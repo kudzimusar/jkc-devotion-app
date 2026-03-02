@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="90 Days Transformation through Daily Devotion and Fellowship - Japan Kingdom Church">
+    <meta name="theme-color" content="#00bcd4">
+    <title>JKC Devotion - 90 Days Transformation</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="css/styles.css">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="church-logo">
+                    <img src="assets/church-logo.png" alt="Japan Kingdom Church Logo" id="churchLogo">
+                    <div>
+                        <div class="church-name">Japan Kingdom Church</div>
+                        <div style="font-size: 0.875rem; opacity: 0.9;">ジャパン・キングダム・チャーチ</div>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                        🌙
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>90 Days of TRANSFORMATION</h1>
+            <p>Following Jesus with the church through forgiveness, reconciliation, submission, and obedience.</p>
+            <p style="margin-top: 1rem; font-weight: 600;">March 2026</p>
+        </div>
+    </section>
+
+    <!-- Progress Section -->
+    <section class="progress-section">
+        <div class="container">
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+                <div class="progress-stats">
+                    <div class="stat">
+                        <div class="stat-value" id="completedDays">0</div>
+                        <div class="stat-label">Days Completed</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="totalDays">31</div>
+                        <div class="stat-label">Total Days</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="streakDays">0</div>
+                        <div class="stat-label">Day Streak</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div id="weeksContainer">
+                <!-- Week cards will be dynamically inserted here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="church-info">
+                    <h3>Japan Kingdom Church</h3>
+                    <p>〒196-0015 東京都昭島市昭和町2-1-6 TE昭島ビル3F</p>
+                    <p>電話: 042-519-4940</p>
+                    <p>Email: jkc.contact@gmail.com</p>
+                </div>
+                <div class="church-links">
+                    <a href="https://www.japankingdomchurch.com" target="_blank" rel="noopener">Website (EN)</a>
+                    <a href="https://www.japankingdomchurch.com/ja" target="_blank" rel="noopener">ウェブサイト (日本語)</a>
+                </div>
+                <div class="footer-bottom">
+                    <p>© 2026 Japan Kingdom Church. All rights reserved.</p>
+                    <p>Church Elder: Sanna Patterson</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Devotion Modal -->
+    <div class="modal" id="devotionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Day Devotion</h2>
+                <button class="modal-close" id="modalClose" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-date" id="modalDate"></div>
+                <div class="modal-declaration" id="modalDeclaration"></div>
+                <div class="modal-scripture" id="modalScripture"></div>
+                <div class="modal-notes">
+                    <label for="modalNotesText">Your Reflections:</label>
+                    <textarea id="modalNotesText" placeholder="Write your thoughts and reflections here..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modalBookmark">📌 Bookmark</button>
+                <button class="btn btn-primary" id="modalComplete">✓ Mark Complete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/app.js"></script>
+</body>
+</html>

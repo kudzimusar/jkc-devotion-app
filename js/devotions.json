@@ -1,0 +1,359 @@
+{
+  "church": {
+    "name": "Japan Kingdom Church",
+    "name_ja": "ジャパン・キングダム・チャーチ",
+    "website": "https://www.japankingdomchurch.com",
+    "website_ja": "https://www.japankingdomchurch.com/ja",
+    "email": "jkc.contact@gmail.com",
+    "phone": "042-519-4940",
+    "address": "〒196-0015 東京都昭島市昭和町2-1-6 TE昭島ビル3F",
+    "elder": "Sanna Patterson"
+  },
+  "program": {
+    "title": "90 Days of TRANSFORMATION through Daily Devotion & Fellowship",
+    "subtitle": "Following Jesus with the church through forgiveness, reconciliation, submission, and obedience.",
+    "month": "March 2026",
+    "totalDays": 31
+  },
+  "weeks": [
+    {
+      "week": 1,
+      "theme": "Forgiveness",
+      "description": "Continue the daily declarations",
+      "color": {
+        "primary": "#e0f7fa",
+        "secondary": "#00bcd4",
+        "accent": "#0097a7"
+      },
+      "days": [
+        {
+          "date": "March 1",
+          "day": 1,
+          "declaration": "My life in Christ begins with my forgiveness.",
+          "scripture": "Acts 2:38",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 2",
+          "day": 2,
+          "declaration": "I have forgiveness through Jesus' blood.",
+          "scripture": "Ephesians 1:7",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 3",
+          "day": 3,
+          "declaration": "God is always ready to forgive me.",
+          "scripture": "1 John 1:9",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 4",
+          "day": 4,
+          "declaration": "I should always be ready to forgive.",
+          "scripture": "Matthew 18:21-22",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 5",
+          "day": 5,
+          "declaration": "I choose not judge others, but forgive.",
+          "scripture": "Luke 6:37",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 6",
+          "day": 6,
+          "declaration": "Loving one another means forgiving.",
+          "scripture": "Ephesians 4:32",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 7",
+          "day": 7,
+          "declaration": "My forgiveness means I must forgive others.",
+          "scripture": "Matthew 6:14-15",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "theme": "Reconciliation",
+      "description": "Restoration of friendly relationships and of peace where before there had been hostility and alienation.",
+      "color": {
+        "primary": "#fff8e1",
+        "secondary": "#ffc107",
+        "accent": "#ff8f00"
+      },
+      "days": [
+        {
+          "date": "March 8",
+          "day": 8,
+          "declaration": "I am reconciled to God through Jesus Christ.",
+          "scripture": "Romans 5:9-11",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 9",
+          "day": 9,
+          "declaration": "I am reconciled to God through the cross.",
+          "scripture": "Colossians 2:14-15, Ephesians 2:12-16",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 10",
+          "day": 10,
+          "declaration": "I am reconciled through the blood of Jesus.",
+          "scripture": "Hebrews 7:26-28",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 11",
+          "day": 11,
+          "declaration": "Jesus offers universal reconciliation and holiness.",
+          "scripture": "Colossians 1:19-22",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 12",
+          "day": 12,
+          "declaration": "I need to be reconciled to one another.",
+          "scripture": "Matthew 5:23-24, 1 Corinthians 7:10-11",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 13",
+          "day": 13,
+          "declaration": "Reconciliation leads to living as a Godly community.",
+          "scripture": "Colossians 3:12-15, Romans 12:16-18",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 14",
+          "day": 14,
+          "declaration": "I bring the message of reconciliation to the world.",
+          "scripture": "2 Corinthians 5:18-20",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "theme": "Submission",
+      "description": "A voluntary heart attitude of yielding to authority.",
+      "color": {
+        "primary": "#e8f5e9",
+        "secondary": "#4caf50",
+        "accent": "#2e7d32"
+      },
+      "days": [
+        {
+          "date": "March 15",
+          "day": 15,
+          "declaration": "Submission requires my humility.",
+          "scripture": "1 Peter 5:5-6",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 16",
+          "day": 16,
+          "declaration": "Submission to God's word leads me to purity.",
+          "scripture": "Psalm 119:9-11",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 17",
+          "day": 17,
+          "declaration": "I choose to submit to God and have intimacy with God.",
+          "scripture": "James 4:6-8",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 18",
+          "day": 18,
+          "declaration": "Submission to God is spiritual warfare I need to learn to fight.",
+          "scripture": "2 Corinthians 10:4-6",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 19",
+          "day": 19,
+          "declaration": "My submission to human authority is based on the Word of God.",
+          "scripture": "1 Peter 2:13-15",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 20",
+          "day": 20,
+          "declaration": "My submission is not just about external obedience.",
+          "scripture": "Deuteronomy 26:16",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 21",
+          "day": 21,
+          "declaration": "Jesus submitted to the will of the Father, and so will I.",
+          "scripture": "Philippians 2:8",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "theme": "Obedience",
+      "description": "The meaning of obeying those who were given authority in the church, and the leaders",
+      "color": {
+        "primary": "#f3e5f5",
+        "secondary": "#9c27b0",
+        "accent": "#6a1b9a"
+      },
+      "days": [
+        {
+          "date": "March 22",
+          "day": 22,
+          "declaration": "My love of Jesus leads me to keeping his commands.",
+          "scripture": "John 14:15,21",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 23",
+          "day": 23,
+          "declaration": "My obedience displays my love of God and others.",
+          "scripture": "1 John 5:2-3",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 24",
+          "day": 24,
+          "declaration": "I choose to obey our church leaders with joy and pray for them.",
+          "scripture": "Hebrews 13:17",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 25",
+          "day": 25,
+          "declaration": "My obedience is not the basis for salvation it is the result.",
+          "scripture": "Ephesians 2:8-10",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 26",
+          "day": 26,
+          "declaration": "God desires obedience from my heart.",
+          "scripture": "1 Samuel 15:22-23",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 27",
+          "day": 27,
+          "declaration": "Obedience flows from my faith in God.",
+          "scripture": "Hebrews 11:7-9",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 28",
+          "day": 28,
+          "declaration": "Obedience follows God rather than my desires.",
+          "scripture": "Hebrews 11:24-26",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "week": 5,
+      "theme": "Easter Holy Week",
+      "description": "First half of Holy Week",
+      "color": {
+        "primary": "#ffebee",
+        "secondary": "#f44336",
+        "accent": "#c62828"
+      },
+      "days": [
+        {
+          "date": "March 29",
+          "day": 29,
+          "declaration": "Jesus entered into Jerusalem with meekness.",
+          "scripture": "Matthew 21:1-11",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 30",
+          "day": 30,
+          "declaration": "Jesus' house, the church, I, need to be the house of prayer.",
+          "scripture": "Matthew 21:12-22",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        },
+        {
+          "date": "March 31",
+          "day": 31,
+          "declaration": "Thank you Jesus for your guidance and warning to prepare us.",
+          "scripture": "Matthew 21:23-24:51",
+          "completed": false,
+          "bookmarked": false,
+          "notes": ""
+        }
+      ]
+    }
+  ]
+}

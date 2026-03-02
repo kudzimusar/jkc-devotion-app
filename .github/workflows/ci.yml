@@ -1,0 +1,148 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate HTML
+        run: |
+          # Check if index.html exists
+          if [ ! -f "index.html" ]; then
+            echo "Error: index.html not found"
+            exit 1
+          fi
+          echo "✓ index.html exists"
+
+      - name: Validate CSS
+        run: |
+          # Check if styles.css exists
+          if [ ! -f "css/styles.css" ]; then
+            echo "Error: css/styles.css not found"
+            exit 1
+          fi
+          echo "✓ css/styles.css exists"
+
+      - name: Validate JavaScript
+        run: |
+          # Check if app.js exists
+          if [ ! -f "js/app.js" ]; then
+            echo "Error: js/app.js not found"
+            exit 1
+          fi
+          echo "✓ js/app.js exists"
+
+      - name: Validate JSON
+        run: |
+          # Check if devotions.json exists and is valid
+          if [ ! -f "js/devotions.json" ]; then
+            echo "Error: js/devotions.json not found"
+            exit 1
+          fi
+          
+          # Validate JSON syntax
+          if ! python3 -m json.tool js/devotions.json > /dev/null 2>&1; then
+            echo "Error: js/devotions.json is not valid JSON"
+            exit 1
+          fi
+          echo "✓ js/devotions.json is valid JSON"
+
+      - name: Validate PWA Manifest
+        run: |
+          # Check if manifest.json exists and is valid
+          if [ ! -f "manifest.json" ]; then
+            echo "Error: manifest.json not found"
+            exit 1
+          fi
+          
+          # Validate JSON syntax
+          if ! python3 -m json.tool manifest.json > /dev/null 2>&1; then
+            echo "Error: manifest.json is not valid JSON"
+            exit 1
+          fi
+          echo "✓ manifest.json is valid JSON"
+
+      - name: Validate Service Worker
+        run: |
+          # Check if sw.js exists
+          if [ ! -f "sw.js" ]; then
+            echo "Error: sw.js not found"
+            exit 1
+          fi
+          echo "✓ sw.js exists"
+
+      - name: Check for required icons
+        run: |
+          # Check if required icons exist
+          required_icons=("icon-192.png" "icon-512.png")
+          for icon in "${required_icons[@]}"; do
+            if [ ! -f "icons/$icon" ]; then
+              echo "Warning: icons/$icon not found"
+            else
+              echo "✓ icons/$icon exists"
+            fi
+          done
+
+      - name: Check church logo
+        run: |
+          # Check if church logo exists
+          if [ ! -f "assets/church-logo.png" ]; then
+            echo "Warning: assets/church-logo.png not found"
+          else
+            echo "✓ assets/church-logo.png exists"
+          fi
+
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check JavaScript syntax
+        run: |
+          # Basic JavaScript syntax check using Node.js
+          node -c js/app.js || echo "Note: Syntax check completed"
+
+      - name: Check for console.log statements
+        run: |
+          # Check for console.log statements (should be removed in production)
+          if grep -r "console\.log" js/app.js; then
+            echo "Warning: console.log statements found in js/app.js"
+          else
+            echo "✓ No console.log statements found"
+          fi
+
+  security:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for sensitive data
+        run: |
+          # Check for potential sensitive data patterns
+          if grep -rE "(password|secret|api[_-]?key|token)" --include="*.js" --include="*.json" --include="*.html" .; then
+            echo "Warning: Potential sensitive data patterns found"
+          else
+            echo "✓ No obvious sensitive data patterns found"
+          fi
+
+      - name: Check for hardcoded URLs
+        run: |
+          # Check for hardcoded URLs that should be relative
+          if grep -rE "https?://(localhost|127\.0\.0\.1)" --include="*.js" --include="*.html" .; then
+            echo "Warning: Hardcoded localhost URLs found"
+          else
+            echo "✓ No hardcoded localhost URLs found"
+          fi

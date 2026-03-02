@@ -1,0 +1,69 @@
+name: Issue Tracker
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    # Run daily at 9 AM UTC
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+jobs:
+  create-weekly-report:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate weekly report
+        run: |
+          echo "# Weekly Devotion App Report" > report.md
+          echo "" >> report.md
+          echo "Generated on: $(date)" >> report.md
+          echo "" >> report.md
+          echo "## Recent Changes" >> report.md
+          git log --since="1 week ago" --pretty=format:"- %s (%h)" >> report.md || echo "No changes in the past week" >> report.md
+          echo "" >> report.md
+          echo "## Statistics" >> report.md
+          echo "- Total commits: $(git rev-list --count HEAD)" >> report.md
+          echo "- Contributors: $(git shortlog -sn | wc -l)" >> report.md
+
+      - name: Create issue with report
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('report.md', 'utf8');
+            
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Weekly Report - ${new Date().toISOString().split('T')[0]}`,
+              body: report,
+              labels: ['report', 'weekly']
+            });
+
+  track-deployment:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create deployment issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const commit = context.sha;
+            const message = context.payload.head_commit.message;
+            
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Deployment: ${message.substring(0, 50)}`,
+              body: `## Deployment Details\n\n- **Commit**: ${commit}\n- **Message**: ${message}\n- **Author**: ${context.payload.head_commit.author.name}\n- **Branch**: ${context.ref}\n\n## Changes\n\n${context.payload.head_commit.message}\n\n## Actions\n\n- [ ] Verify deployment\n- [ ] Test all features\n- [ ] Check PWA functionality\n- [ ] Update documentation if needed`,
+              labels: ['deployment', 'automated']
+            });
