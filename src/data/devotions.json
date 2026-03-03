@@ -1,0 +1,312 @@
+[
+  {
+    "id": 1,
+    "date": "2026-03-01",
+    "week": 1,
+    "theme": "The Foundation of Forgiveness",
+    "title": "My life in Christ begins with my forgiveness.",
+    "scripture": "Acts 2:38",
+    "declaration": "My life in Christ begins with my forgiveness.",
+    "week_theme": "Forgiveness"
+  },
+  {
+    "id": 2,
+    "date": "2026-03-02",
+    "week": 1,
+    "theme": "The Foundation of Forgiveness",
+    "title": "I have forgiveness through Jesus' blood.",
+    "scripture": "Ephesians 1:7",
+    "declaration": "I have forgiveness through Jesus' blood.",
+    "week_theme": "Forgiveness"
+  },
+  {
+    "id": 3,
+    "date": "2026-03-03",
+    "week": 1,
+    "theme": "The Foundation of Forgiveness",
+    "title": "God is always ready to forgive me.",
+    "scripture": "1 John 1:9",
+    "declaration": "God is always ready to forgive me.",
+    "week_theme": "Forgiveness"
+  },
+  {
+    "id": 4,
+    "date": "2026-03-04",
+    "week": 1,
+    "theme": "The Foundation of Forgiveness",
+    "title": "I should always be ready to forgive.",
+    "scripture": "Matthew 18:21-22",
+    "declaration": "I should always be ready to forgive.",
+    "week_theme": "Forgiveness"
+  },
+  {
+    "id": 5,
+    "date": "2026-03-05",
+    "week": 1,
+    "theme": "The Foundation of Forgiveness",
+    "title": "I choose not to judge others, but forgive.",
+    "scripture": "Luke 6:37",
+    "declaration": "I choose not to judge others, but forgive.",
+    "week_theme": "Forgiveness"
+  },
+  {
+    "id": 6,
+    "date": "2026-03-06",
+    "week": 1,
+    "theme": "The Foundation of Forgiveness",
+    "title": "Loving one another means forgiving.",
+    "scripture": "Ephesians 4:32",
+    "declaration": "Loving one another means forgiving.",
+    "week_theme": "Forgiveness"
+  },
+  {
+    "id": 7,
+    "date": "2026-03-07",
+    "week": 1,
+    "theme": "The Foundation of Forgiveness",
+    "title": "My forgiveness means I must forgive others.",
+    "scripture": "Matthew 6:14-15",
+    "declaration": "My forgiveness means I must forgive others.",
+    "week_theme": "Forgiveness"
+  },
+  {
+    "id": 8,
+    "date": "2026-03-08",
+    "week": 2,
+    "theme": "The Ministry of Reconciliation",
+    "title": "I am reconciled to God through Jesus Christ.",
+    "scripture": "Romans 5:9-11",
+    "declaration": "I am reconciled to God through Jesus Christ.",
+    "week_theme": "Reconciliation"
+  },
+  {
+    "id": 9,
+    "date": "2026-03-09",
+    "week": 2,
+    "theme": "The Ministry of Reconciliation",
+    "title": "I am reconciled to God through the cross.",
+    "scripture": "Colossians 2:14-15, Ephesians 2:12-16",
+    "declaration": "I am reconciled to God through the cross.",
+    "week_theme": "Reconciliation"
+  },
+  {
+    "id": 10,
+    "date": "2026-03-10",
+    "week": 2,
+    "theme": "The Ministry of Reconciliation",
+    "title": "I am reconciled through the blood of Jesus.",
+    "scripture": "Hebrews 7:26-28",
+    "declaration": "I am reconciled through the blood of Jesus.",
+    "week_theme": "Reconciliation"
+  },
+  {
+    "id": 11,
+    "date": "2026-03-11",
+    "week": 2,
+    "theme": "The Ministry of Reconciliation",
+    "title": "Jesus offers universal reconciliation and holiness.",
+    "scripture": "Colossians 1:19-22",
+    "declaration": "Jesus offers universal reconciliation and holiness.",
+    "week_theme": "Reconciliation"
+  },
+  {
+    "id": 12,
+    "date": "2026-03-12",
+    "week": 2,
+    "theme": "The Ministry of Reconciliation",
+    "title": "I need to be reconciled to one another.",
+    "scripture": "Matthew 5:23-24, 1 Corinthians 7:10-11",
+    "declaration": "I need to be reconciled to one another.",
+    "week_theme": "Reconciliation"
+  },
+  {
+    "id": 13,
+    "date": "2026-03-13",
+    "week": 2,
+    "theme": "The Ministry of Reconciliation",
+    "title": "Reconciliation leads to living as a Godly community.",
+    "scripture": "Colossians 3:12-15, Romans 12:16-18",
+    "declaration": "Reconciliation leads to living as a Godly community.",
+    "week_theme": "Reconciliation"
+  },
+  {
+    "id": 14,
+    "date": "2026-03-14",
+    "week": 2,
+    "theme": "The Ministry of Reconciliation",
+    "title": "I bring the message of reconciliation to the world.",
+    "scripture": "2 Corinthians 5:18-20",
+    "declaration": "I bring the message of reconciliation to the world.",
+    "week_theme": "Reconciliation"
+  },
+  {
+    "id": 15,
+    "date": "2026-03-15",
+    "week": 3,
+    "theme": "The Attitude of Submission",
+    "title": "Submission requires my humility.",
+    "scripture": "1 Peter 5:5-6",
+    "declaration": "Submission requires my humility.",
+    "week_theme": "Submission"
+  },
+  {
+    "id": 16,
+    "date": "2026-03-16",
+    "week": 3,
+    "theme": "The Attitude of Submission",
+    "title": "Submission to God's word leads me to purity.",
+    "scripture": "Psalm 119:9-11",
+    "declaration": "Submission to God's word leads me to purity.",
+    "week_theme": "Submission"
+  },
+  {
+    "id": 17,
+    "date": "2026-03-17",
+    "week": 3,
+    "theme": "The Attitude of Submission",
+    "title": "I choose to submit to God and have intimacy with God.",
+    "scripture": "James 4:6-8",
+    "declaration": "I choose to submit to God and have intimacy with God.",
+    "week_theme": "Submission"
+  },
+  {
+    "id": 18,
+    "date": "2026-03-18",
+    "week": 3,
+    "theme": "The Attitude of Submission",
+    "title": "Submission to God is spiritual warfare I need to learn to fight.",
+    "scripture": "2 Corinthians 10:4-6",
+    "declaration": "Submission to God is spiritual warfare I need to learn to fight.",
+    "week_theme": "Submission"
+  },
+  {
+    "id": 19,
+    "date": "2026-03-19",
+    "week": 3,
+    "theme": "The Attitude of Submission",
+    "title": "My submission to human authority is based on the Word of God.",
+    "scripture": "1 Peter 2:13-15",
+    "declaration": "My submission to human authority is based on the Word of God.",
+    "week_theme": "Submission"
+  },
+  {
+    "id": 20,
+    "date": "2026-03-20",
+    "week": 3,
+    "theme": "The Attitude of Submission",
+    "title": "My submission is not just about external obedience.",
+    "scripture": "Deuteronomy 26:16",
+    "declaration": "My submission is not just about external obedience.",
+    "week_theme": "Submission"
+  },
+  {
+    "id": 21,
+    "date": "2026-03-21",
+    "week": 3,
+    "theme": "The Attitude of Submission",
+    "title": "Jesus submitted to the will of the Father, and so will I.",
+    "scripture": "Philippians 2:8",
+    "declaration": "Jesus submitted to the will of the Father, and so will I.",
+    "week_theme": "Submission"
+  },
+  {
+    "id": 22,
+    "date": "2026-03-22",
+    "week": 4,
+    "theme": "The Practice of Obedience",
+    "title": "My love of Jesus leads me to keeping his commands.",
+    "scripture": "John 14:15, 21",
+    "declaration": "My love of Jesus leads me to keeping his commands.",
+    "week_theme": "Obedience"
+  },
+  {
+    "id": 23,
+    "date": "2026-03-23",
+    "week": 4,
+    "theme": "The Practice of Obedience",
+    "title": "My obedience displays my love of God and others.",
+    "scripture": "1 John 5:2-3",
+    "declaration": "My obedience displays my love of God and others.",
+    "week_theme": "Obedience"
+  },
+  {
+    "id": 24,
+    "date": "2026-03-24",
+    "week": 4,
+    "theme": "The Practice of Obedience",
+    "title": "I choose to obey our church leaders with joy and pray for them.",
+    "scripture": "Hebrews 13:17",
+    "declaration": "I choose to obey our church leaders with joy and pray for them.",
+    "week_theme": "Obedience"
+  },
+  {
+    "id": 25,
+    "date": "2026-03-25",
+    "week": 4,
+    "theme": "The Practice of Obedience",
+    "title": "My obedience is not the basis for salvation it is the result.",
+    "scripture": "Ephesians 2:8-10",
+    "declaration": "My obedience is not the basis for salvation it is the result.",
+    "week_theme": "Obedience"
+  },
+  {
+    "id": 26,
+    "date": "2026-03-26",
+    "week": 4,
+    "theme": "The Practice of Obedience",
+    "title": "God desires obedience from my heart.",
+    "scripture": "1 Samuel 15:22-23",
+    "declaration": "God desires obedience from my heart.",
+    "week_theme": "Obedience"
+  },
+  {
+    "id": 27,
+    "date": "2026-03-27",
+    "week": 4,
+    "theme": "The Practice of Obedience",
+    "title": "Obedience flows from my faith in God.",
+    "scripture": "Hebrews 11:7-9",
+    "declaration": "Obedience flows from my faith in God.",
+    "week_theme": "Obedience"
+  },
+  {
+    "id": 28,
+    "date": "2026-03-28",
+    "week": 4,
+    "theme": "The Practice of Obedience",
+    "title": "Obedience follows God rather than my desires.",
+    "scripture": "Hebrews 11:24-26",
+    "declaration": "Obedience follows God rather than my desires.",
+    "week_theme": "Obedience"
+  },
+  {
+    "id": 29,
+    "date": "2026-03-29",
+    "week": 5,
+    "theme": "Easter Holy Week (Commencement)",
+    "title": "Jesus entered into Jerusalem with meekness.",
+    "scripture": "Matthew 21:1-11",
+    "declaration": "Jesus entered into Jerusalem with meekness.",
+    "week_theme": "HolyWeek"
+  },
+  {
+    "id": 30,
+    "date": "2026-03-30",
+    "week": 5,
+    "theme": "Easter Holy Week (Commencement)",
+    "title": "Jesus' house, the church, I, need to be the house of prayer.",
+    "scripture": "Matthew 21:12-22",
+    "declaration": "Jesus' house, the church, I, need to be the house of prayer.",
+    "week_theme": "HolyWeek"
+  },
+  {
+    "id": 31,
+    "date": "2026-03-31",
+    "week": 5,
+    "theme": "Easter Holy Week (Commencement)",
+    "title": "Thank you Jesus for your guidance and warning to prepare us.",
+    "scripture": "Matthew 21:23–24:51",
+    "declaration": "Thank you Jesus for your guidance and warning to prepare us.",
+    "week_theme": "HolyWeek"
+  }
+]
