@@ -61,8 +61,9 @@ export const Auth = {
                     name: name
                 }
             };
-        } catch (err: any) {
-            return { success: false, error: err.message };
+        } catch (err) {
+            const error = err as Error;
+            return { success: false, error: error.message };
         }
     },
 
@@ -78,8 +79,9 @@ export const Auth = {
 
             const user = await this.getCurrentUser();
             return { success: true, user: user || undefined };
-        } catch (err: any) {
-            return { success: false, error: err.message };
+        } catch (err) {
+            const error = err as Error;
+            return { success: false, error: error.message };
         }
     },
 
@@ -122,8 +124,9 @@ export const Auth = {
 
             const updatedUser = await this.getCurrentUser();
             return { success: true, user: updatedUser || undefined };
-        } catch (err: any) {
-            return { success: false, error: err.message };
+        } catch (err) {
+            const error = err as Error;
+            return { success: false, error: error.message };
         }
     }
 };

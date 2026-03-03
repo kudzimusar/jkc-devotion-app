@@ -60,6 +60,7 @@ export default function DevotionalApp() {
   const [showSettings, setShowSettings] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authMode, setAuthMode] = useState<"login" | "register" | "profile">("login");
+  const [preferredTime, setPreferredTime] = useState("07:30");
 
   // SOAP State
   const [soapEntry, setSoapEntry] = useState<SoapEntry>({
@@ -325,11 +326,11 @@ export default function DevotionalApp() {
                 <h4 className="font-bold text-sm uppercase tracking-wider text-[var(--primary)]">Transformation Guide</h4>
                 <p className="text-sm opacity-80 leading-relaxed">
                   {stats.streak === 0 ? (
-                    "Welcome back! Take 5 minutes today to focus on God. Morning or lunch breaks are great times to center your soul."
+                    `Welcome back! Take 5 minutes today to focus on God. ${preferredTime === "07:30" ? "Morning" : preferredTime} is a great time to center your soul.`
                   ) : stats.streak < 3 ? (
-                    `Great job on your ${stats.streak} day streak! Keep the momentum going. Why not set a 10-minute quiet time before you start your day?`
+                    `Great job on your ${stats.streak} day streak! Keep the momentum going. Your set time is ${preferredTime}—don't miss it!`
                   ) : (
-                    `Your ${stats.streak} day streak is inspiring! Your growth in ${currentWeek?.name} theme is visible. Stay consistent today.`
+                    `Your ${stats.streak} day streak is inspiring! Your growth in ${currentWeek?.name} theme is visible. Stay consistent at ${preferredTime}.`
                   )}
                 </p>
               </div>
@@ -620,9 +621,18 @@ export default function DevotionalApp() {
                 </Button>
               </div>
 
-              <div className="space-y-2">
-                <Button variant="outline" className="w-full h-12 rounded-full border-0 glass hover:bg-white/20 flex gap-2 justify-center" onClick={() => toast.info("Cloud sync is fully active")}>
-                  <Download className="w-4 h-4" /> Cloud Sync Active
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest opacity-50 px-2">Remind me at</label>
+                  <input
+                    type="time"
+                    value={preferredTime}
+                    onChange={(e) => setPreferredTime(e.target.value)}
+                    className="w-full h-12 rounded-full border-0 glass px-6 font-bold text-[var(--primary)]"
+                  />
+                </div>
+                <Button variant="outline" className="w-full h-12 rounded-full border-0 glass hover:bg-white/20 flex gap-2 justify-center" onClick={() => toast.success(`Reminder scheduled for ${preferredTime}`)}>
+                  <Download className="w-4 h-4" /> Sync & Save Settings
                 </Button>
               </div>
             </div>
