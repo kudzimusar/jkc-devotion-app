@@ -45,6 +45,8 @@ const WEEK_THEMES = [
   { week: 5, name: "Holy Week", icon: Cross, desc: "Passion and Transformation" },
 ];
 
+const BP = "/jkc-devotion-app";
+
 export default function DevotionalApp() {
   const [currentDate, setCurrentDate] = useState(new Date("2026-03-02"));
   const [devotion, setDevotion] = useState<Devotion | undefined>();
@@ -72,6 +74,22 @@ export default function DevotionalApp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [stats, setStats] = useState({ completed: 0, total: 31, streak: 0 });
+
+  useEffect(() => {
+    const loadStats = async () => {
+      if (user) {
+        const entries = await SoapJournal.getAllEntries();
+        // Simple streak: number of entries
+        setStats({
+          completed: entries.length,
+          total: 31,
+          streak: entries.length > 0 ? Math.min(entries.length, 7) : 0 // Placeholder streak
+        });
+      }
+    };
+    loadStats();
+  }, [user]);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -177,14 +195,13 @@ export default function DevotionalApp() {
       <header className="mb-8 relative z-10 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 relative flex-shrink-0">
-            <img src="/church-logo.png" alt="JKC Logo" className="w-full h-full object-contain" />
+            <img src={`${BP}/church-logo.png`} alt="JKC Logo" className="w-full h-full object-contain" />
           </div>
           <div>
-            <h2 className="text-sm font-medium opacity-70 flex items-center gap-2 uppercase tracking-[0.2em] mb-1">
-              {currentWeek?.icon && <currentWeek.icon className="w-4 h-4 text-[var(--primary)]" />}
-              Week {devotion?.week}: {devotion?.week_theme}
-            </h2>
-            <h1 className="text-3xl font-bold font-serif">{format(currentDate, "EEEE, MMMM d")}</h1>
+            <div className="flex flex-col">
+              <h1 className="text-xl font-bold font-serif leading-none">Japan Kingdom Church</h1>
+              <span className="text-[10px] opacity-60 font-medium">ジャパン・キングダム・チャーチ</span>
+            </div>
           </div>
         </div>
         <div className="flex gap-2">
@@ -202,6 +219,23 @@ export default function DevotionalApp() {
         </div>
       </header>
 
+      {/* Hero Section */}
+      <section className="relative z-10 text-center py-12 space-y-4">
+        <motion.h1
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-4xl md:text-5xl font-black tracking-tight text-[var(--primary)]"
+        >
+          90 Days of TRANSFORMATION
+        </motion.h1>
+        <p className="text-lg opacity-70 max-w-lg mx-auto leading-relaxed">
+          Following Jesus with the church through forgiveness, reconciliation, submission, and obedience.
+        </p>
+        <div className="inline-block px-6 py-2 rounded-full glass border-white/20 font-bold text-[var(--primary)]">
+          March 2026
+        </div>
+      </section>
+
       {/* Main Content Area */}
       <AnimatePresence mode="wait">
         <motion.div
@@ -210,26 +244,69 @@ export default function DevotionalApp() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="relative z-10 space-y-6 pb-24"
+          className="relative z-10 space-y-8 pb-12"
         >
-          {/* Progress Overview (Mini) */}
-          <div className="bg-white/40 dark:bg-black/40 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-3xl p-4 shadow-xl flex items-center gap-4">
-            <div className="relative w-12 h-12">
-              <svg className="w-12 h-12 rotate-[-90deg]">
-                <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" className="text-muted/20" fill="transparent" />
-                <circle cx="24" cy="24" r="20" stroke="var(--primary)" strokeWidth="4" strokeDasharray="125.66" strokeDashoffset={125.66 * (1 - (devotion?.id || 0) / 90)} strokeLinecap="round" fill="transparent" />
-              </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold">{(devotion?.id || 0)}/90</span>
-            </div>
-            <div className="flex-1">
-              <div className="text-xs font-bold uppercase tracking-wider mb-1">March Transformation Journey</div>
-              <div className="h-1 bg-muted/20 rounded-full overflow-hidden">
-                <motion.div initial={{ width: 10 }} animate={{ width: `${((devotion?.id || 0) / 90) * 100}%` }} className="h-full bg-[var(--primary)]" />
+          {/* Progress Overview & Stats */}
+          <div className="space-y-6">
+            <div className="bg-white/40 dark:bg-black/40 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-[2.5rem] p-8 shadow-xl">
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                <div className="relative w-24 h-24 flex-shrink-0">
+                  <svg className="w-24 h-24 rotate-[-90deg]">
+                    <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" className="text-muted/20" fill="transparent" />
+                    <circle cx="48" cy="48" r="40" stroke="var(--primary)" strokeWidth="8" strokeDasharray="251.32" strokeDashoffset={251.32 * (1 - (devotion?.id || 0) / 90)} strokeLinecap="round" fill="transparent" />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-xl font-black">{(devotion?.id || 0)}</span>
+                    <span className="text-[10px] opacity-50 font-bold uppercase">Day</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-8 flex-1 w-full">
+                  <div className="text-center">
+                    <div className="text-2xl font-black text-[var(--primary)]">{stats.completed}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider opacity-60">Completed</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-black text-[var(--primary)]">{stats.total}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider opacity-60">Total Days</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-black text-[var(--primary)]">{stats.streak}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider opacity-60">Day Streak</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 space-y-2">
+                <div className="flex justify-between text-xs font-black uppercase tracking-widest opacity-50">
+                  <span>Transformation Progress</span>
+                  <span>{Math.round((stats.completed / stats.total) * 100)}%</span>
+                </div>
+                <div className="h-3 bg-muted/20 rounded-full overflow-hidden p-0.5">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(stats.completed / stats.total) * 100}%` }}
+                    className="h-full bg-[var(--primary)] rounded-full shadow-[0_0_15px_var(--primary)]"
+                  />
+                </div>
               </div>
             </div>
-            <Badge className="bg-[var(--primary)] text-white font-bold h-10 px-4 rounded-full shadow-lg">
-              {user ? user.name.split(' ')[0].toUpperCase() : "TRANSFORMED"}
-            </Badge>
+
+            {/* Current Day Header */}
+            <div className="flex items-center justify-between px-2">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[var(--primary)]/10 flex items-center justify-center">
+                  {currentWeek?.icon && <currentWeek.icon className="w-5 h-5 text-[var(--primary)]" />}
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg leading-none">Week {devotion?.week}: {devotion?.week_theme}</h3>
+                  <p className="text-xs opacity-60 uppercase tracking-widest font-medium">{format(currentDate, "EEEE, MMMM d")}</p>
+                </div>
+              </div>
+              <Badge className="bg-[var(--primary)] text-white font-bold rounded-full">
+                DAY {devotion?.id}
+              </Badge>
+            </div>
           </div>
 
           <Card className="rounded-[2.5rem] overflow-hidden border-0 shadow-2xl glass relative">
@@ -398,7 +475,7 @@ export default function DevotionalApp() {
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
         <DialogContent className="rounded-[2.5rem] border-0 glass max-w-md p-8">
           <DialogHeader className="flex flex-col items-center">
-            <img src="/church-logo.png" alt="JKC Logo" className="w-16 h-16 object-contain mb-4" />
+            <img src={`${BP}/church-logo.png`} alt="JKC Logo" className="w-16 h-16 object-contain mb-4" />
             <DialogTitle className="text-2xl font-serif text-center">{user ? "My Account" : "Join the Journey"}</DialogTitle>
           </DialogHeader>
 
@@ -558,6 +635,34 @@ export default function DevotionalApp() {
           </motion.div>
         </DialogContent>
       </Dialog>
+
+      {/* Footer */}
+      <footer className="relative z-10 mt-24 pb-32 border-t border-white/10 pt-12">
+        <div className="flex flex-col items-center text-center space-y-8">
+          <div className="flex items-center gap-4">
+            <img src={`${BP}/church-logo.png`} alt="JKC Logo" className="w-12 h-12 object-contain" />
+            <div className="text-left">
+              <h3 className="font-bold text-lg">Japan Kingdom Church</h3>
+              <p className="text-xs opacity-60">ジャパン・キングダム・チャーチ</p>
+            </div>
+          </div>
+
+          <div className="space-y-2 opacity-70">
+            <p className="text-sm">〒196-0015 東京都昭島市昭和町2-1-6 TE昭島ビル3F</p>
+            <p className="text-sm">電話: 042-519-4940 | Email: jkc.contact@gmail.com</p>
+          </div>
+
+          <div className="flex gap-6">
+            <a href="https://www.japankingdomchurch.com" target="_blank" rel="noopener" className="text-sm font-bold text-[var(--primary)] hover:underline">Website (EN)</a>
+            <a href="https://www.japankingdomchurch.com/ja" target="_blank" rel="noopener" className="text-sm font-bold text-[var(--primary)] hover:underline">ウェブサイト (日本語)</a>
+          </div>
+
+          <div className="space-y-1 opacity-40 text-[10px] uppercase tracking-widest font-black">
+            <p>© 2026 Japan Kingdom Church. All rights reserved.</p>
+            <p>Church Elder: Sanna Patterson</p>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }

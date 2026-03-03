@@ -24,3 +24,6 @@ export function getWeekForDate(dateStr: string): number {
     if (day <= 28) return 4;
     return 5;
 }
+export function getAllDevotions(): Devotion[] {
+    return devotions as Devotion[];
+}
