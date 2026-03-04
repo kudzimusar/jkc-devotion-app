@@ -232,55 +232,66 @@ export default function DevotionalApp() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[var(--accent)] blur-[100px] rounded-full" />
       </div>
 
-      <header className="mb-8 relative z-10 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 relative flex-shrink-0">
-            <img src={`${BP}/church-logo.png`} alt="JKC Logo" className="w-full h-full object-contain" />
-          </div>
-          <div>
-            <div className="flex flex-col">
-              <h1 className="text-xl font-bold font-serif leading-none">Japan Kingdom Church</h1>
-              <span className="text-[10px] opacity-60 font-medium">ジャパン・キングダム・チャーチ</span>
+      {/* Sticky Header Container */}
+      <div className="sticky top-0 z-[100] -mx-4 px-4 py-4 bg-[var(--background)]/80 backdrop-blur-xl border-b border-white/10 mb-8">
+        <header className="max-w-2xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 relative flex-shrink-0">
+              <img src={`${BP}/church-logo.png`} alt="JKC Logo" className="w-full h-full object-contain" />
+            </div>
+            <div>
+              <div className="flex flex-col">
+                <h1 className="text-lg md:text-xl font-bold font-serif leading-none">Japan Kingdom Church</h1>
+                <span className="text-[10px] opacity-60 font-medium">ジャパン・キングダム・チャーチ</span>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full shadow-sm glass border-white/20"
-            onClick={() => setShowSettings(true)}
-          >
-            <Settings className="w-5 h-5" />
-          </Button>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full shadow-sm glass border-white/20">
-                <Calendar className="w-5 h-5" />
+          <div className="flex items-center gap-3">
+            {/* User Profile / Guest Badge */}
+            <div className="hidden sm:flex flex-col items-end mr-2">
+              <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">Account</span>
+              <span className="text-xs font-black text-[var(--primary)]">{user ? user.name : "Guest User"}</span>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full shadow-sm glass border-white/20 h-9 w-9 md:h-10 md:w-10"
+                onClick={() => setShowSettings(true)}
+              >
+                {user ? <User className="w-4 h-4 md:w-5 md:h-5" /> : <Settings className="w-4 h-4 md:w-5 md:h-5" />}
               </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <CalendarComponent
-                mode="single"
-                selected={currentDate}
-                onSelect={(date) => {
-                  if (date) {
-                    setCurrentDate(date);
-                  }
-                }}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-      </header>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full shadow-sm glass border-white/20 h-9 w-9 md:h-10 md:w-10">
+                    <Calendar className="w-4 h-4 md:w-5 md:h-5" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <CalendarComponent
+                    mode="single"
+                    selected={currentDate}
+                    onSelect={(date) => {
+                      if (date) {
+                        setCurrentDate(date);
+                      }
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+        </header>
+      </div >
 
       {/* Hero Section */}
-      <section className="relative z-10 text-center py-12 space-y-4">
+      < section className="relative z-10 text-center py-12 space-y-4" >
         <motion.h1
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-4xl md:text-5xl font-black tracking-tight text-[var(--primary)]"
+          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-[var(--primary)] leading-tight"
         >
           90 Days of TRANSFORMATION
         </motion.h1>
@@ -290,10 +301,10 @@ export default function DevotionalApp() {
         <div className="inline-block px-6 py-2 rounded-full glass border-white/20 font-bold text-[var(--primary)]">
           March 2026
         </div>
-      </section>
+      </section >
 
       {/* Main Content Area */}
-      <AnimatePresence mode="wait">
+      < AnimatePresence mode="wait" >
         <motion.div
           key={format(currentDate, "yyyy-MM-dd") + lang}
           initial={{ opacity: 0, y: 20 }}
@@ -553,10 +564,10 @@ export default function DevotionalApp() {
             </CardContent>
           </Card>
         </motion.div>
-      </AnimatePresence>
+      </AnimatePresence >
 
       {/* Date Navigation */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/20 dark:bg-black/20 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-full px-6 py-3 shadow-2xl z-50">
+      < div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/20 dark:bg-black/20 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-full px-6 py-3 shadow-2xl z-50" >
         <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 hover:bg-white/20" onClick={() => setCurrentDate(d => {
           const newDate = new Date(d);
           newDate.setDate(newDate.getDate() - 1);
@@ -575,10 +586,10 @@ export default function DevotionalApp() {
         })}>
           <ChevronRight className="w-5 h-5" />
         </Button>
-      </div>
+      </div >
 
       {/* Settings / Auth Dialog */}
-      <Dialog open={showSettings} onOpenChange={setShowSettings}>
+      < Dialog open={showSettings} onOpenChange={setShowSettings} >
         <DialogContent className="rounded-[2.5rem] border-0 glass max-w-md p-8">
           <DialogHeader className="flex flex-col items-center">
             <img src={`${BP}/church-logo.png`} alt="JKC Logo" className="w-16 h-16 object-contain mb-4" />
@@ -738,7 +749,7 @@ export default function DevotionalApp() {
             <p className="text-[10px] opacity-40 uppercase tracking-[0.2em] text-center w-full">Japan Kingdom Church Devotional v2.1 (Cloud)</p>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog >
 
       <Dialog open={declarationMode} onOpenChange={setDeclarationMode}>
         <DialogContent className="sm:max-w-md rounded-[3rem] p-12 border-0 glass overflow-hidden">
@@ -801,6 +812,6 @@ export default function DevotionalApp() {
           </div>
         </div>
       </footer>
-    </main>
+    </main >
   );
 }
