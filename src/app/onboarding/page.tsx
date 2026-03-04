@@ -39,7 +39,7 @@ export default function OnboardingPage() {
             router.push('/login');
             return;
         }
-        const res = await fetch('/api/onboarding/register', {
+        const res = await fetch('/jkc-devotion-app/api/onboarding/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

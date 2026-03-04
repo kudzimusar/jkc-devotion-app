@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from './supabase';
+import { formatInTimeZone } from 'date-fns-tz';
 
 // SOAP Journaling System for JKC Devotion App using Supabase
 
@@ -103,12 +104,11 @@ export const SoapJournal = {
 
         if (data.length > 0) {
             // Get current JST date in YYYY-MM-DD
-            const jstFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo' });
-            const currentJstDate = jstFormatter.format(new Date());
+            const currentJstDate = formatInTimeZone(new Date(), 'Asia/Tokyo', 'yyyy-MM-dd');
 
             // Check if the most recent entry was completed today in JST
             if (data[0].updated_at) {
-                const entryJstDate = jstFormatter.format(new Date(data[0].updated_at));
+                const entryJstDate = formatInTimeZone(new Date(data[0].updated_at), 'Asia/Tokyo', 'yyyy-MM-dd');
                 if (entryJstDate === currentJstDate) {
                     lastCompletedJST = entryJstDate;
                 }

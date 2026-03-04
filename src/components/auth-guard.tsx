@@ -21,16 +21,32 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
             // Check for org membership
             const { data: member, error } = await supabase
                 .from("org_members")
-                .select("org_id")
+                .select("org_id, role")
                 .eq("user_id", user.id)
                 .single();
 
             const hasOrg = !error && member?.org_id;
+            const role = member?.role || 'member';
 
+            // SaaS/API Dashboard logic: Only owners/admins with an ORG can stay in /admin
+            if (pathname.startsWith("/admin")) {
+                if (!hasOrg) {
+                    router.push("/onboarding");
+                } else if (role === 'member') {
+                    router.push("/");
+                }
+            }
+
+            // Shepherd Dashboard logic
+            if (pathname.startsWith("/shepherd")) {
+                if (role === 'member') {
+                    router.push("/");
+                }
+            }
+
+            // Onboarding logic: If already has an org, go to admin
             if (pathname.startsWith("/onboarding") && hasOrg) {
                 router.push("/admin");
-            } else if (pathname.startsWith("/admin") && !hasOrg) {
-                router.push("/onboarding");
             }
 
             setLoading(false);
@@ -39,7 +55,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         checkAuth();
     }, [pathname, router]);
 
-    if (loading && (pathname.startsWith("/admin") || pathname.startsWith("/onboarding"))) {
+    const isProtected = pathname.startsWith("/admin") || pathname.startsWith("/onboarding") || pathname.startsWith("/shepherd");
+
+    if (loading && isProtected) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-background">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

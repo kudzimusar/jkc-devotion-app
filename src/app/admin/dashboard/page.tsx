@@ -16,7 +16,8 @@ import {
     Eye,
     LogOut,
     Palette,
-    Image as ImageIcon
+    Image as ImageIcon,
+    ShieldCheck,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Auth } from "@/lib/auth";
@@ -68,6 +69,7 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [org, setOrg] = useState<Organization | null>(null);
     const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+    const [userRole, setUserRole] = useState<"admin" | "owner" | "member">("member");
     const [activeTab, setActiveTab] = useState<"overview" | "keys" | "settings">("overview");
 
     // New Key State
@@ -114,6 +116,17 @@ export default function DashboardPage() {
                 });
             } else {
                 setOrg(orgData);
+            }
+
+            // Fetch Roll
+            const { data: memberData } = await supabase
+                .from("org_members")
+                .select("role")
+                .eq("user_id", user?.id)
+                .single();
+
+            if (memberData) {
+                setUserRole(memberData.role as any);
             }
 
             const orgId = orgData?.id || "mock-org-123";
@@ -260,28 +273,33 @@ export default function DashboardPage() {
                         <BarChart3 className="w-4 h-4" /> Overview
                     </button>
 
-                    <button
-                        onClick={() => setActiveTab("keys")}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium ${activeTab === "keys" ? "bg-primary/20 text-primary" : "text-white/70 hover:bg-white/5 hover:text-white"
-                            }`}
-                    >
-                        <Key className="w-4 h-4" /> API Keys
-                    </button>
+                    {(userRole === 'admin' || userRole === 'owner') && (
+                        <button
+                            onClick={() => setActiveTab("keys")}
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium ${activeTab === "keys" ? "bg-primary/20 text-primary" : "text-white/70 hover:bg-white/5 hover:text-white"
+                                }`}
+                        >
+                            <Key className="w-4 h-4" /> API Keys
+                        </button>
+                    )}
 
-                    <button
-                        onClick={() => setActiveTab("settings")}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium ${activeTab === "settings" ? "bg-primary/20 text-primary" : "text-white/70 hover:bg-white/5 hover:text-white"
-                            }`}
-                    >
-                        <Settings className="w-4 h-4" /> Settings
-                    </button>
+                    {(userRole === 'admin' || userRole === 'owner') && (
+                        <button
+                            onClick={() => setActiveTab("settings")}
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium ${activeTab === "settings" ? "bg-primary/20 text-primary" : "text-white/70 hover:bg-white/5 hover:text-white"
+                                }`}
+                        >
+                            <ShieldCheck className="w-4 h-4" /> Settings
+                        </button>
+                    )}
                 </div>
-            </motion.aside>
+            </motion.aside >
 
             {/* Main Content Area */}
-            <motion.div
+            < motion.div
                 key={activeTab}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 10 }
+                }
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
                 className="flex-1 space-y-6"
@@ -458,73 +476,76 @@ export default function DashboardPage() {
                             )}
                         </div>
                     </div>
-                )}
+                )
+                }
 
-                {activeTab === "settings" && (
-                    <div className="space-y-6">
-                        <h2 className="text-2xl font-bold tracking-tight">Organization Settings</h2>
+                {
+                    activeTab === "settings" && (
+                        <div className="space-y-6">
+                            <h2 className="text-2xl font-bold tracking-tight">Organization Settings</h2>
 
-                        <Card className="glass border-white/10">
-                            <CardHeader>
-                                <CardTitle>Brand Assets</CardTitle>
-                                <CardDescription>Personalize the devotional experience for your members.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
+                            <Card className="glass border-white/10">
+                                <CardHeader>
+                                    <CardTitle>Brand Assets</CardTitle>
+                                    <CardDescription>Personalize the devotional experience for your members.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
 
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Organization Name</label>
-                                    <input
-                                        type="text"
-                                        defaultValue={org?.name}
-                                        className="flex h-10 w-full rounded-md border border-white/20 bg-black/20 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium flex items-center gap-2">
-                                            <ImageIcon className="w-4 h-4" /> Church Logo URL
-                                        </label>
+                                        <label className="text-sm font-medium">Organization Name</label>
                                         <input
-                                            type="url"
-                                            placeholder="https://..."
-                                            defaultValue={org?.logo_url || ""}
-                                            className="flex h-10 w-full rounded-md border border-white/20 bg-black/20 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                            type="text"
+                                            defaultValue={org?.name}
+                                            className="flex h-10 w-full rounded-md border border-white/20 bg-black/20 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                                         />
-                                        <p className="text-xs text-white/50">Used at the top of the widget.</p>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium flex items-center gap-2">
-                                            <Palette className="w-4 h-4" /> Primary Brand Color
-                                        </label>
-                                        <div className="flex gap-3">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium flex items-center gap-2">
+                                                <ImageIcon className="w-4 h-4" /> Church Logo URL
+                                            </label>
                                             <input
-                                                type="color"
-                                                defaultValue={org?.brand_color || "#10b981"}
-                                                className="h-10 w-14 rounded-md border-0 bg-transparent cursor-pointer p-0"
+                                                type="url"
+                                                placeholder="https://..."
+                                                defaultValue={org?.logo_url || ""}
+                                                className="flex h-10 w-full rounded-md border border-white/20 bg-black/20 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                             />
-                                            <input
-                                                type="text"
-                                                defaultValue={org?.brand_color || "#10b981"}
-                                                className="flex-1 h-10 rounded-md border border-white/20 bg-black/20 px-3 py-2 text-sm ring-offset-background font-mono"
-                                            />
+                                            <p className="text-xs text-white/50">Used at the top of the widget.</p>
                                         </div>
-                                        <p className="text-xs text-white/50">Buttons and accent text will use this color.</p>
-                                    </div>
-                                </div>
 
-                            </CardContent>
-                            <CardFooter className="border-t border-white/10 bg-black/20 pt-4">
-                                <Button onClick={() => toast.success("Settings saved")}>Save Changes</Button>
-                            </CardFooter>
-                        </Card>
-                    </div>
-                )}
-            </motion.div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium flex items-center gap-2">
+                                                <Palette className="w-4 h-4" /> Primary Brand Color
+                                            </label>
+                                            <div className="flex gap-3">
+                                                <input
+                                                    type="color"
+                                                    defaultValue={org?.brand_color || "#10b981"}
+                                                    className="h-10 w-14 rounded-md border-0 bg-transparent cursor-pointer p-0"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    defaultValue={org?.brand_color || "#10b981"}
+                                                    className="flex-1 h-10 rounded-md border border-white/20 bg-black/20 px-3 py-2 text-sm ring-offset-background font-mono"
+                                                />
+                                            </div>
+                                            <p className="text-xs text-white/50">Buttons and accent text will use this color.</p>
+                                        </div>
+                                    </div>
+
+                                </CardContent>
+                                <CardFooter className="border-t border-white/10 bg-black/20 pt-4">
+                                    <Button onClick={() => toast.success("Settings saved")}>Save Changes</Button>
+                                </CardFooter>
+                            </Card>
+                        </div>
+                    )
+                }
+            </motion.div >
 
             {/* New Key Generation Dialog */}
-            <Dialog open={showNewKeyDialog} onOpenChange={(open) => {
+            < Dialog open={showNewKeyDialog} onOpenChange={(open) => {
                 if (!open && !generatedPlainKey) {
                     setShowNewKeyDialog(false);
                 } else if (!open && generatedPlainKey) {
@@ -599,7 +620,7 @@ export default function DashboardPage() {
                         )}
                     </DialogFooter>
                 </DialogContent>
-            </Dialog>
-        </div>
+            </Dialog >
+        </div >
     );
 }
