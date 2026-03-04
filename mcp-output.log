@@ -1,0 +1,15 @@
+Connected to MCP server
+Error calling search_devotions: McpError: MCP error -32603: Database search failed: Could not find the table 'public.devotions' in the schema cache
+    at Function.fromError (/Users/shadreckmusarurwa/Project AI/jkc-devotion-app/node_modules/@modelcontextprotocol/sdk/src/types.ts:2316:16)
+    at Client._onresponse (/Users/shadreckmusarurwa/Project AI/jkc-devotion-app/node_modules/@modelcontextprotocol/sdk/src/shared/protocol.ts:921:36)
+    at StdioClientTransport._transport.onmessage (/Users/shadreckmusarurwa/Project AI/jkc-devotion-app/node_modules/@modelcontextprotocol/sdk/src/shared/protocol.ts:631:22)
+    at StdioClientTransport.processReadBuffer (/Users/shadreckmusarurwa/Project AI/jkc-devotion-app/node_modules/@modelcontextprotocol/sdk/src/client/stdio.ts:197:33)
+    at Socket.<anonymous> (/Users/shadreckmusarurwa/Project AI/jkc-devotion-app/node_modules/@modelcontextprotocol/sdk/src/client/stdio.ts:152:22)
+    at Socket.emit (node:events:524:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:191:23) {
+  code: -32603,
+  data: undefined
+}

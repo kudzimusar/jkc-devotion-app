@@ -63,6 +63,10 @@ export const Auth = {
             };
         } catch (err) {
             const error = err as Error;
+            // Check specifically for email not confirmed error from Supabase
+            if (error.message.includes('Email not confirmed')) {
+                return { success: false, error: 'Email not confirmed', user: { email } as User };
+            }
             return { success: false, error: error.message };
         }
     },
@@ -79,6 +83,24 @@ export const Auth = {
 
             const user = await this.getCurrentUser();
             return { success: true, user: user || undefined };
+        } catch (err) {
+            const error = err as Error;
+            if (error.message.includes('Email not confirmed')) {
+                return { success: false, error: 'Email not confirmed', user: { email } as User };
+            }
+            return { success: false, error: error.message };
+        }
+    },
+
+    // Resend Confirmation Email
+    async resendConfirmation(email: string): Promise<AuthResponse> {
+        try {
+            const { error } = await supabase.auth.resend({
+                type: 'signup',
+                email
+            });
+            if (error) throw error;
+            return { success: true };
         } catch (err) {
             const error = err as Error;
             return { success: false, error: error.message };

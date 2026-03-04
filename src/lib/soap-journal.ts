@@ -85,21 +85,34 @@ export const SoapJournal = {
     },
 
     // Calculate stats: completion total and current streak
-    async getStats(): Promise<{ completed: number; total: number; streak: number }> {
+    async getStats(): Promise<{ completed: number; total: number; streak: number; lastCompletedJST: string | null }> {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return { completed: 0, total: 90, streak: 0 };
+        if (!user) return { completed: 0, total: 90, streak: 0, lastCompletedJST: null };
 
         const { data, error } = await supabase
             .from('soap_entries')
-            .select('day_number')
+            .select('day_number, updated_at')
             .order('day_number', { ascending: false });
 
-        if (error || !data) return { completed: 0, total: 90, streak: 0 };
+        if (error || !data) return { completed: 0, total: 90, streak: 0, lastCompletedJST: null };
 
         const completed = data.length;
         let streak = 0;
+        let lastCompletedJST = null;
 
         if (data.length > 0) {
+            // Get current JST date in YYYY-MM-DD
+            const jstFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo' });
+            const currentJstDate = jstFormatter.format(new Date());
+
+            // Check if the most recent entry was completed today in JST
+            if (data[0].updated_at) {
+                const entryJstDate = jstFormatter.format(new Date(data[0].updated_at));
+                if (entryJstDate === currentJstDate) {
+                    lastCompletedJST = entryJstDate;
+                }
+            }
+
             const dayNumbers = data.map(d => d.day_number);
             let current = dayNumbers[0];
             streak = 1;
@@ -114,7 +127,7 @@ export const SoapJournal = {
             }
         }
 
-        return { completed, total: 90, streak };
+        return { completed, total: 90, streak, lastCompletedJST };
     },
 
     getDefaultEntry(dayNumber: number): SoapEntry {

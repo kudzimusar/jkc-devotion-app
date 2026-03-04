@@ -1,0 +1,28 @@
+{
+    "name": "transformed-life-mcp",
+    "version": "1.0.0",
+    "description": "MCP Server exposing Transformed Life devotions, tools to search themes and weekly summaries.",
+    "transport": [
+        "stdio",
+        "sse"
+    ],
+    "resources": {
+        "daily://devotional": "Today's Devotion",
+        "daily://devotional/ja": "Today's Devotion (Japanese)"
+    },
+    "tools": {
+        "search_devotions": {
+            "description": "Search across all devotions by text query and optionally theme.",
+            "parameters": {
+                "query": "string (required)",
+                "theme": "string (optional)"
+            }
+        },
+        "get_weekly_overview": {
+            "description": "Get the theme and summary for a specific week of the March curriculum.",
+            "parameters": {
+                "week_number": "number (required)"
+            }
+        }
+    }
+}

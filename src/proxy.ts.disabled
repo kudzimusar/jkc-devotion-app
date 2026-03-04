@@ -1,0 +1,116 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest, NextFetchEvent } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+// Setup Supabase Service Role client to bypass RLS for API key validation and org checks
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+async function hashApiKey(apiKey: string): Promise<string> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(apiKey);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Next.js 16 requires either a default export or a named "proxy" export
+export async function proxy(request: NextRequest, event: NextFetchEvent) {
+    const pathname = request.nextUrl.pathname;
+    const url = request.nextUrl.clone();
+
+    // 1. Handle API Security for /api/v1/
+    if (pathname.startsWith('/api/v1/') || pathname.startsWith('/app/api/v1/')) {
+        const securityFailure = (message: string, code: number = 401) => {
+            return new NextResponse(
+                JSON.stringify({ error: "security_violation", message, code }),
+                { status: code, headers: { 'content-type': 'application/json' } }
+            );
+        };
+
+        const apiKey = request.headers.get('x-api-key');
+        if (!apiKey) return securityFailure('Missing API Key', 401);
+
+        try {
+            const keyHash = await hashApiKey(apiKey);
+            const { data: keyData, error } = await supabase
+                .from('api_keys')
+                .select(`id, is_active, org_id, organizations(domain)`)
+                .eq('key_hash', keyHash)
+                .single();
+
+            if (error || !keyData) return securityFailure('Invalid API Key', 401);
+            if (keyData.is_active !== true) return securityFailure('API Key is inactive', 401);
+
+            const originHeader = request.headers.get('origin') || request.headers.get('referer');
+            const isDev = process.env.NODE_ENV === 'development';
+            const org = Array.isArray(keyData.organizations) ? keyData.organizations[0] : keyData.organizations;
+            const allowedDomain = org?.domain;
+
+            let domainMatch = false;
+            if (originHeader) {
+                try {
+                    const originUrl = new URL(originHeader);
+                    if (originUrl.hostname === allowedDomain || (isDev && (originUrl.hostname === 'localhost' || originUrl.hostname === '127.0.0.1'))) {
+                        domainMatch = true;
+                    }
+                } catch (e) {
+                    if (originHeader === allowedDomain || (isDev && (originHeader === 'localhost' || originHeader === '127.0.0.1'))) {
+                        domainMatch = true;
+                    }
+                }
+            } else if (isDev) {
+                domainMatch = true;
+            }
+
+            if (!domainMatch) return securityFailure(`Domain Mismatch: ${originHeader || 'None'} not allowed`, 403);
+
+            event.waitUntil(
+                (async () => {
+                    await supabase.from('api_keys').update({ last_used_at: new Date().toISOString() }).eq('id', keyData.id);
+                })()
+            );
+
+            const requestHeaders = new Headers(request.headers);
+            requestHeaders.set('x-org-id', keyData.org_id);
+            return NextResponse.next({ request: { headers: requestHeaders } });
+        } catch (e) {
+            return securityFailure('Internal Server Error', 500);
+        }
+    }
+
+    // 2. Handle Onboarding Redirection for /admin and /onboarding
+    if (pathname.startsWith('/admin') || pathname.startsWith('/onboarding')) {
+        // Simple auth check via headers or session
+        // Note: middleware/proxy runs in edge runtime
+        const authHeader = request.headers.get('Authorization');
+        const { data: { user } } = await supabase.auth.getUser(authHeader?.split(' ')[1]);
+
+        if (!user) return NextResponse.next();
+
+        const { data: member, error: memberError } = await supabase
+            .from('org_members')
+            .select('org_id')
+            .eq('user_id', user.id)
+            .single();
+
+        const hasOrg = !memberError && member?.org_id;
+
+        if (pathname.startsWith('/onboarding') && hasOrg) {
+            url.pathname = '/admin';
+            return NextResponse.redirect(url);
+        }
+
+        if (pathname.startsWith('/admin') && !hasOrg) {
+            url.pathname = '/onboarding';
+            return NextResponse.redirect(url);
+        }
+    }
+
+    return NextResponse.next();
+}
+
+export const config = {
+    matcher: ['/api/v1/:path*', '/app/api/v1/:path*', '/admin/:path*', '/onboarding/:path*'],
+};

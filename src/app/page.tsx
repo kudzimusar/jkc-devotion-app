@@ -30,12 +30,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { getDevotionForDate, Devotion } from "@/data/devotions";
+import { getDevotionForDate, Devotion } from "@/lib/devotions-service";
 import { BibleApi, BibleVerse, BibleRef } from "@/lib/bible-api";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Auth, User as AuthUser } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
+import { Auth } from "@/lib/auth";
+import type { User as AuthUser } from "@/lib/auth";
 import { SoapJournal, SoapEntry, SOAP_EXPLANATION } from "@/lib/soap-journal";
 
 const WEEK_THEMES = [
@@ -53,7 +57,7 @@ export default function DevotionalApp() {
   const [devotion, setDevotion] = useState<Devotion | undefined>();
   const [verses, setVerses] = useState<BibleVerse[]>([]);
   const [jpVerses, setJpVerses] = useState<BibleVerse[]>([]);
-  const [lang, setLang] = useState<"EN" | "JP">("EN");
+  const [lang, setLang] = useState<"EN" | "JP" | "BOTH">("EN");
   const [loading, setLoading] = useState(false);
   const [note, setNote] = useState("");
   const [declarationMode, setDeclarationMode] = useState(false);
@@ -61,6 +65,7 @@ export default function DevotionalApp() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authMode, setAuthMode] = useState<"login" | "register" | "profile">("login");
   const [preferredTime, setPreferredTime] = useState("07:30");
+  const [emailNotConfirmed, setEmailNotConfirmed] = useState(false);
 
   // SOAP State
   const [soapEntry, setSoapEntry] = useState<SoapEntry>({
@@ -76,7 +81,7 @@ export default function DevotionalApp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [stats, setStats] = useState({ completed: 0, total: 31, streak: 0 });
+  const [stats, setStats] = useState<{ completed: number; total: number; streak: number; lastCompletedJST: string | null }>({ completed: 0, total: 31, streak: 0, lastCompletedJST: null });
 
   const loadStats = async () => {
     if (user) {
@@ -90,17 +95,32 @@ export default function DevotionalApp() {
   }, [user]);
 
   useEffect(() => {
+    // Check active session on mount
     const initAuth = async () => {
       const currentUser = await Auth.getCurrentUser();
       setUser(currentUser);
     };
     initAuth();
+
+    // Listen for auth changes (login, logout, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const currentUser = await Auth.getCurrentUser();
+        setUser(currentUser);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
     const loadDayData = async () => {
       const dateStr = format(currentDate, "yyyy-MM-dd");
-      const d = getDevotionForDate(dateStr);
+      const d = await getDevotionForDate(dateStr) || undefined;
       setDevotion(d);
 
       if (d) {
@@ -155,24 +175,44 @@ export default function DevotionalApp() {
   };
 
   const handleLogin = async () => {
+    setEmailNotConfirmed(false);
     const res = await Auth.login(email, password);
     if (res.success) {
       setUser(res.user as AuthUser);
       toast.success("Logged in successfully");
       setShowSettings(false);
     } else {
-      toast.error(res.error || "Login failed");
+      if (res.error === 'Email not confirmed') {
+        setEmailNotConfirmed(true);
+      } else {
+        toast.error(res.error || "Login failed");
+      }
     }
   };
 
   const handleRegister = async () => {
+    setEmailNotConfirmed(false);
     const res = await Auth.createAccount(email, password, name);
     if (res.success) {
       setUser(res.user as AuthUser);
       toast.success("Account created successfully");
       setShowSettings(false);
     } else {
-      toast.error(res.error || "Registration failed");
+      if (res.error === 'Email not confirmed') {
+        setEmailNotConfirmed(true);
+      } else {
+        toast.error(res.error || "Registration failed");
+      }
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    const res = await Auth.resendConfirmation(email);
+    if (res.success) {
+      toast.success("Confirmation email resent. Please check your inbox.");
+      setEmailNotConfirmed(false);
+    } else {
+      toast.error(res.error || "Failed to resend confirmation");
     }
   };
 
@@ -182,7 +222,7 @@ export default function DevotionalApp() {
   };
 
   const currentWeek = WEEK_THEMES.find(w => w.week === devotion?.week);
-  const activeVerses = lang === "EN" ? verses : jpVerses;
+  const activeVerses = lang === "JP" ? jpVerses : verses; // Base loop is driven by EN or JP. Both overrides rendering inside.
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-8 relative overflow-hidden">
@@ -213,9 +253,25 @@ export default function DevotionalApp() {
           >
             <Settings className="w-5 h-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="rounded-full shadow-sm glass border-white/20">
-            <Calendar className="w-5 h-5" />
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full shadow-sm glass border-white/20">
+                <Calendar className="w-5 h-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <CalendarComponent
+                mode="single"
+                selected={currentDate}
+                onSelect={(date) => {
+                  if (date) {
+                    setCurrentDate(date);
+                  }
+                }}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </header>
 
@@ -303,9 +359,16 @@ export default function DevotionalApp() {
                   <p className="text-xs opacity-60 uppercase tracking-widest font-medium">{format(currentDate, "EEEE, MMMM d")}</p>
                 </div>
               </div>
-              <Badge className="bg-[var(--primary)] text-white font-bold rounded-full">
-                DAY {devotion?.id}
-              </Badge>
+              <div className="flex items-center gap-2">
+                {stats.lastCompletedJST === new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo' }).format(new Date(currentDate)) && (
+                  <Badge className="bg-green-500/20 text-green-700 dark:text-green-400 font-bold border-0 hidden sm:inline-flex">
+                    ✓ COMPLETED
+                  </Badge>
+                )}
+                <Badge className="bg-[var(--primary)] text-white font-bold rounded-full">
+                  DAY {devotion?.id}
+                </Badge>
+              </div>
             </div>
           </div>
 
@@ -362,10 +425,15 @@ export default function DevotionalApp() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 rounded-full text-xs font-bold gap-1 px-3 glass"
-                    onClick={() => setLang(l => l === "EN" ? "JP" : "EN")}
+                    className="h-8 rounded-full text-xs font-bold gap-1 px-3 glass whitespace-nowrap"
+                    onClick={() => {
+                      if (lang === "EN") setLang("JP");
+                      else if (lang === "JP") setLang("BOTH");
+                      else setLang("EN");
+                    }}
                   >
-                    <Globe className="w-3 h-3 text-[var(--primary)]" /> {lang === "EN" ? "NASB" : "口語訳 (JBS)"}
+                    <Globe className="w-3 h-3 text-[var(--primary)]" />
+                    {lang === "EN" ? "NASB" : lang === "JP" ? "口語訳 (JBS)" : "EN / JP"}
                   </Button>
                 </div>
 
@@ -378,14 +446,24 @@ export default function DevotionalApp() {
                     </div>
                   ) : activeVerses.length > 0 ? (
                     activeVerses.map((v, i) => (
-                      <span key={i}>
+                      <span key={i} className={lang === "BOTH" ? "block mb-4" : ""}>
                         {(v.verse === 1 || (i > 0 && activeVerses[i - 1].bookName !== v.bookName)) && (
                           <span className="block font-bold text-sm text-[var(--primary)] mt-6 mb-1 uppercase tracking-wider">
                             {v.bookName} {v.chapter}
                           </span>
                         )}
-                        <sup className="text-[var(--primary)] font-bold text-[10px] mr-1">{v.verse}</sup>
-                        {v.text}{" "}
+                        <span className={lang === "BOTH" ? "block" : ""}>
+                          <sup className="text-[var(--primary)] font-bold text-[10px] mr-1">{v.verse}</sup>
+                          {v.text}{" "}
+                        </span>
+
+                        {/* Secondary rendering for Bilingual View */}
+                        {lang === "BOTH" && jpVerses[i] && (
+                          <span className="block mt-1 text-base opacity-75">
+                            <sup className="text-[var(--primary)] font-bold text-[10px] mr-1">{jpVerses[i].verse}</sup>
+                            {jpVerses[i].text}
+                          </span>
+                        )}
                       </span>
                     ))
                   ) : (
@@ -548,9 +626,18 @@ export default function DevotionalApp() {
                       value={password}
                       onChange={e => setPassword(e.target.value)}
                     />
-                    <Button type="submit" className="w-full h-12 rounded-full bg-[var(--primary)] font-bold text-white shadow-lg">
-                      SIGN IN
-                    </Button>
+                    {emailNotConfirmed ? (
+                      <div className="bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 p-4 rounded-2xl text-sm font-medium border border-yellow-500/20 flex flex-col gap-3">
+                        <p>Your email address has not been confirmed yet.</p>
+                        <Button type="button" variant="outline" className="w-full border-yellow-500/30 hover:bg-yellow-500/10" onClick={handleResendConfirmation}>
+                          Resend Confirmation Email
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button type="submit" className="w-full h-12 rounded-full bg-[var(--primary)] font-bold text-white shadow-lg">
+                        SIGN IN
+                      </Button>
+                    )}
                   </form>
                 </TabsContent>
 
@@ -577,9 +664,18 @@ export default function DevotionalApp() {
                       value={password}
                       onChange={e => setPassword(e.target.value)}
                     />
-                    <Button type="submit" className="w-full h-12 rounded-full bg-[var(--primary)] font-bold text-white shadow-lg">
-                      CREATE ACCOUNT
-                    </Button>
+                    {emailNotConfirmed ? (
+                      <div className="bg-yellow-500/10 text-yellow-600 p-4 rounded-2xl text-sm font-medium border border-yellow-500/20 flex flex-col gap-3">
+                        <p>Registration successful! Please confirm your email.</p>
+                        <Button type="button" variant="outline" className="w-full border-yellow-500/30 hover:bg-yellow-500/10" onClick={handleResendConfirmation}>
+                          Resend Confirmation Email
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button type="submit" className="w-full h-12 rounded-full bg-[var(--primary)] font-bold text-white shadow-lg">
+                        CREATE ACCOUNT
+                      </Button>
+                    )}
                   </form>
                 </TabsContent>
               </Tabs>

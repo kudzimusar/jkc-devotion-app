@@ -1,0 +1,10 @@
+Connected to MCP server
+Response from search_devotions:
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "[\n  {\n    \"id\": 1,\n    \"date\": \"2026-03-01\",\n    \"week\": 1,\n    \"theme\": \"The Foundation of Forgiveness\",\n    \"title\": \"My life in Christ begins with my forgiveness.\",\n    \"scripture\": \"Acts 2:38\",\n    \"declaration\": \"My life in Christ begins with my forgiveness.\",\n    \"week_theme\": \"Forgiveness\"\n  },\n  {\n    \"id\": 2,\n    \"date\": \"2026-03-02\",\n    \"week\": 1,\n    \"theme\": \"The Foundation of Forgiveness\",\n    \"title\": \"I have forgiveness through Jesus' blood.\",\n    \"scripture\": \"Ephesians 1:7\",\n    \"declaration\": \"I have forgiveness through Jesus' blood.\",\n    \"week_theme\": \"Forgiveness\"\n  },\n  {\n    \"id\": 3,\n    \"date\": \"2026-03-03\",\n    \"week\": 1,\n    \"theme\": \"The Foundation of Forgiveness\",\n    \"title\": \"God is always ready to forgive me.\",\n    \"scripture\": \"1 John 1:9\",\n    \"declaration\": \"God is always ready to forgive me.\",\n    \"week_theme\": \"Forgiveness\"\n  },\n  {\n    \"id\": 4,\n    \"date\": \"2026-03-04\",\n    \"week\": 1,\n    \"theme\": \"The Foundation of Forgiveness\",\n    \"title\": \"I should always be ready to forgive.\",\n    \"scripture\": \"Matthew 18:21-22\",\n    \"declaration\": \"I should always be ready to forgive.\",\n    \"week_theme\": \"Forgiveness\"\n  },\n  {\n    \"id\": 5,\n    \"date\": \"2026-03-05\",\n    \"week\": 1,\n    \"theme\": \"The Foundation of Forgiveness\",\n    \"title\": \"I choose not to judge others, but forgive.\",\n    \"scripture\": \"Luke 6:37\",\n    \"declaration\": \"I choose not to judge others, but forgive.\",\n    \"week_theme\": \"Forgiveness\"\n  }\n]"
+    }
+  ]
+}
