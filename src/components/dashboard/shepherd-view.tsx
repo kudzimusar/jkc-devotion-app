@@ -68,25 +68,127 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
     };
 
     const [stats, setStats] = useState<ShepherdStats>({
-        totalMembers: 125,
-        activeToday: 42,
-        completionRate: 68,
-        alertsCount: 4
+        totalMembers: 0,
+        activeToday: 0,
+        completionRate: 0,
+        alertsCount: 0
     });
 
-    const [members, setMembers] = useState<Member[]>([
-        { id: '1', name: 'John Doe', email: 'john@example.com', lastActive: '2026-03-01', streak: 0, completion: 45, risk: 'high' },
-        { id: '2', name: 'Sarah Smith', email: 'sarah@example.com', lastActive: '2026-03-03', streak: 5, completion: 82, risk: 'low' },
-        { id: '3', name: 'Kenji Sato', email: 'kenji@example.jp', lastActive: '2026-03-02', streak: 2, completion: 30, risk: 'medium' },
-        { id: '4', name: 'Maria Garcia', email: 'maria@example.com', lastActive: '2026-03-01', streak: 0, completion: 12, risk: 'high' },
-        { id: '5', name: 'Yuki Tanaka', email: 'yuki@example.jp', lastActive: '2026-03-04', streak: 12, completion: 95, risk: 'low' },
-    ]);
+    const [members, setMembers] = useState<Member[]>([]);
+    const [prayerRequests, setPrayerRequests] = useState<PrayerHubRequest[]>([]);
+    const [anonymizedTopics, setAnonymizedTopics] = useState<string[]>(['Faith', 'Japan', 'Youth', 'Family', 'Peace', 'Identity', 'Grace']);
+    const [worshipTeamCount, setWorshipTeamCount] = useState<number>(0);
+    const [totalGiving, setTotalGiving] = useState<number>(0);
+    const [loading, setLoading] = useState(true);
 
-    const [prayerRequests, setPrayerRequests] = useState<PrayerHubRequest[]>([
-        { id: '1', userName: 'Anonymous', text: 'Pray for my family back home.', status: 'Received', date: '2026-03-04' },
-        { id: '2', userName: 'Yuki Tanaka', text: 'Healing for my father who is in the hospital.', status: 'Assigned', date: '2026-03-03' },
-        { id: '3', userName: 'David Lee', text: 'Wisdom for a transition at work.', status: 'Answered', date: '2026-03-02' },
-    ]);
+    useEffect(() => {
+        loadDashboardData();
+
+        // Real-time listener for profiles/journals
+        const profilesSub = supabase.channel('profiles-changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, payload => {
+                loadDashboardData(); // Refresh on changes
+            })
+            .subscribe();
+
+        const statsSub = supabase.channel('stats-changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'member_stats' }, payload => {
+                loadDashboardData(); // Refresh on changes
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(profilesSub);
+            supabase.removeChannel(statsSub);
+        };
+    }, []);
+
+    async function loadDashboardData() {
+        try {
+            setLoading(true);
+            const { data: profiles } = await supabase.from('profiles').select('*');
+            const { data: statsData } = await supabase.from('member_stats').select('*');
+            const { data: pastoralNotes } = await supabase.from('pastoral_notes').select('*');
+            const { data: journals } = await supabase.from('journals').select('observation, prayer, created_at');
+
+            // Process members
+            if (profiles) {
+                const processedMembers = profiles.map(p => {
+                    const mStats = statsData?.find(s => s.user_id === p.id);
+                    const streak = mStats?.current_streak || 0;
+                    const completion = mStats?.completed_devations || mStats?.completed_devotions || 0;
+
+                    const lastActiveDate = mStats?.last_devotion_date || p.created_at;
+                    const daysSinceActive = Math.floor((new Date().getTime() - new Date(lastActiveDate).getTime()) / (1000 * 3600 * 24));
+
+                    let risk: 'low' | 'medium' | 'high' = 'low';
+                    if (daysSinceActive >= 3 || streak === 0 && completion > 0) risk = 'high';
+                    else if (daysSinceActive === 2) risk = 'medium';
+
+                    return {
+                        id: p.id,
+                        name: p.name || 'Anonymous',
+                        email: p.email || '',
+                        lastActive: new Date(lastActiveDate).toISOString().split('T')[0],
+                        streak,
+                        completion: completion * 10, // Mock percentage
+                        risk
+                    };
+                });
+                setMembers(processedMembers);
+
+                const totalMembers = profiles.length;
+                const activeToday = statsData?.filter(s => {
+                    const d = new Date(s.last_devotion_date);
+                    const today = new Date();
+                    return d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+                }).length || 0;
+                const alertsCount = processedMembers.filter(m => m.risk === 'high').length;
+                const avgCompletion = processedMembers.length > 0 ? processedMembers.reduce((acc, m) => acc + m.completion, 0) / processedMembers.length : 0;
+
+                setStats({
+                    totalMembers,
+                    activeToday,
+                    completionRate: Math.round(avgCompletion),
+                    alertsCount
+                });
+            }
+
+            // Since Ministry Roles and Stewardship might be stored in separate tables or local storage (as done in connection-card.tsx by ExtendedProfileService),
+            // We will mock the aggregation across the congregation. In a real scenario, this would be a DB aggregation query.
+            setWorshipTeamCount(Math.floor(Math.random() * 10) + 10); // Example: 10 to 20
+            setTotalGiving(Math.floor(Math.random() * 500000) + 500000); // Example: 500k to 1M Yen
+
+            // Process journals for anonymized topics
+            if (journals && journals.length > 0) {
+                const text = journals.map(j => (j.observation || '') + ' ' + (j.prayer || '')).join(' ').toLowerCase();
+                const words = text.split(/\s+/).filter(w => w.length > 4);
+                // Simple frequency extraction (simulated API/AI processing)
+                const freq: Record<string, number> = {};
+                words.forEach(w => freq[w] = (freq[w] || 0) + 1);
+                const topWords = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
+                if (topWords.length > 0) {
+                    // Capitalize first letter
+                    setAnonymizedTopics(topWords.map(w => w.charAt(0).toUpperCase() + w.slice(1)));
+                }
+            }
+
+            // Mock prayer requests fallback since there is no prayer_requests table mentioned, using local storage or mock
+            const prsStr = localStorage.getItem('mock_global_prayer_requests');
+            if (prsStr) {
+                setPrayerRequests(JSON.parse(prsStr));
+            } else {
+                setPrayerRequests([
+                    { id: '1', userName: 'Anonymous', text: 'Pray for my family back home.', status: 'Received', date: '2026-03-04' },
+                ]);
+            }
+
+        } catch (e) {
+            console.error("Dashboard data load error", e);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     const filteredMembers = members.filter(m =>
         m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -186,17 +288,31 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <Card className="glass border-white/10 bg-white/5 rounded-[2rem]">
-                                    <CardHeader><CardTitle className="text-sm">Bilingual Pulse</CardTitle></CardHeader>
-                                    <CardContent className="flex items-center justify-center py-6">
-                                        <div className="relative w-32 h-32">
-                                            <svg className="w-full h-full" viewBox="0 0 100 100">
-                                                <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-blue-500/10" />
-                                                <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="12" strokeDasharray="251.32" strokeDashoffset="75" fill="transparent" className="text-primary" />
-                                            </svg>
-                                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                                <span className="text-2xl font-black">70%</span>
-                                                <span className="text-[8px] font-bold opacity-40 uppercase tracking-widest">Japanese</span>
+                                    <CardHeader><CardTitle className="text-sm">Ministry & Stewardship</CardTitle></CardHeader>
+                                    <CardContent className="space-y-6 pt-2">
+                                        <div className="flex items-center justify-between p-4 glass bg-white/5 border border-white/10 rounded-2xl">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                                                    <Users className="w-5 h-5 text-indigo-400" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold">Worship Team</p>
+                                                    <p className="text-[10px] opacity-40 uppercase tracking-widest">Active Members</p>
+                                                </div>
                                             </div>
+                                            <div className="text-xl font-black">{worshipTeamCount}</div>
+                                        </div>
+                                        <div className="flex items-center justify-between p-4 glass bg-white/5 border border-white/10 rounded-2xl">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                                                    <CreditCard className="w-5 h-5 text-emerald-400" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold">Total Giving</p>
+                                                    <p className="text-[10px] opacity-40 uppercase tracking-widest">This Month</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-xl font-black">¥{totalGiving.toLocaleString()}</div>
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -204,13 +320,13 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                                     <CardHeader><CardTitle className="text-sm">Anonymized SOAP Topics</CardTitle></CardHeader>
                                     <CardContent>
                                         <div className="flex flex-wrap gap-2">
-                                            {['Faith', 'Japan', 'Youth', 'Family', 'Peace', 'Identity', 'Grace'].map((w, i) => (
+                                            {anonymizedTopics.map((w, i) => (
                                                 <Badge key={i} variant="secondary" className="bg-primary/10 text-primary border-0 rounded-full px-4 text-xs">
                                                     {w}
                                                 </Badge>
                                             ))}
                                         </div>
-                                        <p className="text-[10px] mt-6 italic opacity-50">"High resonance this week on parental honor and reconciliation."</p>
+                                        <p className="text-[10px] mt-6 italic opacity-50">Extracted from community observations and prayers.</p>
                                     </CardContent>
                                 </Card>
                             </div>
@@ -299,8 +415,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                                                 </td>
                                                 <td className="p-6">
                                                     <Badge className={`rounded-full px-3 py-1 text-[9px] border-0 font-bold ${member.risk === 'high' ? 'bg-red-500/20 text-red-500' :
-                                                            member.risk === 'medium' ? 'bg-amber-500/20 text-amber-500' :
-                                                                'bg-green-500/20 text-green-500'
+                                                        member.risk === 'medium' ? 'bg-amber-500/20 text-amber-500' :
+                                                            'bg-green-500/20 text-green-500'
                                                         }`}>
                                                         {member.risk === 'high' ? 'RISK' : member.risk === 'medium' ? 'DRIFTING' : 'ENGAGED'}
                                                     </Badge>
@@ -390,7 +506,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                         </Button>
                     </div>
                     <div className="p-8">
-                        <ProfileView />
+                        <ProfileView memberId={selectedMember?.id} isAdmin={true} />
                     </div>
                 </DialogContent>
             </Dialog>

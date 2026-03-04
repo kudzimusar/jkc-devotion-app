@@ -19,7 +19,7 @@ import {
     Globe,
     Milestone
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase, AnalyticsService, ExtendedProfileService } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -40,11 +40,37 @@ interface ProfileData {
     preferred_language?: string;
 }
 
-export function ProfileView() {
+interface ProfileViewProps {
+    memberId?: string;
+    isAdmin?: boolean;
+}
+
+export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<ProfileData | null>(null);
     const [stats, setStats] = useState({ completed: 0, streak: 0 });
     const [saving, setSaving] = useState(false);
+    const [pastoralNotes, setPastoralNotes] = useState("");
+    const [savingNotes, setSavingNotes] = useState(false);
+
+    // New Module States
+    const [household, setHousehold] = useState<any[]>([]);
+    const [newHouseholdName, setNewHouseholdName] = useState("");
+    const [newHouseholdRel, setNewHouseholdRel] = useState("Spouse");
+
+    const [prayers, setPrayers] = useState<any[]>([]);
+    const [newPrayer, setNewPrayer] = useState("");
+
+    const [ministryRoles, setMinistryRoles] = useState<any[]>([
+        { id: 1, role: 'Media/Tech Team', status: 'ACTIVE' },
+        { id: 2, role: 'Hospitality', status: 'PAST' }
+    ]);
+    const [newMinistry, setNewMinistry] = useState("");
+
+    const [stewardship, setStewardship] = useState<any[]>([
+        { id: 1, date: '2026-03-01', fund: 'Tithe', amount: 50000 },
+        { id: 2, date: '2026-02-01', fund: 'Tithe', amount: 50000 }
+    ]);
 
     useEffect(() => {
         loadProfile();
@@ -54,19 +80,21 @@ export function ProfileView() {
         try {
             setLoading(true);
             const { data: { user: authUser } } = await supabase.auth.getUser();
-            if (!authUser) return;
+            const targetId = memberId || authUser?.id;
+
+            if (!targetId) return;
 
             const { data: profileData } = await supabase
                 .from('profiles')
                 .select('*')
-                .eq('id', authUser.id)
+                .eq('id', targetId)
                 .single();
 
             if (profileData) {
                 setProfile({
-                    id: authUser.id,
+                    id: targetId,
                     name: profileData.name || '',
-                    email: authUser.email || '',
+                    email: authUser?.email || '', // In a real app we'd fetch member's email securely, maybe we can ignore it if not available
                     birthdate: profileData.birthdate,
                     wedding_anniversary: profileData.wedding_anniversary,
                     physical_address: profileData.physical_address,
@@ -74,14 +102,44 @@ export function ProfileView() {
                     country_of_origin: profileData.country_of_origin,
                     preferred_language: profileData.preferred_language || 'EN',
                 });
+            } else if (authUser && !memberId) {
+                setProfile({
+                    id: targetId,
+                    name: '',
+                    email: authUser?.email || '',
+                });
             }
 
+            // Load custom tabs data
+            const hh = await ExtendedProfileService.getLocal(`hh_${targetId}`, []);
+            setHousehold(hh);
+            const pr = await ExtendedProfileService.getLocal(`pr_${targetId}`, []);
+            setPrayers(pr);
+            const mr = await ExtendedProfileService.getLocal(`mr_${targetId}`, ministryRoles);
+            setMinistryRoles(mr);
+
             // Load Stats
-            const journalStats = await SoapJournal.getStats();
+            let journalStats = { completed: 0, streak: 0 };
+            if (!memberId || memberId === authUser?.id) {
+                journalStats = await SoapJournal.getStats();
+            } else {
+                const { data: statsData } = await supabase.from('member_stats').select('*').eq('user_id', targetId).single();
+                if (statsData) {
+                    journalStats = { completed: statsData.completed_devotions || 0, streak: statsData.current_streak || 0 };
+                }
+            }
+
             setStats({
                 completed: journalStats.completed,
                 streak: journalStats.streak
             });
+
+            if (isAdmin && targetId) {
+                const { data: notesData } = await supabase.from('pastoral_notes').select('notes').eq('member_id', targetId).single();
+                if (notesData) {
+                    setPastoralNotes(notesData.notes || '');
+                }
+            }
 
         } catch (err) {
             console.error(err);
@@ -118,6 +176,66 @@ export function ProfileView() {
         }
     }
 
+    const handleAddHousehold = async () => {
+        if (!newHouseholdName) return;
+        const nh = [...household, { id: Date.now(), name: newHouseholdName, relationship: newHouseholdRel }];
+        setHousehold(nh);
+        if (profile) {
+            await ExtendedProfileService.saveLocal(`hh_${profile.id}`, nh);
+            AnalyticsService.logEvent(profile.id, 'household_updated', { household: nh });
+        }
+        setNewHouseholdName("");
+    }
+
+    const handleAddPrayer = async () => {
+        if (!newPrayer) return;
+        const np = [...prayers, { id: Date.now(), text: newPrayer, status: 'PENDING' }];
+        setPrayers(np);
+        if (profile) {
+            await ExtendedProfileService.saveLocal(`pr_${profile.id}`, np);
+            AnalyticsService.logEvent(profile.id, 'prayer_request_added', { request: newPrayer });
+        }
+        setNewPrayer("");
+    }
+
+    const handleTogglePrayer = async (id: number) => {
+        const np = prayers.map(p => p.id === id ? { ...p, status: p.status === 'PENDING' ? 'ANSWERED' : 'PENDING' } : p);
+        setPrayers(np);
+        if (profile) {
+            await ExtendedProfileService.saveLocal(`pr_${profile.id}`, np);
+            AnalyticsService.logEvent(profile.id, 'prayer_status_changed', { id });
+        }
+    }
+
+    const handleAddMinistry = async () => {
+        if (!newMinistry) return;
+        const nm = [...ministryRoles, { id: Date.now(), role: newMinistry, status: 'ACTIVE' }];
+        setMinistryRoles(nm);
+        if (profile) {
+            await ExtendedProfileService.saveLocal(`mr_${profile.id}`, nm);
+            AnalyticsService.logEvent(profile.id, 'ministry_role_updated', { ministry: nm });
+        }
+        setNewMinistry("");
+    }
+
+    async function handleSavePastoralNotes() {
+        if (!profile || !isAdmin) return;
+        try {
+            setSavingNotes(true);
+            const { error } = await supabase
+                .from('pastoral_notes')
+                .upsert({ member_id: profile.id, notes: pastoralNotes, updated_at: new Date().toISOString() });
+
+            if (error) throw error;
+            toast.success("Pastoral notes saved successfully!");
+        } catch (err) {
+            console.error(err);
+            toast.error("Error saving pastoral notes");
+        } finally {
+            setSavingNotes(false);
+        }
+    }
+
     if (loading) {
         return <div className="p-20 flex justify-center"><Clock className="w-8 h-8 animate-spin opacity-20" /></div>;
     }
@@ -147,13 +265,13 @@ export function ProfileView() {
 
                     <CardContent className="p-8">
                         <Tabs defaultValue="identity" className="w-full">
-                            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-6 rounded-full bg-black/20 p-1 mb-8">
-                                <TabsTrigger value="identity" className="rounded-full data-[state=active]:bg-primary">Identity</TabsTrigger>
-                                <TabsTrigger value="family" className="rounded-full data-[state=active]:bg-primary">Family</TabsTrigger>
-                                <TabsTrigger value="spiritual" className="rounded-full data-[state=active]:bg-primary">Journey</TabsTrigger>
-                                <TabsTrigger value="church" className="rounded-full data-[state=active]:bg-primary">Service</TabsTrigger>
-                                <TabsTrigger value="giving" className="rounded-full data-[state=active]:bg-primary md:hidden lg:inline-flex">Giving</TabsTrigger>
-                                <TabsTrigger value="pastoral" className="rounded-full data-[state=active]:bg-primary">Care</TabsTrigger>
+                            <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 rounded-[2rem] bg-black/10 dark:bg-white/5 border border-white/5 p-1 mb-8 gap-1 h-auto min-h-[56px]">
+                                <TabsTrigger value="identity" className="rounded-full data-[state=active]:bg-primary text-[10px] md:text-sm font-bold">Identity</TabsTrigger>
+                                <TabsTrigger value="family" className="rounded-full data-[state=active]:bg-primary text-[10px] md:text-sm font-bold">Family</TabsTrigger>
+                                <TabsTrigger value="spiritual" className="rounded-full data-[state=active]:bg-primary text-[10px] md:text-sm font-bold">Journey</TabsTrigger>
+                                <TabsTrigger value="church" className="rounded-full data-[state=active]:bg-primary text-[10px] md:text-sm font-bold">Service</TabsTrigger>
+                                <TabsTrigger value="giving" className="rounded-full data-[state=active]:bg-primary text-[10px] md:text-sm font-bold md:hidden lg:inline-flex">Giving</TabsTrigger>
+                                <TabsTrigger value="pastoral" className="rounded-full data-[state=active]:bg-primary text-[10px] md:text-sm font-bold">Care</TabsTrigger>
                             </TabsList>
 
                             {/* IDENTITY TAB */}
@@ -236,18 +354,41 @@ export function ProfileView() {
                             <TabsContent value="family" className="space-y-6">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-xl font-bold flex items-center gap-2">
-                                        <Users className="w-5 h-5 text-primary" />
+                                        <Users className="w-5 h-5 text-[var(--primary)]" />
                                         Household Management
                                     </h3>
-                                    <Button variant="ghost" className="glass rounded-full text-xs font-bold gap-2">
-                                        <Plus className="w-4 h-4" /> LINK FAMILY
+                                </div>
+
+                                <div className="flex gap-2">
+                                    <Input placeholder="Name..." value={newHouseholdName} onChange={e => setNewHouseholdName(e.target.value)} className="glass border-white/10 rounded-2xl h-12" />
+                                    <select value={newHouseholdRel} onChange={e => setNewHouseholdRel(e.target.value)} className="w-32 h-12 rounded-2xl bg-white/5 border border-white/10 px-4 focus:ring-2 ring-[var(--primary)]/20 outline-none">
+                                        <option value="Spouse">Spouse</option>
+                                        <option value="Child">Child</option>
+                                        <option value="Parent">Parent</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                    <Button onClick={handleAddHousehold} className="rounded-2xl bg-[var(--primary)] h-12 px-6 font-bold gap-2 shadow-lg shadow-primary/20 shrink-0">
+                                        <Plus className="w-4 h-4" /> LINK
                                     </Button>
                                 </div>
 
-                                <div className="py-12 border-2 border-dashed border-white/10 rounded-3xl flex flex-col items-center justify-center opacity-40 text-center">
-                                    <Users className="w-12 h-12 mb-3" />
-                                    <p className="max-w-[200px] text-xs font-bold">No household members linked yet. Start building your family unit.</p>
-                                </div>
+                                {household.length === 0 ? (
+                                    <div className="py-12 border-2 border-dashed border-white/10 rounded-3xl flex flex-col items-center justify-center opacity-40 text-center">
+                                        <Users className="w-12 h-12 mb-3" />
+                                        <p className="max-w-[200px] text-xs font-bold">No household members linked yet. Start building your family unit.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3 pt-4">
+                                        {household.map((h, i) => (
+                                            <div key={i} className="glass border-white/10 rounded-2xl p-4 flex items-center justify-between">
+                                                <div>
+                                                    <p className="font-bold">{h.name}</p>
+                                                    <p className="text-[10px] opacity-40 uppercase tracking-widest">{h.relationship}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </TabsContent>
 
                             {/* SPIRITUAL TAB */}
@@ -297,15 +438,17 @@ export function ProfileView() {
                                 <div className="grid md:grid-cols-2 gap-8">
                                     <div className="space-y-4">
                                         <h4 className="text-sm font-bold uppercase tracking-widest opacity-40">Service & Volunteering</h4>
+                                        <div className="flex gap-2 mb-4">
+                                            <Input placeholder="Role (e.g. Greeter)" value={newMinistry} onChange={e => setNewMinistry(e.target.value)} className="glass border-white/10 rounded-2xl h-10" />
+                                            <Button onClick={handleAddMinistry} size="sm" className="rounded-2xl bg-[var(--primary)] font-bold px-4 text-white"><Plus className="w-4 h-4" /></Button>
+                                        </div>
                                         <div className="space-y-3">
-                                            <div className="glass border-white/10 rounded-2xl p-4 flex items-center justify-between">
-                                                <p className="font-bold text-primary">Media/Tech Team</p>
-                                                <Badge className="bg-green-500/20 text-green-500 border-0">ACTIVE</Badge>
-                                            </div>
-                                            <div className="glass border-white/10 rounded-2xl p-4 flex items-center justify-between opacity-50">
-                                                <p className="font-bold">Hospitality</p>
-                                                <Badge variant="outline" className="border-white/20">PAST</Badge>
-                                            </div>
+                                            {ministryRoles.map(m => (
+                                                <div key={m.id} className={`glass border-white/10 rounded-2xl p-4 flex items-center justify-between ${m.status !== 'ACTIVE' ? 'opacity-50' : ''}`}>
+                                                    <p className="font-bold">{m.status === 'ACTIVE' ? <span className="text-[var(--primary)]">{m.role}</span> : m.role}</p>
+                                                    <Badge variant={m.status === 'ACTIVE' ? 'default' : 'outline'} className={m.status === 'ACTIVE' ? 'bg-green-500/20 text-green-500 border-0' : 'border-white/20'}>{m.status}</Badge>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
 
@@ -357,16 +500,13 @@ export function ProfileView() {
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-white/5">
-                                                <tr>
-                                                    <td className="p-4 opacity-60">2026-03-01</td>
-                                                    <td className="p-4 font-bold">Tithe</td>
-                                                    <td className="p-4 text-right font-black">¥50,000</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="p-4 opacity-60">2026-02-01</td>
-                                                    <td className="p-4 font-bold">Tithe</td>
-                                                    <td className="p-4 text-right font-black">¥50,000</td>
-                                                </tr>
+                                                {stewardship.map(s => (
+                                                    <tr key={s.id}>
+                                                        <td className="p-4 opacity-60">{s.date}</td>
+                                                        <td className="p-4 font-bold">{s.fund}</td>
+                                                        <td className="p-4 text-right font-black">¥{s.amount.toLocaleString()}</td>
+                                                    </tr>
+                                                ))}
                                             </tbody>
                                         </table>
                                     </div>
@@ -394,16 +534,56 @@ export function ProfileView() {
 
                                     <div className="space-y-3 pt-4">
                                         <h4 className="text-xs font-black uppercase tracking-widest opacity-40">Active Prayer Requests</h4>
-                                        <div className="glass border-white/10 rounded-2xl p-4 flex items-center justify-between">
-                                            <div>
-                                                <p className="font-bold text-sm">Wisdom for new career transition</p>
-                                                <div className="flex gap-2 mt-1">
-                                                    <Badge variant="outline" className="text-[8px] h-4 border-amber-500/50 text-amber-500">PENDING</Badge>
+                                        <div className="flex gap-2 mb-4">
+                                            <Input placeholder="My prayer is..." value={newPrayer} onChange={e => setNewPrayer(e.target.value)} className="glass border-white/10 rounded-2xl h-12" />
+                                            <Button onClick={handleAddPrayer} className="rounded-2xl bg-[var(--primary)] h-12 px-6 font-bold shadow-lg shadow-primary/20 shrink-0 text-white">
+                                                ADD
+                                            </Button>
+                                        </div>
+                                        {prayers.length === 0 && <p className="text-xs opacity-50 text-center py-4">No active requests.</p>}
+                                        {prayers.map(p => (
+                                            <div key={p.id} className="glass border-white/10 rounded-2xl p-4 flex items-center justify-between">
+                                                <div>
+                                                    <p className={`font-bold text-sm ${p.status === 'ANSWERED' ? 'line-through opacity-50' : ''}`}>{p.text}</p>
+                                                    <div className="flex gap-2 mt-1">
+                                                        <Badge variant="outline" className={`text-[8px] h-4 ${p.status === 'PENDING' ? 'border-amber-500/50 text-amber-500' : 'border-green-500/50 text-green-500'}`}>{p.status}</Badge>
+                                                    </div>
+                                                </div>
+                                                <Button onClick={() => handleTogglePrayer(p.id)} variant="ghost" size="sm" className="text-[10px] font-bold">
+                                                    {p.status === 'PENDING' ? 'MARK ANSWERED' : 'MARK PENDING'}
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {isAdmin && (
+                                        <div className="space-y-4 pt-6 border-t border-white/10">
+                                            <h4 className="text-sm font-black uppercase text-amber-500 flex items-center gap-2">
+                                                <Shield className="w-4 h-4" /> Admin Only: Pastoral Notes
+                                            </h4>
+                                            <p className="text-xs opacity-60">
+                                                These notes are strictly confidential and visible only to leadership. Use this area for counseling logs, discipleship tracking, and follow-up flags.
+                                            </p>
+                                            <div className="space-y-3">
+                                                <textarea
+                                                    className="w-full h-40 glass bg-white/5 border border-amber-500/20 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none placeholder:text-white/20"
+                                                    placeholder="Enter counseling notes or follow-up insights..."
+                                                    value={pastoralNotes}
+                                                    onChange={(e) => setPastoralNotes(e.target.value)}
+                                                />
+                                                <div className="flex justify-end">
+                                                    <Button
+                                                        onClick={handleSavePastoralNotes}
+                                                        disabled={savingNotes}
+                                                        className="rounded-full bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs h-10 px-6 gap-2"
+                                                    >
+                                                        {savingNotes ? <Clock className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                                        SAVE SECURE LOG
+                                                    </Button>
                                                 </div>
                                             </div>
-                                            <Button variant="ghost" size="sm" className="text-[10px] font-bold">MARK ANSWERED</Button>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                             </TabsContent>
 
