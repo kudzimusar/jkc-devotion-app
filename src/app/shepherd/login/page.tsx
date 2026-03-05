@@ -7,7 +7,7 @@ import { Flame, Eye, EyeOff, Mail, Lock, AlertCircle, Loader2, ShieldCheck } fro
 import { AdminAuth } from "@/lib/admin-auth";
 import { basePath as BP } from "@/lib/utils";
 
-const DASHBOARD_PATH = `${BP}/shepherd/dashboard`;
+const DASHBOARD_PATH = "/shepherd/dashboard";
 
 export default function AdminLoginPage() {
     const router = useRouter();

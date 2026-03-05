@@ -27,7 +27,7 @@ const NAV_ITEMS = [
     { label: "Settings", icon: Settings, path: "/settings" },
 ];
 
-const BASE_PATH = `${BP}/shepherd/dashboard`;
+const BASE_PATH = "/shepherd/dashboard";
 
 export function Sidebar() {
     const pathname = usePathname();
