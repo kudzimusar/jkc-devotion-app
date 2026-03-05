@@ -333,14 +333,12 @@ export default function DevotionalApp() {
                 </h2>
                 <p className="text-xs md:text-sm font-bold uppercase tracking-[0.3em] opacity-30 pt-4">Building Healthy Habits & Holy Lives</p>
 
-                {user && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 inline-flex max-w-2xl mx-auto items-center p-4 px-6 rounded-[2rem] glass bg-[var(--primary)]/5 border border-[var(--primary)]/20 shadow-[0_10px_30px_rgba(var(--primary-rgb),0.1)] gap-4 text-left">
-                    <Sparkles className="w-8 h-8 text-[var(--primary)] shrink-0" />
-                    <p className="text-sm font-bold leading-relaxed text-foreground/90 italic tracking-wide">
-                      "{AIService.generateHeroMessage(stats.streak, stats.completed, stats.total)}"
-                    </p>
-                  </motion.div>
-                )}
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 inline-flex max-w-2xl mx-auto items-center p-4 px-6 rounded-[2rem] glass bg-[var(--primary)]/5 border border-[var(--primary)]/20 shadow-[0_10px_30px_rgba(var(--primary-rgb),0.1)] gap-4 text-left">
+                  <Sparkles className="w-8 h-8 text-[var(--primary)] shrink-0" />
+                  <p className="text-sm font-bold leading-relaxed text-foreground/90 italic tracking-wide">
+                    "{AIService.generateHeroMessage(stats.streak, stats.completed, stats.total)}"
+                  </p>
+                </motion.div>
               </motion.div>
             </section>
 

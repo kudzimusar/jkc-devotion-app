@@ -30,7 +30,7 @@ export default function SettingsHub() {
     useEffect(() => {
         const init = async () => {
             const currentUser = await Auth.getCurrentUser();
-            if (!currentUser) window.location.href = '/';
+            if (!currentUser) window.location.href = BP || '/';
             setUser(currentUser);
         };
         init();
@@ -39,7 +39,7 @@ export default function SettingsHub() {
     const handlePasswordReset = async () => {
         if (!user?.email) return;
         const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-            redirectTo: window.location.origin + '/settings',
+            redirectTo: window.location.origin + BP + '/settings',
         });
         if (error) {
             toast.error(error.message);
@@ -51,7 +51,7 @@ export default function SettingsHub() {
     const handleLogout = async () => {
         try {
             await Auth.logout();
-            window.location.href = '/';
+            window.location.href = BP || '/';
         } catch (error) {
             toast.error("Error logging out.");
         }

@@ -66,7 +66,7 @@ export default function ProfileHub() {
         const init = async () => {
             const currentUser = await Auth.getCurrentUser();
             if (!currentUser) {
-                window.location.href = '/';
+                window.location.href = BP || '/';
                 return;
             }
             setUser(currentUser);
@@ -162,7 +162,7 @@ export default function ProfileHub() {
     const handleLogout = async () => {
         try {
             await Auth.logout();
-            window.location.href = '/';
+            window.location.href = BP || '/';
         } catch (error) {
             toast.error("Error logging out.");
         }

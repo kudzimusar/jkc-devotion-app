@@ -2,6 +2,7 @@
 
 import { supabase } from './supabase';
 import { User as SupabaseUser } from '@supabase/supabase-js';
+import { basePath as BP } from './utils';
 
 export interface User {
     id: string;
@@ -46,7 +47,8 @@ export const Auth = {
                 options: {
                     data: {
                         full_name: name
-                    }
+                    },
+                    emailRedirectTo: window.location.origin + BP
                 }
             });
 
@@ -112,7 +114,7 @@ export const Auth = {
         return await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: window.location.origin
+                redirectTo: window.location.origin + BP
             }
         });
     },
@@ -121,7 +123,7 @@ export const Auth = {
         return await supabase.auth.signInWithOAuth({
             provider: 'apple',
             options: {
-                redirectTo: window.location.origin
+                redirectTo: window.location.origin + BP
             }
         });
     },
@@ -129,6 +131,7 @@ export const Auth = {
     // Logout
     async logout() {
         await supabase.auth.signOut();
+        window.location.href = BP || '/';
     },
 
     // Update profile
