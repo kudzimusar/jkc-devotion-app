@@ -37,7 +37,7 @@ export const AIService = {
         });
     },
 
-    chatWithGlobalAssistant: async (userRole: string, userName: string, query: string, contextPayload?: any) => {
+    chatWithGlobalAssistant: async (userRole: string, userName: string, query: string, contextPayload?: any, chatHistory?: { role: string, content: string }[]) => {
         // [FUTURE AI INTEGRATION NOTE]
         // When real Gemini API is integrated, if userRole === 'admin', query the `member_analytics`, 
         // `soap_entries`, and `prayer_requests` tables first. Serialize that data into a hidden 
@@ -58,7 +58,29 @@ export const AIService = {
                         resolve(`Hello ${userName}. As an Admin Assistant, I am constantly monitoring church health.\n\nRegarding: "${query}"\nNo severe discrepancies found right now. What specific data slice (growth, programs, user roles, due dates) would you like me to aggregate for you?`);
                     }
                 } else {
-                    if (lowerQuery.includes("today") || lowerQuery.includes("verse") || lowerQuery.includes("theme")) {
+                    const isFollowUp = chatHistory && chatHistory.length > 0;
+
+                    if (isFollowUp) {
+                        if (lowerQuery.includes("more") || lowerQuery.includes("say") || lowerQuery.includes("else") || lowerQuery.includes("deep") || lowerQuery.includes("mean")) {
+                            if (contextPayload?.devotion) {
+                                const d = contextPayload.devotion;
+                                const s = contextPayload.stats;
+
+                                let response = `That's a great question. In the original text, the themes around ${d.theme} carry deep historical and theological weight. Specifically, when we look at the idea of it, it implies an active decision rather than just a passive feeling. `;
+
+                                if (s?.currentStreak > 0) {
+                                    response += `\n\nBased on your ${s.currentStreak}-day streak, I can see you're taking this journey seriously! How do you think this biblical principle applies to your current situation?`;
+                                } else {
+                                    response += `\n\nHow do you think this biblical principle applies to your current situation?`;
+                                }
+
+                                resolve(response);
+                                return;
+                            }
+                        }
+                    }
+
+                    if (!isFollowUp && (lowerQuery.includes("today") || lowerQuery.includes("verse") || lowerQuery.includes("theme"))) {
                         if (contextPayload?.devotion) {
                             const d = contextPayload.devotion;
                             const s = contextPayload.stats;
@@ -81,7 +103,7 @@ export const AIService = {
                             return;
                         }
                     }
-                    resolve(`Hello ${userName}. I am your Spiritual Assistant.\n\nRegarding: "${query}"\n\nThe Word tells us to continually seek wisdom. If you have questions about specific verses, want to know how to connect with the church, or need me to check your recent devotion streak, just ask! Keep building healthy habits!`);
+                    resolve(`Hello ${userName}. I am your Spiritual Assistant.\n\nRegarding: "${query}"\n\n${isFollowUp ? "Let's explore that deeper together." : "The Word tells us to continually seek wisdom. If you have questions about specific verses, want to know how to connect with the church, or need me to check your recent devotion streak, just ask!"} Keep building healthy habits!`);
                 }
             }, 1500);
         });

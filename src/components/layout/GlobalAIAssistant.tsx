@@ -32,7 +32,7 @@ export function GlobalAIAssistant({ user, userRole, stats, devotion, currentDate
                 currentDate: currentDate?.toISOString()
             };
 
-            const response = await AIService.chatWithGlobalAssistant(userRole || 'member', user?.name || 'Guest', query, contextPayload);
+            const response = await AIService.chatWithGlobalAssistant(userRole || 'member', user?.name || 'Guest', query, contextPayload, chatHistory);
             setChatHistory([...newChat, { role: 'ai', content: response }]);
         } catch (e) {
             setChatHistory([...newChat, { role: 'ai', content: "I'm sorry, I'm having trouble connecting right now." }]);
