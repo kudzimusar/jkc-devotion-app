@@ -33,7 +33,7 @@ const identitySchema = z.object({
     postal_code: z.string().optional(),
     country_of_origin: z.string().optional(),
     preferred_language: z.string().optional(),
-    years_in_japan: z.any().optional(),
+    years_in_japan: z.coerce.number().optional(),
     occupation: z.string().optional(),
     education_level: z.string().optional()
 });
