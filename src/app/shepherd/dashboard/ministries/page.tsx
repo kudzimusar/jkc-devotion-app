@@ -23,7 +23,7 @@ export default function MinistriesPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        supabaseAdmin.from('ministry_members').select('*').eq('is_active', true)
+        supabaseAdmin.from('member_roles').select('*').eq('active_status', true)
             .then(({ data }) => { setMembers(data || []); setLoading(false); });
     }, []);
 
@@ -50,7 +50,7 @@ export default function MinistriesPage() {
                 {[
                     { label: 'Active Ministries', val: ministryList.length, color: 'text-violet-400' },
                     { label: 'Team Members', val: members.length, color: 'text-blue-400' },
-                    { label: 'Leaders', val: members.filter(m => m.ministry_role === 'leader').length, color: 'text-amber-400' },
+                    { label: 'Leaders', val: members.filter(m => m.is_leader).length, color: 'text-amber-400' },
                     { label: 'Staffing Gaps', val: STAFFING_GAPS.length, color: 'text-red-400' },
                 ].map(s => (
                     <div key={s.label} className="bg-[#111827] border border-white/5 rounded-2xl p-4">
@@ -98,7 +98,7 @@ export default function MinistriesPage() {
                             <p className="text-sm font-black text-white capitalize">{ministry.name}</p>
                             <div className="flex items-center gap-1 mt-1">
                                 <Users className="w-3 h-3 text-white/30" />
-                                <p className="text-[10px] text-white/40">{ministry.count} members</p>
+                                <p className="text-[10px] text-white/40">{ministry.count} members · {ministry.members[0]?.role_title || 'Team'}</p>
                             </div>
                         </motion.div>
                     );

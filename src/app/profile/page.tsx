@@ -12,6 +12,7 @@ import {
     Briefcase, Music, CalendarCheck, Coins
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
@@ -103,6 +104,9 @@ export default function ProfileHub() {
     const [skills, setSkills] = useState<any[]>([]);
     const [newSkill, setNewSkill] = useState(SKILL_OPTIONS[0]);
 
+    const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
+    const [fellowshipGroups, setFellowshipGroups] = useState<any[]>([]);
+    const [userGroups, setUserGroups] = useState<any[]>([]);
     const [givingData, setGivingData] = useState({ tithe_status: false, preferred_giving_method: 'Cash' });
 
     useEffect(() => {
@@ -153,23 +157,39 @@ export default function ProfileHub() {
             setStats(journalStats);
 
             // Household
-            setHousehold(await ExtendedProfileService.getLocal(`hh_${userId}`, []));
+            const { data: hhData } = await supabase.from('households').select('id, household_name').eq('head_id', userId).maybeSingle();
+            if (hhData) {
+                const { data: members } = await supabase.from('household_members').select('*').eq('household_id', hhData.id);
+                setHousehold(members || []);
+            } else {
+                setHousehold([]);
+            }
 
             // Milestones
-            const { data: mData } = await supabase.from('member_milestones').select('*').eq('user_id', userId).single();
+            const { data: mData } = await supabase.from('member_milestones').select('*').eq('user_id', userId).maybeSingle();
             if (mData) setMilestones(mData);
 
             // Ministries
             const { data: roleData } = await supabase.from('member_roles').select('*').eq('user_id', userId);
-            if (roleData) setMinistryRoles(roleData);
+            if (roleData) setMinistryRoles(roleData || []);
 
             // Prayers
             const { data: prayerData } = await supabase.from('prayer_requests').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-            if (prayerData) setPrayers(prayerData);
+            if (prayerData) setPrayers(prayerData || []);
 
             // Skills
             const { data: skillData } = await supabase.from('member_skills').select('*').eq('user_id', userId);
-            if (skillData) setSkills(skillData);
+            if (skillData) setSkills(skillData || []);
+
+            // Attendance
+            const { data: attData } = await supabase.from('service_attendance').select('*').eq('user_id', userId).order('service_date', { ascending: false }).limit(10);
+            setAttendanceRecords(attData || []);
+
+            // Fellowship
+            const { data: groups } = await supabase.from('fellowship_groups').select('*').eq('is_active', true);
+            setFellowshipGroups(groups || []);
+            const { data: joined } = await supabase.from('fellowship_members').select('group_id').eq('user_id', userId);
+            setUserGroups(joined?.map(j => j.group_id) || []);
 
         } catch (e) {
             console.error(e);
@@ -208,19 +228,42 @@ export default function ProfileHub() {
 
     const handleAddHousehold = async () => {
         if (!newHouseholdName || !user) return;
-        const nh = [...household, { id: Date.now(), name: newHouseholdName, relationship: newHouseholdRel }];
-        setHousehold(nh);
-        await ExtendedProfileService.saveLocal(`hh_${user.id}`, nh);
-        AnalyticsService.logEvent(user.id, 'household_updated', { household: nh });
+        try {
+            // 1. Ensure household exists for head
+            let { data: hh } = await supabase.from('households').select('id').eq('head_id', user.id).maybeSingle();
+            if (!hh) {
+                const { data: newHh, error: hhErr } = await supabase.from('households').insert([{
+                    head_id: user.id,
+                    household_name: `${user.name}'s Household`
+                }]).select().single();
+                if (hhErr) throw hhErr;
+                hh = newHh;
+            }
 
-        // Also update identity household_type abstractly
-        let household_type = 'Single';
-        if (nh.some(h => h.relationship === 'Spouse')) household_type = 'Couple';
-        if (nh.some(h => h.relationship === 'Child')) household_type = 'Family with Children';
-        await supabase.from('profiles').update({ household_type }).eq('id', user.id);
+            // 2. Add member
+            const { data: member, error: memErr } = await supabase.from('household_members').insert([{
+                household_id: hh!.id,
+                full_name: newHouseholdName,
+                relationship: newHouseholdRel
+            }]).select().single();
+            if (memErr) throw memErr;
 
-        setNewHouseholdName("");
-        toast.success("Household updated!");
+            const nh = [...household, member];
+            setHousehold(nh);
+
+            AnalyticsService.logEvent(user.id, 'household_member_added', { member: newHouseholdName });
+
+            // 3. Update identity household_type abstractly
+            let household_type = 'Single';
+            if (nh.some(h => h.relationship === 'Spouse')) household_type = 'Couple';
+            if (nh.some(h => h.relationship === 'Child')) household_type = 'Family with Children';
+            await supabase.from('profiles').update({ household_type }).eq('id', user.id);
+
+            setNewHouseholdName("");
+            toast.success("Household updated!");
+        } catch (e) {
+            toast.error("Error updating household");
+        }
     };
 
     const saveMilestones = async () => {
@@ -305,6 +348,24 @@ export default function ProfileHub() {
             toast.error("Error adding skill (might already exist)");
         }
     }
+
+    const handleJoinGroup = async (groupId: string) => {
+        if (!user) return;
+        const isJoined = userGroups.includes(groupId);
+        try {
+            if (isJoined) {
+                await supabase.from('fellowship_members').delete().eq('user_id', user.id).eq('group_id', groupId);
+                setUserGroups(userGroups.filter(id => id !== groupId));
+                toast.success("Left group");
+            } else {
+                await supabase.from('fellowship_members').insert([{ user_id: user.id, group_id: groupId }]);
+                setUserGroups([...userGroups, groupId]);
+                toast.success("Joined group!");
+            }
+        } catch (e) {
+            toast.error("Action failed");
+        }
+    };
 
     const saveGiving = async () => {
         if (!user) return;
@@ -525,7 +586,7 @@ export default function ProfileHub() {
                                                     {household.map(h => (
                                                         <div key={h.id} className="flex items-center justify-between p-4 bg-background border border-foreground/10 rounded-2xl">
                                                             <div className="flex flex-col">
-                                                                <span className="font-bold">{h.name}</span>
+                                                                <span className="font-bold">{h.full_name || h.name}</span>
                                                                 <span className="text-xs text-[var(--primary)] font-bold uppercase tracking-widest">{h.relationship}</span>
                                                             </div>
                                                             <CheckCircle2 className="w-5 h-5 text-green-500" />
@@ -677,10 +738,69 @@ export default function ProfileHub() {
                                         </div>
                                     )}
 
-                                    {/* ATTENDANCE / COMMUNITY */}
-                                    {(activeTab === 'attendance' || activeTab === 'community') && (
-                                        <div className="p-12 text-center text-foreground/50 font-bold border-2 border-dashed border-foreground/10 rounded-3xl mt-4">
-                                            Module being prepped for next release. Check back soon.
+                                    {/* ATTENDANCE TAB */}
+                                    {activeTab === 'attendance' && (
+                                        <div className="space-y-8 animate-in fade-in duration-300">
+                                            <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8 space-y-6">
+                                                <h4 className="font-black text-lg pb-4 border-b border-foreground/10">Recent Attendance</h4>
+                                                <div className="grid gap-3">
+                                                    {attendanceRecords.length > 0 ? attendanceRecords.map((r, i) => (
+                                                        <div key={i} className="flex items-center justify-between p-4 bg-background border border-foreground/10 rounded-2xl">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                                                                    <CalendarCheck className="w-5 h-5 text-emerald-500" />
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-bold">{new Date(r.service_date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+                                                                    <p className="text-xs text-foreground/50 uppercase font-black tracking-widest">{r.attendance_type}</p>
+                                                                </div>
+                                                            </div>
+                                                            <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                                                        </div>
+                                                    )) : (
+                                                        <div className="text-center py-12 text-foreground/30 font-bold uppercase tracking-widest text-xs">No attendance recorded yet.</div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* COMMUNITY TAB */}
+                                    {activeTab === 'community' && (
+                                        <div className="space-y-8 animate-in fade-in duration-300">
+                                            <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8 space-y-6">
+                                                <h4 className="font-black text-lg pb-4 border-b border-foreground/10">Fellowship Circles</h4>
+                                                <div className="grid md:grid-cols-2 gap-4">
+                                                    {fellowshipGroups.length > 0 ? fellowshipGroups.map(g => {
+                                                        const joined = userGroups.includes(g.id);
+                                                        return (
+                                                            <div key={g.id} className="bg-background border border-foreground/10 rounded-2xl p-5 flex flex-col justify-between">
+                                                                <div>
+                                                                    <div className="flex items-center justify-between mb-2">
+                                                                        <span className="text-[10px] font-black bg-[var(--primary)]/10 text-[var(--primary)] px-2 py-0.5 rounded-md uppercase tracking-widest">{g.meeting_frequency}</span>
+                                                                        {joined && <Badge className="bg-emerald-500 text-white border-0">Joined</Badge>}
+                                                                    </div>
+                                                                    <h5 className="font-bold text-lg mb-1">{g.name}</h5>
+                                                                    <p className="text-xs text-foreground/50 flex items-center gap-1 mb-4">
+                                                                        <MapPin className="w-3 h-3" /> {g.location || 'Online / Various'}
+                                                                    </p>
+                                                                </div>
+                                                                <Button
+                                                                    onClick={() => handleJoinGroup(g.id)}
+                                                                    variant={joined ? "outline" : "default"}
+                                                                    className={`w-full font-bold rounded-xl ${joined ? 'border-red-500/20 text-red-500 hover:bg-red-500/5' : 'bg-[var(--primary)] text-white'}`}
+                                                                >
+                                                                    {joined ? 'Leave Group' : 'Join Circle'}
+                                                                </Button>
+                                                            </div>
+                                                        );
+                                                    }) : (
+                                                        <div className="col-span-full py-12 text-center text-foreground/30 font-bold uppercase tracking-widest text-xs">
+                                                            No active fellowship groups available to join.
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
                                     )}
 
