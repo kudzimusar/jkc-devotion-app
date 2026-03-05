@@ -38,7 +38,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
             }
 
             // Shepherd Dashboard logic
-            if (pathname.startsWith("/shepherd")) {
+            if (pathname.startsWith("/shepherd") && !pathname.startsWith("/shepherd/login")) {
                 if (role === 'member') {
                     router.push("/");
                 }
