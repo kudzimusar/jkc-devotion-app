@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
   },
   basePath: '/jkc-devotion-app',
   assetPrefix: '/jkc-devotion-app/',
+  trailingSlash: true,
   // Provide empty turbopack config to avoid Turbopack errors
   turbopack: {},
 };
