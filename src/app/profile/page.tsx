@@ -33,7 +33,7 @@ const identitySchema = z.object({
     postal_code: z.string().optional(),
     country_of_origin: z.string().optional(),
     preferred_language: z.string().optional(),
-    years_in_japan: z.string().transform((v) => parseInt(v)).optional().or(z.number().optional()),
+    years_in_japan: z.any().optional(),
     occupation: z.string().optional(),
     education_level: z.string().optional()
 });
@@ -185,8 +185,13 @@ export default function ProfileHub() {
             if (household.some(h => h.relationship === 'Spouse')) household_type = 'Couple';
             if (household.some(h => h.relationship === 'Child')) household_type = 'Family with Children';
 
+            const cleanData = { ...data };
+            if (cleanData.years_in_japan) {
+                cleanData.years_in_japan = parseInt(cleanData.years_in_japan.toString()) || 0;
+            }
+
             const { error } = await supabase.from('profiles').update({
-                ...data,
+                ...cleanData,
                 household_type
             }).eq('id', user.id);
 

@@ -31,7 +31,8 @@ import {
   LayoutDashboard,
   AlertCircle,
   MapPin,
-  Mail
+  Mail,
+  CheckCircle2
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -84,6 +85,81 @@ const WEEK_THEMES = [
   { week: 4, name: "Obedience", icon: UserRound, desc: "Love in Action" },
   { week: 5, name: "Holy Week", icon: Cross, desc: "Passion and Transformation" },
 ];
+
+const SundayCheckIn = ({ user, currentDate }: { user: any, currentDate: Date }) => {
+  const [loading, setLoading] = useState(false);
+  const [checkedIn, setCheckedIn] = useState(false);
+  const todayStr = format(currentDate, "yyyy-MM-dd");
+
+  useEffect(() => {
+    if (user) {
+      supabase.from('service_attendance')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('service_date', todayStr)
+        .maybeSingle()
+        .then(({ data }) => { if (data) setCheckedIn(true); });
+    }
+  }, [user, todayStr]);
+
+  const handleCheckIn = async (type: string) => {
+    if (!user) {
+      toast.error("Please login to check-in!");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.from('service_attendance').insert([{
+        user_id: user.id,
+        service_date: todayStr,
+        attendance_type: type
+      }]);
+      if (error) throw error;
+      setCheckedIn(true);
+      toast.success("Checked in! Have a blessed service.");
+    } catch (e) {
+      console.error(e);
+      toast.error("Check-in failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (checkedIn) return (
+    <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 animate-in fade-in zoom-in duration-500">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+          <CheckCircle2 className="w-6 h-6 text-white" />
+        </div>
+        <div>
+          <h4 className="font-black text-emerald-500">You're Checked In!</h4>
+          <p className="text-xs font-bold text-foreground/50 uppercase tracking-widest">Sunday Service {todayStr}</p>
+        </div>
+      </div>
+      <p className="text-sm font-serif italic text-foreground/60 text-right">"I was glad when they said unto me, Let us go into the house of the LORD." - Psalm 122:1</p>
+    </div>
+  );
+
+  return (
+    <div className="bg-gradient-to-r from-[var(--primary)] to-pink-500 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32" />
+      <div className="relative z-10 space-y-6">
+        <div className="space-y-2">
+          <h3 className="text-2xl md:text-3xl font-black italic">Sunday Service Check-In</h3>
+          <p className="text-sm font-bold opacity-80 uppercase tracking-[0.2em]">Join us in the house of the Lord today</p>
+        </div>
+        <div className="flex flex-wrap gap-4">
+          <Button disabled={loading} onClick={() => handleCheckIn('In-Person')} className="bg-white text-[var(--primary)] hover:bg-white/90 font-black px-8 py-6 rounded-2xl shadow-xl h-auto transition-transform active:scale-95">
+            <MapPin className="w-5 h-5 mr-3" /> AT CHURCH
+          </Button>
+          <Button disabled={loading} onClick={() => handleCheckIn('Online')} className="bg-white/20 hover:bg-white/30 text-white font-black px-8 py-6 rounded-2xl backdrop-blur-md border border-white/30 h-auto transition-transform active:scale-95">
+            <Globe className="w-5 h-5 mr-3" /> ONLINE (ZOOM/STREAM)
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function DevotionalApp() {
   const getJstToday = () => {
@@ -259,8 +335,12 @@ export default function DevotionalApp() {
     try {
       setLoading(true);
       const entryToSave = { ...soapEntry, observation: note, day_number: devotion.id, scripture: devotion.scripture };
-      await SoapJournal.saveEntry(devotion.id, entryToSave);
+      const savedEntry = await SoapJournal.saveEntry(devotion.id, entryToSave);
       setSoapEntry(entryToSave);
+
+      // Fire and forget AI background processing
+      AIService.processSentiment(user.id, savedEntry.id, note, format(currentDate, "yyyy-MM-dd"));
+
       toast.success("Saved Successfully!");
       loadStats();
     } catch (e) {
@@ -386,6 +466,13 @@ export default function DevotionalApp() {
                 </div>
               </div>
             </section>
+
+            {/* Sunday Check-In */}
+            {format(currentDate, "EEEE") === "Sunday" && (
+              <section className="max-w-4xl mx-auto px-4">
+                <SundayCheckIn user={user} currentDate={currentDate} />
+              </section>
+            )}
 
             {/* Main Content Area */}
             <motion.div

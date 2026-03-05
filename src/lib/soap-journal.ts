@@ -63,13 +63,16 @@ export const SoapJournal = {
             updated_at: new Date().toISOString()
         };
 
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('soap_entries')
             .upsert(entryToSave, {
                 onConflict: 'user_id,day_number'
-            });
+            })
+            .select()
+            .single();
 
         if (error) throw error;
+        return data;
     },
 
     // Delete SOAP entry
