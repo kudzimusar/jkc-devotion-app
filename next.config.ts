@@ -10,7 +10,7 @@ const withPWA = require("next-pwa")({
 });
 
 const nextConfig: NextConfig = {
-  // output: 'export', // Removed to support Middleware and API routes
+  output: 'export',
   images: {
     unoptimized: true,
   },
