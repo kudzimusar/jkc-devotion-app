@@ -72,7 +72,26 @@ export const SoapJournal = {
             .single();
 
         if (error) throw error;
+
+        // Update aggregate stats for the admin pipeline
+        try {
+            await this.updateMemberStats(user.id);
+        } catch (e) {
+            console.warn("Failed to update aggregate stats", e);
+        }
+
         return data;
+    },
+
+    async updateMemberStats(userId: string) {
+        const stats = await this.getStats();
+        await supabase.from('member_stats').upsert({
+            user_id: userId,
+            current_streak: stats.streak,
+            total_completed: stats.completed,
+            last_devotion_date: stats.lastCompletedJST,
+            updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' });
     },
 
     // Delete SOAP entry

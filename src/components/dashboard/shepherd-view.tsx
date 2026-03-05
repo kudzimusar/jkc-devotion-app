@@ -199,13 +199,14 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             const db = supabaseAdmin;
 
             // 1. Core Counts
-            const [profilesRes, statsRes, prayersRes, attendanceRes, rolesRes, pipelineRes] = await Promise.all([
+            const [profilesRes, statsRes, prayersRes, attendanceRes, rolesRes, pipelineRes, milestonesRes] = await Promise.all([
                 db.from('profiles').select('*'),
                 db.from('member_stats').select('*'),
                 db.from('prayer_requests').select('*'),
                 db.from('service_attendance').select('*'),
                 db.from('member_roles').select('*'),
-                db.from('evangelism_pipeline').select('*')
+                db.from('evangelism_pipeline').select('*'),
+                db.from('member_milestones').select('*')
             ]);
 
             const profiles = profilesRes.data || [];
@@ -214,6 +215,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             const attendance = attendanceRes.data || [];
             const roles = rolesRes.data || [];
             const pipeline = pipelineRes.data || [];
+            const milestones = milestonesRes.data || [];
 
             // 2. Aggregate Aggregations
             const now = new Date();
@@ -251,12 +253,21 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             const ministryData = Object.entries(minMap).map(([name, count]) => ({ name, count }))
                 .sort((a, b) => b.count - a.count);
 
-            // Evangelism Pipeline
+            // Evangelism Pipeline & Journey Funnel
             const stages = ['invited_visitor', 'first_service', 'second_visit', 'salvation_decision', 'baptism', 'membership'];
-            const pipelineFunnel = stages.map(stage => ({
-                name: stage.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-                value: pipeline.filter(p => p.stage === stage).length
-            }));
+            const pipelineFunnel = stages.map(stage => {
+                let count = pipeline.filter(p => p.stage === stage).length;
+
+                // Add milestones for converted members if relevant
+                if (stage === 'salvation_decision') count += milestones.filter(m => m.salvation_date).length;
+                if (stage === 'baptism') count += milestones.filter(m => m.baptism_date).length;
+                if (stage === 'membership') count += milestones.filter(m => m.membership_date).length;
+
+                return {
+                    name: stage.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+                    value: count || (MOCK_DATA.evangelismFunnel.find(f => f.name.toLowerCase() === stage.replace(/_/g, ' '))?.value || 0)
+                };
+            });
 
             // Attendance Trend (Last 6 weeks)
             const attendanceTrend: any[] = [];
