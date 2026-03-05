@@ -44,6 +44,7 @@ interface DashboardData {
     soapSentiment: SentimentData[];
     wordCloud: string[];
     attendanceTrend: { week: string; count: number }[];
+    skillsData: { name: string; count: number }[];
 }
 
 interface AtRiskMember {
@@ -129,6 +130,11 @@ const MOCK_DATA: DashboardData = {
         { week: 'Feb 16', count: 168 }, { week: 'Feb 23', count: 174 },
         { week: 'Mar 2', count: 181 }, { week: 'Mar 9', count: 189 },
     ],
+    skillsData: [
+        { name: 'Teaching', count: 32 }, { name: 'Music', count: 21 },
+        { name: 'Technology', count: 14 }, { name: 'Counseling', count: 7 },
+        { name: 'Administration', count: 12 }, { name: 'Media', count: 9 },
+    ]
 };
 
 /* ─── Sub-components ─── */
@@ -199,14 +205,17 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             const db = supabaseAdmin;
 
             // 1. Core Counts
-            const [profilesRes, statsRes, prayersRes, attendanceRes, rolesRes, pipelineRes, milestonesRes] = await Promise.all([
+            const [profilesRes, statsRes, prayersRes, attendanceRes, rolesRes, pipelineRes, milestonesRes, healthRes, alertsRes, skillsRes] = await Promise.all([
                 db.from('profiles').select('*'),
                 db.from('member_stats').select('*'),
                 db.from('prayer_requests').select('*'),
                 db.from('service_attendance').select('*'),
                 db.from('member_roles').select('*'),
                 db.from('evangelism_pipeline').select('*'),
-                db.from('member_milestones').select('*')
+                db.from('member_milestones').select('*'),
+                db.from('church_health_metrics').select('*').order('created_at', { ascending: false }).limit(1),
+                db.from('member_alerts').select('*, member:profiles(name)').eq('is_resolved', false).limit(10),
+                db.from('member_skills').select('skill_name')
             ]);
 
             const profiles = profilesRes.data || [];
@@ -281,6 +290,26 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 });
             }
 
+            // At-risk members
+            const mappedAlerts = (alertsRes.data || []).map((a: any) => ({
+                id: a.id,
+                name: a.member?.name || 'Unknown',
+                email: '',
+                days_inactive: 0,
+                risk_level: a.severity || 'high',
+                current_streak: 0
+            }));
+
+            // Skills Aggregation
+            const skillMap: Record<string, number> = {};
+            (skillsRes.data || []).forEach((s: any) => {
+                skillMap[s.skill_name] = (skillMap[s.skill_name] || 0) + 1;
+            });
+            const skillsData = Object.entries(skillMap)
+                .map(([name, count]) => ({ name, count }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 10);
+
             setData(prev => ({
                 ...prev,
                 totalMembers: profiles.length,
@@ -290,17 +319,16 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 lastSundayAttendance: sundayAttendance || prev.lastSundayAttendance,
                 prayerActive: prayers.filter(p => p.status === 'Pending').length,
                 prayerAnswered: prayers.filter(p => p.status === 'Answered').length,
+                engagementScore: healthRes.data?.[0]?.score || prev.engagementScore,
+                alertMembers: mappedAlerts.length > 0 ? mappedAlerts : prev.alertMembers,
                 householdData: [
                     { month: format(now, 'MMM'), ...hhSplit }
                 ],
                 ministryData: ministryData.length > 0 ? ministryData : prev.ministryData,
                 evangelismFunnel: pipelineFunnel.some(f => f.value > 0) ? pipelineFunnel : prev.evangelismFunnel,
-                attendanceTrend: attendanceTrend
+                attendanceTrend: attendanceTrend,
+                skillsData: skillsData.length > 0 ? skillsData : prev.skillsData
             }));
-
-            // At-risk members (Keep existing RPC if it exists, otherwise calculate)
-            const { data: riskData } = await db.rpc('get_at_risk_members');
-            if (riskData && riskData.length > 0) setData(prev => ({ ...prev, alertMembers: riskData }));
 
         } catch (e) {
             console.error("Dashboard Load Error:", e);
@@ -623,9 +651,34 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 <SectionHeader title="Ministry Engagement" subtitle="25 active ministry teams — staffing analysis" />
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
+                    {/* Skills Heatmap (NEW) */}
+                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-5 md:col-span-3 mb-4">
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <p className="text-xs font-black text-white/40 uppercase tracking-widest">Congregational Skills Heatmap</p>
+                                <p className="text-[10px] text-white/20 font-bold uppercase mt-1">Available talents for ministry placement</p>
+                            </div>
+                            <Badge className="bg-violet-500/10 text-violet-400 border-violet-500/20 text-[9px] font-black">{data.skillsData.length} SPECIALIZATIONS</Badge>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                            {data.skillsData.map((skill, i) => (
+                                <motion.div
+                                    key={skill.name}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: i * 0.05 }}
+                                    className="p-4 rounded-xl border border-white/5 bg-white/2 flex flex-col items-center justify-center text-center group hover:bg-violet-500/5 hover:border-violet-500/20 transition-all cursor-default"
+                                >
+                                    <p className="text-[10px] font-black text-white/40 group-hover:text-violet-400 transition-colors uppercase tracking-tight">{skill.name}</p>
+                                    <p className="text-xl font-black text-white mt-1">{skill.count}</p>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Ministry Participation Bar */}
                     <div className="bg-[#111827] border border-white/5 rounded-2xl p-5 md:col-span-2">
-                        <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Ministry Participation</p>
+                        <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Ministry Leadership Split</p>
                         <ResponsiveContainer width="100%" height={240}>
                             <BarChart data={data.ministryData} layout="vertical" barSize={10}>
                                 <XAxis type="number" hide />
@@ -678,6 +731,46 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                                     <span className="text-[9px] font-black bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-md">NEEDS TEAM</span>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ─── ROW 4.5: GEOGRAPHIC INTELLIGENCE ─── */}
+            <section className="mb-8">
+                <div className="bg-[#111827] border border-white/5 rounded-3xl p-8 relative overflow-hidden min-h-[350px]">
+                    <div className="absolute inset-0 opacity-10 grayscale pointer-events-none">
+                        <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=2000" className="w-full h-full object-cover" alt="Map" />
+                    </div>
+                    <div className="relative z-10">
+                        <SectionHeader title="Geographic Member Clusters" subtitle="Spatial density of congregation — mapping fellowship group opportunities" />
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+                            {[
+                                { name: 'Nerima-ku', count: 34, trend: '+3', color: 'text-emerald-400' },
+                                { name: 'Adachi-ku', count: 21, trend: '+1', color: 'text-violet-400' },
+                                { name: 'Hachioji', count: 15, trend: '0', color: 'text-white/40' },
+                                { name: 'Setagaya', count: 12, trend: '+2', color: 'text-blue-400' },
+                            ].map((loc) => (
+                                <motion.div
+                                    whileHover={{ y: -5 }}
+                                    key={loc.name}
+                                    className="bg-white/5 backdrop-blur-md p-5 rounded-2xl border border-white/10"
+                                >
+                                    <p className="text-[10px] text-white/40 font-black uppercase mb-1 tracking-widest">{loc.name}</p>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-2xl font-black text-white">{loc.count}</span>
+                                        <Badge className={`bg-${loc.color.split('-')[1]}-500/20 ${loc.color} border-0 text-[10px]`}>{loc.trend}</Badge>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                        <div className="mt-8 flex gap-3">
+                            <Button className="h-12 px-6 rounded-xl bg-violet-600 text-white font-black shadow-lg hover:bg-violet-500 transition-all">
+                                <Globe className="w-4 h-4 mr-2" /> INTERACTIVE CLUSTER MAP
+                            </Button>
+                            <Button variant="outline" className="h-12 px-6 rounded-xl border-white/10 text-white/60 font-black hover:bg-white/5">
+                                <MapPin className="w-4 h-4 mr-2" /> AREA ANALYSIS
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -790,9 +883,9 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                     <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Morning Pastor Briefing</p>
                     <div className="space-y-3">
                         {[
-                            { q: "Who needs care now?", a: "12 members disengaged. 5 crisis prayers unresolved.", color: "text-red-400" },
-                            { q: "Where is God moving?", a: "Youth attendance surged 24%. 3 new families joined.", color: "text-emerald-400" },
-                            { q: "Where must church go?", a: "Expand children's ministry. Financial counseling needed.", color: "text-violet-400" },
+                            { q: "Who needs care now?", a: data.alertMembers.length > 0 ? `${data.alertMembers.length} members flagged for inactivity. ${data.prayerActive} crisis prayers unresolved.` : "All active members are engaged. No critical risks detected.", color: "text-red-400" },
+                            { q: "Where is God moving?", a: `Youth attendance surged 24%. ${data.newMembersThisMonth} new arrivals this month.`, color: "text-emerald-400" },
+                            { q: "Where must church go?", a: "Shinagawa area showing high density—consider new Circle. Media Ministry needs 2 volunteers.", color: "text-violet-400" },
                         ].map(b => (
                             <div key={b.q} className="p-3 bg-white/3 rounded-xl border border-white/5">
                                 <p className="text-[9px] font-black text-white/30 uppercase tracking-wider mb-1">{b.q}</p>

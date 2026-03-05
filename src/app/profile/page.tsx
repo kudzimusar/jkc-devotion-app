@@ -36,7 +36,9 @@ const identitySchema = z.object({
     preferred_language: z.string().optional(),
     years_in_japan: z.coerce.number().optional(),
     occupation: z.string().optional(),
-    education_level: z.string().optional()
+    education_level: z.string().optional(),
+    invited_by_name: z.string().optional(),
+    invite_method: z.string().optional()
 });
 
 type IdentityForm = z.infer<typeof identitySchema>;
@@ -67,8 +69,10 @@ const PRAYER_CATEGORIES = [
 ];
 
 const SKILL_OPTIONS = [
-    "Music", "Teaching", "Media", "Finance", "Administration", "Counseling",
-    "Technology", "Hospitality", "Event Planning", "Language Translation", "Design", "Leadership"
+    "Music", "Teaching", "Technology", "Video Editing", "Graphic Design",
+    "Counseling", "Administration", "Finance", "Writing", "Translation",
+    "Event Planning", "Evangelism", "Prayer / Intercession", "Leadership",
+    "Youth Mentoring", "Children Ministry", "Hospitality"
 ];
 
 export default function ProfileHub() {
@@ -103,6 +107,9 @@ export default function ProfileHub() {
 
     const [skills, setSkills] = useState<any[]>([]);
     const [newSkill, setNewSkill] = useState(SKILL_OPTIONS[0]);
+    const [newSkillLevel, setNewSkillLevel] = useState("Intermediate");
+    const [newSkillExp, setNewSkillExp] = useState(1);
+    const [newSkillCat, setNewSkillCat] = useState("Technology");
 
     const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
     const [fellowshipGroups, setFellowshipGroups] = useState<any[]>([]);
@@ -136,7 +143,7 @@ export default function ProfileHub() {
                     birthdate: pData.birthdate || '',
                     marital_status: pData.marital_status || '',
                     wedding_anniversary: pData.wedding_anniversary || '',
-                    physical_address: pData.physical_address || '',
+                    physical_address: pData.physical_address || pData.address || '',
                     city: pData.city || '',
                     ward: pData.ward || '',
                     postal_code: pData.postal_code || '',
@@ -144,7 +151,9 @@ export default function ProfileHub() {
                     preferred_language: pData.preferred_language || '',
                     years_in_japan: pData.years_in_japan,
                     occupation: pData.occupation || '',
-                    education_level: pData.education_level || ''
+                    education_level: pData.education_level || '',
+                    invited_by_name: pData.invited_by_name || '',
+                    invite_method: pData.invite_method || ''
                 });
                 setGivingData({
                     tithe_status: pData.tithe_status || false,
@@ -340,12 +349,18 @@ export default function ProfileHub() {
     const handleAddSkill = async () => {
         if (!user) return;
         try {
-            const { data, error } = await supabase.from('member_skills').insert([{ user_id: user.id, skill_name: newSkill }]).select().single();
+            const { data, error } = await supabase.from('member_skills').insert([{
+                user_id: user.id,
+                skill_name: newSkill,
+                skill_category: newSkillCat,
+                skill_level: newSkillLevel,
+                years_experience: newSkillExp
+            }]).select().single();
             if (error) throw error;
             setSkills([...skills, data]);
             toast.success("Skill added!");
         } catch (e) {
-            toast.error("Error adding skill (might already exist)");
+            toast.error("Error adding skill");
         }
     }
 
@@ -555,9 +570,40 @@ export default function ProfileHub() {
                                                     <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Education Level</label>
                                                     <Input {...idForm.register("education_level")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
                                                 </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">City</label>
+                                                    <Input {...idForm.register("city")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Ward</label>
+                                                    <Input {...idForm.register("ward")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Postal Code</label>
+                                                    <Input {...idForm.register("postal_code")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                </div>
                                                 <div className="space-y-2 md:col-span-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Home Address / Ward</label>
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Full Home Address</label>
                                                     <Input {...idForm.register("physical_address")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                </div>
+                                                <div className="pt-4 md:col-span-2 border-t border-foreground/5 mt-4">
+                                                    <h4 className="text-sm font-black uppercase tracking-widest text-[var(--primary)] mb-6">Referral Tracking</h4>
+                                                    <div className="grid md:grid-cols-2 gap-6">
+                                                        <div className="space-y-2">
+                                                            <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Who invited you?</label>
+                                                            <Input {...idForm.register("invited_by_name")} placeholder="Member Name or Guest" className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Method</label>
+                                                            <select {...idForm.register("invite_method")} className="w-full h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-4 text-sm font-semibold outline-none focus:ring-[var(--primary)]">
+                                                                <option value="Friend">Friend / Family</option>
+                                                                <option value="Social Media">Social Media</option>
+                                                                <option value="Street Outreach">Street Outreach</option>
+                                                                <option value="Web Search">Web Search</option>
+                                                                <option value="Other">Other</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <Button type="submit" disabled={isSaving} className="w-full md:w-auto px-12 h-14 rounded-xl bg-[var(--primary)] text-white font-black">
@@ -695,18 +741,88 @@ export default function ProfileHub() {
                                     {activeTab === 'skills' && (
                                         <div className="space-y-8 animate-in fade-in duration-300">
                                             <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8 space-y-6">
-                                                <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                                                    <select value={newSkill} onChange={e => setNewSkill(e.target.value)} className="h-14 rounded-2xl bg-background border border-foreground/10 px-4 text-sm font-semibold outline-none flex-1">
-                                                        {SKILL_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
-                                                    </select>
-                                                    <Button onClick={handleAddSkill} className="h-14 px-8 rounded-2xl bg-[var(--primary)] text-white font-black shadow-lg">Add Talent</Button>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] font-bold text-foreground/40 uppercase pl-1">Category</label>
+                                                        <select value={newSkillCat} onChange={e => setNewSkillCat(e.target.value)} className="h-14 w-full rounded-2xl bg-background border border-foreground/10 px-4 text-sm font-semibold outline-none">
+                                                            {SKILL_OPTIONS.slice(0, 10).map(o => <option key={o} value={o}>{o}</option>)}
+                                                        </select>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] font-bold text-foreground/40 uppercase pl-1">Talent</label>
+                                                        <select value={newSkill} onChange={e => setNewSkill(e.target.value)} className="h-14 w-full rounded-2xl bg-background border border-foreground/10 px-4 text-sm font-semibold outline-none">
+                                                            {SKILL_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                                                        </select>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] font-bold text-foreground/40 uppercase pl-1">Level</label>
+                                                        <select value={newSkillLevel} onChange={e => setNewSkillLevel(e.target.value)} className="h-14 w-full rounded-2xl bg-background border border-foreground/10 px-4 text-sm font-semibold outline-none">
+                                                            <option>Beginner</option>
+                                                            <option>Intermediate</option>
+                                                            <option>Expert</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className="flex items-end gap-2">
+                                                        <div className="space-y-1 flex-1">
+                                                            <label className="text-[10px] font-bold text-foreground/40 uppercase pl-1">Yrs Exp</label>
+                                                            <Input type="number" value={newSkillExp} onChange={e => setNewSkillExp(parseInt(e.target.value))} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
+                                                        </div>
+                                                        <Button onClick={handleAddSkill} className="h-14 px-8 rounded-2xl bg-[var(--primary)] text-white font-black shadow-lg">Link</Button>
+                                                    </div>
                                                 </div>
                                                 <div className="flex flex-wrap gap-2">
                                                     {skills.map(s => (
-                                                        <span key={s.id} className="px-4 py-2 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] font-bold text-sm border border-[var(--primary)]/20">
-                                                            {s.skill_name}
-                                                        </span>
+                                                        <div key={s.id} className="flex items-center justify-between px-5 py-4 rounded-2xl bg-background border border-foreground/10 shadow-sm">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-10 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center">
+                                                                    <Briefcase className="w-5 h-5 text-[var(--primary)]" />
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-sm font-black leading-tight">{s.skill_name}</p>
+                                                                    <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-tight">{s.skill_category} · {s.years_experience} Yrs</p>
+                                                                </div>
+                                                            </div>
+                                                            <Badge variant="outline" className="text-[9px] font-black border-[var(--primary)]/20 text-[var(--primary)] bg-[var(--primary)]/5 uppercase">
+                                                                {s.skill_level}
+                                                            </Badge>
+                                                        </div>
                                                     ))}
+                                                </div>
+
+                                                {/* MINISTRY MATCHING ENGINE (NEW) */}
+                                                <div className="pt-8 border-t border-foreground/5 overflow-hidden">
+                                                    <div className="flex items-center gap-2 mb-6">
+                                                        <Activity className="w-5 h-5 text-[var(--primary)]" />
+                                                        <h4 className="text-sm font-black uppercase tracking-widest text-foreground/60">Ministry Recommendations</h4>
+                                                    </div>
+                                                    <div className="grid gap-3">
+                                                        {skills.length > 0 ? (
+                                                            [...new Set(skills.map(s => {
+                                                                const name = s.skill_name.toLowerCase();
+                                                                if (name.includes('music') || name.includes('choir') || name.includes('sing')) return 'Worship Ministry';
+                                                                if (name.includes('tech') || name.includes('media') || name.includes('video')) return 'Media / Production';
+                                                                if (name.includes('teaching') || name.includes('children') || name.includes('kid')) return 'Children\'s Ministry';
+                                                                if (name.includes('hospitality') || name.includes('service') || name.includes('usher')) return 'Hospitality';
+                                                                if (name.includes('counsel')) return 'Counseling Ministry';
+                                                                if (name.includes('finance') || name.includes('admin')) return 'Finance Team';
+                                                                return 'General Service';
+                                                            }))].map(rec => (
+                                                                <div key={rec} className="flex items-center justify-between p-4 bg-[var(--primary)]/5 border border-[var(--primary)]/10 rounded-2xl group hover:bg-[var(--primary)]/10 transition-colors">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="w-10 h-10 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center">
+                                                                            <Heart className="w-5 h-5 text-[var(--primary)]" />
+                                                                        </div>
+                                                                        <p className="font-black text-sm">{rec}</p>
+                                                                    </div>
+                                                                    <Button variant="ghost" className="text-[10px] font-black text-[var(--primary)] uppercase tracking-widest hover:bg-transparent">
+                                                                        Join Team <ChevronRight className="w-4 h-4 ml-1" />
+                                                                    </Button>
+                                                                </div>
+                                                            ))
+                                                        ) : (
+                                                            <p className="text-xs text-foreground/40 font-medium italic">Add your skills above to see ministry matches.</p>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

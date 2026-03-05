@@ -1,7 +1,7 @@
 import pkg from 'pg';
 const { Client } = pkg;
 
-const CONNECTION_STRING = `postgresql://postgres:Youblessme-1985@db.dapxrorkcvpzzkggopsa.supabase.co:5432/postgres`;
+const CONNECTION_STRING = `postgresql://postgres.dapxrorkcvpzzkggopsa:Youblessme-1985@52.68.3.1:6543/postgres`;
 
 async function main() {
     const client = new Client({
