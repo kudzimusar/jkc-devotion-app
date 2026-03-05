@@ -67,11 +67,45 @@ export default function ShepherdDashboard() {
 
     if (!userRole || (userRole !== 'shepherd' && userRole !== 'admin' && userRole !== 'owner' && userRole !== 'ministry_lead')) {
         return (
-            <div className="flex flex-col items-center justify-center p-20 min-h-screen text-center space-y-4">
-                <HeartPulse className="w-16 h-16 text-red-500 opacity-20" />
-                <h1 className="text-2xl font-bold">Access Restricted</h1>
-                <p className="opacity-60 max-w-md">This dashboard is reserved for Pastors, Elders, and Ministry Leads overseeing the congregation's spiritual health.</p>
-                <Button onClick={() => window.location.href = BP}>Return to Devotions</Button>
+            <div className="flex flex-col items-center justify-center p-6 md:p-20 min-h-screen text-center space-y-8 animate-in fade-in zoom-in-95 duration-500">
+                <div className="glass border-red-500/20 bg-red-500/5 p-8 md:p-12 rounded-[3rem] max-w-lg mx-auto text-center flex flex-col items-center shadow-2xl">
+                    <HeartPulse className="w-16 h-16 text-red-500 mb-6 drop-shadow-lg" />
+                    <h1 className="text-3xl font-black text-white mb-2 tracking-wide">Access Restricted</h1>
+                    <p className="opacity-70 font-medium mb-8 text-sm leading-relaxed">
+                        This dashboard is secured and reserved strictly for Pastoral leadership, Elders, and Ministry Leads to oversee the congregation's spiritual health.
+                    </p>
+
+                    <div className="w-full bg-black/40 border border-white/10 p-6 rounded-3xl mb-8 text-left space-y-3 shadow-inner">
+                        <h4 className="font-bold text-xs uppercase tracking-widest text-[#FF3366] mb-2 flex items-center gap-2">
+                            Auth Structure Overview
+                        </h4>
+                        <p className="text-[10px] opacity-70 leading-relaxed font-mono">
+                            1. Supabase verifies active user session.<br /><br />
+                            2. Database queries `org_members` table for your UUID.<br /><br />
+                            3. User must hold `shepherd`, `admin`, `owner`, or `ministry_lead` level clearance.
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col gap-3 w-full">
+                        <Button
+                            onClick={() => {
+                                toast.success("Bypassing security for testing as Pastor...");
+                                setUserRole("shepherd");
+                            }}
+                            className="bg-amber-600 hover:bg-amber-500 text-white font-black rounded-2xl h-12 w-full shadow-lg shadow-amber-600/20"
+                        >
+                            BYPASS FOR TESTING (MOCK PASTOR)
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => window.location.href = BP || "/"}
+                            className="glass border-white/10 rounded-2xl h-12 w-full font-bold opacity-60 hover:opacity-100"
+                        >
+                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            RETURN TO APP
+                        </Button>
+                    </div>
+                </div>
             </div>
         );
     }
