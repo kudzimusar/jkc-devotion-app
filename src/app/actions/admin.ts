@@ -67,6 +67,7 @@ export async function addPrayerRequestAction(requestData: any) {
             .from('prayer_requests')
             .insert([{
                 user_id: userId,
+                org_id: orgId,
                 request_text: text,
                 category,
                 urgency,

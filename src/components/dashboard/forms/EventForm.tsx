@@ -7,8 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { createEventAction } from "@/app/actions/admin";
 import { Calendar, MapPin, AlignLeft } from "lucide-react";
+import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
 
 export function EventForm({ onSuccess }: { onSuccess: () => void }) {
+    const { userId, orgId } = useAdminCtx();
     const [loading, setLoading] = useState(false);
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -19,8 +21,8 @@ export function EventForm({ onSuccess }: { onSuccess: () => void }) {
 
         const result = await createEventAction({
             ...data,
-            orgId: 'demo-org-id',
-            userId: 'demo-user-id'
+            orgId,
+            userId
         });
 
         if (result.success) {

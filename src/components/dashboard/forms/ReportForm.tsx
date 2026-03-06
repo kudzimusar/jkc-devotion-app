@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { generateReportAction } from "@/app/actions/admin";
 import { FileText, Sparkles, TrendingUp, Users, Heart, BarChart } from "lucide-react";
+import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
 
 export function ReportForm({ onSuccess }: { onSuccess: () => void }) {
+    const { userId, orgId } = useAdminCtx();
     const [loading, setLoading] = useState(false);
     const [selectedType, setSelectedType] = useState<string | null>(null);
 
@@ -20,7 +22,7 @@ export function ReportForm({ onSuccess }: { onSuccess: () => void }) {
         if (!selectedType) return;
         setLoading(true);
 
-        const result = await generateReportAction(selectedType, 'demo-org-id', 'demo-user-id');
+        const result = await generateReportAction(selectedType, orgId, userId);
 
         if (result.success) {
             toast.success(`${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)} Intelligence generated!`);

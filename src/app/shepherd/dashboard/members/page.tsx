@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Users, Search, Filter, UserCheck, UserX, ChevronRight, Mail, Phone, Calendar, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 
@@ -11,6 +12,10 @@ interface Member {
     membership_status?: string; city?: string;
     gender?: string; phone?: string;
     date_joined_church?: string; baptism_status?: string;
+    avatar_url?: string;
+    skills_talents?: string[];
+    milestones?: any;
+    ministries?: any[];
 }
 
 const BADGE_COLORS: Record<string, string> = {
@@ -26,14 +31,30 @@ export default function MembersPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState("all");
+    const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
     useEffect(() => {
-        supabase.from('profiles').select('*').order('name')
-            .then(({ data }) => {
-                setMembers(data || []);
-                setLoading(false);
-            });
+        fetchMembers();
     }, []);
+
+    async function fetchMembers() {
+        setLoading(true);
+        const { data, error } = await supabase
+            .from('profiles')
+            .select(`
+                *,
+                milestones:member_milestones(*),
+                ministries:ministry_members(*)
+            `)
+            .order('name');
+
+        if (error) {
+            console.error("Error fetching members:", error);
+        } else {
+            setMembers(data || []);
+        }
+        setLoading(false);
+    }
 
     const filtered = members.filter(m => {
         const q = search.toLowerCase();
@@ -135,7 +156,10 @@ export default function MembersPage() {
                                         {m.date_joined_church ? new Date(m.date_joined_church).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—'}
                                     </p>
                                 </div>
-                                <button className="text-[9px] font-black text-violet-400 hover:text-violet-300 transition-colors flex items-center gap-0.5">
+                                <button
+                                    onClick={() => setSelectedMember(m)}
+                                    className="text-[9px] font-black text-violet-400 hover:text-violet-300 transition-colors flex items-center gap-0.5"
+                                >
                                     View <ChevronRight className="w-3 h-3" />
                                 </button>
                             </motion.div>
@@ -143,6 +167,106 @@ export default function MembersPage() {
                     </div>
                 )}
             </div>
+
+            {/* Member Detail Modal */}
+            {selectedMember && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="bg-[#0f172a] border border-white/10 rounded-[2.5rem] w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
+                    >
+                        <div className="p-8 border-b border-white/5 flex items-start justify-between bg-gradient-to-br from-violet-600/10 to-transparent">
+                            <div className="flex items-center gap-6">
+                                <div className="w-20 h-20 rounded-3xl bg-violet-500/20 flex items-center justify-center text-3xl font-black text-violet-400 border border-violet-500/20">
+                                    {selectedMember.name?.[0]?.toUpperCase()}
+                                </div>
+                                <div>
+                                    <h2 className="text-3xl font-black text-white tracking-tighter">{selectedMember.name}</h2>
+                                    <div className="flex gap-2 mt-2">
+                                        <Badge className={`${BADGE_COLORS[selectedMember.membership_status || 'visitor'] || 'bg-white/10 text-white/40'} border-0 font-black px-3 py-1`}>
+                                            {selectedMember.membership_status?.toUpperCase() || 'VISITOR'}
+                                        </Badge>
+                                        <Badge className="bg-white/5 text-white/40 border-0 font-black px-3 py-1">
+                                            {selectedMember.city || 'LOCATION UNKNOWN'}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            </div>
+                            <button onClick={() => setSelectedMember(null)} className="p-2 hover:bg-white/5 rounded-full text-white/20 hover:text-white transition-colors">
+                                <UserX className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                            <div className="grid grid-cols-2 gap-8">
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-black text-white/20 uppercase tracking-widest flex items-center gap-1.5"><Mail className="w-3 h-3" /> Email Address</p>
+                                    <p className="text-sm font-bold text-white/80">{selectedMember.email}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-black text-white/20 uppercase tracking-widest flex items-center gap-1.5"><Phone className="w-3 h-3" /> Phone Number</p>
+                                    <p className="text-sm font-bold text-white/80">{selectedMember.phone || 'Not provided'}</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <h4 className="text-xs font-black text-white/20 uppercase tracking-[0.2em]">Spiritual Milestones</h4>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {[
+                                        { label: 'Salvation', val: selectedMember.milestones?.salvation_date },
+                                        { label: 'Baptism', val: selectedMember.milestones?.baptism_date },
+                                        { label: 'Membership', val: selectedMember.milestones?.membership_date },
+                                        { label: 'Foundation', val: selectedMember.milestones?.foundation_class_date }
+                                    ].map(m => (
+                                        <div key={m.label} className={`p-4 rounded-2xl border ${m.val ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-white/2 border-white/5 opacity-50'}`}>
+                                            <p className="text-[10px] font-black uppercase text-white/30">{m.label}</p>
+                                            <p className={`text-sm font-bold mt-0.5 ${m.val ? 'text-emerald-400' : 'text-white/20'}`}>
+                                                {m.val ? new Date(m.val).toLocaleDateString() : 'Pending'}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {selectedMember.ministries && selectedMember.ministries.length > 0 && (
+                                <div className="space-y-4">
+                                    <h4 className="text-xs font-black text-white/20 uppercase tracking-[0.2em]">Ministry Involvement</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedMember.ministries.map(m => (
+                                            <Badge key={m.id} className="bg-violet-500/10 text-violet-400 border border-violet-500/20 px-4 py-1.5 rounded-xl font-bold">
+                                                {m.ministry_name} • {m.ministry_role}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {selectedMember.skills_talents && selectedMember.skills_talents.length > 0 && (
+                                <div className="space-y-4">
+                                    <h4 className="text-xs font-black text-white/20 uppercase tracking-[0.2em]">Skills & Talents</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedMember.skills_talents.map(s => (
+                                            <Badge key={s} className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-4 py-1.5 rounded-xl font-bold">
+                                                {s}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="p-8 border-t border-white/5 bg-white/2 flex gap-3">
+                            <Button className="flex-1 h-14 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-2xl border-0 shadow-lg shadow-violet-600/20">
+                                Send Message
+                            </Button>
+                            <Button variant="outline" className="flex-1 h-14 border-white/10 bg-white/5 hover:bg-white/10 text-white font-black rounded-2xl">
+                                Assign to Ministry
+                            </Button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 }

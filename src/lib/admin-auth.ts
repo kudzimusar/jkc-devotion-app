@@ -26,6 +26,7 @@ interface CachedSession {
     email: string;
     name: string;
     role: AdminRole;
+    orgId: string;
     cachedAt: number;
 }
 
@@ -52,7 +53,7 @@ export const AdminAuth = {
 
             const { data: member } = await supabase
                 .from('org_members')
-                .select('role')
+                .select('role, org_id')
                 .eq('user_id', session.user.id)
                 .single();
 
@@ -69,6 +70,7 @@ export const AdminAuth = {
                 email: session.user.email || '',
                 name: profile?.name || session.user.email || 'Admin',
                 role: member.role as AdminRole,
+                orgId: member.org_id,
                 cachedAt: Date.now(),
             };
 

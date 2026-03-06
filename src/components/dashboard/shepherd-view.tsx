@@ -100,6 +100,7 @@ const MOCK_DATA: DashboardData = {
         { name: 'Evangelism', count: 16 }, { name: 'Media/Tech', count: 12 },
         { name: 'Choir', count: 24 }, { name: 'Ushers', count: 15 },
         { name: 'Counseling', count: 8 }, { name: 'Missions', count: 11 },
+        { name: 'Hospitality', count: 14 }, { name: 'Welfare', count: 7 },
     ],
     prayerCategories: [
         { name: 'Health', value: 32, color: '#f87171' },
@@ -316,7 +317,11 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 .sort((a, b) => b.count - a.count);
 
             // Staffing Gaps (Dynamic)
-            const gapMinistries = ['Childrens Ministry', 'Counseling', 'Outreach', 'Missions', 'Intercessory'];
+            const gapMinistries = [
+                'Children\'s Ministry', 'Counseling Ministry', 'Evangelism Team',
+                'Missions Team', 'Intercessory Prayer Team', 'Technical Team',
+                'Health & Wellness', 'Benevolence & Welfare'
+            ];
             const detectedGaps = gapMinistries.filter(m => (minMap[m] || 0) < 5);
 
             // Evangelism Pipeline & Journey Funnel

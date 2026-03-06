@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { assignMinistryRoleAction } from "@/app/actions/admin";
 import { BookOpen, UserPlus, ShieldCheck, Sparkles } from "lucide-react";
+import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
 
 export function MinistryForm({ onSuccess }: { onSuccess: () => void }) {
+    const { userId: adminId } = useAdminCtx();
     const [loading, setLoading] = useState(false);
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -18,7 +20,7 @@ export function MinistryForm({ onSuccess }: { onSuccess: () => void }) {
         const role = formData.get('role') as string;
         const ministry = formData.get('ministry') as string;
 
-        const result = await assignMinistryRoleAction(memberId, role, ministry, 'demo-admin-id');
+        const result = await assignMinistryRoleAction(memberId, role, ministry, adminId);
 
         if (result.success) {
             toast.success("Ministry invitation sent successfully!");

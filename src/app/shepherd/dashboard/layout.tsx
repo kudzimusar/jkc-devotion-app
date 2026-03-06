@@ -16,11 +16,12 @@ interface AdminCtx {
     role: AdminRole;
     userName: string;
     userId: string;
+    orgId: string;
     alertCount: number;
     refreshDashboard: () => void;
 }
 const AdminContext = createContext<AdminCtx>({
-    role: 'admin', userName: 'Admin', userId: '', alertCount: 0,
+    role: 'admin', userName: 'Admin', userId: '', orgId: '', alertCount: 0,
     refreshDashboard: () => { }
 });
 export const useAdminCtx = () => useContext(AdminContext);
@@ -31,7 +32,7 @@ export default function ShepherdDashboardLayout({ children }: { children: React.
     const [state, setState] = useState<{ loading: boolean; authed: boolean; ctx: AdminCtx }>({
         loading: true,
         authed: false,
-        ctx: { role: 'admin', userName: 'Admin', userId: '', alertCount: 0, refreshDashboard: () => { } }
+        ctx: { role: 'admin', userName: 'Admin', userId: '', orgId: '', alertCount: 0, refreshDashboard: () => { } }
     });
 
     const loadSession = useCallback(async () => {
@@ -55,6 +56,7 @@ export default function ShepherdDashboardLayout({ children }: { children: React.
                 role: session.role,
                 userName: session.name,
                 userId: session.userId,
+                orgId: session.orgId,
                 alertCount: count || 0,
                 refreshDashboard: () => loadSession(),
             }

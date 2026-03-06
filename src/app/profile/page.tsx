@@ -45,14 +45,15 @@ type IdentityForm = z.infer<typeof identitySchema>;
 
 const SIDEBAR_NAV = [
     { id: 'identity', label: 'Identity', icon: UserIcon },
-    { id: 'family', label: 'Family', icon: Users },
-    { id: 'journey', label: 'Journey', icon: Milestone },
-    { id: 'service', label: 'Service', icon: Heart },
-    { id: 'care', label: 'Care', icon: MessageCircle },
+    { id: 'family', label: 'Family & Households', icon: Users },
+    { id: 'junior-church', label: 'Junior Church', icon: Sparkles },
+    { id: 'journey', label: 'Spiritual Journey', icon: Milestone },
+    { id: 'service', label: 'Ministry & Service', icon: Heart },
+    { id: 'care', label: 'Pastoral Care', icon: MessageCircle },
     { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
     { id: 'skills', label: 'Skills & Talents', icon: Briefcase },
-    { id: 'community', label: 'Community', icon: Globe },
-    { id: 'giving', label: 'Giving', icon: Coins }
+    { id: 'community', label: 'Circle Community', icon: Globe },
+    { id: 'giving', label: 'Giving & Tithe', icon: Coins }
 ];
 
 const MINISTRY_OPTIONS = [
@@ -60,7 +61,9 @@ const MINISTRY_OPTIONS = [
     "Children's Ministry", "Youth Ministry", "Young Adults", "Intercessory Prayer Team",
     "Evangelism Team", "Discipleship Team", "Marriage Ministry", "Men's Ministry",
     "Women's Ministry", "Counseling Ministry", "Protocol / Security", "Missions Team",
-    "Administration", "Finance Team", "Technical Team", "Translation Team", "Community Outreach"
+    "Administration", "Finance Team", "Technical Team", "Translation Team",
+    "Community Outreach", "Missions & Church Planting", "Creative Arts & Drama",
+    "Health & Wellness", "Benevolence & Welfare", "Prison Ministry", "Campus Fellowship"
 ];
 
 const PRAYER_CATEGORIES = [
@@ -69,10 +72,12 @@ const PRAYER_CATEGORIES = [
 ];
 
 const SKILL_OPTIONS = [
-    "Music", "Teaching", "Technology", "Video Editing", "Graphic Design",
-    "Counseling", "Administration", "Finance", "Writing", "Translation",
-    "Event Planning", "Evangelism", "Prayer / Intercession", "Leadership",
-    "Youth Mentoring", "Children Ministry", "Hospitality"
+    "Music (Instruments)", "Vocals", "Teaching", "Technology", "Video Editing",
+    "Graphic Design", "Counseling", "Administration", "Finance", "Writing",
+    "Translation (JP/EN)", "Event Planning", "Evangelism", "Prayer / Intercession",
+    "Leadership", "Youth Mentoring", "Children Ministry", "Hospitality",
+    "Culinary Arts", "Medical / Nursing", "Legal Advice", "Construction / DIY",
+    "Social Media Mgmt", "Photography", "Web Development"
 ];
 
 export default function ProfileHub() {
@@ -112,6 +117,8 @@ export default function ProfileHub() {
     const [newSkillCat, setNewSkillCat] = useState("Technology");
 
     const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
+    const [children, setChildren] = useState<any[]>([]);
+    const [givingHistory, setGivingHistory] = useState<any[]>([]);
     const [fellowshipGroups, setFellowshipGroups] = useState<any[]>([]);
     const [userGroups, setUserGroups] = useState<any[]>([]);
     const [givingData, setGivingData] = useState({ tithe_status: false, preferred_giving_method: 'Cash' });
@@ -219,6 +226,14 @@ export default function ProfileHub() {
             // Prophetic Intelligence (PIL)
             const { data: pilData } = await supabase.from('prophetic_insights').select('*').eq('subject_id', userId).eq('is_acknowledged', false).maybeSingle();
             if (pilData) setPropheticInsight(pilData);
+
+            // Junior Church
+            const { data: juniorData } = await supabase.from('guardian_links').select('*').eq('guardian_id', userId);
+            setChildren(juniorData || []);
+
+            // Giving History
+            const { data: gHistory } = await supabase.from('financial_records').select('*').eq('user_id', userId).order('given_date', { ascending: false });
+            setGivingHistory(gHistory || []);
 
             // Fellowship
             const { data: groups } = await supabase.from('fellowship_groups').select('*').eq('is_active', true);
@@ -728,6 +743,18 @@ export default function ProfileHub() {
                                                     <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Membership Date</label>
                                                     <Input type="date" value={milestones.membership_date || ''} onChange={e => setMilestones({ ...milestones, membership_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
                                                 </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Foundation Class Completed</label>
+                                                    <Input type="date" value={milestones.foundation_class_date || ''} onChange={e => setMilestones({ ...milestones, foundation_class_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Leadership Training</label>
+                                                    <Input type="date" value={milestones.leadership_training_date || ''} onChange={e => setMilestones({ ...milestones, leadership_training_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Ordnained / Commissioned</label>
+                                                    <Input type="date" value={milestones.ordained_date || ''} onChange={e => setMilestones({ ...milestones, ordained_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
+                                                </div>
                                                 <div className="col-span-full pt-4">
                                                     <Button onClick={saveMilestones} className="px-8 h-12 rounded-xl bg-emerald-500 text-white font-black shadow-lg">Save Milestones</Button>
                                                 </div>
@@ -787,6 +814,90 @@ export default function ProfileHub() {
                                                             </div>
                                                         </div>
                                                     ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* JUNIOR CHURCH TAB */}
+                                    {activeTab === 'junior-church' && (
+                                        <div className="space-y-8 animate-in fade-in duration-300">
+                                            <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8 space-y-6">
+                                                <div className="flex items-center justify-between pb-4 border-b border-foreground/10">
+                                                    <div>
+                                                        <h4 className="font-black text-lg">My Children</h4>
+                                                        <p className="text-xs text-foreground/50">Manage your children's enrollment in Junior Church</p>
+                                                    </div>
+                                                    <Button variant="outline" className="h-10 rounded-xl border-foreground/10 font-bold px-4">
+                                                        <Plus className="w-4 h-4 mr-2" /> Add Child
+                                                    </Button>
+                                                </div>
+
+                                                {children.length > 0 ? (
+                                                    <div className="grid gap-4">
+                                                        {children.map(child => (
+                                                            <div key={child.id} className="flex items-center justify-between p-5 bg-background border border-foreground/10 rounded-2xl">
+                                                                <div className="flex items-center gap-4">
+                                                                    <div className="w-12 h-12 rounded-2xl bg-violet-500/10 flex items-center justify-center text-violet-500 font-black">
+                                                                        {child.child_name[0]}
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="font-bold text-foreground">{child.child_name}</p>
+                                                                        <p className="text-xs text-foreground/40">{child.child_birthdate || 'Age not specified'}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex flex-col items-end">
+                                                                    <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[9px] font-black uppercase">Active</Badge>
+                                                                    <p className="text-[10px] text-foreground/30 mt-1">Last seen: Feb 26</p>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-center py-20 bg-background/50 rounded-2xl border border-dashed border-foreground/10">
+                                                        <Sparkles className="w-10 h-10 text-foreground/10 mx-auto mb-4" />
+                                                        <p className="text-xs font-black text-foreground/30 uppercase tracking-widest">No children linked yet</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* GIVING TAB */}
+                                    {activeTab === 'giving' && (
+                                        <div className="space-y-8 animate-in fade-in duration-300">
+                                            <div className="grid md:grid-cols-2 gap-6 pb-8 border-b border-foreground/10">
+                                                <div className="bg-foreground/5 p-6 rounded-3xl border border-foreground/10">
+                                                    <p className="text-xs font-black text-foreground/40 uppercase tracking-widest mb-4">Giving Preferences</p>
+                                                    <div className="space-y-4">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <span className="text-sm font-semibold">Automatic Tithing</span>
+                                                            <input type="checkbox" checked={givingData.tithe_status} onChange={e => setGivingData({ ...givingData, tithe_status: e.target.checked })} />
+                                                        </div>
+                                                        <select value={givingData.preferred_giving_method} onChange={e => setGivingData({ ...givingData, preferred_giving_method: e.target.value })} className="w-full h-12 rounded-xl bg-background border border-foreground/10 px-4 text-sm font-semibold">
+                                                            <option>Cash</option>
+                                                            <option>Bank Transfer</option>
+                                                            <option>Card / Digital</option>
+                                                        </select>
+                                                        <Button onClick={saveGiving} className="w-full bg-[var(--primary)] text-white font-black h-12 rounded-xl">Save Preferences</Button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <h4 className="font-black text-lg">Recent Giving History</h4>
+                                                <div className="grid gap-3">
+                                                    {givingHistory.length > 0 ? givingHistory.map(g => (
+                                                        <div key={g.id} className="flex items-center justify-between p-4 bg-foreground/5 border border-foreground/10 rounded-2xl">
+                                                            <div>
+                                                                <p className="text-sm font-black text-foreground">{g.record_type.toUpperCase()}</p>
+                                                                <p className="text-[10px] text-foreground/40">{g.given_date}</p>
+                                                            </div>
+                                                            <p className="font-black text-[var(--primary)]">¥{Number(g.amount).toLocaleString()}</p>
+                                                        </div>
+                                                    )) : (
+                                                        <p className="text-center py-10 text-xs text-foreground/30 font-bold uppercase tracking-widest">No giving records found</p>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

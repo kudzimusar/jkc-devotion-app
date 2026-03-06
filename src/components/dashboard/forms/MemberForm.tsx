@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { addMemberAction } from "@/app/actions/admin";
 import { Users } from "lucide-react";
+import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
 
 export function MemberForm({ onSuccess }: { onSuccess: () => void }) {
+    const { orgId } = useAdminCtx();
     const [loading, setLoading] = useState(false);
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -16,8 +18,7 @@ export function MemberForm({ onSuccess }: { onSuccess: () => void }) {
         const formData = new FormData(e.currentTarget);
         const data = Object.fromEntries(formData.entries());
 
-        // Mock orgId for demo
-        const result = await addMemberAction({ ...data, orgId: 'demo-org-id' });
+        const result = await addMemberAction({ ...data, orgId });
 
         if (result.success) {
             toast.success("Member added successfully!");

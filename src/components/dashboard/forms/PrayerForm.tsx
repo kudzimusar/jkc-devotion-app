@@ -7,8 +7,10 @@ import { toast } from "sonner";
 import { addPrayerRequestAction } from "@/app/actions/admin";
 import { Heart, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
 
 export function PrayerForm({ onSuccess }: { onSuccess: () => void }) {
+    const { userId, orgId } = useAdminCtx();
     const [loading, setLoading] = useState(false);
     const [text, setText] = useState("");
     const [aiInsight, setAiInsight] = useState<string | null>(null);
@@ -29,7 +31,8 @@ export function PrayerForm({ onSuccess }: { onSuccess: () => void }) {
 
         const result = await addPrayerRequestAction({
             text,
-            userId: 'demo-user-id', // In real app, from auth
+            userId,
+            orgId,
             isAnonymous: false
         });
 
