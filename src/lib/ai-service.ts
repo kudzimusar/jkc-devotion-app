@@ -66,7 +66,7 @@ export const AIService = {
         try {
             const { supabaseAdmin } = await import("./supabase-admin");
             const { data: insights } = await supabaseAdmin
-                .from('prophetic_insights')
+                .from('ai_insights')
                 .select('*')
                 .eq('is_acknowledged', false)
                 .limit(5);

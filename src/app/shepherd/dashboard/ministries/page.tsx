@@ -27,8 +27,8 @@ export default function MinistriesPage() {
     useEffect(() => {
         const load = async () => {
             const [rolesRes, skillsRes] = await Promise.all([
-                supabaseAdmin.from('member_roles').select('*').eq('active_status', true),
-                supabaseAdmin.from('member_skills').select('*, profiles(name, profile_image_url)')
+                supabaseAdmin.from('ministry_members').select('*').eq('is_active', true),
+                supabaseAdmin.from('member_skills').select('*, profiles(name, avatar_url)')
             ]);
             setMembers(rolesRes.data || []);
             setCandidates(skillsRes.data || []);
@@ -50,12 +50,11 @@ export default function MinistriesPage() {
 
     const handleInvite = async (candidate: any, ministryName: string) => {
         try {
-            const { error } = await supabaseAdmin.from('member_roles').insert({
+            const { error } = await supabaseAdmin.from('ministry_members').insert({
                 user_id: candidate.user_id,
                 ministry_name: ministryName,
-                role_title: 'Invited Member',
-                status: 'pending_invitation',
-                invitation_date: new Date().toISOString()
+                ministry_role: 'member',
+                is_active: true
             });
             if (error) throw error;
             // Optionally update state to show "Invited"

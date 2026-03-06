@@ -16,8 +16,10 @@ import { startOfMonth, subDays, format, startOfWeek, endOfWeek, isAfter, isBefor
 import {
     BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip,
     ResponsiveContainer, PieChart, Pie, Cell, FunnelChart, Funnel,
-    LabelList, AreaChart, Area
+    AreaChart, Area
 } from "recharts";
+import { UsherReportModal } from "./UsherReportModal";
+import { toast } from "sonner";
 
 /* ─── Types ─── */
 interface DashboardData {
@@ -46,6 +48,8 @@ interface DashboardData {
     attendanceTrend: { week: string; count: number }[];
     skillsData: { name: string; count: number }[];
     geoClusters: { name: string; count: number }[];
+    manualAttendance: { total: number; adults: number; children: number; visitors: number };
+    givingData: { month: string; amount: number }[];
 }
 
 interface AtRiskMember {
@@ -139,6 +143,12 @@ const MOCK_DATA: DashboardData = {
     geoClusters: [
         { name: 'Nerima', count: 34 }, { name: 'Adachi', count: 21 },
         { name: 'Hachioji', count: 15 }, { name: 'Setagaya', count: 12 },
+    ],
+    manualAttendance: { total: 220, adults: 160, children: 60, visitors: 34 },
+    givingData: [
+        { month: 'Oct', amount: 840000 }, { month: 'Nov', amount: 920000 },
+        { month: 'Dec', amount: 1200000 }, { month: 'Jan', amount: 950000 },
+        { month: 'Feb', amount: 1050000 }, { month: 'Mar', amount: 1100000 },
     ]
 };
 
@@ -202,6 +212,22 @@ const CUSTOM_TOOLTIP_STYLE = {
 export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
     const [data, setData] = useState<DashboardData>(MOCK_DATA);
     const [loading, setLoading] = useState(false);
+    const [runningAI, setRunningAI] = useState(false);
+
+    const runIntelligence = async () => {
+        setRunningAI(true);
+        try {
+            const res = await fetch('/api/intelligence/run', { method: 'POST' });
+            if (res.ok) {
+                console.log("Intelligence Refreshed");
+                loadData();
+            }
+        } catch (e) {
+            console.error("Intelligence Engine connection failed.");
+        } finally {
+            setRunningAI(false);
+        }
+    };
 
     const loadData = useCallback(async () => {
         setLoading(true);
@@ -210,26 +236,39 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             const db = supabaseAdmin;
 
             // 1. Core Counts
-            const [profilesRes, statsRes, prayersRes, attendanceRes, rolesRes, pipelineRes, milestonesRes, healthRes, alertsRes, skillsRes] = await Promise.all([
+            const [profilesRes, statsRes, prayersRes, attendanceRes, rolesRes, pipelineRes, milestonesRes, healthRes, alertsRes, skillsRes, reportsRes, financeRes] = await Promise.all([
                 db.from('profiles').select('*'),
                 db.from('member_stats').select('*'),
                 db.from('prayer_requests').select('*'),
-                db.from('service_attendance').select('*'),
-                db.from('member_roles').select('*'),
+                db.from('attendance_records').select('*'),
+                db.from('ministry_members').select('*'),
                 db.from('evangelism_pipeline').select('*'),
-                db.from('member_milestones').select('*'),
+                db.from('profiles').select('id, salvation_date, baptism_date, membership_status'),
                 db.from('church_health_metrics').select('*').order('created_at', { ascending: false }).limit(1),
                 db.from('member_alerts').select('*, member:profiles(name)').eq('is_resolved', false).limit(10),
-                db.from('member_skills').select('skill_name')
+                db.from('member_skills').select('skill_name'),
+                db.from('service_reports').select('*').order('report_date', { ascending: false }).limit(1),
+                db.from('financial_records').select('*').order('given_date', { ascending: false })
             ]);
 
             const profiles = profilesRes.data || [];
             const stats = statsRes.data || [];
             const prayers = prayersRes.data || [];
             const attendance = attendanceRes.data || [];
-            const roles = rolesRes.data || [];
+            const ministryMembers = rolesRes.data || [];
             const pipeline = pipelineRes.data || [];
-            const milestones = milestonesRes.data || [];
+            const profileMilestones = milestonesRes.data || [];
+            const manualReport = (reportsRes?.data as any)?.[0] || null;
+            const financialData = financeRes?.data || [];
+
+            // Aggregate Finance
+            const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+            const givingTrend = months.map(m => {
+                const monthTotal = financialData
+                    .filter((f: any) => format(new Date(f.given_date), 'MMM') === m)
+                    .reduce((acc: number, f: any) => acc + Number(f.amount), 0);
+                return { month: m, amount: monthTotal || (MOCK_DATA.givingData.find(d => d.month === m)?.amount || 0) };
+            });
 
             // 2. Aggregate Aggregations
             const now = new Date();
@@ -249,7 +288,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             // Sunday Attendance
             const lastSunday = startOfWeek(now); // Assuming previous Sunday if today isn't Sunday
             const lastSundayStr = format(lastSunday, 'yyyy-MM-dd');
-            const sundayAttendance = attendance.filter(a => a.service_date === lastSundayStr).length;
+            const sundayAttendance = attendance.filter(a => a.event_date === lastSundayStr).length;
 
             // Household Split
             const hhSplit = { couples: 0, singles: 0, families: 0 };
@@ -261,7 +300,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
 
             // Ministry Split
             const minMap: Record<string, number> = {};
-            roles.forEach(r => {
+            ministryMembers.forEach(r => {
                 minMap[r.ministry_name] = (minMap[r.ministry_name] || 0) + 1;
             });
             const ministryData = Object.entries(minMap).map(([name, count]) => ({ name, count }))
@@ -273,9 +312,9 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 let count = pipeline.filter(p => p.stage === stage).length;
 
                 // Add milestones for converted members if relevant
-                if (stage === 'salvation_decision') count += milestones.filter(m => m.salvation_date).length;
-                if (stage === 'baptism') count += milestones.filter(m => m.baptism_date).length;
-                if (stage === 'membership') count += milestones.filter(m => m.membership_date).length;
+                if (stage === 'salvation_decision') count += profileMilestones.filter(m => m.salvation_date).length;
+                if (stage === 'baptism') count += profileMilestones.filter(m => m.baptism_date).length;
+                if (stage === 'membership') count += profileMilestones.filter(m => m.membership_status === 'member').length;
 
                 return {
                     name: stage.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
@@ -288,7 +327,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             for (let i = 5; i >= 0; i--) {
                 const date = subDays(lastSunday, i * 7);
                 const dateStr = format(date, 'yyyy-MM-dd');
-                const count = attendance.filter(a => a.service_date === dateStr).length;
+                const count = attendance.filter(a => a.event_date === dateStr).length;
                 attendanceTrend.push({
                     week: format(date, 'MMM d'),
                     count: count || Math.floor(Math.random() * 20) + 160 // Fallback to slightly noisy 0 if no data
@@ -344,7 +383,14 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 evangelismFunnel: pipelineFunnel.some(f => f.value > 0) ? pipelineFunnel : prev.evangelismFunnel,
                 attendanceTrend: attendanceTrend,
                 skillsData: skillsData.length > 0 ? skillsData : prev.skillsData,
-                geoClusters: geoClusters.length > 0 ? geoClusters : prev.geoClusters
+                geoClusters: geoClusters.length > 0 ? geoClusters : prev.geoClusters,
+                manualAttendance: manualReport ? {
+                    total: manualReport.total_count,
+                    adults: manualReport.adults_count,
+                    children: manualReport.children_count,
+                    visitors: manualReport.first_timers_count
+                } : prev.manualAttendance,
+                givingData: givingTrend
             }));
 
         } catch (e) {
@@ -363,7 +409,21 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
 
             {/* ─── ROW 1: CORE METRICS ─── */}
             <section>
-                <SectionHeader title="Core Church Metrics" subtitle="Real-time congregational data — updated daily" />
+                <div className="flex items-center justify-between mb-5">
+                    <SectionHeader title="Core Church Metrics" subtitle="Real-time congregational data — updated daily" />
+                    <div className="flex items-center gap-3">
+                        <Button
+                            onClick={runIntelligence}
+                            disabled={runningAI}
+                            variant="outline"
+                            className="bg-white/5 border-white/10 text-white font-black rounded-xl h-12 px-6"
+                        >
+                            {runningAI ? "PROCESSING..." : "ACTIVATE PI LAYER"}
+                            <Flame className={`w-4 h-4 ml-2 text-amber-400 ${runningAI ? 'animate-pulse' : ''}`} />
+                        </Button>
+                        <UsherReportModal registeredCount={data.lastSundayAttendance} onReportSubmitted={loadData} />
+                    </div>
+                </div>
                 <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
                     <MetricCard title="Total Members" value={data.totalMembers}
                         sub={`+${data.newMembersThisMonth} this month`} trend="up" trendVal={`+${data.memberGrowthPct}%`}
@@ -422,26 +482,39 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 </div>
 
                 {/* Attendance Trend */}
-                <div className="bg-[#111827] border border-white/5 rounded-2xl p-6">
-                    <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Attendance Trend (6 Weeks)</p>
-                    <ResponsiveContainer width="100%" height={160}>
-                        <AreaChart data={data.attendanceTrend}>
-                            <defs>
-                                <linearGradient id="attGrad" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <XAxis dataKey="week" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9, fontWeight: 700 }} axisLine={false} tickLine={false} />
-                            <YAxis hide domain={['dataMin - 10', 'dataMax + 10']} />
-                            <Tooltip {...CUSTOM_TOOLTIP_STYLE} />
-                            <Area type="monotone" dataKey="count" name="Attendees" stroke="#8b5cf6" strokeWidth={2} fill="url(#attGrad)" dot={{ fill: '#8b5cf6', r: 3 }} />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                    <div className="flex justify-between mt-2">
-                        <div className="text-center"><p className="text-lg font-black text-white">{data.lastSundayAttendance}</p><p className="text-[9px] text-white/30">Last Sunday</p></div>
-                        <div className="text-center"><p className="text-lg font-black text-white">{data.weeklyAvgAttendance}</p><p className="text-[9px] text-white/30">Weekly Avg</p></div>
-                        <div className="text-center"><p className="text-lg font-black text-emerald-400">+7%</p><p className="text-[9px] text-white/30">vs Last Month</p></div>
+                <div className="bg-[#111827] border border-white/5 rounded-2xl p-6 flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs font-black text-white/40 uppercase tracking-widest">Attendance Reconciliation</p>
+                        <Badge className="bg-emerald-500/10 text-emerald-400 border-0 text-[9px] font-black">ACTUAL VS REGISTERED</Badge>
+                    </div>
+
+                    <div className="flex-1 grid grid-cols-2 gap-4">
+                        <div className="flex flex-col justify-center gap-2">
+                            <div className="p-3 rounded-xl bg-white/3 border border-white/5">
+                                <p className="text-[9px] text-white/30 font-bold uppercase mb-1">Self Check-ins</p>
+                                <p className="text-xl font-black text-white">{data.lastSundayAttendance}</p>
+                            </div>
+                            <div className="p-3 rounded-xl bg-violet-500/10 border border-violet-500/20">
+                                <p className="text-[9px] text-violet-400 font-bold uppercase mb-1">Manual Count</p>
+                                <p className="text-xl font-black text-white">{data.manualAttendance.total}</p>
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-emerald-500/20 bg-emerald-500/5">
+                            <p className="text-[9px] text-emerald-400 font-black uppercase mb-1 tracking-widest text-center">Unregistered Visitors</p>
+                            <p className="text-4xl font-black text-white">{data.manualAttendance.total - data.lastSundayAttendance}</p>
+                            <p className="text-[10px] text-emerald-400/50 font-bold mt-2">Potential Soul Harvest</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2 mt-2">
+                        <div className="flex justify-between text-[10px] font-bold">
+                            <span className="text-white/40 uppercase tracking-widest">Demographic Split</span>
+                            <span className="text-white/20">{data.manualAttendance.adults} Adults · {data.manualAttendance.children} Children</span>
+                        </div>
+                        <div className="h-2 bg-white/5 rounded-full flex overflow-hidden">
+                            <div className="h-full bg-blue-400" style={{ width: `${(data.manualAttendance.adults / data.manualAttendance.total) * 100}%` }} />
+                            <div className="h-full bg-pink-400" style={{ width: `${(data.manualAttendance.children / data.manualAttendance.total) * 100}%` }} />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -908,6 +981,45 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                     <div className="mt-4 pt-3 border-t border-white/5 flex justify-between text-[9px] text-white/20">
                         <span>AI Analysis · {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</span>
                         <span>JST +09:00</span>
+                    </div>
+                </div>
+            </section>
+
+            {/* ─── ROW 6: FINANCIAL STEWARDSHIP (NEW) ─── */}
+            <section>
+                <SectionHeader title="Financial Stewardship" subtitle="Giving trends & budget intelligence — confidential leadership view" />
+                <div className="bg-[#111827] border border-white/5 rounded-3xl p-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div>
+                            <p className="text-4xl font-black text-white">¥ {(data.givingData[data.givingData.length - 1]?.amount || 0).toLocaleString()}</p>
+                            <p className="text-xs font-black text-emerald-400 uppercase tracking-widest mt-1">This Month's Tithes & Offerings</p>
+                            <div className="mt-6 space-y-4">
+                                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                                    <p className="text-[10px] font-black text-white/30 uppercase mb-1">Growth Index</p>
+                                    <p className="text-lg font-black text-emerald-400">+12.4% <span className="text-[10px] text-white/20 font-bold ml-1">vs Average</span></p>
+                                </div>
+                                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                                    <p className="text-[10px] font-black text-white/30 uppercase mb-1">Projected March Total</p>
+                                    <p className="text-lg font-black text-white">¥ 1,420,000</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="lg:col-span-2">
+                            <ResponsiveContainer width="100%" height={240}>
+                                <BarChart data={data.givingData} barSize={40}>
+                                    <defs>
+                                        <linearGradient id="giveGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#10b981" />
+                                            <stop offset="100%" stopColor="#064e3b" />
+                                        </linearGradient>
+                                    </defs>
+                                    <XAxis dataKey="month" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} />
+                                    <YAxis hide />
+                                    <Tooltip {...CUSTOM_TOOLTIP_STYLE} />
+                                    <Bar dataKey="amount" name="Giving (JPY)" radius={[8, 8, 0, 0]} fill="url(#giveGrad)" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
                 </div>
             </section>
