@@ -6,7 +6,7 @@ import {
     LayoutDashboard, HeartPulse, Users, BookOpen, Music,
     Globe, Calendar, DollarSign, TrendingUp, Sparkles,
     FileText, Settings, ChevronLeft, ChevronRight, Shield,
-    MessagesSquare, Flame
+    MessagesSquare, Flame, LayoutGrid
 } from "lucide-react";
 import { basePath as BP } from "@/lib/utils";
 import { useState } from "react";
@@ -23,6 +23,7 @@ const NAV_ITEMS = [
     { label: "Giving & Finance", icon: DollarSign, path: "/finance" },
     { label: "Growth Intelligence", icon: TrendingUp, path: "/growth" },
     { label: "AI Command Center", icon: Sparkles, path: "/ai" },
+    { label: "Ministry Hub", icon: LayoutGrid, path: "/ministry-hub" },
     { label: "Reports & Data", icon: FileText, path: "/reports" },
     { label: "Settings", icon: Settings, path: "/settings" },
 ];

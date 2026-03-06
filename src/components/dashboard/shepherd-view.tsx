@@ -19,6 +19,7 @@ import {
     AreaChart, Area
 } from "recharts";
 import { UsherReportModal } from "./UsherReportModal";
+import { AttendanceReconciliationCard } from "./AttendanceReconciliationCard";
 import { toast } from "sonner";
 
 /* ─── Types ─── */
@@ -481,42 +482,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                     </div>
                 </div>
 
-                {/* Attendance Trend */}
-                <div className="bg-[#111827] border border-white/5 rounded-2xl p-6 flex flex-col gap-4">
-                    <div className="flex items-center justify-between">
-                        <p className="text-xs font-black text-white/40 uppercase tracking-widest">Attendance Reconciliation</p>
-                        <Badge className="bg-emerald-500/10 text-emerald-400 border-0 text-[9px] font-black">ACTUAL VS REGISTERED</Badge>
-                    </div>
-
-                    <div className="flex-1 grid grid-cols-2 gap-4">
-                        <div className="flex flex-col justify-center gap-2">
-                            <div className="p-3 rounded-xl bg-white/3 border border-white/5">
-                                <p className="text-[9px] text-white/30 font-bold uppercase mb-1">Self Check-ins</p>
-                                <p className="text-xl font-black text-white">{data.lastSundayAttendance}</p>
-                            </div>
-                            <div className="p-3 rounded-xl bg-violet-500/10 border border-violet-500/20">
-                                <p className="text-[9px] text-violet-400 font-bold uppercase mb-1">Manual Count</p>
-                                <p className="text-xl font-black text-white">{data.manualAttendance.total}</p>
-                            </div>
-                        </div>
-                        <div className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-emerald-500/20 bg-emerald-500/5">
-                            <p className="text-[9px] text-emerald-400 font-black uppercase mb-1 tracking-widest text-center">Unregistered Visitors</p>
-                            <p className="text-4xl font-black text-white">{data.manualAttendance.total - data.lastSundayAttendance}</p>
-                            <p className="text-[10px] text-emerald-400/50 font-bold mt-2">Potential Soul Harvest</p>
-                        </div>
-                    </div>
-
-                    <div className="space-y-2 mt-2">
-                        <div className="flex justify-between text-[10px] font-bold">
-                            <span className="text-white/40 uppercase tracking-widest">Demographic Split</span>
-                            <span className="text-white/20">{data.manualAttendance.adults} Adults · {data.manualAttendance.children} Children</span>
-                        </div>
-                        <div className="h-2 bg-white/5 rounded-full flex overflow-hidden">
-                            <div className="h-full bg-blue-400" style={{ width: `${(data.manualAttendance.adults / data.manualAttendance.total) * 100}%` }} />
-                            <div className="h-full bg-pink-400" style={{ width: `${(data.manualAttendance.children / data.manualAttendance.total) * 100}%` }} />
-                        </div>
-                    </div>
-                </div>
+                {/* Attendance Reconciliation Card (Integrated Digital Ministry Data) */}
+                <AttendanceReconciliationCard />
             </div>
 
             {/* ─── ROW 2: SPIRITUAL HEALTH ANALYTICS ─── */}
