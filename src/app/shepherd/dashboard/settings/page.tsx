@@ -8,6 +8,7 @@ import { AdminAuth, ADMIN_ROLES, ROLE_HIERARCHY, AdminRole } from "@/lib/admin-a
 import { motion, AnimatePresence } from "framer-motion";
 import { Settings, Users, Shield, Mail, Plus, Trash2, CheckCircle2, AlertCircle, Crown, User, Loader2, Copy, Share2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { basePath as BP } from "@/lib/utils";
 
 const ROLE_ICONS: Record<string, any> = { super_admin: Crown, owner: Shield, shepherd: Shield, admin: User, ministry_lead: User };
 const ROLE_COLORS: Record<string, string> = {
