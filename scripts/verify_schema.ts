@@ -13,7 +13,7 @@ try {
         const match = line.match(/^([^=]+)=(.*)$/);
         if (match) process.env[match[1]] = match[2];
     });
-} catch (e) { /* already in env */ }
+} catch (e: any) { /* already in env */ }
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;

@@ -81,7 +81,7 @@ async function main() {
     try {
         await client.query(SQL);
         console.log('✅ Ingestion engine updated.');
-    } catch (e) {
+    } catch (e: any) {
         console.error('❌ Error updating ingestion engine:');
         console.error(e.message);
     } finally {
@@ -89,4 +89,4 @@ async function main() {
     }
 }
 
-main().catch(console.error);
+main().catch((e: any) => console.error(e));

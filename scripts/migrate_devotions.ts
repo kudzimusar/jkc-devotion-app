@@ -14,7 +14,7 @@ const loadEnv = () => {
                 process.env[match[1]] = match[2];
             }
         });
-    } catch (e) {
+    } catch (e: any) {
         // Fallback for execution within project dir
         try {
             const envPath = path.resolve(process.cwd(), '.env.local');
@@ -25,7 +25,7 @@ const loadEnv = () => {
                     process.env[match[1]] = match[2];
                 }
             });
-        } catch (e2) {
+        } catch (e2: any) {
             console.log("Could not load .env.local automatically, assuming env vars are set.");
         }
     }
@@ -88,7 +88,7 @@ async function migrate() {
             }
         }
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Migration failed:", error);
     }
 }

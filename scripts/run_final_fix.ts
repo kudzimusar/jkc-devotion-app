@@ -100,7 +100,7 @@ async function main() {
     try {
         await client.query(SQL);
         console.log('✅ Final schema and views established.');
-    } catch (e) {
+    } catch (e: any) {
         console.error('❌ Error during finalization:');
         console.error(e.message);
     } finally {
@@ -108,4 +108,4 @@ async function main() {
     }
 }
 
-main().catch(console.error);
+main().catch((e: any) => console.error(e));

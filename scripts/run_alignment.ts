@@ -29,7 +29,7 @@ async function main() {
     await client.end();
 }
 
-main().catch(async e => {
+main().catch(async (e: any) => {
     console.error(e);
-    try { await client.end() } catch { }
+    try { await client.end() } catch (e: any) { }
 });

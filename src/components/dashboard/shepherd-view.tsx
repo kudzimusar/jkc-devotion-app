@@ -242,7 +242,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             const db = supabaseAdmin;
 
             // 1. Core Counts & New Analytic Views
-            const [profilesRes, statsRes, prayersRes, rolesRes, pulseRes, healthRes, propheticRes, notesRes, velocityRes] = await Promise.all([
+            const [profilesRes, statsRes, prayersRes, rolesRes, pulseRes, healthRes, propheticRes, notesRes, velocityRes, skillsRes] = await Promise.all([
                 db.from('profiles').select('*'),
                 db.from('member_stats').select('*'),
                 db.from('prayer_requests').select('*'),
@@ -251,7 +251,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 db.from('church_health_metrics').select('*').order('created_at', { ascending: false }).limit(1),
                 db.from('prophetic_insights').select('*').eq('is_acknowledged', false).order('generated_at', { ascending: false }).limit(10),
                 db.from('pastoral_notes').select('*, member:profiles(name)').eq('category', 'counseling').eq('is_resolved', false).order('follow_up_date', { ascending: true }),
-                db.from('vw_activity_velocity').select('*')
+                db.from('vw_activity_velocity').select('*'),
+                db.from('member_skills').select('*')
             ]);
 
             const profiles = profilesRes.data || [];

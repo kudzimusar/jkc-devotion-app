@@ -13,7 +13,7 @@ try {
         const match = line.match(/^([^=]+)=(.*)$/);
         if (match) process.env[match[1]] = match[2];
     });
-} catch (e) { }
+} catch (e: any) { }
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -137,5 +137,5 @@ async function main() {
     console.log('\n✅ Mission Control Intelligence Sync Complete.');
 }
 
-main().catch(console.error);
+main().catch((e: any) => console.error(e));
 
