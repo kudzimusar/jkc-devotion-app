@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { DollarSign, TrendingUp, Users, PieChart as PieIcon } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { getFinanceRecords } from "@/app/actions/admin";
+import { supabase } from "@/lib/supabase";
 
 const TOOLTIP_STYLE = {
     contentStyle: { background: '#1a2236', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 },
@@ -19,12 +19,11 @@ export default function FinancePage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        getFinanceRecords().then(res => {
-            if (res.success) {
-                setRecords(res.data || []);
-            }
-            setLoading(false);
-        });
+        supabase.from('financial_records').select('*').order('given_date', { ascending: false })
+            .then(({ data }) => {
+                setRecords(data || []);
+                setLoading(false);
+            });
     }, []);
 
     const total = records.reduce((a, r) => a + Number(r.amount || 0), 0);

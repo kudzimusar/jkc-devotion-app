@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "./supabase-admin";
+import { supabase } from "./supabase";
 
 export const PILEngine = {
     /**
@@ -16,10 +16,10 @@ export const PILEngine = {
 
         try {
             // 1. MODEL: Member Drop-Off Risk (7-day silence)
-            const { data: atRisk } = await supabaseAdmin.from('vw_member_disengagement_risk').select('*');
+            const { data: atRisk } = await supabase.from('vw_member_disengagement_risk').select('*');
             if (atRisk) {
                 for (const member of atRisk) {
-                    await supabaseAdmin.from('prophetic_insights').upsert({
+                    await supabase.from('prophetic_insights').upsert({
                         category: 'drop_off',
                         subject_id: member.user_id,
                         probability_score: member.risk_score,
@@ -34,10 +34,10 @@ export const PILEngine = {
             }
 
             // 2. MODEL: Geographic Expansion (Underserved Wards)
-            const { data: geoGaps } = await supabaseAdmin.from('vw_geo_planting_opportunities').select('*');
+            const { data: geoGaps } = await supabase.from('vw_geo_planting_opportunities').select('*');
             if (geoGaps) {
                 for (const gap of geoGaps) {
-                    await supabaseAdmin.from('prophetic_insights').upsert({
+                    await supabase.from('prophetic_insights').upsert({
                         category: 'geo',
                         insight_title: `Expansion Alert: ${gap.ward}`,
                         insight_description: `Concentrated cluster of ${gap.member_count} members detected in ${gap.ward} with 0 fellowship groups.`,
@@ -52,7 +52,7 @@ export const PILEngine = {
 
             // 3. MODEL: Volunteer Forecast (Shortage in Missions/Counseling)
             // Simplified logic: If a ministry has < 5% of members, mark as shortage risk
-            const { data: roles } = await supabaseAdmin.from('member_roles').select('ministry_name');
+            const { data: roles } = await supabase.from('member_roles').select('ministry_name');
             const totalMembers = roles?.length || 0;
             const minMap: Record<string, number> = {};
             roles?.forEach(r => minMap[r.ministry_name] = (minMap[r.ministry_name] || 0) + 1);
@@ -62,7 +62,7 @@ export const PILEngine = {
                 const count = minMap[min] || 0;
                 const ratio = (count / (totalMembers || 1)) * 100;
                 if (ratio < 10) { // Less than 10% participation
-                    await supabaseAdmin.from('prophetic_insights').upsert({
+                    await supabase.from('prophetic_insights').upsert({
                         category: 'volunteer',
                         insight_title: `Volunteer Shortage: ${min}`,
                         insight_description: `${min} currently only has ${count} volunteers (${ratio.toFixed(1)}% of base). Demand is outstripping supply.`,

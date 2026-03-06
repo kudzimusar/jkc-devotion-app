@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { HeartPulse, Flame, TrendingUp, BookOpen, BarChart2 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from "recharts";
-import { getSpiritualStats } from "@/app/actions/admin";
+import { supabase } from "@/lib/supabase";
 
 const TOOLTIP_STYLE = {
     contentStyle: { background: '#1a2236', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 },
@@ -18,11 +18,12 @@ export default function SpiritualPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        getSpiritualStats().then(res => {
-            if (res.success) {
-                setStats(res.stats || []);
-                setSoap(res.soap || []);
-            }
+        Promise.all([
+            supabase.from('member_stats').select('*').order('engagement_score', { ascending: false }).limit(20),
+            supabase.from('soap_entries').select('*').order('created_at', { ascending: false }).limit(50),
+        ]).then(([s, e]) => {
+            setStats(s.data || []);
+            setSoap(e.data || []);
             setLoading(false);
         });
     }, []);
