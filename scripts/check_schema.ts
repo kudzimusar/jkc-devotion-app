@@ -10,14 +10,15 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // Load .env.local
 const envPath = resolve(__dirname, '../.env.local');
 const envFile = readFileSync(envPath, 'utf8');
+const env: Record<string, string> = {};
 envFile.split('\n').forEach(line => {
     const match = line.match(/^([^=]+)=(.*)$/);
-    if (match) process.env[match[1]] = match[2];
+    if (match) env[match[1]] = match[2];
 });
 
-const PROJECT_REF = 'dapxrorkcvpzzkggopsa';
-const DB_PASSWORD = 'Youblessme-1985';
-const CONNECTION_STRING = `postgresql://postgres.${PROJECT_REF}:${DB_PASSWORD}@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres`;
+const CONNECTION_STRING = env.SUPABASE_CONNECTION_STRING || `postgresql://postgres.dapxrorkcvpzzkggopsa:Youblessme-1985@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres`;
+
+console.log('Using connection string:', CONNECTION_STRING.replace(/:[^@]+@/, ':***@'));
 
 const client = new Client({
     connectionString: CONNECTION_STRING,
@@ -27,7 +28,7 @@ const client = new Client({
 async function main() {
     await client.connect();
 
-    console.log('--- TABLES ---');
+    console.log('\n--- TABLES ---');
     const tables = await client.query(`
         SELECT table_name 
         FROM information_schema.tables 
@@ -36,23 +37,21 @@ async function main() {
     `);
     tables.rows.forEach(r => console.log(r.table_name));
 
-    console.log('\n--- COLUMNS FOR org_members ---');
-    const cols = await client.query(`
-        SELECT column_name, data_type 
-        FROM information_schema.columns 
-        WHERE table_name = 'org_members' AND table_schema = 'public';
-    `);
-    cols.rows.forEach(r => console.log(`${r.column_name}: ${r.data_type}`));
+    const existingTables = new Set(tables.rows.map(r => r.table_name));
 
     console.log('\n--- CHECKING org_id IN COMMON TABLES ---');
     const tablesToCheck = [
         'households', 'devotions', 'member_stats', 'soap_entries',
         'prayer_requests', 'attendance_records', 'ministry_members',
         'pastoral_notes', 'fellowship_groups', 'evangelism_pipeline',
-        'financial_records', 'events', 'ai_insights'
+        'financial_records', 'events', 'ai_insights', 'forms', 'form_submissions'
     ];
 
     for (const t of tablesToCheck) {
+        if (!existingTables.has(t)) {
+            console.log(`${t}: ❌ TABLE MISSING`);
+            continue;
+        }
         const check = await client.query(`
             SELECT column_name 
             FROM information_schema.columns 

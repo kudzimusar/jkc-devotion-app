@@ -51,8 +51,7 @@ export const PILEngine = {
             }
 
             // 3. MODEL: Volunteer Forecast (Shortage in Missions/Counseling)
-            // Simplified logic: If a ministry has < 5% of members, mark as shortage risk
-            const { data: roles } = await supabase.from('member_roles').select('ministry_name');
+            const { data: roles } = await supabase.from('ministry_members').select('ministry_name');
             const totalMembers = roles?.length || 0;
             const minMap: Record<string, number> = {};
             roles?.forEach(r => minMap[r.ministry_name] = (minMap[r.ministry_name] || 0) + 1);
@@ -72,6 +71,38 @@ export const PILEngine = {
                         metadata: { ministry: min, count, ratio }
                     }, { onConflict: 'category,insight_title' });
                     results.volunteer++;
+                }
+            }
+
+            // 4. [NEW] MODEL: Attendance Reach Gap (Manual vs Digital)
+            const { data: attendanceGaps } = await supabase.from('vw_ministry_performance_alerts').select('*');
+            if (attendanceGaps) {
+                for (const gap of attendanceGaps) {
+                    await supabase.from('prophetic_insights').upsert({
+                        category: 'ministry_performance',
+                        insight_title: `Attendance Reach Gap: ${gap.report_date}`,
+                        insight_description: `${gap.gap_percentage.toFixed(1)}% of attendees did not check-in digitally (${gap.unregistered_count} people).`,
+                        recommended_action: `Deploy welcome team at key entrances with QR codes to foster digital engagement.`,
+                        probability_score: 80,
+                        risk_level: 'medium',
+                        metadata: { date: gap.report_date, unregistered_count: gap.unregistered_count }
+                    }, { onConflict: 'category,insight_title' });
+                }
+            }
+
+            // 5. [NEW] MODEL: Soul Harvest Momentum (Evangelism success)
+            const { data: momentum } = await supabase.from('vw_evangelism_momentum').select('*');
+            if (momentum) {
+                for (const m of momentum) {
+                    await supabase.from('prophetic_insights').upsert({
+                        category: 'conversion',
+                        insight_title: `Evangelism Breakthrough: ${m.report_date}`,
+                        insight_description: `${m.total_salvations} souls recorded in today's outreach!`,
+                        recommended_action: `Ensure immediate discipleship follow-up for all new converts.`,
+                        probability_score: 100,
+                        risk_level: 'low',
+                        metadata: { date: m.report_date, count: m.total_salvations }
+                    }, { onConflict: 'category,insight_title' });
                 }
             }
 

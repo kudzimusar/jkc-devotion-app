@@ -80,16 +80,21 @@ export async function POST(req: Request) {
             attendance_index: attendanceIndex,
             engagement_index: engagementIndex,
             service_index: serviceIndex,
-            prayer_index: 75, // Placeholder for now
+            prayer_index: 75,
             community_index: 68
         }]);
+
+        // 3. Run PIL Engine Sweep (Predictive Models)
+        const { PILEngine } = await import('@/lib/pil-engine');
+        const sweepResults = await PILEngine.runIntelligenceSweep();
 
         return NextResponse.json({
             success: true,
             execution_time: new Date().toISOString(),
             processed_members: stats.length,
             alerts_generated: alerts.length,
-            new_health_score: totalScore
+            new_health_score: totalScore,
+            sweep_results: sweepResults
         });
 
     } catch (error: any) {

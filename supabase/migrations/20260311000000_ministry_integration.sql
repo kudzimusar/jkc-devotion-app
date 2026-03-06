@@ -123,16 +123,17 @@ BEGIN
             total_count = EXCLUDED.total_count,
             notes = EXCLUDED.notes;
 
-    -- 2. DISPATCH: Prayer Request Intake -> prayer_requests
+    -- 2. DISPATCH: Child Check-In -> kids_registry
     ELSIF v_form_name = 'Child Check-In' THEN
-        -- Logic for child registration could go here
-        NULL;
-
-    -- 3. DISPATCH: Evangelism Activity Log -> evangelism_pipeline (aggregated log entry)
-    ELSIF v_form_name = 'Evangelism Activity Log' THEN
-        -- We'll create a summary note in the pipeline or just rely on the form view for now.
-        -- For higher impact, we could create a "Mass Outreach" entry here.
-        NULL;
+        INSERT INTO public.kids_registry (org_id, child_name, age, parent_name, allergies, supervised_by)
+        VALUES (
+            v_org_id,
+            v_values->>'Child Name',
+            COALESCE((v_values->>'Age')::int, 0),
+            v_values->>'Parent/Guardian Name',
+            v_values->>'Allergies',
+            NEW.user_id
+        );
     END IF;
 
     -- Mark as processed
@@ -193,6 +194,17 @@ BEGIN
         ON CONFLICT (org_id, report_date, service_type) DO UPDATE SET 
             adults_count = EXCLUDED.adults_count, children_count = EXCLUDED.children_count,
             total_count = EXCLUDED.total_count, notes = EXCLUDED.notes;
+
+    ELSIF v_form_name = 'Child Check-In' THEN
+        INSERT INTO public.kids_registry (org_id, child_name, age, parent_name, allergies, supervised_by)
+        VALUES (
+            v_org_id,
+            v_values->>'Child Name',
+            COALESCE((v_values->>'Age')::int, 0),
+            v_values->>'Parent/Guardian Name',
+            v_values->>'Allergies',
+            v_sub.user_id
+        );
     END IF;
 
     UPDATE public.form_submissions SET processed_at = now() WHERE id = p_submission_id;
