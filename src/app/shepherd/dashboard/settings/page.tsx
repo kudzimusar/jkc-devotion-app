@@ -67,12 +67,15 @@ export default function SettingsPage() {
                 if (error.message.includes('already been registered')) {
                     const { data: existingProfile } = await supabase.from('profiles').select('id').eq('email', inviteEmail).single();
                     if (existingProfile) {
+                        const token = crypto.randomUUID();
                         await supabaseAdmin.from('org_members').upsert({
                             user_id: existingProfile.id,
                             role: inviteRole,
                             org_id: orgId,
+                            invitation_token: token,
+                            invitation_status: 'pending'
                         });
-                        toast.success(`${inviteEmail} promoted to staff role!`);
+                        toast.success(`${inviteEmail} promoted! Invitation link generated.`);
                         setInviteEmail("");
                         setShowInvite(false);
                         loadData();

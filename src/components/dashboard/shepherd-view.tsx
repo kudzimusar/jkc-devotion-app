@@ -6,7 +6,7 @@ import {
     Users, Activity, Calendar, TrendingUp, Heart, AlertTriangle,
     CheckCircle2, Clock, ShieldAlert, UserCheck, Music, Flame,
     ArrowUp, ArrowDown, MessageSquare, Globe, ChevronRight, Minus, MapPin,
-    UserPlus
+    UserPlus, ShieldCheck, XCircle
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -216,6 +216,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
     const [loading, setLoading] = useState(false);
     const [runningAI, setRunningAI] = useState(false);
     const [showOnboarding, setShowOnboarding] = useState(false);
+    const [membershipRequests, setMembershipRequests] = useState<any[]>([]);
 
     const runIntelligence = async () => {
         setRunningAI(true);
@@ -229,6 +230,18 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             console.error("Intelligence Engine connection failed.");
         } finally {
             setRunningAI(false);
+            toast.success("Prophetic Insight Layer Synced!");
+        }
+    };
+
+    const handleMembershipAction = async (userId: string, status: string) => {
+        try {
+            const { error } = await supabaseAdmin.from('profiles').update({ membership_status: status }).eq('id', userId);
+            if (error) throw error;
+            toast.success(`User set to ${status}`);
+            loadData();
+        } catch (e) {
+            toast.error("Action failed");
         }
     };
 
@@ -348,6 +361,9 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 .sort((a, b) => b.count - a.count)
                 .slice(0, 4);
 
+            const pendingMembers = profiles.filter(p => p.membership_status === 'pending_approval');
+            setMembershipRequests(pendingMembers);
+
             setData(prev => ({
                 ...prev,
                 totalMembers: profiles.length,
@@ -417,11 +433,58 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                     </div>
                 </div>
 
-                {showOnboarding && (
-                    <div className="mb-10 animate-in fade-in slide-in-from-top-4 duration-500">
-                        <MinistryOnboarding />
-                    </div>
-                )}
+                <div className="flex flex-col xl:flex-row gap-4 mb-10">
+                    {membershipRequests.length > 0 && (
+                        <Card className="bg-[#111827] border-violet-500/30 flex-1 overflow-hidden">
+                            <CardHeader className="bg-violet-500/10 border-b border-white/5 py-3">
+                                <CardTitle className="text-xs font-black uppercase tracking-widest text-violet-400 flex items-center justify-between">
+                                    <span>New Membership Pipeline</span>
+                                    <Badge className="bg-violet-500 text-white border-0">{membershipRequests.length} PENDING</Badge>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <div className="divide-y divide-white/5">
+                                    {membershipRequests.map(req => (
+                                        <div key={req.id} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-violet-500/20 text-violet-400 flex items-center justify-center font-black">
+                                                    {req.name?.[0] || '?'}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold text-white">{req.name}</p>
+                                                    <p className="text-[10px] text-white/40 uppercase tracking-widest">{req.email}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => handleMembershipAction(req.id, 'member')}
+                                                    className="h-8 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[10px]"
+                                                >
+                                                    APPROVE
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => handleMembershipAction(req.id, 'visitor')}
+                                                    className="h-8 rounded-lg text-white/40 hover:text-red-400 font-black text-[10px]"
+                                                >
+                                                    REJECT
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {showOnboarding && (
+                        <div className="flex-1 animate-in fade-in slide-in-from-right-4 duration-500">
+                            <MinistryOnboarding />
+                        </div>
+                    )}
+                </div>
                 <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
                     <MetricCard title="Total Members" value={data.totalMembers}
                         sub={`+${data.newMembersThisMonth} this month`} trend="up" trendVal={`+${data.memberGrowthPct}%`}

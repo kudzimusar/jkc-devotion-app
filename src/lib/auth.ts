@@ -39,14 +39,15 @@ export const Auth = {
     },
 
     // Create new account
-    async createAccount(email: string, password: string, name: string): Promise<AuthResponse> {
+    async createAccount(email: string, password: string, name: string, metadata: any = {}): Promise<AuthResponse> {
         try {
             const { data, error } = await supabase.auth.signUp({
                 email,
                 password,
                 options: {
                     data: {
-                        full_name: name
+                        full_name: name,
+                        ...metadata
                     },
                     emailRedirectTo: window.location.origin + BP
                 }

@@ -185,6 +185,7 @@ export default function DevotionalApp() {
   const [emailNotConfirmed, setEmailNotConfirmed] = useState(false);
   const [shareProgress, setShareProgress] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [isMemberRequest, setIsMemberRequest] = useState(false);
 
   // Ask Bible Chat State
   const [askChatOpen, setAskChatOpen] = useState(false);
@@ -313,7 +314,8 @@ export default function DevotionalApp() {
 
   const handleRegister = async () => {
     setLoading(true);
-    const res = await Auth.createAccount(email, password, name);
+    const metadata = isMemberRequest ? { membership_status: 'pending_approval' } : {};
+    const res = await Auth.createAccount(email, password, name, metadata);
     if (res.success) {
       setEmailNotConfirmed(true);
       toast.success("Account created! Check your email.");
@@ -664,6 +666,20 @@ export default function DevotionalApp() {
                           <Input placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} className="h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-6" />
                           <Input placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} className="h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-6" />
                           <Input placeholder="Set Password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-6" />
+
+                          <div className="flex items-center gap-3 p-4 bg-[var(--primary)]/5 rounded-2xl border border-[var(--primary)]/20">
+                            <input
+                              type="checkbox"
+                              id="memberRequest"
+                              checked={isMemberRequest}
+                              onChange={(e) => setIsMemberRequest(e.target.checked)}
+                              className="w-5 h-5 rounded-md accent-[var(--primary)]"
+                            />
+                            <label htmlFor="memberRequest" className="text-xs font-bold text-foreground/70 cursor-pointer">
+                              Are you a member of Japan Kingdom Church?
+                            </label>
+                          </div>
+
                           <Button onClick={handleRegister} className="w-full h-14 rounded-full bg-primary font-black text-lg shadow-xl shadow-primary/20" disabled={loading}>CREATE ACCOUNT</Button>
                         </TabsContent>
                       </Tabs>
