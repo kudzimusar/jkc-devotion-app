@@ -145,6 +145,16 @@ export function DynamicFormRenderer({ formId, campusId, onSuccess }: DynamicForm
 
             if (vError) throw vError;
 
+            // 3. Finalize Submission (Trigger Backend Integration Dispatcher)
+            const { error: rpcError } = await supabase.rpc('finalize_form_submission', {
+                p_submission_id: submission.id
+            });
+
+            if (rpcError) {
+                console.warn("Backend processing alert:", rpcError);
+                // We don't throw here to ensure user sees success since data is saved
+            }
+
             toast.success("Submission successfully processed!");
             localStorage.removeItem(`form_draft_${formId}`);
 
