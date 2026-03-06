@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { useAdminCtx } from "../layout";
 import { AdminAuth, ADMIN_ROLES, ROLE_HIERARCHY, AdminRole } from "@/lib/admin-auth";
 import { motion, AnimatePresence } from "framer-motion";
-import { Settings, Users, Shield, Mail, Plus, Trash2, CheckCircle2, AlertCircle, Crown, User, Loader2 } from "lucide-react";
+import { Settings, Users, Shield, Mail, Plus, Trash2, CheckCircle2, AlertCircle, Crown, User, Loader2, Copy, Share2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 const ROLE_ICONS: Record<string, any> = { super_admin: Crown, owner: Shield, shepherd: Shield, admin: User, ministry_lead: User };
@@ -19,8 +19,9 @@ const ROLE_COLORS: Record<string, string> = {
 };
 
 export default function SettingsPage() {
-    const { role: myRole, userName, email: myEmail } = useAdminCtx() as any;
+    const { role: myRole, userName, email: myEmail, orgId } = useAdminCtx() as any;
     const [team, setTeam] = useState<any[]>([]);
+    const [invitations, setInvitations] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showInvite, setShowInvite] = useState(false);
     const [inviteEmail, setInviteEmail] = useState("");
@@ -31,9 +32,22 @@ export default function SettingsPage() {
     const isSuperAdmin = AdminAuth.can(myRole, 'owner');
 
     useEffect(() => {
-        supabaseAdmin.from('org_members').select('*, profiles(name, email)')
-            .then(({ data }) => { setTeam(data || []); setLoading(false); });
-    }, []);
+        loadData();
+    }, [orgId]);
+
+    async function loadData() {
+        setLoading(true);
+        const [teamRes, invRes] = await Promise.all([
+            supabase.from('org_members').select('*, profiles(name, email)').eq('org_id', orgId),
+            supabase.from('org_members')
+                .select('*, profiles(name, email), ministries(name)')
+                .not('invitation_token', 'is', null)
+                .eq('org_id', orgId)
+        ]);
+        setTeam(teamRes.data || []);
+        setInvitations(invRes.data || []);
+        setLoading(false);
+    }
 
     const handleInvite = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -41,32 +55,26 @@ export default function SettingsPage() {
         setInviting(true);
 
         try {
-            // Send invite via Supabase Admin API
             const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(inviteEmail, {
                 data: { role: inviteRole, invited_by: userName }
             });
 
             if (error) throw error;
 
-            // Pre-create org_member record so role is assigned on first login
             if (data.user) {
                 await supabaseAdmin.from('org_members').upsert({
                     user_id: data.user.id,
                     role: inviteRole,
-                    org_id: null, // will be set by the user
+                    org_id: orgId,
                 });
             }
 
-            toast.success(`Invitation sent to ${inviteEmail} as ${inviteRole}`);
+            toast.success(`Invitation sent to ${inviteEmail}`);
             setInviteEmail("");
             setShowInvite(false);
+            loadData();
         } catch (err: any) {
-            // If user already exists, still create the member record
-            if (err.message?.includes('already been registered')) {
-                toast.error('User already exists. Ask them to sign in at /shepherd/login');
-            } else {
-                toast.error(err.message || 'Failed to send invitation');
-            }
+            toast.error(err.message || 'Failed to send invitation');
         } finally {
             setInviting(false);
         }
@@ -75,175 +83,190 @@ export default function SettingsPage() {
     const handleRevoke = async (memberId: string, memberName: string) => {
         if (!confirm(`Remove ${memberName} from admin access?`)) return;
         await supabaseAdmin.from('org_members').delete().eq('id', memberId);
-        setTeam(prev => prev.filter(m => m.id !== memberId));
+        loadData();
         toast.success(`${memberName} access revoked`);
+    };
+
+    const copyLink = (token: string) => {
+        const url = `${window.location.origin}${BP}/shepherd/onboarding?token=${token}`;
+        navigator.clipboard.writeText(url);
+        toast.success("Link copied!");
+    };
+
+    const shareWhatsApp = (inv: any) => {
+        const url = `${window.location.origin}${BP}/shepherd/onboarding?token=${inv.invitation_token}`;
+        const text = `Hi ${inv.profiles?.name}, join the Church OS team as a ${inv.role}: ${url}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     };
 
     return (
         <div className="p-6 xl:p-8">
-            <div className="mb-6">
-                <h1 className="text-xl font-black text-white">Settings & Team</h1>
-                <p className="text-[11px] text-white/30 mt-0.5">Profile · Team management · Admin access control</p>
+            <div className="mb-6 text-center md:text-left">
+                <h1 className="text-3xl font-black text-white tracking-tighter uppercase">Settings & Team</h1>
+                <p className="text-[10px] font-black text-white/30 mt-0.5 tracking-widest uppercase">Profile · Team management · Admin access control</p>
             </div>
 
-            {/* Tabs */}
-            <div className="flex gap-1 p-1 bg-white/5 rounded-xl border border-white/5 w-fit mb-6">
+            <div className="flex justify-center md:justify-start gap-1 p-1 bg-white/5 rounded-2xl border border-white/5 w-fit mb-8">
                 {(['profile', 'team', 'invitations'] as const).map(t => (
                     <button key={t} onClick={() => setTab(t)}
-                        className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wide transition-all capitalize ${tab === t ? 'bg-violet-600 text-white' : 'text-white/30 hover:text-white/60'}`}>
+                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${tab === t ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/20' : 'text-white/30 hover:text-white/60'}`}>
                         {t}
                     </button>
                 ))}
             </div>
 
-            {/* Profile Tab */}
-            {tab === 'profile' && (
-                <div className="max-w-lg">
-                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-6">
-                        <div className="flex items-center gap-4 mb-5">
-                            <div className="w-14 h-14 rounded-2xl bg-violet-500/20 flex items-center justify-center text-xl font-black text-violet-400">
-                                {userName?.[0]?.toUpperCase()}
-                            </div>
-                            <div>
-                                <p className="text-base font-black text-white">{userName}</p>
-                                <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg ${ROLE_COLORS[myRole] || 'bg-white/10 text-white/40'}`}>
-                                    {myRole?.replace(/_/g, ' ')?.toUpperCase()}
-                                </span>
-                            </div>
-                        </div>
-                        <div className="space-y-3">
-                            <div>
-                                <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">Role</p>
-                                <p className="text-xs text-white/60 capitalize">{myRole?.replace(/_/g, ' ')}</p>
-                            </div>
-                            <div>
-                                <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">Role Level</p>
-                                <p className="text-xs text-white/60">{ROLE_HIERARCHY[myRole as AdminRole] || 0} / 100</p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={() => AdminAuth.logoutAdmin()}
-                            className="mt-5 w-full h-10 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-black rounded-xl hover:bg-red-500/20 transition-all"
-                        >
-                            Sign Out
-                        </button>
-                    </div>
+            {loading ? (
+                <div className="flex items-center justify-center p-20">
+                    <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
                 </div>
-            )}
+            ) : (
+                <AnimatePresence mode="wait">
+                    {tab === 'profile' && (
+                        <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-md mx-auto md:mx-0">
+                            <div className="bg-[#111] border border-white/5 rounded-[2.5rem] p-8 space-y-6">
+                                <div className="flex items-center gap-6">
+                                    <div className="w-20 h-20 rounded-3xl bg-violet-600 flex items-center justify-center text-3xl font-black text-white shadow-xl shadow-violet-600/20">
+                                        {userName?.[0]?.toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <p className="text-xl font-black text-white tracking-tight">{userName}</p>
+                                        <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest ${ROLE_COLORS[myRole] || 'bg-white/10 text-white/40'}`}>
+                                            {myRole?.replace(/_/g, ' ')}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="space-y-4 bg-white/5 p-6 rounded-3xl border border-white/5">
+                                    <div>
+                                        <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Email Address</p>
+                                        <p className="font-bold text-white/80">{myEmail}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Role Hierarchy</p>
+                                        <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden mt-1">
+                                            <div className="bg-violet-600 h-full rounded-full" style={{ width: `${ROLE_HIERARCHY[myRole as AdminRole] || 0}%` }} />
+                                        </div>
+                                    </div>
+                                </div>
+                                <Button onClick={() => AdminAuth.logoutAdmin()} variant="outline" className="w-full h-14 border-red-500/20 text-red-500 font-black rounded-2xl hover:bg-red-500/10 uppercase tracking-widest">
+                                    Sign Out Account
+                                </Button>
+                            </div>
+                        </motion.div>
+                    )}
 
-            {/* Team Tab */}
-            {tab === 'team' && (
-                <div>
-                    <div className="flex items-center justify-between mb-4">
-                        <p className="text-xs text-white/40">{team.length} admin users</p>
-                        {isSuperAdmin && (
-                            <button
-                                onClick={() => setShowInvite(s => !s)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-black rounded-xl transition-all"
-                            >
-                                <Plus className="w-3.5 h-3.5" /> Invite Admin
-                            </button>
-                        )}
-                    </div>
+                    {tab === 'team' && (
+                        <motion.div key="team" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                            <div className="flex items-center justify-between mb-6">
+                                <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">{team.length} Staff Members</p>
+                                {isSuperAdmin && (
+                                    <Button onClick={() => setShowInvite(s => !s)} className="bg-violet-600 hover:bg-violet-500 font-black uppercase tracking-widest text-[10px] h-10 px-6 rounded-xl">
+                                        <Plus className="w-4 h-4 mr-2" /> Invite Admin
+                                    </Button>
+                                )}
+                            </div>
 
-                    {/* Invite form */}
-                    <AnimatePresence>
-                        {showInvite && (
-                            <motion.form
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                onSubmit={handleInvite}
-                                className="bg-[#111827] border border-violet-500/20 rounded-2xl p-5 mb-4 space-y-3 overflow-hidden"
-                            >
-                                <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">Send Admin Invitation</p>
-                                <div className="flex gap-2">
-                                    <div className="relative flex-1">
-                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/25" />
-                                        <input
+                            <AnimatePresence>
+                                {showInvite && (
+                                    <motion.form
+                                        initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                                        onSubmit={handleInvite}
+                                        className="bg-[#111] border border-violet-500/20 rounded-3xl p-6 mb-8 space-y-4 overflow-hidden"
+                                    >
+                                        <Input
                                             type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
-                                            placeholder="admin@church.org"
-                                            className="w-full h-10 bg-white/5 border border-white/10 rounded-xl pl-9 pr-3 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-violet-500/40"
+                                            placeholder="Enter email address"
+                                            className="h-14 bg-white/5 border-white/10 rounded-2xl px-6 font-bold"
                                             required
                                         />
-                                    </div>
-                                    <select value={inviteRole} onChange={e => setInviteRole(e.target.value as AdminRole)}
-                                        className="h-10 px-3 bg-white/5 border border-white/10 rounded-xl text-xs text-white/60 focus:outline-none min-w-[130px]">
-                                        {ADMIN_ROLES.map(r => <option key={r} value={r}>{r.replace(/_/g, ' ')}</option>)}
-                                    </select>
-                                </div>
-                                <div className="flex gap-2">
-                                    <button type="submit" disabled={inviting}
-                                        className="flex-1 h-9 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-[10px] font-black rounded-xl transition-all flex items-center justify-center gap-1.5">
-                                        {inviting ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Sending...</> : <><Mail className="w-3.5 h-3.5" />Send Invite Email</>}
-                                    </button>
-                                    <button type="button" onClick={() => setShowInvite(false)}
-                                        className="h-9 px-4 bg-white/5 text-white/40 text-[10px] font-black rounded-xl hover:bg-white/10 transition-all">
-                                        Cancel
-                                    </button>
-                                </div>
-                                <p className="text-[9px] text-white/20">The user will receive an email with a magic link to set their password and access the admin dashboard.</p>
-                            </motion.form>
-                        )}
-                    </AnimatePresence>
+                                        <div className="flex gap-4">
+                                            <select value={inviteRole} onChange={e => setInviteRole(e.target.value as AdminRole)}
+                                                className="flex-1 h-14 bg-white/5 border-white/10 rounded-2xl px-6 text-white font-bold outline-none focus:ring-2 focus:ring-violet-500">
+                                                {ADMIN_ROLES.map(r => <option key={r} value={r} className="bg-[#111] uppercase tracking-widest text-[10px]">{r.replace(/_/g, ' ')}</option>)}
+                                            </select>
+                                            <Button type="submit" disabled={inviting} className="h-14 px-8 bg-violet-600 font-black rounded-2xl uppercase tracking-widest">
+                                                {inviting ? "SENDING..." : "SEND INVITE"}
+                                            </Button>
+                                        </div>
+                                    </motion.form>
+                                )}
+                            </AnimatePresence>
 
-                    {/* Team list */}
-                    <div className="bg-[#111827] border border-white/5 rounded-2xl overflow-hidden">
-                        <div className="grid grid-cols-[2fr_1fr_1fr_auto] gap-4 px-5 py-3 border-b border-white/5">
-                            {['Member', 'Role', 'Joined', ''].map(h => (
-                                <p key={h} className="text-[8px] font-black text-white/25 uppercase tracking-widest">{h}</p>
-                            ))}
-                        </div>
-                        {loading ? (
-                            <div className="p-8 text-center text-white/25 text-xs">Loading team...</div>
-                        ) : team.length === 0 ? (
-                            <div className="p-8 text-center text-white/25 text-xs">No admin team members yet.</div>
-                        ) : (
-                            <div className="divide-y divide-white/3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {team.map(m => {
-                                    const RoleIcon = ROLE_ICONS[m.role] || User;
-                                    const name = m.profiles?.name || 'Unknown';
-                                    const email = m.profiles?.email || '';
+                                    const name = m.profiles?.name || 'Unknown User';
                                     const canRevoke = isSuperAdmin && m.role !== 'super_admin';
                                     return (
-                                        <div key={m.id} className="grid grid-cols-[2fr_1fr_1fr_auto] gap-4 px-5 py-3.5 items-center">
-                                            <div className="flex items-center gap-2.5 min-w-0">
-                                                <div className="w-7 h-7 rounded-lg bg-violet-500/15 flex items-center justify-center text-[10px] font-black text-violet-400 flex-shrink-0">
+                                        <div key={m.id} className="bg-[#111] border border-white/5 rounded-3xl p-6 relative group overflow-hidden">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-2xl bg-violet-500/10 flex items-center justify-center text-lg font-black text-violet-500">
                                                     {name[0]?.toUpperCase()}
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="text-xs font-bold text-white truncate">{name}</p>
-                                                    <p className="text-[9px] text-white/30 truncate">{email}</p>
+                                                    <p className="text-white font-black truncate">{name}</p>
+                                                    <p className={`text-[8px] font-black px-2 mt-1 py-0.5 rounded-lg uppercase tracking-widest inline-block ${ROLE_COLORS[m.role] || 'bg-white/10 text-white/40'}`}>
+                                                        {m.role?.replace(/_/g, ' ')}
+                                                    </p>
                                                 </div>
                                             </div>
-                                            <span className={`text-[8px] font-black px-2 py-0.5 rounded-lg capitalize w-fit ${ROLE_COLORS[m.role] || 'bg-white/10 text-white/40'}`}>
-                                                {m.role?.replace(/_/g, ' ')}
-                                            </span>
-                                            <p className="text-[10px] text-white/30">
-                                                {m.joined_at ? new Date(m.joined_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—'}
-                                            </p>
-                                            {canRevoke ? (
-                                                <button onClick={() => handleRevoke(m.id, name)}
-                                                    className="text-red-400/40 hover:text-red-400 transition-colors p-1 rounded-lg hover:bg-red-500/10">
-                                                    <Trash2 className="w-3.5 h-3.5" />
+                                            {canRevoke && (
+                                                <button onClick={() => handleRevoke(m.id, name)} className="absolute top-4 right-4 text-red-500/20 hover:text-red-500 transition-colors p-2 hover:bg-red-500/10 rounded-xl">
+                                                    <Trash2 className="w-4 h-4" />
                                                 </button>
-                                            ) : <div />}
+                                            )}
                                         </div>
                                     );
                                 })}
                             </div>
-                        )}
-                    </div>
-                </div>
-            )}
+                        </motion.div>
+                    )}
 
-            {/* Invitations tab */}
-            {tab === 'invitations' && (
-                <div className="bg-[#111827] border border-white/5 rounded-2xl p-6 text-center text-white/25 text-xs">
-                    <Mail className="w-8 h-8 mx-auto mb-3 opacity-30" />
-                    <p>Invitation tracking coming soon.</p>
-                    <p className="mt-1 text-[10px]">Sent invitations will be listed here with status (pending/accepted/expired).</p>
-                </div>
+                    {tab === 'invitations' && (
+                        <motion.div key="invitations" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">{invitations.length} Pending Invitations</p>
+                            </div>
+
+                            {invitations.length === 0 ? (
+                                <div className="bg-[#111] border border-white/5 rounded-[2.5rem] p-20 text-center space-y-4">
+                                    <div className="w-16 h-16 bg-white/5 rounded-3xl flex items-center justify-center mx-auto">
+                                        <Mail className="w-6 h-6 text-white/20" />
+                                    </div>
+                                    <p className="text-white/20 font-black uppercase text-[10px] tracking-widest">No pending invitations found</p>
+                                </div>
+                            ) : (
+                                <div className="bg-[#111] border border-white/5 rounded-3xl overflow-hidden divide-y divide-white/5">
+                                    {invitations.map(inv => (
+                                        <div key={inv.id} className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-2xl bg-violet-500/10 flex items-center justify-center">
+                                                    <Mail className="w-5 h-5 text-violet-500" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-white font-black">{inv.profiles?.name || 'Assigned Leader'}</p>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <span className="text-[8px] font-black px-2 py-0.5 bg-violet-600 text-white rounded-lg uppercase tracking-widest">{inv.role?.replace(/_/g, ' ')}</span>
+                                                        <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">{inv.ministries?.name}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Button onClick={() => copyLink(inv.invitation_token)} className="h-10 bg-white/5 text-white/60 hover:bg-white/10 font-bold rounded-xl text-[10px] tracking-widest px-4">
+                                                    <Copy className="w-3.5 h-3.5 mr-2" /> COPY LINK
+                                                </Button>
+                                                <Button onClick={() => shareWhatsApp(inv)} className="h-10 bg-emerald-600/10 text-emerald-500 hover:bg-emerald-600/20 font-bold rounded-xl text-[10px] tracking-widest px-4">
+                                                    <Share2 className="w-3.5 h-3.5 mr-2" /> WHATSAPP
+                                                </Button>
+                                                <button onClick={() => supabase.from('org_members').delete().eq('id', inv.id).then(() => loadData())} className="p-2 text-white/10 hover:text-red-500 transition-colors">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             )}
         </div>
     );
