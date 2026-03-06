@@ -64,8 +64,8 @@ export const AIService = {
 
         let pilContext = "";
         try {
-            const { supabaseAdmin } = await import("./supabase-admin");
-            const { data: insights } = await supabaseAdmin
+            const { supabase } = await import("./supabase");
+            const { data: insights } = await supabase
                 .from('ai_insights')
                 .select('*')
                 .eq('is_acknowledged', false)
@@ -73,7 +73,7 @@ export const AIService = {
 
             if (insights && insights.length > 0) {
                 pilContext = "\n--- PROPHETIC INTELLIGENCE (PIL) FORECASTS ---\n" +
-                    insights.map(i => `- [${i.category.toUpperCase()}] ${i.insight_title}: ${i.insight_description} (Prob: ${i.probability_score}%)`).join("\n") +
+                    insights.map((i: any) => `- [${i.category.toUpperCase()}] ${i.insight_title}: ${i.insight_description} (Prob: ${i.probability_score}%)`).join("\n") +
                     "\n--- END PIL ---";
             }
         } catch (e) {
