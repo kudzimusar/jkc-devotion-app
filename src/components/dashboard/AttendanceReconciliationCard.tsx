@@ -17,7 +17,7 @@ export function AttendanceReconciliationCard() {
                     .from('vw_attendance_reconciliation')
                     .select('*')
                     .order('report_date', { ascending: false })
-                    .limit(5);
+                    .limit(1);
 
                 if (error) throw error;
                 setStats(data || []);

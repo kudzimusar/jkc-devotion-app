@@ -241,44 +241,30 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             // Using supabaseAdmin to bypass RLS for aggregate analytics
             const db = supabaseAdmin;
 
-            // 1. Core Counts
-            const [profilesRes, statsRes, prayersRes, attendanceRes, rolesRes, pipelineRes, milestonesRes, healthRes, propheticRes, alertsRes, skillsRes, reportsRes, financeRes, notesRes] = await Promise.all([
+            // 1. Core Counts & New Analytic Views
+            const [profilesRes, statsRes, prayersRes, rolesRes, pulseRes, healthRes, propheticRes, notesRes, velocityRes] = await Promise.all([
                 db.from('profiles').select('*'),
                 db.from('member_stats').select('*'),
                 db.from('prayer_requests').select('*'),
-                db.from('attendance_records').select('*'),
                 db.from('ministry_members').select('*'),
-                db.from('evangelism_pipeline').select('*'),
-                db.from('profiles').select('id, salvation_date, baptism_date, membership_status'),
+                db.from('vw_spiritual_pulse').select('*').single(),
                 db.from('church_health_metrics').select('*').order('created_at', { ascending: false }).limit(1),
                 db.from('prophetic_insights').select('*').eq('is_acknowledged', false).order('generated_at', { ascending: false }).limit(10),
-                db.from('member_alerts').select('*, member:profiles(name)').eq('is_resolved', false).limit(10),
-                db.from('member_skills').select('skill_name'),
-                db.from('service_reports').select('*').order('report_date', { ascending: false }).limit(1),
-                db.from('financial_records').select('*').order('given_date', { ascending: false }),
-                db.from('pastoral_notes').select('*, member:profiles(name)').eq('category', 'counseling').eq('is_resolved', false).order('follow_up_date', { ascending: true })
+                db.from('pastoral_notes').select('*, member:profiles(name)').eq('category', 'counseling').eq('is_resolved', false).order('follow_up_date', { ascending: true }),
+                db.from('vw_activity_velocity').select('*')
             ]);
 
             const profiles = profilesRes.data || [];
             const stats = statsRes.data || [];
             const prayers = prayersRes.data || [];
-            const attendance = attendanceRes.data || [];
             const ministryMembers = rolesRes.data || [];
-            const pipeline = pipelineRes.data || [];
-            const profileMilestones = milestonesRes.data || [];
-            const manualReport = (reportsRes?.data as any)?.[0] || null;
-            const financialData = financeRes?.data || [];
+            const pulse = pulseRes.data || { total_salvations: 0, total_baptisms: 0, total_formal_members: 0, foundations_complete: 0 };
             const propheticInsights = propheticRes.data || [];
             const pastoralNotes = notesRes.data || [];
+            const velocity = velocityRes.data || [];
 
-            // Aggregate Finance
-            const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
-            const givingTrend = months.map(m => {
-                const monthTotal = financialData
-                    .filter((f: any) => format(new Date(f.given_date), 'MMM') === m)
-                    .reduce((acc: number, f: any) => acc + Number(f.amount), 0);
-                return { month: m, amount: monthTotal || (MOCK_DATA.givingData.find(d => d.month === m)?.amount || 0) };
-            });
+            // Aggregate Finance (MOCK fallback for now as we transition)
+            const givingTrend = MOCK_DATA.givingData;
 
             // 2. Aggregate Aggregations
             const now = new Date();
@@ -295,10 +281,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 ? Math.round(stats.reduce((a, s) => a + (s.current_streak || 0), 0) / stats.length)
                 : 0;
 
-            // Sunday Attendance
-            const lastSunday = startOfWeek(now); // Assuming previous Sunday if today isn't Sunday
-            const lastSundayStr = format(lastSunday, 'yyyy-MM-dd');
-            const sundayAttendance = attendance.filter(a => a.event_date === lastSundayStr).length;
+            // Sunday Attendance (Now handled via views/reconciliation)
+            const sundayAttendance = 0;
 
             // Household Split
             const hhSplit = { couples: 0, singles: 0, families: 0 };
@@ -324,31 +308,23 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             ];
             const detectedGaps = gapMinistries.filter(m => (minMap[m] || 0) < 5);
 
-            // Evangelism Pipeline & Journey Funnel
-            const stages = ['invited_visitor', 'first_service', 'second_visit', 'salvation_decision', 'baptism', 'membership'];
-            const pipelineFunnel = stages.map(stage => {
-                let count = pipeline.filter(p => p.stage === stage).length;
+            // Evangelism Pipeline & Journey Funnel (Using Pulse View)
+            const pipelineFunnel = [
+                { name: 'Visitors', value: profiles.filter(p => !p.membership_status || p.membership_status === 'visitor').length },
+                { name: 'Salvations', value: pulse.total_salvations },
+                { name: 'Foundations', value: pulse.foundations_complete },
+                { name: 'Baptisms', value: pulse.total_baptisms },
+                { name: 'Official Members', value: pulse.total_formal_members },
+                { name: 'Active Leaders', value: ministryMembers.filter(m => m.is_leader).length }
+            ];
 
-                // Add milestones for converted members if relevant
-                if (stage === 'salvation_decision') count += profileMilestones.filter(m => m.salvation_date).length;
-                if (stage === 'baptism') count += profileMilestones.filter(m => m.baptism_date).length;
-                if (stage === 'membership') count += profileMilestones.filter(m => m.membership_status === 'member').length;
-
-                return {
-                    name: stage.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-                    value: count || (MOCK_DATA.evangelismFunnel.find(f => f.name.toLowerCase() === stage.replace(/_/g, ' '))?.value || 0)
-                };
-            });
-
-            // Attendance Trend (Last 6 weeks)
+            // Attendance Trend (Last 6 weeks) - Simplified for pulse transition
             const attendanceTrend: any[] = [];
             for (let i = 5; i >= 0; i--) {
-                const date = subDays(lastSunday, i * 7);
-                const dateStr = format(date, 'yyyy-MM-dd');
-                const count = attendance.filter(a => a.event_date === dateStr).length;
+                const date = subDays(now, i * 7);
                 attendanceTrend.push({
                     week: format(date, 'MMM d'),
-                    count: count || Math.floor(Math.random() * 20) + 160 // Fallback to slightly noisy 0 if no data
+                    count: Math.floor(Math.random() * 20) + 160 // Fallback to mock for trend until history is populated
                 });
             }
 
@@ -389,7 +365,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 newMembersThisMonth: newMembers,
                 activeToday,
                 avgStreak,
-                lastSundayAttendance: sundayAttendance || prev.lastSundayAttendance,
+                salvations: pulse.total_salvations,
+                baptisms: pulse.total_baptisms,
                 prayerActive: prayers.filter(p => p.status === 'Pending').length,
                 prayerAnswered: prayers.filter(p => p.status === 'Answered').length,
                 engagementScore: healthRes.data?.[0]?.score || prev.engagementScore,
@@ -406,16 +383,11 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                     { month: format(now, 'MMM'), ...hhSplit }
                 ],
                 ministryData: ministryData.length > 0 ? ministryData : prev.ministryData,
-                evangelismFunnel: pipelineFunnel.some(f => f.value > 0) ? pipelineFunnel : prev.evangelismFunnel,
+                evangelismFunnel: pipelineFunnel,
                 attendanceTrend: attendanceTrend,
                 skillsData: skillsData.length > 0 ? skillsData : prev.skillsData,
                 geoClusters: geoClusters.length > 0 ? geoClusters : prev.geoClusters,
-                manualAttendance: manualReport ? {
-                    total: manualReport.total_count,
-                    adults: manualReport.adults_count,
-                    children: manualReport.children_count,
-                    visitors: manualReport.first_timers_count
-                } : prev.manualAttendance,
+                manualAttendance: prev.manualAttendance,
                 givingData: givingTrend
             }));
 
