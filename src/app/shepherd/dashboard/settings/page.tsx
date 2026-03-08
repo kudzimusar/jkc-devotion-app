@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Settings, Users, Shield, Mail, Plus, Trash2, CheckCircle2, AlertCircle, Crown, User, Loader2, Copy, Share2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { basePath as BP } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -30,6 +31,7 @@ export default function SettingsPage() {
     const [inviteEmail, setInviteEmail] = useState("");
     const [inviteRole, setInviteRole] = useState<AdminRole>("admin");
     const [inviting, setInviting] = useState(false);
+    const [myRoles, setMyRoles] = useState<any[]>([]);
     const [tab, setTab] = useState<'profile' | 'team' | 'invitations'>('profile');
 
     const isSuperAdmin = AdminAuth.can(myRole, 'owner');
@@ -40,19 +42,25 @@ export default function SettingsPage() {
 
     async function loadData() {
         setLoading(true);
-        const [teamRes, invRes] = await Promise.all([
-            supabaseAdmin.from('org_members').select('*, profiles(name, email)').eq('org_id', orgId),
+        const [teamRes, invRes, rolesRes] = await Promise.all([
+            supabaseAdmin.from('org_members').select('*, profiles(name, email, membership_status, created_at)').eq('org_id', orgId),
             supabaseAdmin.from('org_members')
                 .select('*, profiles(name, email), ministries:ministry_id(name)')
                 .not('invitation_token', 'is', null)
+                .eq('org_id', orgId),
+            supabaseAdmin.from('user_roles')
+                .select('*, roles(*)')
+                .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
                 .eq('org_id', orgId)
         ]);
 
         console.log("Team Data (Admin):", teamRes.data);
         console.log("Invitation Data (Admin):", invRes.data);
+        console.log("My Roles:", rolesRes.data);
 
         setTeam(teamRes.data || []);
         setInvitations(invRes.data || []);
+        setMyRoles(rolesRes.data || []);
         setLoading(false);
     }
 
@@ -150,34 +158,119 @@ export default function SettingsPage() {
             ) : (
                 <AnimatePresence mode="wait">
                     {tab === 'profile' && (
-                        <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-md mx-auto md:mx-0">
-                            <div className="bg-[#111] border border-white/5 rounded-[2.5rem] p-8 space-y-6">
-                                <div className="flex items-center gap-6">
-                                    <div className="w-20 h-20 rounded-3xl bg-violet-600 flex items-center justify-center text-3xl font-black text-white shadow-xl shadow-violet-600/20">
+                        <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8 max-w-4xl">
+                            {/* 1. Identity Overview */}
+                            <div className="bg-[#111] border border-white/5 rounded-[2.5rem] p-8">
+                                <div className="flex flex-col md:flex-row items-center gap-8 mb-8">
+                                    <div className="w-32 h-32 rounded-[2.5rem] bg-gradient-to-br from-violet-600 to-indigo-700 flex items-center justify-center text-5xl font-black text-white shadow-2xl shadow-violet-600/20 border-4 border-white/5">
                                         {userName?.[0]?.toUpperCase()}
                                     </div>
-                                    <div>
-                                        <p className="text-xl font-black text-white tracking-tight">{userName}</p>
-                                        <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest ${ROLE_COLORS[myRole] || 'bg-white/10 text-white/40'}`}>
-                                            {myRole?.replace(/_/g, ' ')}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="space-y-4 bg-white/5 p-6 rounded-3xl border border-white/5">
-                                    <div>
-                                        <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Email Address</p>
-                                        <p className="font-bold text-white/80">{myEmail}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Role Hierarchy</p>
-                                        <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden mt-1">
-                                            <div className="bg-violet-600 h-full rounded-full" style={{ width: `${ROLE_HIERARCHY[myRole as AdminRole] || 0}%` }} />
+                                    <div className="text-center md:text-left space-y-2">
+                                        <h2 className="text-3xl font-black text-white tracking-tight">{userName}</h2>
+                                        <p className="text-white/40 font-medium">{myEmail}</p>
+                                        <div className="flex flex-wrap justify-center md:justify-start gap-2 pt-2">
+                                            <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 px-3 py-1 font-black uppercase tracking-widest text-[9px]">
+                                                {team.find(m => m.profiles?.email === myEmail)?.profiles?.membership_status?.toUpperCase() || 'MEMBER'}
+                                            </Badge>
+                                            <Badge className="bg-white/5 text-white/40 border-white/10 px-3 py-1 font-black uppercase tracking-widest text-[9px]">
+                                                JOINED {new Date(team.find(m => m.profiles?.email === myEmail)?.profiles?.created_at).toLocaleDateString()}
+                                            </Badge>
                                         </div>
                                     </div>
                                 </div>
-                                <Button onClick={() => AdminAuth.logoutAdmin()} variant="outline" className="w-full h-14 border-red-500/20 text-red-500 font-black rounded-2xl hover:bg-red-500/10 uppercase tracking-widest">
-                                    Sign Out Account
-                                </Button>
+
+                                {/* 2. Role Hierarchy & 3. Role Description */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-4">
+                                        <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Active Permissions Matrix</p>
+                                        <div className="space-y-3">
+                                            {myRoles.length === 0 ? (
+                                                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 text-white/30 text-xs text-center italic">
+                                                    No administrative roles detected
+                                                </div>
+                                            ) : (
+                                                myRoles.map(ur => (
+                                                    <div key={ur.id} className="p-5 bg-white/5 rounded-3xl border border-white/5 transition-all hover:bg-white/8 group">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <p className="font-black text-white uppercase tracking-wider text-xs">{ur.role_name.replace(/_/g, ' ')}</p>
+                                                            <span className="text-[9px] font-black text-violet-400 bg-violet-400/10 px-2 py-0.5 rounded-lg">LVL {ur.roles?.level}</span>
+                                                        </div>
+                                                        <p className="text-[10px] text-white/40 leading-relaxed">{ur.roles?.description}</p>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <div className="bg-white/5 p-6 rounded-3xl border border-white/5 space-y-6">
+                                            {/* 4. Permissions Dashboard */}
+                                            <div className="space-y-4">
+                                                <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Capabilities Index</p>
+                                                <div className="space-y-2">
+                                                    {[
+                                                        { label: 'System Governance', key: 'all' },
+                                                        { label: 'Member Data Access', key: 'user_view' },
+                                                        { label: 'Role Assignment', key: 'user_manage' },
+                                                        { label: 'Financial Auditing', key: 'financials' }
+                                                    ].map(p => {
+                                                        const hasCap = myRoles.some(r => r.roles?.permissions?.includes('all') || r.roles?.permissions?.includes(p.key));
+                                                        return (
+                                                            <div key={p.key} className="flex items-center justify-between p-3 px-4 rounded-xl bg-white/2 border border-white/5">
+                                                                <span className="text-[10px] font-bold text-white/60">{p.label}</span>
+                                                                {hasCap ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <AlertCircle className="w-3.5 h-3.5 text-white/10" />}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+
+                                            {/* 5. Authority Level Indicator */}
+                                            <div className="space-y-3 pt-2">
+                                                <div className="flex justify-between items-end">
+                                                    <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Authority Level</p>
+                                                    <p className="text-sm font-black text-violet-400">{ROLE_HIERARCHY[myRole as AdminRole] || 0}% Clearance</p>
+                                                </div>
+                                                <div className="w-full bg-white/5 h-3 rounded-full overflow-hidden border border-white/10 p-0.5">
+                                                    <motion.div
+                                                        initial={{ width: 0 }}
+                                                        animate={{ width: `${ROLE_HIERARCHY[myRole as AdminRole] || 0}%` }}
+                                                        className="bg-gradient-to-r from-violet-600 to-indigo-500 h-full rounded-full shadow-lg shadow-violet-500/50"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <Button onClick={() => AdminAuth.logoutAdmin()} variant="outline" className="w-full h-16 border-red-500/20 text-red-500 font-black rounded-[1.25rem] hover:bg-red-500/10 uppercase tracking-[0.2em] text-xs transition-all">
+                                            Sign Out of Mission Control
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 6. Access Limitations & 7. Activity Log Placeholder */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="bg-[#111] border border-white/5 rounded-[2.5rem] p-8 space-y-4">
+                                    <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Operational Constraints</p>
+                                    <ul className="space-y-3">
+                                        {[
+                                            'Cannot bypass dual-authorization for large financial transfers',
+                                            'Cannot modify system audit logs (Hard-coded immutability)',
+                                            'Cannot override Super Admin global configurations'
+                                        ].map((text, i) => (
+                                            <li key={i} className="flex gap-3 text-[10px] text-white/50 leading-relaxed">
+                                                <Shield className="w-4 h-4 text-violet-500 shrink-0" />
+                                                {text}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                                <div className="bg-[#111] border border-white/5 rounded-[2.5rem] p-8 space-y-4">
+                                    <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Recent Activity Chain</p>
+                                    <div className="flex flex-col items-center justify-center h-24 text-white/20 text-[10px] font-bold uppercase tracking-widest">
+                                        No recent actions logged
+                                    </div>
+                                </div>
                             </div>
                         </motion.div>
                     )}

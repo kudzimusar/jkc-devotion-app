@@ -38,7 +38,8 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
         owner: "Organization Owner",
         shepherd: "Shepherd / Leader",
         admin: "Administrator",
-        ministry_lead: "Ministry Leader"
+        ministry_lead: "Ministry Leader",
+        ministry_leader: "Ministry Leader"
     };
 
     const QUICK_ACTIONS_CONFIG = [

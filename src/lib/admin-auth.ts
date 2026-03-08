@@ -7,7 +7,7 @@
 import { supabase } from './supabase';
 import { basePath as BP } from './utils';
 
-export const ADMIN_ROLES = ['super_admin', 'owner', 'shepherd', 'admin', 'ministry_lead'] as const;
+export const ADMIN_ROLES = ['super_admin', 'owner', 'shepherd', 'admin', 'ministry_lead', 'ministry_leader'] as const;
 export type AdminRole = typeof ADMIN_ROLES[number];
 
 export const ROLE_HIERARCHY: Record<AdminRole, number> = {
@@ -16,6 +16,7 @@ export const ROLE_HIERARCHY: Record<AdminRole, number> = {
     shepherd: 80,
     admin: 70,
     ministry_lead: 60,
+    ministry_leader: 60,
 };
 
 const CACHE_KEY = 'church_os_admin_session';
@@ -55,9 +56,27 @@ export const AdminAuth = {
                 .from('org_members')
                 .select('role, org_id')
                 .eq('user_id', session.user.id)
-                .single();
+                .maybeSingle();
 
-            if (!member || !ADMIN_ROLES.includes(member.role as AdminRole)) return null;
+            let role = member?.role;
+            let orgId = member?.org_id;
+
+            // Fallback to user_roles if org_members doesn't have the role
+            if (!role) {
+                const { data: userRole } = await supabase
+                    .from('user_roles')
+                    .select('role_name, org_id')
+                    .eq('user_id', session.user.id)
+                    .limit(1)
+                    .maybeSingle();
+
+                if (userRole) {
+                    role = userRole.role_name;
+                    orgId = userRole.org_id;
+                }
+            }
+
+            if (!role || !ADMIN_ROLES.includes(role as AdminRole)) return null;
 
             const { data: profile } = await supabase
                 .from('profiles')
@@ -69,8 +88,8 @@ export const AdminAuth = {
                 userId: session.user.id,
                 email: session.user.email || '',
                 name: profile?.name || session.user.email || 'Admin',
-                role: member.role as AdminRole,
-                orgId: member.org_id,
+                role: role as AdminRole,
+                orgId: orgId as string,
                 cachedAt: Date.now(),
             };
 
