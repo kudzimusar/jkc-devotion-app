@@ -8,7 +8,8 @@ import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { toast } from "sonner";
-import { saveAs } from 'file-saver';
+import { exportToCSV, exportToExcel, exportToPDF } from "@/lib/export-utils";
+import { Download, ChevronDown } from "lucide-react";
 
 interface Member {
     id: string; name: string; email: string;
@@ -40,6 +41,7 @@ export default function MembersPage() {
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState("all");
     const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+    const [showExport, setShowExport] = useState(false);
 
     useEffect(() => {
         fetchMembers();
@@ -75,30 +77,80 @@ export default function MembersPage() {
         setLoading(false);
     }
 
-    const exportDirectory = () => {
-        const headers = ["Name", "Email", "Status", "City", "Phone", "Baptized", "Joined Church"];
-        const rows = filtered.map(m => [
-            m.name,
-            m.email,
-            m.membership_status || 'visitor',
-            m.city || '-',
-            m.phone || '-',
-            m.baptism_status || 'no',
-            m.date_joined_church || '-'
-        ]);
+    async function handlePromoteToMember(targetId: string) {
+        setLoading(true);
+        try {
+            const { error } = await supabaseAdmin
+                .from('profiles')
+                .update({
+                    membership_status: 'member',
+                    growth_stage: 'disciple'
+                })
+                .eq('id', targetId);
 
-        const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        saveAs(blob, `JKC_Member_Directory_${new Date().toISOString().split('T')[0]}.csv`);
-        toast.success("Directory exported successfully!");
-    };
+            if (error) throw error;
 
-    const filtered = members.filter(m => {
+            // Also sync to org_members for legacy dashboard consistency
+            await supabaseAdmin
+                .from('org_members')
+                .update({ stage: 'disciple' })
+                .eq('user_id', targetId);
+
+            toast.success("Membership approved! Growth stage updated to Disciple.");
+            await fetchMembers(); // Refresh list
+
+            // Update selected member view if open
+            if (selectedMember && selectedMember.id === targetId) {
+                setSelectedMember({
+                    ...selectedMember,
+                    membership_status: 'member',
+                    growth_stage: 'disciple'
+                });
+            }
+        } catch (err: any) {
+            console.error("Promotion failed:", err);
+            toast.error("Failed to approve membership.");
+        } finally {
+            setLoading(false);
+        }
+    }
+    const filtered = members.filter((m: Member) => {
         const q = search.toLowerCase();
         const matchSearch = !q || m.name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q);
         const matchFilter = filter === 'all' || m.membership_status === filter;
         return matchSearch && matchFilter;
     });
+
+    const exportDirectory = (format: 'csv' | 'xlsx' | 'pdf') => {
+        const timestamp = new Date().toISOString().split('T')[0];
+        const filename = `JKC_Member_Directory_${timestamp}`;
+
+        const exportData = filtered.map((m: Member) => ({
+            Name: m.name,
+            Email: m.email,
+            Status: m.membership_status || 'visitor',
+            City: m.city || '-',
+            Phone: m.phone || '-',
+            Baptized: m.baptism_status || 'no',
+            Joined: m.date_joined_church || '-',
+            'Growth Stage': m.growth_stage || 'visitor',
+            Roles: m.org_members?.role || 'member'
+        }));
+
+        const headers = ["Name", "Email", "Status", "City", "Phone", "Baptized", "Joined", "Growth Stage", "Roles"];
+        const keys = ["Name", "Email", "Status", "City", "Phone", "Baptized", "Joined", "Growth Stage", "Roles"];
+
+        if (format === 'csv') {
+            exportToCSV(exportData, filename, headers);
+        } else if (format === 'xlsx') {
+            exportToExcel(exportData, filename, "Members");
+        } else if (format === 'pdf') {
+            exportToPDF(exportData, filename, "Member Directory Report", headers, keys);
+        }
+
+        toast.success(`Exporting as ${format.toUpperCase()}...`);
+        setShowExport(false);
+    };
 
     return (
         <div className="p-6 xl:p-8">
@@ -125,9 +177,25 @@ export default function MembersPage() {
                         <option value="visitor">Visitors</option>
                         <option value="leader">Leaders</option>
                     </select>
-                    <Button onClick={exportDirectory} variant="outline" className="h-9 px-4 bg-white/5 border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/60 hover:text-white">
-                        Export CSV
-                    </Button>
+                    <div className="relative">
+                        <Button
+                            onClick={() => setShowExport(!showExport)}
+                            variant="outline"
+                            className="h-9 px-4 bg-white/5 border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/60 hover:text-white flex items-center gap-2"
+                        >
+                            <Download className="w-3.5 h-3.5" />
+                            EXPORT
+                            <ChevronDown className="w-3 h-3" />
+                        </Button>
+
+                        {showExport && (
+                            <div className="absolute top-full right-0 mt-2 w-36 bg-[#1a1f2e] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
+                                <button onClick={() => exportDirectory('xlsx')} className="w-full px-4 py-2.5 text-[10px] font-black uppercase text-white/60 hover:text-white hover:bg-white/5 text-left transition-colors border-b border-white/5">Excel (.xlsx)</button>
+                                <button onClick={() => exportDirectory('csv')} className="w-full px-4 py-2.5 text-[10px] font-black uppercase text-white/60 hover:text-white hover:bg-white/5 text-left transition-colors border-b border-white/5">CSV Table</button>
+                                <button onClick={() => exportDirectory('pdf')} className="w-full px-4 py-2.5 text-[10px] font-black uppercase text-white/60 hover:text-white hover:bg-white/5 text-left transition-colors">PDF Report</button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -317,7 +385,15 @@ export default function MembersPage() {
                             </div>
                         </div>
 
-                        <div className="p-8 border-t border-white/5 bg-white/2 flex gap-3">
+                        <div className="p-8 border-t border-white/5 bg-white/2 flex flex-wrap gap-3">
+                            {selectedMember.membership_status !== 'member' && (
+                                <Button
+                                    onClick={() => handlePromoteToMember(selectedMember.id)}
+                                    className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl border-0 shadow-lg shadow-emerald-600/20 mb-2"
+                                >
+                                    Approve Membership
+                                </Button>
+                            )}
                             <Button
                                 onClick={() => window.print()}
                                 className="flex-1 h-14 bg-white/10 hover:bg-white/20 text-white font-black rounded-2xl border-white/10 shadow-lg"
