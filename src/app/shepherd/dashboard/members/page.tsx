@@ -6,8 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
-
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { toast } from "sonner";
+import { saveAs } from 'file-saver';
 
 interface Member {
     id: string; name: string; email: string;
@@ -17,7 +18,11 @@ interface Member {
     avatar_url?: string;
     skills_talents?: string[];
     milestones?: any;
-    ministries?: any[];
+    ministry_members?: any[];
+    member_skills?: any[];
+    org_members?: any;
+    discipleship_score?: number;
+    stage?: string;
 }
 
 const BADGE_COLORS: Record<string, string> = {
@@ -41,12 +46,15 @@ export default function MembersPage() {
 
     async function fetchMembers() {
         setLoading(true);
-        const { data, error } = await supabase
+        // Using supabaseAdmin to ensure access to all member data regardless of RLS
+        const { data, error } = await supabaseAdmin
             .from('profiles')
             .select(`
                 *,
                 milestones:member_milestones(*),
-                ministries:ministry_members(*)
+                ministry_members(*),
+                member_skills(*),
+                org_members(role, stage, discipleship_score, joined_at)
             `)
             .order('name');
 
@@ -54,15 +62,35 @@ export default function MembersPage() {
             console.error("Error fetching members:", error);
             toast.error("Failed to load members directory");
         } else {
-            // Flatten milestones for the UI
             const processed = (data || []).map((m: any) => ({
                 ...m,
-                milestones: m.milestones?.[0] || {}
+                milestones: m.milestones?.[0] || {},
+                org_members: m.org_members?.[0] || {},
+                discipleship_score: m.org_members?.[0]?.discipleship_score || 0,
+                stage: m.org_members?.[0]?.stage || 'visitor'
             }));
             setMembers(processed);
         }
         setLoading(false);
     }
+
+    const exportDirectory = () => {
+        const headers = ["Name", "Email", "Status", "City", "Phone", "Baptized", "Joined Church"];
+        const rows = filtered.map(m => [
+            m.name,
+            m.email,
+            m.membership_status || 'visitor',
+            m.city || '-',
+            m.phone || '-',
+            m.baptism_status || 'no',
+            m.date_joined_church || '-'
+        ]);
+
+        const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        saveAs(blob, `JKC_Member_Directory_${new Date().toISOString().split('T')[0]}.csv`);
+        toast.success("Directory exported successfully!");
+    };
 
     const filtered = members.filter(m => {
         const q = search.toLowerCase();
@@ -96,6 +124,9 @@ export default function MembersPage() {
                         <option value="visitor">Visitors</option>
                         <option value="leader">Leaders</option>
                     </select>
+                    <Button onClick={exportDirectory} variant="outline" className="h-9 px-4 bg-white/5 border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/60 hover:text-white">
+                        Export CSV
+                    </Button>
                 </div>
             </div>
 
@@ -237,11 +268,11 @@ export default function MembersPage() {
                                 </div>
                             </div>
 
-                            {selectedMember.ministries && selectedMember.ministries.length > 0 && (
+                            {selectedMember.ministry_members && selectedMember.ministry_members.length > 0 && (
                                 <div className="space-y-4">
                                     <h4 className="text-xs font-black text-white/20 uppercase tracking-[0.2em]">Ministry Involvement</h4>
                                     <div className="flex flex-wrap gap-2">
-                                        {selectedMember.ministries.map(m => (
+                                        {selectedMember.ministry_members.map(m => (
                                             <Badge key={m.id} className="bg-violet-500/10 text-violet-400 border border-violet-500/20 px-4 py-1.5 rounded-xl font-bold">
                                                 {m.ministry_name} • {m.ministry_role}
                                             </Badge>
@@ -250,21 +281,48 @@ export default function MembersPage() {
                                 </div>
                             )}
 
-                            {selectedMember.skills_talents && selectedMember.skills_talents.length > 0 && (
+                            {(selectedMember.member_skills?.length || 0) > 0 && (
                                 <div className="space-y-4">
-                                    <h4 className="text-xs font-black text-white/20 uppercase tracking-[0.2em]">Skills & Talents</h4>
+                                    <h4 className="text-xs font-black text-white/20 uppercase tracking-[0.2em]">Skills & Assets</h4>
                                     <div className="flex flex-wrap gap-2">
-                                        {selectedMember.skills_talents.map(s => (
-                                            <Badge key={s} className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-4 py-1.5 rounded-xl font-bold">
-                                                {s}
+                                        {selectedMember.member_skills?.map(s => (
+                                            <Badge key={s.id} className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-4 py-1.5 rounded-xl font-bold">
+                                                {s.skill_name}
                                             </Badge>
                                         ))}
                                     </div>
                                 </div>
                             )}
+
+                            <div className="space-y-4 pt-4 border-t border-white/5">
+                                <h4 className="text-xs font-black text-white/20 uppercase tracking-[0.2em]">Pastor's Intel</h4>
+                                <div className="bg-black/20 rounded-2xl p-6 border border-white/5">
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div>
+                                            <p className="text-[10px] font-black text-white/10 uppercase tracking-widest">Growth Stage</p>
+                                            <p className="text-sm font-black text-white uppercase mt-1">{selectedMember.stage || 'Visitor'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-black text-white/10 uppercase tracking-widest">Discipleship Score</p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+                                                    <div className="h-full bg-violet-500" style={{ width: `${selectedMember.discipleship_score || 0}%` }} />
+                                                </div>
+                                                <span className="text-xs font-black text-violet-400">{selectedMember.discipleship_score || 0}/100</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div className="p-8 border-t border-white/5 bg-white/2 flex gap-3">
+                            <Button
+                                onClick={() => window.print()}
+                                className="flex-1 h-14 bg-white/10 hover:bg-white/20 text-white font-black rounded-2xl border-white/10 shadow-lg"
+                            >
+                                Print Profile
+                            </Button>
                             <Button className="flex-1 h-14 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-2xl border-0 shadow-lg shadow-violet-600/20">
                                 Send Message
                             </Button>
@@ -275,6 +333,36 @@ export default function MembersPage() {
                     </motion.div>
                 </div>
             )}
+            {/* Print Styles */}
+            <style jsx global>{`
+                @media print {
+                    .fixed.inset-0.z-50 {
+                        position: static !important;
+                        background: white !important;
+                        padding: 0 !important;
+                    }
+                    header, aside, .p-8.border-t, button, .flex.items-center.justify-between.mb-6, .grid.grid-cols-4.gap-3.mb-6, .mb-6 {
+                        display: none !important;
+                    }
+                    .bg-[#0f172a] {
+                        background: white !important;
+                        color: black !important;
+                        border: none !important;
+                        box-shadow: none !important;
+                        width: 100% !important;
+                        max-width: none !important;
+                        max-height: none !important;
+                        overflow: visible !important;
+                    }
+                    .text-white { color: black !important; }
+                    .text-white\/20, .text-white\/30, .text-white\/40 { color: #666 !important; }
+                    .bg-white\/5, .bg-white\/2, .bg-black\/20 { background: #f5f5f5 !important; }
+                    .border-white\/5, .border-white\/10 { border-color: #eee !important; }
+                    h2, h3, h4 { color: black !important; }
+                    .text-violet-400 { color: #7c3aed !important; }
+                    .bg-violet-600\/10 { background: #f5f3ff !important; }
+                }
+            `}</style>
         </div>
     );
 }
