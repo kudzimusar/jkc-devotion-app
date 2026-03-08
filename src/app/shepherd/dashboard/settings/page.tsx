@@ -43,7 +43,7 @@ export default function SettingsPage() {
     async function loadData() {
         setLoading(true);
         const [teamRes, invRes, rolesRes] = await Promise.all([
-            supabaseAdmin.from('org_members').select('*, profiles(name, email, membership_status, created_at)').eq('org_id', orgId),
+            supabaseAdmin.from('org_members').select('*, profiles(name, email, membership_status, growth_stage, created_at)').eq('org_id', orgId),
             supabaseAdmin.from('org_members')
                 .select('*, profiles(name, email), ministries:ministry_id(name)')
                 .not('invitation_token', 'is', null)
@@ -170,7 +170,10 @@ export default function SettingsPage() {
                                         <p className="text-white/40 font-medium">{myEmail}</p>
                                         <div className="flex flex-wrap justify-center md:justify-start gap-2 pt-2">
                                             <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 px-3 py-1 font-black uppercase tracking-widest text-[9px]">
-                                                {team.find(m => m.profiles?.email === myEmail)?.profiles?.membership_status?.toUpperCase() || 'MEMBER'}
+                                                {team.find(m => m.profiles?.email === myEmail)?.profiles?.membership_status?.toUpperCase() || 'VISITOR'}
+                                            </Badge>
+                                            <Badge className="bg-violet-500/10 text-violet-400 border-violet-500/20 px-3 py-1 font-black uppercase tracking-widest text-[9px]">
+                                                {team.find(m => m.profiles?.email === myEmail)?.profiles?.growth_stage?.toUpperCase() || 'VISITOR'}
                                             </Badge>
                                             <Badge className="bg-white/5 text-white/40 border-white/10 px-3 py-1 font-black uppercase tracking-widest text-[9px]">
                                                 JOINED {new Date(team.find(m => m.profiles?.email === myEmail)?.profiles?.created_at).toLocaleDateString()}

@@ -23,6 +23,7 @@ interface Member {
     org_members?: any;
     discipleship_score?: number;
     stage?: string;
+    growth_stage?: string;
 }
 
 const BADGE_COLORS: Record<string, string> = {
@@ -67,7 +68,7 @@ export default function MembersPage() {
                 milestones: m.milestones?.[0] || {},
                 org_members: m.org_members?.[0] || {},
                 discipleship_score: m.org_members?.[0]?.discipleship_score || 0,
-                stage: m.org_members?.[0]?.stage || 'visitor'
+                growth_stage: m.growth_stage || m.org_members?.[0]?.stage || 'visitor'
             }));
             setMembers(processed);
         }
@@ -182,8 +183,8 @@ export default function MembersPage() {
                                     <Mail className="w-3 h-3 text-white/20 flex-shrink-0" />
                                     <p className="text-xs text-white/40 truncate">{m.email}</p>
                                 </div>
-                                <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg capitalize ${BADGE_COLORS[m.membership_status || 'visitor'] || 'bg-white/10 text-white/40'}`}>
-                                    {m.membership_status || 'visitor'}
+                                <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg capitalize ${BADGE_COLORS[m.growth_stage || 'visitor'] || 'bg-white/10 text-white/40'}`}>
+                                    {m.growth_stage || 'visitor'}
                                 </span>
                                 <div className="flex items-center gap-1">
                                     <MapPin className="w-3 h-3 text-white/20" />
@@ -300,7 +301,7 @@ export default function MembersPage() {
                                     <div className="grid grid-cols-2 gap-6">
                                         <div>
                                             <p className="text-[10px] font-black text-white/10 uppercase tracking-widest">Growth Stage</p>
-                                            <p className="text-sm font-black text-white uppercase mt-1">{selectedMember.stage || 'Visitor'}</p>
+                                            <p className="text-sm font-black text-white uppercase mt-1">{selectedMember.growth_stage || 'Visitor'}</p>
                                         </div>
                                         <div>
                                             <p className="text-[10px] font-black text-white/10 uppercase tracking-widest">Discipleship Score</p>
