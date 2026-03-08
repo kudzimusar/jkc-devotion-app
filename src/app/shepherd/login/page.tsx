@@ -21,7 +21,7 @@ export default function AdminLoginPage() {
     // If already logged in as admin, redirect immediately
     useEffect(() => {
         AdminAuth.getAdminSession().then(session => {
-            if (session) router.replace(DASHBOARD_PATH);
+            if (session) router.replace(`${BP}${DASHBOARD_PATH}/`);
             else setCheckingSession(false);
         });
     }, [router]);
@@ -40,7 +40,7 @@ export default function AdminLoginPage() {
             return;
         }
 
-        router.push(DASHBOARD_PATH);
+        router.push(`${BP}${DASHBOARD_PATH}/`);
     };
 
     if (checkingSession) {

@@ -208,7 +208,7 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                                         <p className="text-[10px] text-white/40 uppercase tracking-widest">{ROLE_LABELS[role] || "Staff Member"}</p>
                                     </div>
                                     <div className="border-t border-white/5 pt-1 space-y-0.5">
-                                        <Link href="/shepherd/dashboard/settings" className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-white/60 hover:text-white hover:bg-white/8 transition-all">
+                                        <Link href={`${BP}/shepherd/dashboard/settings/`} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-white/60 hover:text-white hover:bg-white/8 transition-all">
                                             <User className="w-3.5 h-3.5" /> My Profile
                                         </Link>
                                         <button onClick={() => AdminAuth.logoutAdmin()} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all">

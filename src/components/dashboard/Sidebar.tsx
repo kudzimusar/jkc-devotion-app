@@ -63,7 +63,7 @@ export function Sidebar() {
                     {NAV_ITEMS.map((item) => {
                         const fullPath = `${BASE_PATH}${item.path}`;
                         const isActive = item.path === ""
-                            ? pathname === BASE_PATH || pathname === BASE_PATH + "/"
+                            ? pathname === `${BP}${BASE_PATH}` || pathname === `${BP}${BASE_PATH}/`
                             : pathname.includes(item.path);
                         const Icon = item.icon;
 
@@ -71,7 +71,7 @@ export function Sidebar() {
                             <motion.button
                                 key={item.path}
                                 whileHover={{ x: 2 }}
-                                onClick={() => router.push(BASE_PATH + item.path)}
+                                onClick={() => router.push(`${BP}${BASE_PATH}${item.path}/`)}
                                 className={cn(
                                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 group",
                                     isActive
