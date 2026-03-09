@@ -6,7 +6,7 @@ import {
     LayoutDashboard, HeartPulse, Users, BookOpen, Music,
     Globe, Calendar, DollarSign, TrendingUp, Sparkles,
     FileText, Settings, ChevronLeft, ChevronRight, Shield,
-    MessagesSquare, Flame, LayoutGrid, Megaphone
+    MessagesSquare, Flame, LayoutGrid, Megaphone, ShieldCheck
 } from "lucide-react";
 import { basePath as BP } from "@/lib/utils";
 import { useState } from "react";
