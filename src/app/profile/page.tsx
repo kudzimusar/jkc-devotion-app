@@ -287,7 +287,6 @@ export default function ProfileHub() {
 
             const { error } = await supabase.from('profiles').update({
                 name: cleanData.name,
-                email: cleanData.email,
                 phone: cleanData.phone_number,
                 gender: cleanData.gender,
                 date_of_birth: cleanData.birthdate,
