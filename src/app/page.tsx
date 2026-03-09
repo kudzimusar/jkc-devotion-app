@@ -55,6 +55,7 @@ import type { User as AuthUser } from "@/lib/auth";
 import { SoapJournal, SoapEntry, SOAP_EXPLANATION } from "@/lib/soap-journal";
 import { basePath as BP } from "@/lib/utils";
 import { TopNav } from "@/components/layout/TopNav";
+import { AuthModal } from "@/components/auth/AuthModal";
 
 const FloatingHearts = () => {
   const [hearts, setHearts] = useState<{ id: number; left: number; delay: number; duration: number; size: number }[]>([]);
@@ -198,13 +199,11 @@ export default function DevotionalApp() {
   const [loading, setLoading] = useState(false);
   const [note, setNote] = useState("");
   const [declarationMode, setDeclarationMode] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [authMode, setAuthMode] = useState<"login" | "register" | "profile">("login");
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [emailNotConfirmed, setEmailNotConfirmed] = useState(false);
   const [shareProgress, setShareProgress] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [isMemberRequest, setIsMemberRequest] = useState(false);
 
   // Ask Bible Chat State
   const [askChatOpen, setAskChatOpen] = useState(false);
@@ -222,10 +221,6 @@ export default function DevotionalApp() {
     updated_at: null
   });
 
-  // Auth Inputs
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [stats, setStats] = useState<{ completed: number; total: number; streak: number; lastCompletedJST: string | null; completedDays: number[] }>({ completed: 0, total: 31, streak: 0, lastCompletedJST: null, completedDays: [] });
 
   const loadStats = async () => {
@@ -259,7 +254,7 @@ export default function DevotionalApp() {
         const currentUser = await Auth.getCurrentUser();
         setUser(currentUser);
         if (currentUser) {
-          setShowSettings(false);
+          setIsAuthModalOpen(false);
           const { data: profile } = await supabase.from('profiles').select('share_progress_with_leaders').eq('id', currentUser.id).single();
           if (profile) setShareProgress(profile.share_progress_with_leaders);
           const { data: member } = await supabase.from('org_members').select('role').eq('user_id', currentUser.id).single();
@@ -315,43 +310,14 @@ export default function DevotionalApp() {
 
   const activeVerses = lang === "JP" ? jpVerses : verses;
 
-  const handleLogin = async () => {
-    setLoading(true);
-    const res = await Auth.login(email, password);
-    if (res.success) {
-      setUser(res.user || null);
-      toast.success("Welcome back!");
-      setShowSettings(false);
-    } else if (res.error === 'Email not confirmed') {
-      setEmailNotConfirmed(true);
-      toast.error("Please confirm your email.");
-    } else {
-      toast.error(res.error || "Login failed");
-    }
-    setLoading(false);
-  };
-
-  const handleRegister = async () => {
-    setLoading(true);
-    const metadata = isMemberRequest ? { membership_status: 'pending_approval' } : {};
-    const res = await Auth.createAccount(email, password, name, metadata);
-    if (res.success) {
-      setEmailNotConfirmed(true);
-      toast.success("Account created! Check your email.");
-    } else {
-      toast.error(res.error || "Signup failed");
-    }
-    setLoading(false);
-  };
-
-  const handleGoogleLogin = async () => {
-    await Auth.signInWithGoogle();
+  const handleLoginSuccess = (newUser: AuthUser) => {
+    setUser(newUser);
   };
 
   const saveSoap = async () => {
     if (!user || !devotion) {
       toast.error("Please login to save your journal");
-      setShowSettings(true);
+      setIsAuthModalOpen(true);
       return;
     }
     try {
@@ -396,7 +362,14 @@ export default function DevotionalApp() {
 
       <FloatingHearts />
 
-      <TopNav user={user} userRole={userRole} stats={stats} devotion={devotion ? { ...devotion, fullScriptureText: activeVerses.map(v => v.text).join(" ") } : null} currentDate={currentDate} onLoginClick={() => setShowSettings(true)} />
+      <TopNav user={user} userRole={userRole} stats={stats} devotion={devotion ? { ...devotion, fullScriptureText: activeVerses.map(v => v.text).join(" ") } : null} currentDate={currentDate} onLoginClick={() => setIsAuthModalOpen(true)} />
+
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={handleLoginSuccess}
+        onEmailNotConfirmed={() => setEmailNotConfirmed(true)}
+      />
 
       {/* Email Verification Alert */}
       <AnimatePresence>
@@ -417,300 +390,233 @@ export default function DevotionalApp() {
       </AnimatePresence>
 
       <div className="max-w-screen-xl mx-auto px-4 py-8 relative z-10 transition-all duration-500">
-        <div className={`grid grid-cols-1 ${user && showSettings ? 'lg:grid-cols-12 lg:gap-12' : ''}`}>
+        <div className={`max-w-2xl mx-auto space-y-12 pb-32 transition-all duration-500`}>
 
-          {/* Main Left Column (Or Full Width) */}
-          <div className={`${user && showSettings ? 'lg:col-span-7' : 'max-w-2xl mx-auto'} space-y-12 pb-32 transition-all duration-500`}>
-
-            {/* Hero Section */}
-            <section className="text-center space-y-4 pt-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-4"
-              >
-                <h2 className="text-5xl md:text-7xl font-sans tracking-tight leading-none text-foreground/90">
-                  <span className="font-serif italic font-medium pr-2">90 Days of </span><br className="md:hidden" />
-                  <span className="font-black text-[var(--primary)] tracking-widest uppercase md:block mt-2">Transformation</span>
-                </h2>
-                <p className="text-xs md:text-sm font-bold uppercase tracking-[0.3em] opacity-30 pt-4">Building Healthy Habits & Holy Lives</p>
-
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 inline-flex max-w-2xl mx-auto items-center p-4 px-6 rounded-[2rem] glass bg-[var(--primary)]/5 border border-[var(--primary)]/20 shadow-[0_10px_30px_rgba(var(--primary-rgb),0.1)] gap-4 text-left">
-                  <Sparkles className="w-8 h-8 text-[var(--primary)] shrink-0" />
-                  <p className="text-sm font-bold leading-relaxed text-foreground/90 italic tracking-wide">
-                    "{AIService.generateHeroMessage(stats.streak, stats.completed, stats.total)}"
-                  </p>
-                </motion.div>
-              </motion.div>
-            </section>
-
-            {/* Pulse / Stats Section */}
-            <section>
-              <div className="glass-card rounded-[3rem] p-8 md:p-10 border border-foreground/20 shadow-2xl bg-foreground/5 backdrop-blur-2xl">
-                <div className="flex flex-col md:flex-row items-center gap-10">
-                  {/* Progress Circle */}
-                  <div className="relative w-32 h-32 flex-shrink-0">
-                    <svg className="w-full h-full rotate-[-90deg]" viewBox="0 0 100 100">
-                      <circle cx="50" cy="50" r="44" stroke="currentColor" strokeWidth="8" className="text-white/5" fill="transparent" />
-                      <motion.circle
-                        cx="50" cy="50" r="44"
-                        stroke="var(--primary)"
-                        strokeWidth="8"
-                        strokeDasharray="276.46"
-                        initial={{ strokeDashoffset: 276.46 }}
-                        animate={{ strokeDashoffset: 276.46 * (1 - (devotion?.id || 0) / 90) }}
-                        transition={{ duration: 1.5, ease: "easeOut" }}
-                        strokeLinecap="round"
-                        fill="transparent"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-2xl font-black">{(devotion?.id || 0)}</span>
-                      <span className="text-[8px] font-black uppercase opacity-40">Day No.</span>
-                    </div>
-                  </div>
-
-                  {/* Stats Grid */}
-                  <div className="flex-1 w-full grid grid-cols-3 gap-4 text-center">
-                    <div className="space-y-1">
-                      <div className="text-2xl md:text-3xl font-black text-[var(--primary)]">{stats.completed}</div>
-                      <div className="text-[9px] font-black uppercase tracking-widest opacity-40">Completed</div>
-                    </div>
-                    <div className="space-y-1 border-x border-foreground/10">
-                      <div className="text-2xl md:text-3xl font-black text-[var(--primary)]">90</div>
-                      <div className="text-[9px] font-black uppercase tracking-widest opacity-40">Total Journey</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-2xl md:text-3xl font-black text-[var(--primary)]">{stats.streak}</div>
-                      <div className="text-[9px] font-black uppercase tracking-widest opacity-40">Day Streak</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* Sunday Check-In */}
-            {format(currentDate, "EEEE") === "Sunday" && (
-              <section className="max-w-4xl mx-auto px-4">
-                <SundayCheckIn user={user} currentDate={currentDate} />
-              </section>
-            )}
-
-            {/* Main Content Area */}
+          {/* Hero Section */}
+          <section className="text-center space-y-4 pt-4">
             <motion.div
-              key={format(currentDate, "yyyy-MM-dd")}
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="space-y-8 pb-32"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4"
             >
-              {/* Daily Header */}
-              <div className="flex items-center justify-between px-2">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-[var(--primary)]/10 flex items-center justify-center">
-                    {devotion && (() => {
-                      const theme = WEEK_THEMES.find(w => w.week === devotion.week);
-                      const Icon = theme?.icon || Sparkles;
-                      return <Icon className="w-6 h-6 text-[var(--primary)]" />
-                    })()}
-                  </div>
-                  <div className="space-y-0.5">
-                    <h3 className="font-black text-xl leading-none">Week {devotion?.week}: {devotion?.week_theme}</h3>
-                    <p className="text-xs font-bold text-[var(--primary)] tracking-widest uppercase opacity-80">{format(currentDate, "EEEE, MMMM d")}</p>
-                  </div>
-                </div>
-                {stats.completedDays.includes(devotion?.id || 0) && (
-                  <Badge className="bg-green-500 text-white font-black border-0 px-4 py-1 rounded-full shadow-lg shadow-green-500/20">
-                    COMPLETED
-                  </Badge>
-                )}
-              </div>
+              <h2 className="text-5xl md:text-7xl font-sans tracking-tight leading-none text-foreground/90">
+                <span className="font-serif italic font-medium pr-2">90 Days of </span><br className="md:hidden" />
+                <span className="font-black text-[var(--primary)] tracking-widest uppercase md:block mt-2">Transformation</span>
+              </h2>
+              <p className="text-xs md:text-sm font-bold uppercase tracking-[0.3em] opacity-30 pt-4">Building Healthy Habits & Holy Lives</p>
 
-              {/* Devotion Content Card */}
-              <Card className="glass border-foreground/20 rounded-[3rem] overflow-hidden shadow-2xl bg-foreground/5 backdrop-blur-xl group">
-                <CardContent className="p-8 md:p-12 space-y-12">
-                  {/* Title Section */}
-                  <div className="space-y-4">
-                    <Badge variant="outline" className="rounded-full border-[var(--primary)]/40 text-[var(--primary)] px-5 py-2 font-black tracking-[0.2em] text-[10px] uppercase">
-                      The Daily Focus
-                    </Badge>
-                    <div className="space-y-2">
-                      <h4 className="text-[10px] font-black uppercase text-[var(--primary)] opacity-60 tracking-widest">
-                        {devotion?.theme}
-                      </h4>
-                      <h3 className="text-3xl md:text-4xl font-black italic text-foreground/90 font-serif leading-tight">
-                        "{devotion?.title}"
-                      </h3>
-                    </div>
-                  </div>
-
-                  {/* Scripture Section */}
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between border-b border-foreground/10 pb-4">
-                      <div className="flex items-center gap-3">
-                        <BookOpen className="w-5 h-5 text-[var(--primary)]" />
-                        <span className="font-black text-sm tracking-widest uppercase">{devotion?.scripture}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" className="rounded-full h-8 text-[10px] font-black gap-2 px-4 glass hover:bg-[var(--primary)]/10 border border-[var(--primary)]/30 text-[var(--primary)]" onClick={() => setAskChatOpen(true)}>
-                          <Sparkles className="w-3.5 h-3.5" />
-                          AI CHAT
-                        </Button>
-                        <Button variant="ghost" size="sm" className="rounded-full h-8 text-[10px] font-black gap-2 px-4 glass hover:bg-foreground/10" onClick={() => setLang(l => (l === "EN" ? "JP" : (l === "JP" ? "BOTH" : "EN")))}>
-                          <Globe className="w-3.5 h-3.5" />
-                          {lang === "EN" ? "NASB" : lang === "JP" ? "口語訳" : "Bilingual"}
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="prose dark:prose-invert max-w-none">
-                      {loading ? (
-                        <div className="space-y-3 py-4">
-                          <div className="h-5 bg-foreground/10 rounded-full w-full animate-pulse" />
-                          <div className="h-5 bg-foreground/10 rounded-full w-[80%] animate-pulse" />
-                        </div>
-                      ) : (
-                        <div className="text-xl md:text-2xl font-serif leading-relaxed text-foreground/80 font-medium">
-                          {activeVerses.map((v, i) => (
-                            <span key={i} className={lang === "BOTH" ? "block mb-8" : "inline"}>
-                              <sup className="text-[var(--primary)] font-black text-xs mr-2">{v.verse}</sup>
-                              {v.text}{" "}
-                              {lang === "BOTH" && jpVerses[i] && (
-                                <span className="block mt-2 text-lg md:text-xl opacity-60 border-l-2 border-[var(--primary)]/30 pl-6 my-4 italic">
-                                  {jpVerses[i].text}
-                                </span>
-                              )}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Declaration Section */}
-                  <div className="pt-6">
-                    <Button variant="outline" className="w-full h-auto py-12 rounded-[2.5rem] border-dashed border-2 border-[var(--primary)]/30 bg-[var(--primary)]/5 hover:bg-[var(--primary)]/10 transition-all flex flex-col gap-6" onClick={() => setDeclarationMode(true)}>
-                      <div className="w-14 h-14 rounded-full bg-[var(--primary)] text-white flex items-center justify-center shadow-xl shadow-primary/20 scale-110">
-                        <Send className="w-6 h-6 rotate-[-20deg]" />
-                      </div>
-                      <div className="space-y-2 px-6">
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">Today's Declaration</span>
-                        <p className="text-2xl md:text-3xl font-black italic tracking-tight underline decoration-[var(--primary)]/30 underline-offset-8">"{devotion?.declaration}"</p>
-                      </div>
-                    </Button>
-                  </div>
-
-                  {/* Journaling Section */}
-                  <div className="space-y-8 pt-8 border-t border-white/5">
-                    <div className="flex items-center gap-3">
-                      <PenLine className="w-5 h-5 text-[var(--primary)]" />
-                      <h5 className="font-black text-sm tracking-widest uppercase">Spirit-Led Journaling</h5>
-                    </div>
-
-                    <Tabs defaultValue="reflection" className="w-full">
-                      <TabsList className="bg-black/20 p-1 rounded-full h-12 mb-8">
-                        <TabsTrigger value="reflection" className="rounded-full px-8 data-[state=active]:bg-primary">Quick Reflection</TabsTrigger>
-                        <TabsTrigger value="soap" className="rounded-full px-8 data-[state=active]:bg-primary">Full SOAP</TabsTrigger>
-                      </TabsList>
-
-                      <TabsContent value="reflection">
-                        <Textarea
-                          placeholder="Speak, Lord, for your servant is listening..."
-                          className="min-h-[200px] rounded-[2rem] bg-black/10 dark:bg-foreground/5 border-white/5 p-8 text-lg md:text-xl font-serif resize-none focus:ring-2 ring-[var(--primary)]/30 transition-all"
-                          value={note}
-                          onChange={e => setNote(e.target.value)}
-                        />
-                      </TabsContent>
-
-                      <TabsContent value="soap" className="space-y-6">
-                        {['observation', 'application', 'prayer'].map((field) => (
-                          <div key={field} className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-6">{field}</label>
-                            <Textarea
-                              placeholder={`My ${field.toLowerCase()}...`}
-                              className="min-h-[120px] rounded-[1.5rem] bg-black/10 dark:bg-foreground/5 border-white/5 p-6 text-base font-serif resize-none"
-                              value={(soapEntry as any)[field.toLowerCase()]}
-                              onChange={e => setSoapEntry({ ...soapEntry, [field.toLowerCase()]: e.target.value })}
-                            />
-                          </div>
-                        ))}
-                      </TabsContent>
-
-                      <div className="flex justify-center pt-10">
-                        <Button onClick={saveSoap} disabled={loading} className="rounded-full h-16 px-16 bg-[var(--primary)] text-white font-black text-xl shadow-2xl shadow-primary/30 hover:scale-105 transition-transform">
-                          {loading ? "SAVING..." : "COMPLETE TODAY"}
-                        </Button>
-                      </div>
-                    </Tabs>
-                  </div>
-                </CardContent>
-              </Card>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 inline-flex max-w-2xl mx-auto items-center p-4 px-6 rounded-[2rem] glass bg-[var(--primary)]/5 border border-[var(--primary)]/20 shadow-[0_10px_30px_rgba(var(--primary-rgb),0.1)] gap-4 text-left">
+                <Sparkles className="w-8 h-8 text-[var(--primary)] shrink-0" />
+                <p className="text-sm font-bold leading-relaxed text-foreground/90 italic tracking-wide">
+                  "{AIService.generateHeroMessage(stats.streak, stats.completed, stats.total)}"
+                </p>
+              </motion.div>
             </motion.div>
-          </div> {/* End Main Left Column */}
+          </section>
 
-          {/* Profile / Settings View (Inline representation instead of Sheet) */}
-          {showSettings && (
-            <div className={`relative animate-in fade-in slide-in-from-bottom-8 duration-500 w-full ${user ? 'lg:col-span-5 lg:mt-16' : 'max-w-md mx-auto mt-8'}`}>
-              <div className="bg-background/80 backdrop-blur-3xl rounded-[3.5rem] border border-foreground/10 overflow-hidden shadow-2xl p-6 lg:p-0">
-                <div className="p-4 flex flex-col items-center gap-4 relative shrink-0">
-                  <img src={`${BP}/church-logo.png`} alt="JKC" className="w-16 h-16 object-contain" />
-                  <h3 className="text-3xl font-serif text-center">{user ? "Connection Card" : "Join the Journey"}</h3>
-                  {!user && <p className="text-sm opacity-50 text-center">Your private journal, synced anywhere.</p>}
-                  <button onClick={() => setShowSettings(false)} className="absolute top-6 right-6 opacity-40 hover:opacity-100 transition-opacity lg:hidden">
-                    <Trash2 className="w-6 h-6 rotate-45" />
-                  </button>
+          {/* Pulse / Stats Section */}
+          <section>
+            <div className="glass-card rounded-[3rem] p-8 md:p-10 border border-foreground/20 shadow-2xl bg-foreground/5 backdrop-blur-2xl">
+              <div className="flex flex-col md:flex-row items-center gap-10">
+                {/* Progress Circle */}
+                <div className="relative w-32 h-32 flex-shrink-0">
+                  <svg className="w-full h-full rotate-[-90deg]" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="44" stroke="currentColor" strokeWidth="8" className="text-white/5" fill="transparent" />
+                    <motion.circle
+                      cx="50" cy="50" r="44"
+                      stroke="var(--primary)"
+                      strokeWidth="8"
+                      strokeDasharray="276.46"
+                      initial={{ strokeDashoffset: 276.46 }}
+                      animate={{ strokeDashoffset: 276.46 * (1 - (devotion?.id || 0) / 90) }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      strokeLinecap="round"
+                      fill="transparent"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-2xl font-black">{(devotion?.id || 0)}</span>
+                    <span className="text-[8px] font-black uppercase opacity-40">Day No.</span>
+                  </div>
                 </div>
 
-                <div className="p-2 md:p-6">
-                  {!user ? (
-                    <div className="space-y-6">
-                      <Tabs value={authMode} onValueChange={(v: any) => setAuthMode(v)}>
-                        <TabsList className="grid w-full grid-cols-2 rounded-full h-14 mb-10 bg-foreground/5 border border-foreground/10 p-1">
-                          <TabsTrigger value="login" className="rounded-full font-bold">LOGIN</TabsTrigger>
-                          <TabsTrigger value="register" className="rounded-full font-bold">NEW ACCOUNT</TabsTrigger>
-                        </TabsList>
-
-                        <TabsContent value="login" className="space-y-4">
-                          <Input placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} className="h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-6 text-lg" />
-                          <Input placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-6 text-lg" />
-                          <Button onClick={handleLogin} className="w-full h-14 rounded-full bg-primary font-black text-lg py-6 shadow-xl shadow-primary/20" disabled={loading}>CONTINUE</Button>
-                          <div className="relative py-4 text-center">
-                            <span className="text-[10px] font-black opacity-30 uppercase tracking-widest px-4 border-t border-foreground/10 pt-4 block w-full mt-2">or secure sign in</span>
-                          </div>
-                          <Button onClick={handleGoogleLogin} variant="outline" className="w-full h-14 rounded-full border-2 font-black gap-3 py-6 glass border-foreground/10 bg-background/50 hover:bg-foreground/5">
-                            <img src="https://www.google.com/favicon.ico" className="w-5 h-5" /> Google Account
-                          </Button>
-                        </TabsContent>
-
-                        <TabsContent value="register" className="space-y-4">
-                          <Input placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} className="h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-6" />
-                          <Input placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} className="h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-6" />
-                          <Input placeholder="Set Password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-6" />
-
-                          <div className="flex items-center gap-3 p-4 bg-[var(--primary)]/5 rounded-2xl border border-[var(--primary)]/20">
-                            <input
-                              type="checkbox"
-                              id="memberRequest"
-                              checked={isMemberRequest}
-                              onChange={(e) => setIsMemberRequest(e.target.checked)}
-                              className="w-5 h-5 rounded-md accent-[var(--primary)]"
-                            />
-                            <label htmlFor="memberRequest" className="text-xs font-bold text-foreground/70 cursor-pointer">
-                              Are you a member of Japan Kingdom Church?
-                            </label>
-                          </div>
-
-                          <Button onClick={handleRegister} className="w-full h-14 rounded-full bg-primary font-black text-lg shadow-xl shadow-primary/20" disabled={loading}>CREATE ACCOUNT</Button>
-                        </TabsContent>
-                      </Tabs>
-                    </div>
-                  ) : null}
+                {/* Stats Grid */}
+                <div className="flex-1 w-full grid grid-cols-3 gap-4 text-center">
+                  <div className="space-y-1">
+                    <div className="text-2xl md:text-3xl font-black text-[var(--primary)]">{stats.completed}</div>
+                    <div className="text-[9px] font-black uppercase tracking-widest opacity-40">Completed</div>
+                  </div>
+                  <div className="space-y-1 border-x border-foreground/10">
+                    <div className="text-2xl md:text-3xl font-black text-[var(--primary)]">90</div>
+                    <div className="text-[9px] font-black uppercase tracking-widest opacity-40">Total Journey</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-2xl md:text-3xl font-black text-[var(--primary)]">{stats.streak}</div>
+                    <div className="text-[9px] font-black uppercase tracking-widest opacity-40">Day Streak</div>
+                  </div>
                 </div>
               </div>
             </div>
+          </section>
+
+          {/* Sunday Check-In */}
+          {format(currentDate, "EEEE") === "Sunday" && (
+            <section className="max-w-4xl mx-auto px-4">
+              <SundayCheckIn user={user} currentDate={currentDate} />
+            </section>
           )}
 
-        </div> {/* End Grid */}
-      </div>
+          {/* Main Content Area */}
+          <motion.div
+            key={format(currentDate, "yyyy-MM-dd")}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="space-y-8 pb-32"
+          >
+            {/* Daily Header */}
+            <div className="flex items-center justify-between px-2">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-[var(--primary)]/10 flex items-center justify-center">
+                  {devotion && (() => {
+                    const theme = WEEK_THEMES.find(w => w.week === devotion.week);
+                    const Icon = theme?.icon || Sparkles;
+                    return <Icon className="w-6 h-6 text-[var(--primary)]" />
+                  })()}
+                </div>
+                <div className="space-y-0.5">
+                  <h3 className="font-black text-xl leading-none">Week {devotion?.week}: {devotion?.week_theme}</h3>
+                  <p className="text-xs font-bold text-[var(--primary)] tracking-widest uppercase opacity-80">{format(currentDate, "EEEE, MMMM d")}</p>
+                </div>
+              </div>
+              {stats.completedDays.includes(devotion?.id || 0) && (
+                <Badge className="bg-green-500 text-white font-black border-0 px-4 py-1 rounded-full shadow-lg shadow-green-500/20">
+                  COMPLETED
+                </Badge>
+              )}
+            </div>
+
+            {/* Devotion Content Card */}
+            <Card className="glass border-foreground/20 rounded-[3rem] overflow-hidden shadow-2xl bg-foreground/5 backdrop-blur-xl group">
+              <CardContent className="p-8 md:p-12 space-y-12">
+                {/* Title Section */}
+                <div className="space-y-4">
+                  <Badge variant="outline" className="rounded-full border-[var(--primary)]/40 text-[var(--primary)] px-5 py-2 font-black tracking-[0.2em] text-[10px] uppercase">
+                    The Daily Focus
+                  </Badge>
+                  <div className="space-y-2">
+                    <h4 className="text-[10px] font-black uppercase text-[var(--primary)] opacity-60 tracking-widest">
+                      {devotion?.theme}
+                    </h4>
+                    <h3 className="text-3xl md:text-4xl font-black italic text-foreground/90 font-serif leading-tight">
+                      "{devotion?.title}"
+                    </h3>
+                  </div>
+                </div>
+
+                {/* Scripture Section */}
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between border-b border-foreground/10 pb-4">
+                    <div className="flex items-center gap-3">
+                      <BookOpen className="w-5 h-5 text-[var(--primary)]" />
+                      <span className="font-black text-sm tracking-widest uppercase">{devotion?.scripture}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" className="rounded-full h-8 text-[10px] font-black gap-2 px-4 glass hover:bg-[var(--primary)]/10 border border-[var(--primary)]/30 text-[var(--primary)]" onClick={() => setAskChatOpen(true)}>
+                        <Sparkles className="w-3.5 h-3.5" />
+                        AI CHAT
+                      </Button>
+                      <Button variant="ghost" size="sm" className="rounded-full h-8 text-[10px] font-black gap-2 px-4 glass hover:bg-foreground/10" onClick={() => setLang(l => (l === "EN" ? "JP" : (l === "JP" ? "BOTH" : "EN")))}>
+                        <Globe className="w-3.5 h-3.5" />
+                        {lang === "EN" ? "NASB" : lang === "JP" ? "口語訳" : "Bilingual"}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="prose dark:prose-invert max-w-none">
+                    {loading ? (
+                      <div className="space-y-3 py-4">
+                        <div className="h-5 bg-foreground/10 rounded-full w-full animate-pulse" />
+                        <div className="h-5 bg-foreground/10 rounded-full w-[80%] animate-pulse" />
+                      </div>
+                    ) : (
+                      <div className="text-xl md:text-2xl font-serif leading-relaxed text-foreground/80 font-medium">
+                        {activeVerses.map((v, i) => (
+                          <span key={i} className={lang === "BOTH" ? "block mb-8" : "inline"}>
+                            <sup className="text-[var(--primary)] font-black text-xs mr-2">{v.verse}</sup>
+                            {v.text}{" "}
+                            {lang === "BOTH" && jpVerses[i] && (
+                              <span className="block mt-2 text-lg md:text-xl opacity-60 border-l-2 border-[var(--primary)]/30 pl-6 my-4 italic">
+                                {jpVerses[i].text}
+                              </span>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Declaration Section */}
+                <div className="pt-6">
+                  <Button variant="outline" className="w-full h-auto py-12 rounded-[2.5rem] border-dashed border-2 border-[var(--primary)]/30 bg-[var(--primary)]/5 hover:bg-[var(--primary)]/10 transition-all flex flex-col gap-6" onClick={() => setDeclarationMode(true)}>
+                    <div className="w-14 h-14 rounded-full bg-[var(--primary)] text-white flex items-center justify-center shadow-xl shadow-primary/20 scale-110">
+                      <Send className="w-6 h-6 rotate-[-20deg]" />
+                    </div>
+                    <div className="space-y-2 px-6">
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">Today's Declaration</span>
+                      <p className="text-2xl md:text-3xl font-black italic tracking-tight underline decoration-[var(--primary)]/30 underline-offset-8">"{devotion?.declaration}"</p>
+                    </div>
+                  </Button>
+                </div>
+
+                {/* Journaling Section */}
+                <div className="space-y-8 pt-8 border-t border-white/5">
+                  <div className="flex items-center gap-3">
+                    <PenLine className="w-5 h-5 text-[var(--primary)]" />
+                    <h5 className="font-black text-sm tracking-widest uppercase">Spirit-Led Journaling</h5>
+                  </div>
+
+                  <Tabs defaultValue="reflection" className="w-full">
+                    <TabsList className="bg-black/20 p-1 rounded-full h-12 mb-8">
+                      <TabsTrigger value="reflection" className="rounded-full px-8 data-[state=active]:bg-primary">Quick Reflection</TabsTrigger>
+                      <TabsTrigger value="soap" className="rounded-full px-8 data-[state=active]:bg-primary">Full SOAP</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="reflection">
+                      <Textarea
+                        placeholder="Speak, Lord, for your servant is listening..."
+                        className="min-h-[200px] rounded-[2rem] bg-black/10 dark:bg-foreground/5 border-white/5 p-8 text-lg md:text-xl font-serif resize-none focus:ring-2 ring-[var(--primary)]/30 transition-all"
+                        value={note}
+                        onChange={e => setNote(e.target.value)}
+                      />
+                    </TabsContent>
+
+                    <TabsContent value="soap" className="space-y-6">
+                      {['observation', 'application', 'prayer'].map((field) => (
+                        <div key={field} className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-6">{field}</label>
+                          <Textarea
+                            placeholder={`My ${field.toLowerCase()}...`}
+                            className="min-h-[120px] rounded-[1.5rem] bg-black/10 dark:bg-foreground/5 border-white/5 p-6 text-base font-serif resize-none"
+                            value={(soapEntry as any)[field.toLowerCase()]}
+                            onChange={e => setSoapEntry({ ...soapEntry, [field.toLowerCase()]: e.target.value })}
+                          />
+                        </div>
+                      ))}
+                    </TabsContent>
+
+                    <div className="flex justify-center pt-10">
+                      <Button onClick={saveSoap} disabled={loading} className="rounded-full h-16 px-16 bg-[var(--primary)] text-white font-black text-xl shadow-2xl shadow-primary/30 hover:scale-105 transition-transform">
+                        {loading ? "SAVING..." : "COMPLETE TODAY"}
+                      </Button>
+                    </div>
+                  </Tabs>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div> {/* End Main Content Area */}
+      </div> {/* End Max Width Wrapper */}
 
       {/* Persistent Bottom Controls */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-4 glass p-3 rounded-full border border-foreground/20 shadow-2xl bg-foreground/10 backdrop-blur-3xl lg:bottom-12">
@@ -809,6 +715,6 @@ export default function DevotionalApp() {
           © {new Date().getFullYear()} Japan Kingdom Church. All rights reserved.
         </div>
       </footer>
-    </main>
+    </main >
   );
 }
