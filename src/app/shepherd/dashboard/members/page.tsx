@@ -25,6 +25,10 @@ interface Member {
     discipleship_score?: number;
     stage?: string;
     growth_stage?: string;
+    created_at?: string;
+    roles?: string[];
+    church_background?: string;
+    referral_source?: string;
 }
 
 const BADGE_COLORS: Record<string, string> = {
@@ -71,7 +75,8 @@ export default function MembersPage() {
                 milestones: m.milestones?.[0] || {},
                 org_members: m.org_members?.[0] || {},
                 discipleship_score: m.org_members?.[0]?.discipleship_score || 0,
-                growth_stage: m.growth_stage || m.org_members?.[0]?.stage || 'visitor'
+                growth_stage: m.growth_stage || m.org_members?.[0]?.stage || 'visitor',
+                roles: m.ministry_members?.map((mm: any) => `${mm.ministry_name} (${mm.ministry_role})`) || []
             }));
             setMembers(processed);
 
