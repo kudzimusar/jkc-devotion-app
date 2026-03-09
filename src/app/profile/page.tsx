@@ -496,7 +496,7 @@ export default function ProfileHub() {
     };
 
     if (loading) {
-        return <div className="min-h-screen bg-[var(--background)] flex items-center justify-center"><Clock className="w-8 h-8 animate-spin opacity-20" /></div>;
+        return <div className="min-h-screen bg-background flex items-center justify-center"><Clock className="w-8 h-8 animate-spin text-muted-foreground opacity-20" /></div>;
     }
 
     return (
@@ -511,10 +511,10 @@ export default function ProfileHub() {
                         <img src={`${BP}/church-logo.png`} alt="JKC" className="w-12 h-12 object-contain" />
                     </div>
                     <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
-                        <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:text-foreground hover:bg-foreground/5 font-semibold text-sm transition-all">
+                        <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted font-semibold text-sm transition-all">
                             <LayoutDashboard className="w-4 h-4" /> Home
                         </Link>
-                        <div className="pt-4 pb-2 px-4 text-xs font-black uppercase tracking-widest text-[var(--primary)] opacity-80">
+                        <div className="pt-4 pb-2 px-4 text-xs font-black uppercase tracking-widest text-primary opacity-80">
                             Connection Card
                         </div>
                         {SIDEBAR_NAV.map(nav => (
@@ -522,8 +522,8 @@ export default function ProfileHub() {
                                 key={nav.id}
                                 onClick={() => setActiveTab(nav.id)}
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${activeTab === nav.id
-                                    ? 'bg-[var(--primary)]/10 text-[var(--primary)] shadow-sm'
-                                    : 'text-muted-foreground hover:text-foreground hover:bg-foreground/5'
+                                    ? 'bg-primary/10 text-primary shadow-sm'
+                                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                                     }`}
                             >
                                 <nav.icon className="w-4 h-4 shrink-0" /> {nav.label}
@@ -541,8 +541,8 @@ export default function ProfileHub() {
                 </aside>
 
                 {/* MAIN CONTENT AREA */}
-                <main className="flex-1 overflow-y-auto relative">
-                    <div className="h-64 md:h-80 bg-[var(--primary)] relative">
+                <main className="flex-1 overflow-y-auto relative bg-background">
+                    <div className="h-64 md:h-80 bg-primary relative">
                         <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
                         <Button className="absolute top-6 right-6 bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-md rounded-xl font-bold">
                             <Camera className="w-4 h-4 mr-2" /> Change Cover
@@ -555,18 +555,18 @@ export default function ProfileHub() {
                             {/* LEFT PROFILE CARD */}
                             <div className="w-full lg:w-[320px] shrink-0 space-y-6">
                                 <div className="bg-card rounded-[2rem] shadow-xl border border-border overflow-hidden relative p-8 flex flex-col items-center transition-colors">
-                                    <div className="w-32 h-32 rounded-full border-4 border-card bg-[var(--primary)] text-white text-5xl font-black flex items-center justify-center relative shadow-xl z-10 mb-6">
+                                    <div className="w-32 h-32 rounded-full border-4 border-card bg-primary text-primary-foreground text-5xl font-black flex items-center justify-center relative shadow-xl z-10 mb-6">
                                         {profile?.name?.[0] || user?.name?.[0]}
                                     </div>
                                     <h2 className="text-2xl font-black text-center text-foreground">{profile?.name || user?.name}</h2>
                                     <p className="text-sm text-muted-foreground font-semibold mb-8 text-center">{profile?.country_of_origin || 'Local Assembly'}</p>
 
                                     <div className="w-full space-y-4 mb-8 text-foreground">
-                                        <div className="flex items-center justify-between p-3 px-4 rounded-xl bg-foreground/5">
+                                        <div className="flex items-center justify-between p-3 px-4 rounded-xl bg-muted">
                                             <span className="text-sm font-semibold text-muted-foreground">Completed Days</span>
-                                            <span className="text-[var(--primary)] font-black">{stats.completed}</span>
+                                            <span className="text-primary font-black">{stats.completed}</span>
                                         </div>
-                                        <div className="flex items-center justify-between p-3 px-4 rounded-xl bg-foreground/5">
+                                        <div className="flex items-center justify-between p-3 px-4 rounded-xl bg-muted">
                                             <span className="text-sm font-semibold text-muted-foreground">Current Streak</span>
                                             <span className="text-amber-500 font-black">{stats.streak}</span>
                                         </div>
@@ -585,7 +585,7 @@ export default function ProfileHub() {
                                         }}
                                         className={`w-full py-6 rounded-xl font-bold border-border hover:bg-muted capitalize ${profile?.membership_status === 'member' ? 'text-emerald-500 border-emerald-500/20 bg-emerald-500/5' :
                                             membershipRequest?.status === 'pending' ? 'text-amber-500 border-amber-500/20 bg-amber-500/5' :
-                                                'text-[var(--primary)] border-[var(--primary)]/20 shadow-lg shadow-[var(--primary)]/5 hover:scale-[1.02] active:scale-95 transition-all'
+                                                'text-primary border-primary/20 shadow-lg shadow-primary/5 hover:scale-[1.02] active:scale-95 transition-all'
                                             }`}
                                     >
                                         <div className="flex flex-col items-center">
@@ -625,7 +625,7 @@ export default function ProfileHub() {
                                         <h3 className="text-2xl font-black capitalize flex items-center gap-3 text-foreground">
                                             {(() => {
                                                 const Icon = SIDEBAR_NAV.find(n => n.id === activeTab)?.icon;
-                                                return Icon ? <Icon className="w-6 h-6 text-[var(--primary)]" /> : null;
+                                                return Icon ? <Icon className="w-6 h-6 text-primary" /> : null;
                                             })()}
                                             {SIDEBAR_NAV.find(n => n.id === activeTab)?.label}
                                         </h3>

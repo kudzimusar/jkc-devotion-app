@@ -126,6 +126,9 @@ export default function MembersPage() {
     const filtered = members.filter((m: Member) => {
         const q = search.toLowerCase();
         const matchSearch = !q || m.name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q);
+        const hasPending = membershipRequests.some(r => r.user_id === m.id);
+
+        if (filter === 'pending_request') return matchSearch && hasPending;
         const matchFilter = filter === 'all' || m.membership_status === filter;
         return matchSearch && matchFilter;
     });
@@ -190,6 +193,7 @@ export default function MembersPage() {
                         className="h-9 px-3 bg-white/5 border border-white/10 rounded-xl text-xs text-white/60 focus:outline-none"
                     >
                         <option value="all">All Status</option>
+                        <option value="pending_request">Pending Approval</option>
                         <option value="member">Members</option>
                         <option value="visitor">Visitors</option>
                         <option value="leader">Leaders</option>
@@ -268,9 +272,16 @@ export default function MembersPage() {
                                     <Mail className="w-3 h-3 text-white/20 flex-shrink-0" />
                                     <p className="text-xs text-white/40 truncate">{m.email}</p>
                                 </div>
-                                <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg capitalize ${BADGE_COLORS[m.growth_stage || 'visitor'] || 'bg-white/10 text-white/40'}`}>
-                                    {m.growth_stage || 'visitor'}
-                                </span>
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg capitalize ${BADGE_COLORS[m.growth_stage || 'visitor'] || 'bg-white/10 text-white/40'}`}>
+                                        {m.growth_stage || 'visitor'}
+                                    </span>
+                                    {membershipRequests.some(r => r.user_id === m.id) && (
+                                        <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded text-[8px] font-bold text-amber-500 animate-pulse">
+                                            PENDING
+                                        </div>
+                                    )}
+                                </div>
                                 <div className="flex items-center gap-1">
                                     <MapPin className="w-3 h-3 text-white/20" />
                                     <p className="text-xs text-white/40 truncate">{m.city || '—'}</p>
@@ -308,10 +319,15 @@ export default function MembersPage() {
                                 </div>
                                 <div>
                                     <h2 className="text-3xl font-black text-white tracking-tighter">{selectedMember.name}</h2>
-                                    <div className="flex gap-2 mt-2">
+                                    <div className="flex flex-wrap gap-2 mt-2">
                                         <Badge className={`${BADGE_COLORS[selectedMember.membership_status || 'visitor'] || 'bg-white/10 text-white/40'} border-0 font-black px-3 py-1`}>
                                             {selectedMember.membership_status?.toUpperCase() || 'VISITOR'}
                                         </Badge>
+                                        {membershipRequests.some(r => r.user_id === selectedMember.id) && (
+                                            <Badge className="bg-amber-500 text-white border-0 font-black px-3 py-1 animate-pulse">
+                                                PENDING APPROVAL
+                                            </Badge>
+                                        )}
                                         <Badge className="bg-white/5 text-white/40 border-0 font-black px-3 py-1">
                                             {selectedMember.city || 'LOCATION UNKNOWN'}
                                         </Badge>

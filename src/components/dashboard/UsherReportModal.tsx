@@ -88,11 +88,11 @@ export function UsherReportModal({ registeredCount, onReportSubmitted }: UsherRe
                     <ClipboardCheck className="w-4 h-4 mr-2" /> SUBMIT USHER REPORT
                 </Button>
             </DialogTrigger>
-            <DialogContent className="bg-[#0f172a] border-white/10 text-white max-w-md rounded-3xl p-0 overflow-hidden">
-                <div className="bg-gradient-to-br from-violet-600/20 to-transparent p-6 pb-4">
+            <DialogContent className="bg-card border-border text-foreground max-w-md rounded-3xl p-0 overflow-hidden shadow-2xl transition-colors">
+                <div className="bg-gradient-to-br from-primary/10 to-transparent p-6 pb-4">
                     <DialogHeader>
-                        <DialogTitle className="text-xl font-black tracking-tight">Sunday Service Report</DialogTitle>
-                        <p className="text-xs text-white/40 font-bold uppercase tracking-widest mt-1">Manual Headcount & Visitor Tracking</p>
+                        <DialogTitle className="text-xl font-black tracking-tight text-foreground">Sunday Service Report</DialogTitle>
+                        <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-1 opacity-70">Manual Headcount & Visitor Tracking</p>
                     </DialogHeader>
                 </div>
 
@@ -135,29 +135,29 @@ export function UsherReportModal({ registeredCount, onReportSubmitted }: UsherRe
                     </div>
 
                     {/* Reconciliation Stats */}
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+                    <div className="bg-muted border border-border rounded-2xl p-4">
                         <div className="flex justify-between items-center mb-2">
-                            <p className="text-[10px] font-black text-white/40 uppercase">Reconciliation Intelligence</p>
+                            <p className="text-[10px] font-black text-muted-foreground uppercase opacity-60">Reconciliation Intelligence</p>
                             {gap > 0 ? (
-                                <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-black">+{gap} UNREGISTERED</span>
+                                <span className="text-[10px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full font-black">+{gap} UNREGISTERED</span>
                             ) : gap < 0 ? (
-                                <span className="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full font-black">{gap} DISCREPANCY</span>
+                                <span className="text-[10px] bg-red-500/20 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full font-black">{gap} DISCREPANCY</span>
                             ) : (
-                                <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-black">MATCHED</span>
+                                <span className="text-[10px] bg-blue-500/20 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full font-black">MATCHED</span>
                             )}
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                             <MiniStat label="Digital" val={registeredCount} />
-                            <MiniStat label="Manual" val={totalManual} accent="text-violet-400" />
-                            <MiniStat label="Visitors" val={formData.first_timers_count} accent="text-emerald-400" />
+                            <MiniStat label="Manual" val={totalManual} accent="text-primary" />
+                            <MiniStat label="Visitors" val={formData.first_timers_count} accent="text-emerald-500" />
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <p className="text-[10px] font-black text-white/40 uppercase tracking-widest ml-1">Service Notes</p>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 opacity-60">Service Notes</p>
                         <Input
                             placeholder="e.g. Higher impact during altar call..."
-                            className="bg-white/5 border-white/10 text-sm h-12 rounded-xl"
+                            className="bg-muted border-border text-sm h-12 rounded-xl text-foreground placeholder:text-muted-foreground/40"
                             value={formData.notes}
                             onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                         />
@@ -166,7 +166,7 @@ export function UsherReportModal({ registeredCount, onReportSubmitted }: UsherRe
                     <Button
                         onClick={handleSubmit}
                         disabled={loading}
-                        className="w-full bg-violet-600 hover:bg-violet-500 h-14 text-white font-black rounded-2xl text-lg shadow-xl shadow-violet-600/20 transition-all hover:scale-[1.02]"
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground h-14 font-black rounded-2xl text-lg shadow-xl shadow-primary/20 transition-all hover:scale-[1.02]"
                     >
                         {loading ? "Submitting..." : "SUBMIT MINISTRY REPORT"}
                         <Save className="w-5 h-5 ml-2" />
@@ -177,11 +177,11 @@ export function UsherReportModal({ registeredCount, onReportSubmitted }: UsherRe
     );
 }
 
-function Counter({ label, value, onInc, onDec, icon: Icon, accent = "violet" }: any) {
+function Counter({ label, value, onInc, onDec, icon: Icon, accent = "primary" }: any) {
     const colors: any = {
-        violet: "bg-violet-500/10 text-violet-400 border-violet-500/20",
-        emerald: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-        blue: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+        primary: "bg-primary/10 text-primary border-primary/20",
+        emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+        blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
     };
 
     return (
@@ -191,18 +191,18 @@ function Counter({ label, value, onInc, onDec, icon: Icon, accent = "violet" }: 
                 <span className="text-[10px] font-black uppercase tracking-widest opacity-70">{label}</span>
             </div>
             <div className="flex items-center gap-4">
-                <button onClick={onDec} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center font-black text-lg hover:bg-white/10 transition-colors">-</button>
-                <span className="text-2xl font-black text-white w-8 text-center">{value}</span>
-                <button onClick={onInc} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center font-black text-lg hover:bg-white/10 transition-colors">+</button>
+                <button onClick={onDec} className="w-8 h-8 rounded-full bg-foreground/5 dark:bg-white/5 flex items-center justify-center font-black text-lg hover:bg-foreground/10 dark:hover:bg-white/10 transition-colors text-foreground">-</button>
+                <span className="text-2xl font-black text-foreground w-8 text-center">{value}</span>
+                <button onClick={onInc} className="w-8 h-8 rounded-full bg-foreground/5 dark:bg-white/5 flex items-center justify-center font-black text-lg hover:bg-foreground/10 dark:hover:bg-white/10 transition-colors text-foreground">+</button>
             </div>
         </div>
     );
 }
 
-function MiniStat({ label, val, accent = "text-white" }: any) {
+function MiniStat({ label, val, accent = "text-foreground" }: any) {
     return (
         <div className="text-center">
-            <p className="text-[9px] text-white/30 font-bold uppercase">{label}</p>
+            <p className="text-[9px] text-muted-foreground/40 font-bold uppercase">{label}</p>
             <p className={`text-sm font-black ${accent}`}>{val}</p>
         </div>
     );

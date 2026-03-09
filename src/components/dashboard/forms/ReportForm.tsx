@@ -36,15 +36,15 @@ export function ReportForm({ onSuccess }: { onSuccess: () => void }) {
     return (
         <div className="space-y-4 pt-4">
             <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3 flex items-start gap-3">
-                <Sparkles className="w-4 h-4 text-indigo-400 mt-0.5" />
+                <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400 mt-0.5" />
                 <div>
-                    <p className="text-[10px] font-black text-indigo-300 uppercase">Prophetic Synthesis Engine</p>
-                    <p className="text-[10px] text-indigo-300/60 leading-tight">I will analyze current data across all tables to generate a narrative intelligence briefing.</p>
+                    <p className="text-[10px] font-black text-indigo-700 dark:text-indigo-300 uppercase">Prophetic Synthesis Engine</p>
+                    <p className="text-[10px] text-indigo-600/60 dark:text-indigo-300/60 leading-tight">I will analyze current data across all tables to generate a narrative intelligence briefing.</p>
                 </div>
             </div>
 
             <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-white/40 px-1">Select Briefing Type</label>
+                <label className="text-[10px] font-black uppercase text-muted-foreground px-1">Select Briefing Type</label>
                 <div className="grid grid-cols-1 gap-2">
                     {REPORT_TYPES.map((type) => {
                         const Icon = type.icon;
@@ -53,15 +53,15 @@ export function ReportForm({ onSuccess }: { onSuccess: () => void }) {
                             <button
                                 key={type.id}
                                 onClick={() => setSelectedType(type.id)}
-                                className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${isSelected ? 'bg-white/10 border-indigo-500/50' : 'bg-white/5 border-white/5 hover:bg-white/8 hover:border-white/10'
+                                className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${isSelected ? 'bg-primary/5 border-primary/50' : 'bg-muted/50 border-border hover:bg-muted hover:border-muted-foreground/20'
                                     }`}
                             >
-                                <div className={`w-8 h-8 rounded-lg bg-black/20 flex items-center justify-center ${type.color}`}>
+                                <div className={`w-8 h-8 rounded-lg bg-background/50 flex items-center justify-center ${type.color}`}>
                                     <Icon className="w-4 h-4" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-xs font-bold text-white">{type.name}</p>
-                                    <p className="text-[10px] text-white/30">{type.desc}</p>
+                                    <p className="text-xs font-bold text-foreground">{type.name}</p>
+                                    <p className="text-[10px] text-muted-foreground">{type.desc}</p>
                                 </div>
                             </button>
                         );

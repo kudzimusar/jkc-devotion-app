@@ -32,15 +32,15 @@ export function QuickActionModal({ isOpen, onClose, type }: QuickActionModalProp
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="bg-[#0a101c] border-white/10 text-white rounded-3xl max-w-lg shadow-2xl">
+            <DialogContent className="bg-card border-border text-foreground rounded-3xl max-w-lg shadow-2xl transition-colors">
                 <DialogHeader>
                     <div className="flex items-center gap-3 mb-2">
-                        <div className={`w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center ${config.color}`}>
+                        <div className={`w-10 h-10 rounded-2xl bg-muted flex items-center justify-center ${config.color}`}>
                             <Icon className="w-5 h-5" />
                         </div>
                         <div>
-                            <DialogTitle className="text-xl font-black">{config.title}</DialogTitle>
-                            <DialogDescription className="text-white/40 text-xs font-medium">
+                            <DialogTitle className="text-xl font-black text-foreground">{config.title}</DialogTitle>
+                            <DialogDescription className="text-muted-foreground text-xs font-medium">
                                 {config.desc}
                             </DialogDescription>
                         </div>

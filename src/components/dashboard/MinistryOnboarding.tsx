@@ -103,13 +103,13 @@ export function MinistryOnboarding() {
     };
 
     return (
-        <Card className="bg-[#111] border-white/5 rounded-[2.5rem] p-8 overflow-hidden relative">
+        <Card className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm overflow-hidden relative transition-colors">
             <CardHeader className="p-0 mb-8">
-                <CardTitle className="text-2xl font-black text-white flex items-center gap-3">
-                    <UserPlus className="w-6 h-6 text-violet-500" />
+                <CardTitle className="text-2xl font-black text-foreground flex items-center gap-3">
+                    <UserPlus className="w-6 h-6 text-primary" />
                     Ministry Onboarding
                 </CardTitle>
-                <p className="text-white/30 text-xs font-bold tracking-widest mt-1 uppercase">Assign leadership roles to church members</p>
+                <p className="text-muted-foreground text-xs font-bold tracking-widest mt-1 uppercase">Assign leadership roles to church members</p>
             </CardHeader>
 
             <CardContent className="p-0">
@@ -129,30 +129,30 @@ export function MinistryOnboarding() {
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                                        className="bg-white/5 border-white/10 h-16 rounded-2xl px-12 text-white font-bold"
+                                        className="bg-muted border-border h-16 rounded-2xl px-12 text-foreground font-bold shadow-inner"
                                     />
-                                    <Search className="absolute left-4 top-5 w-6 h-6 text-white/20" />
+                                    <Search className="absolute left-4 top-5 w-6 h-6 text-muted-foreground/30" />
                                     <Button
                                         onClick={handleSearch}
-                                        className="absolute right-2 top-2 h-12 bg-white/10 hover:bg-white/20 rounded-xl"
+                                        className="absolute right-2 top-2 h-12 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl"
                                     >
                                         SEARCH
                                     </Button>
                                 </div>
 
                                 {members.length > 0 && (
-                                    <div className="bg-white/5 rounded-2xl overflow-hidden border border-white/10">
+                                    <div className="bg-muted rounded-2xl overflow-hidden border border-border">
                                         {members.map(m => (
                                             <button
                                                 key={m.id}
                                                 onClick={() => setSelectedMember(m)}
-                                                className={`w-full p-4 flex items-center justify-between hover:bg-white/5 transition-all ${selectedMember?.id === m.id ? 'bg-violet-500/10 border-l-4 border-violet-500' : ''}`}
+                                                className={`w-full p-4 flex items-center justify-between hover:bg-foreground/5 transition-all ${selectedMember?.id === m.id ? 'bg-primary/10 border-l-4 border-primary' : ''}`}
                                             >
                                                 <div className="text-left">
-                                                    <p className="text-xs font-black text-white">{m.name}</p>
-                                                    <p className="text-[10px] text-white/30 font-bold">{m.email}</p>
+                                                    <p className="text-xs font-black text-foreground">{m.name}</p>
+                                                    <p className="text-[10px] text-muted-foreground font-bold">{m.email}</p>
                                                 </div>
-                                                <CheckCircle className={`w-4 h-4 ${selectedMember?.id === m.id ? 'text-violet-500' : 'text-white/10'}`} />
+                                                <CheckCircle className={`w-4 h-4 ${selectedMember?.id === m.id ? 'text-primary' : 'text-muted-foreground/20'}`} />
                                             </button>
                                         ))}
                                     </div>
@@ -160,32 +160,32 @@ export function MinistryOnboarding() {
                             </div>
 
                             {selectedMember && (
-                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pt-6 border-t border-white/5">
+                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 pt-6 border-t border-border">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-white/30 uppercase tracking-widest">Target Ministry</label>
+                                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Target Ministry</label>
                                             <select
                                                 value={selectedMinistryId}
                                                 onChange={(e) => setSelectedMinistryId(e.target.value)}
-                                                className="w-full h-16 bg-white/5 border-white/10 rounded-2xl px-6 text-white font-bold appearance-none outline-none focus:ring-2 focus:ring-violet-500"
+                                                className="w-full h-16 bg-muted border border-border rounded-2xl px-6 text-foreground font-bold appearance-none outline-none focus:ring-2 focus:ring-primary transition-all"
                                             >
                                                 {ministries.length === 0 ? (
-                                                    <option value="" disabled className="bg-[#111]">No ministries found</option>
+                                                    <option value="" disabled className="bg-card">No ministries found</option>
                                                 ) : (
-                                                    ministries.map(m => <option key={m.id} value={m.id} className="bg-[#111]">{m.name}</option>)
+                                                    ministries.map(m => <option key={m.id} value={m.id} className="bg-card">{m.name}</option>)
                                                 )}
                                             </select>
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-white/30 uppercase tracking-widest">Platform Role</label>
+                                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Platform Role</label>
                                             <select
                                                 value={selectedRole}
                                                 onChange={(e) => setSelectedRole(e.target.value)}
-                                                className="w-full h-16 bg-white/5 border-white/10 rounded-2xl px-6 text-white font-bold appearance-none outline-none focus:ring-2 focus:ring-violet-500"
+                                                className="w-full h-16 bg-muted border border-border rounded-2xl px-6 text-foreground font-bold appearance-none outline-none focus:ring-2 focus:ring-primary transition-all"
                                             >
-                                                <option value="ministry_leader" className="bg-[#111]">Ministry Leader</option>
-                                                <option value="ministry_worker" className="bg-[#111]">Ministry Worker (Input only)</option>
-                                                <option value="shepherd" className="bg-[#111]">Shepherd (Care focus)</option>
+                                                <option value="ministry_leader" className="bg-card">Ministry Leader</option>
+                                                <option value="ministry_worker" className="bg-card">Ministry Worker (Input only)</option>
+                                                <option value="shepherd" className="bg-card">Shepherd (Care focus)</option>
                                             </select>
                                         </div>
                                     </div>
@@ -193,7 +193,7 @@ export function MinistryOnboarding() {
                                     <Button
                                         onClick={handleAssign}
                                         disabled={loading || !selectedMinistryId}
-                                        className={`w-full h-16 transition-all font-black rounded-2xl shadow-xl uppercase tracking-widest ${!selectedMinistryId ? 'bg-white/5 text-white/20' : 'bg-violet-600 hover:bg-violet-500 text-white shadow-violet-600/20'}`}
+                                        className={`w-full h-16 transition-all font-black rounded-2xl shadow-xl uppercase tracking-widest ${!selectedMinistryId ? 'bg-muted text-muted-foreground/30' : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20'}`}
                                     >
                                         {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Mail className="w-5 h-5 mr-2" />}
                                         {loading ? "ASSIGNING..." : (selectedMinistryId ? `ASSIGN ${selectedMember.name.toUpperCase()} TO LEADERSHIP` : "SELECT A MINISTRY TO PROCEED")}
@@ -207,35 +207,35 @@ export function MinistryOnboarding() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
-                            className="bg-violet-600/10 border border-violet-500/20 rounded-3xl p-8 text-center space-y-6"
+                            className="bg-primary/5 border border-primary/10 rounded-3xl p-8 text-center space-y-6"
                         >
-                            <div className="w-16 h-16 bg-violet-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-violet-600/20">
-                                <CheckCircle className="w-8 h-8 text-white" />
+                            <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-primary/20">
+                                <CheckCircle className="w-8 h-8 text-primary-foreground" />
                             </div>
                             <div>
-                                <h3 className="text-xl font-black text-white">Appointed Successfully!</h3>
-                                <p className="text-sm text-white/50">{selectedMember?.name} is now a {selectedRole.replace('_', ' ')}.</p>
+                                <h3 className="text-xl font-black text-foreground">Appointed Successfully!</h3>
+                                <p className="text-sm text-muted-foreground">{selectedMember?.name} is now a {selectedRole.replace('_', ' ')}.</p>
                             </div>
 
                             <div className="space-y-3">
-                                <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Invitation Link</p>
-                                <div className="flex gap-2 p-2 bg-black/40 rounded-2xl border border-white/5">
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Invitation Link</p>
+                                <div className="flex gap-2 p-2 bg-muted rounded-2xl border border-border">
                                     <Input
                                         readOnly
                                         value={inviteLink}
-                                        className="bg-transparent border-0 h-10 text-xs font-bold text-violet-400 focus-visible:ring-0"
+                                        className="bg-transparent border-0 h-10 text-xs font-bold text-primary focus-visible:ring-0"
                                     />
-                                    <Button onClick={copyToClipboard} size="icon" className="h-10 w-10 bg-white/5 hover:bg-white/10 rounded-xl">
-                                        <Copy className="w-4 h-4 text-white" />
+                                    <Button onClick={copyToClipboard} size="icon" className="h-10 w-10 bg-card hover:bg-muted rounded-xl border border-border">
+                                        <Copy className="w-4 h-4 text-foreground" />
                                     </Button>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
-                                <Button onClick={shareInvite} className="h-12 bg-white text-black font-black rounded-xl text-[10px] tracking-widest uppercase flex items-center justify-center gap-2">
+                                <Button onClick={shareInvite} className="h-12 bg-foreground text-background font-black rounded-xl text-[10px] tracking-widest uppercase flex items-center justify-center gap-2 hover:opacity-90">
                                     <Share2 className="w-4 h-4" /> Share Link
                                 </Button>
-                                <Button onClick={reset} variant="outline" className="h-12 bg-transparent border-white/10 text-white/60 font-black rounded-xl text-[10px] tracking-widest uppercase flex items-center justify-center gap-2">
+                                <Button onClick={reset} variant="outline" className="h-12 bg-transparent border-border text-muted-foreground font-black rounded-xl text-[10px] tracking-widest uppercase flex items-center justify-center gap-2 hover:bg-muted">
                                     <Plus className="w-4 h-4" /> New Onboarding
                                 </Button>
                             </div>

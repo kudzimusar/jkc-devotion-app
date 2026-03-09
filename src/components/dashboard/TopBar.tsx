@@ -105,14 +105,14 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                     variant="ghost"
                     size="icon"
                     onClick={toggleMode}
-                    className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-foreground/5 dark:hover:bg-white/5"
+                    className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 >
                     {mode === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
                 </Button>
 
                 {/* Refresh */}
                 {onRefresh && (
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-foreground/5 dark:hover:bg-white/5"
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                         onClick={onRefresh}>
                         <RefreshCw className="w-4 h-4" />
                     </Button>
@@ -124,7 +124,7 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                         variant="ghost"
                         size="icon"
                         id="notifications-btn"
-                        className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-foreground/5 dark:hover:bg-white/5 relative"
+                        className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted relative transition-colors"
                         onClick={() => setNotifOpen(o => !o)}
                     >
                         <Bell className="w-4 h-4" />
@@ -184,7 +184,7 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                                         const Icon = qa.icon;
                                         return (
                                             <button key={qa.label} onClick={() => openAction(qa.type)}
-                                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-foreground/5 dark:hover:bg-white/5 transition-all text-left font-medium">
+                                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-all text-left font-medium">
                                                 <Icon className="w-4 h-4 text-violet-400" />
                                                 {qa.label}
                                             </button>
@@ -202,7 +202,7 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                     <button
                         id="admin-profile-btn"
                         onClick={() => setProfileOpen(o => !o)}
-                        className="flex items-center gap-2 h-9 px-3 rounded-xl hover:bg-foreground/5 transition-all"
+                        className="flex items-center gap-2 h-9 px-3 rounded-xl hover:bg-muted transition-all"
                     >
                         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-xs font-black text-white">
                             {userName[0]}
@@ -223,7 +223,7 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                                         <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{ROLE_LABELS[role] || "Staff Member"}</p>
                                     </div>
                                     <div className="border-t border-border pt-1 space-y-0.5">
-                                        <Link href="/shepherd/dashboard/settings/" className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-foreground/5 dark:hover:bg-white/5 transition-all">
+                                        <Link href="/shepherd/dashboard/settings/" className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
                                             <User className="w-3.5 h-3.5" /> My Profile
                                         </Link>
                                         <button onClick={() => AdminAuth.logoutAdmin()} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-all">

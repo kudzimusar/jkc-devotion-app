@@ -47,20 +47,20 @@ export function PrayerForm({ onSuccess }: { onSuccess: () => void }) {
 
     return (
         <div className="space-y-4 pt-4">
-            <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl p-3 flex items-start gap-3">
-                <Sparkles className="w-4 h-4 text-violet-400 mt-0.5" />
+            <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 flex items-start gap-3">
+                <Sparkles className="w-4 h-4 text-primary mt-0.5" />
                 <div>
-                    <p className="text-[10px] font-black text-violet-300 uppercase">AI Prophetic Intent</p>
-                    <p className="text-[10px] text-violet-300/60 leading-tight">I will automatically categorize this request and assign the appropriate intercessory urgency.</p>
+                    <p className="text-[10px] font-black text-primary uppercase">AI Prophetic Intent</p>
+                    <p className="text-[10px] text-primary/60 leading-tight">I will automatically categorize this request and assign the appropriate intercessory urgency.</p>
                 </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-black uppercase text-white/40">Request Details</label>
+                        <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Request Details</label>
                         {aiType && (
-                            <Badge className="bg-violet-500/20 text-violet-400 border-0 text-[9px] px-2 py-0">
+                            <Badge className="bg-primary/20 text-primary border-0 text-[10px] px-2 py-0.5 font-bold">
                                 AI Sensed: {aiType}
                             </Badge>
                         )}
@@ -69,12 +69,12 @@ export function PrayerForm({ onSuccess }: { onSuccess: () => void }) {
                         value={text}
                         onChange={(e) => setText(e.target.value)}
                         placeholder="Type the prayer request here..."
-                        className="bg-white/5 border-white/10 text-white text-xs min-h-[120px] focus:ring-violet-500/50"
+                        className="bg-muted border-border text-foreground text-xs min-h-[120px] focus:ring-primary/50 transition-all placeholder:text-muted-foreground/40"
                         required
                     />
                 </div>
 
-                <Button type="submit" disabled={loading || text.length < 5} className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-5 rounded-xl gap-2 shadow-lg shadow-violet-500/20">
+                <Button type="submit" disabled={loading || text.length < 5} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-5 rounded-xl gap-2 shadow-lg shadow-primary/20 transition-all">
                     {loading ? "Processing Prophetic Intake..." : "Submit Prayer Request"}
                     <Heart className="w-4 h-4" />
                 </Button>

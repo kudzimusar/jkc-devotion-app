@@ -33,25 +33,25 @@ export function MemberForm({ onSuccess }: { onSuccess: () => void }) {
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
             <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-white/40">Full Name</label>
-                    <Input name="name" placeholder="John Doe" className="bg-white/5 border-white/10 text-white text-xs" required />
+                    <label className="text-[10px] font-black uppercase text-muted-foreground">Full Name</label>
+                    <Input name="name" placeholder="John Doe" className="bg-muted border-border text-foreground text-xs placeholder:text-muted-foreground/40" required />
                 </div>
                 <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-white/40">Email</label>
-                    <Input name="email" type="email" placeholder="john@example.com" className="bg-white/5 border-white/10 text-white text-xs" required />
+                    <label className="text-[10px] font-black uppercase text-muted-foreground">Email</label>
+                    <Input name="email" type="email" placeholder="john@example.com" className="bg-muted border-border text-foreground text-xs placeholder:text-muted-foreground/40" required />
                 </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-white/40">Phone</label>
-                    <Input name="phone" placeholder="+81..." className="bg-white/5 border-white/10 text-white text-xs" />
+                    <label className="text-[10px] font-black uppercase text-muted-foreground">Phone</label>
+                    <Input name="phone" placeholder="+81..." className="bg-muted border-border text-foreground text-xs placeholder:text-muted-foreground/40" />
                 </div>
                 <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-white/40">City</label>
-                    <Input name="city" placeholder="Tokyo" className="bg-white/5 border-white/10 text-white text-xs" />
+                    <label className="text-[10px] font-black uppercase text-muted-foreground">City</label>
+                    <Input name="city" placeholder="Tokyo" className="bg-muted border-border text-foreground text-xs placeholder:text-muted-foreground/40" />
                 </div>
             </div>
-            <Button type="submit" disabled={loading} className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-5 rounded-xl">
+            <Button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-5 rounded-xl shadow-lg shadow-primary/20 transition-all">
                 {loading ? "Adding Member..." : "Complete Onboarding"}
             </Button>
         </form>

@@ -157,35 +157,35 @@ const MOCK_DATA: DashboardData = {
 /* ─── Sub-components ─── */
 function MetricCard({ title, value, sub, trend, trendVal, icon: Icon, accentColor = 'violet' }: any) {
     const colorMap: Record<string, string> = {
-        violet: 'text-violet-400 bg-violet-500/10',
-        blue: 'text-blue-400 bg-blue-500/10',
-        emerald: 'text-emerald-400 bg-emerald-500/10',
-        amber: 'text-amber-400 bg-amber-500/10',
-        red: 'text-red-400 bg-red-500/10',
-        cyan: 'text-cyan-400 bg-cyan-500/10',
+        violet: 'text-violet-500 bg-violet-500/10',
+        blue: 'text-blue-500 bg-blue-500/10',
+        emerald: 'text-emerald-500 bg-emerald-500/10',
+        amber: 'text-amber-500 bg-amber-500/10',
+        red: 'text-red-500 bg-red-500/10',
+        cyan: 'text-cyan-500 bg-cyan-500/10',
     };
     const colors = colorMap[accentColor] || colorMap.violet;
     const [iconColor, iconBg] = colors.split(' ');
 
     return (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-            className="bg-[#111827] border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-all group">
+            className="bg-card border border-border rounded-2xl p-5 hover:border-primary/50 transition-all group shadow-sm">
             <div className="flex items-start justify-between mb-4">
-                <p className="text-xs font-black text-white/40 uppercase tracking-widest">{title}</p>
+                <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{title}</p>
                 <div className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center`}>
                     <Icon className={`w-4 h-4 ${iconColor}`} />
                 </div>
             </div>
             <div className="space-y-1">
-                <p className="text-3xl font-black text-white">{value}</p>
+                <p className="text-3xl font-black text-foreground">{value}</p>
                 <div className="flex items-center gap-2">
                     {trend && (
-                        <span className={`flex items-center gap-0.5 text-[10px] font-bold ${trend === 'up' ? 'text-emerald-400' : trend === 'down' ? 'text-red-400' : 'text-white/30'}`}>
+                        <span className={`flex items-center gap-0.5 text-[10px] font-bold ${trend === 'up' ? 'text-emerald-500' : trend === 'down' ? 'text-red-500' : 'text-muted-foreground'}`}>
                             {trend === 'up' ? <ArrowUp className="w-2.5 h-2.5" /> : trend === 'down' ? <ArrowDown className="w-2.5 h-2.5" /> : <Minus className="w-2.5 h-2.5" />}
                             {trendVal}
                         </span>
                     )}
-                    <p className="text-[10px] text-white/30 font-medium">{sub}</p>
+                    <p className="text-[10px] text-muted-foreground font-medium">{sub}</p>
                 </div>
             </div>
         </motion.div>
@@ -195,19 +195,19 @@ function MetricCard({ title, value, sub, trend, trendVal, icon: Icon, accentColo
 function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
     return (
         <div className="flex items-center gap-3 mb-5">
-            <div className="h-4 w-0.5 bg-violet-400 rounded-full" />
+            <div className="h-4 w-0.5 bg-primary rounded-full" />
             <div>
-                <h2 className="text-sm font-black text-white uppercase tracking-wider">{title}</h2>
-                <p className="text-[10px] text-white/30">{subtitle}</p>
+                <h2 className="text-sm font-black text-foreground uppercase tracking-wider">{title}</h2>
+                <p className="text-[10px] text-muted-foreground">{subtitle}</p>
             </div>
         </div>
     );
 }
 
 const CUSTOM_TOOLTIP_STYLE = {
-    contentStyle: { background: '#1a2236', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '8px 12px' },
-    labelStyle: { color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: 1 },
-    itemStyle: { color: 'rgba(255,255,255,0.8)', fontSize: 11, fontWeight: 600 },
+    contentStyle: { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: '8px 12px' },
+    labelStyle: { color: 'var(--muted-foreground)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: 1 },
+    itemStyle: { color: 'var(--foreground)', fontSize: 11, fontWeight: 600 },
 };
 
 /* ─── Main Component ─── */
@@ -415,7 +415,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                         <Button
                             variant="outline"
                             onClick={() => setShowOnboarding(!showOnboarding)}
-                            className={`bg-white/5 border-white/10 text-white font-black rounded-xl h-12 px-6 ${showOnboarding ? 'bg-violet-500/20 border-violet-500' : ''}`}
+                            className={`bg-muted border-border text-foreground font-black rounded-xl h-12 px-6 ${showOnboarding ? 'bg-primary/20 border-primary' : ''}`}
                         >
                             <UserPlus className="w-4 h-4 mr-2" />
                             {showOnboarding ? "CLOSE ONBOARDING" : "ONBOARD LEADERS"}
@@ -424,10 +424,10 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                             onClick={runIntelligence}
                             disabled={runningAI}
                             variant="outline"
-                            className="bg-white/5 border-white/10 text-white font-black rounded-xl h-12 px-6"
+                            className="bg-muted border-border text-foreground font-black rounded-xl h-12 px-6"
                         >
                             {runningAI ? "PROCESSING..." : "ACTIVATE PI LAYER"}
-                            <Flame className={`w-4 h-4 ml-2 text-amber-400 ${runningAI ? 'animate-pulse' : ''}`} />
+                            <Flame className={`w-4 h-4 ml-2 text-amber-500 ${runningAI ? 'animate-pulse' : ''}`} />
                         </Button>
                         <UsherReportModal registeredCount={data.lastSundayAttendance} onReportSubmitted={loadData} />
                     </div>
@@ -435,24 +435,24 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
 
                 <div className="flex flex-col xl:flex-row gap-4 mb-10">
                     {membershipRequests.length > 0 && (
-                        <Card className="bg-[#111827] border-violet-500/30 flex-1 overflow-hidden">
-                            <CardHeader className="bg-violet-500/10 border-b border-white/5 py-3">
-                                <CardTitle className="text-xs font-black uppercase tracking-widest text-violet-400 flex items-center justify-between">
+                        <Card className="bg-card border-primary/30 flex-1 overflow-hidden">
+                            <CardHeader className="bg-primary/10 border-b border-border py-3">
+                                <CardTitle className="text-xs font-black uppercase tracking-widest text-primary flex items-center justify-between">
                                     <span>New Membership Pipeline</span>
-                                    <Badge className="bg-violet-500 text-white border-0">{membershipRequests.length} PENDING</Badge>
+                                    <Badge className="bg-primary text-primary-foreground border-0">{membershipRequests.length} PENDING</Badge>
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="p-0">
-                                <div className="divide-y divide-white/5">
+                                <div className="divide-y divide-border">
                                     {membershipRequests.map(req => (
-                                        <div key={req.id} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors">
+                                        <div key={req.id} className="p-4 flex items-center justify-between hover:bg-muted transition-colors">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-violet-500/20 text-violet-400 flex items-center justify-center font-black">
+                                                <div className="w-10 h-10 rounded-full bg-primary/20 text-primary flex items-center justify-center font-black">
                                                     {req.name?.[0] || '?'}
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-bold text-white">{req.name}</p>
-                                                    <p className="text-[10px] text-white/40 uppercase tracking-widest">{req.email}</p>
+                                                    <p className="text-sm font-bold text-foreground">{req.name}</p>
+                                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{req.email}</p>
                                                 </div>
                                             </div>
                                             <div className="flex gap-2">
@@ -467,7 +467,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                                                     size="sm"
                                                     variant="ghost"
                                                     onClick={() => handleMembershipAction(req.id, 'visitor')}
-                                                    className="h-8 rounded-lg text-white/40 hover:text-red-400 font-black text-[10px]"
+                                                    className="h-8 rounded-lg text-muted-foreground hover:text-red-500 font-black text-[10px]"
                                                 >
                                                     REJECT
                                                 </Button>
@@ -504,10 +504,10 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             {/* ─── ENGAGEMENT SCORE GAUGE + ATTENDANCE TREND ─── */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Engagement Gauge */}
-                <div className="bg-[#111827] border border-white/5 rounded-2xl p-6 flex flex-col items-center">
-                    <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Congregation Engagement Score</p>
+                <div className="bg-card border border-border rounded-2xl p-6 flex flex-col items-center shadow-sm">
+                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4">Congregation Engagement Score</p>
                     <svg width="140" height="140" className="rotate-[-135deg]">
-                        <circle cx="70" cy="70" r="55" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" />
+                        <circle cx="70" cy="70" r="55" fill="none" stroke="currentColor" strokeOpacity="0.05" strokeWidth="12" className="text-foreground" />
                         <motion.circle cx="70" cy="70" r="55" fill="none" stroke="url(#engGrad)" strokeWidth="12"
                             strokeLinecap="round"
                             strokeDasharray={`${(2 * Math.PI * 55) * 0.75}`}
@@ -523,8 +523,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                         </defs>
                     </svg>
                     <div className="-mt-16 text-center">
-                        <p className="text-4xl font-black text-white">{data.engagementScore}</p>
-                        <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider mt-1">/ 100</p>
+                        <p className="text-4xl font-black text-foreground">{data.engagementScore}</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1">/ 100</p>
                     </div>
                     <div className="mt-4 grid grid-cols-3 gap-3 w-full">
                         {[
@@ -533,9 +533,9 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                             { label: 'Ministry', pct: 25 },
                         ].map(f => (
                             <div key={f.label} className="text-center">
-                                <p className="text-[9px] text-white/30 uppercase tracking-wider mb-1">{f.label}</p>
-                                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                                    <div className="h-full bg-violet-500 rounded-full" style={{ width: `${(data.engagementScore / 100) * f.pct * 3}%` }} />
+                                <p className="text-[9px] text-muted-foreground uppercase tracking-wider mb-1">{f.label}</p>
+                                <div className="h-1 bg-muted rounded-full overflow-hidden">
+                                    <div className="h-full bg-primary rounded-full" style={{ width: `${(data.engagementScore / 100) * f.pct * 3}%` }} />
                                 </div>
                             </div>
                         ))}
@@ -552,14 +552,14 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                     {/* Devotion Heatmap */}
-                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-5">
-                        <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-3">Devotion Completion Heatmap</p>
-                        <p className="text-[10px] text-white/25 mb-4">Daily engagement — last 14 days</p>
+                    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+                        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-3">Devotion Completion Heatmap</p>
+                        <p className="text-[10px] text-muted-foreground/60 mb-4">Daily engagement — last 14 days</p>
                         <div className="space-y-1.5">
                             {data.devotionTrend.map((d, i) => (
                                 <div key={i} className="flex items-center gap-2">
-                                    <p className="text-[9px] text-white/20 w-7 text-right font-mono">{d.day}</p>
-                                    <div className="flex-1 h-5 bg-white/3 rounded-sm overflow-hidden">
+                                    <p className="text-[9px] text-muted-foreground/40 w-7 text-right font-mono">{d.day}</p>
+                                    <div className="flex-1 h-5 bg-muted rounded-sm overflow-hidden">
                                         <motion.div
                                             initial={{ width: 0 }}
                                             animate={{ width: `${d.pct}%` }}
@@ -571,15 +571,15 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                                             }}
                                         />
                                     </div>
-                                    <p className="text-[9px] text-white/30 w-6 font-bold">{d.pct}%</p>
+                                    <p className="text-[9px] text-muted-foreground/60 w-6 font-bold">{d.pct}%</p>
                                 </div>
                             ))}
                         </div>
                     </div>
 
                     {/* Completion Rate Bar */}
-                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-5">
-                        <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-3">Daily Completion Rate</p>
+                    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+                        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-3">Daily Completion Rate</p>
                         <ResponsiveContainer width="100%" height={200}>
                             <BarChart data={data.devotionTrend} barSize={12}>
                                 <XAxis dataKey="day" tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 8 }} axisLine={false} tickLine={false} />
@@ -598,9 +598,9 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                     </div>
 
                     {/* SOAP Sentiment */}
-                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-5">
-                        <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-1">SOAP Sentiment Analysis</p>
-                        <p className="text-[10px] text-white/25 mb-3">Anonymized journal emotional themes</p>
+                    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+                        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">SOAP Sentiment Analysis</p>
+                        <p className="text-[10px] text-muted-foreground/60 mb-3">Anonymized journal emotional themes</p>
                         <ResponsiveContainer width="100%" height={120}>
                             <PieChart>
                                 <Pie data={data.soapSentiment} cx="50%" cy="50%" innerRadius={30} outerRadius={55}
@@ -617,15 +617,15 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                                 <div key={s.name} className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <div className="w-2 h-2 rounded-full" style={{ background: s.color }} />
-                                        <p className="text-[10px] text-white/50 font-medium">{s.name}</p>
+                                        <p className="text-[10px] text-muted-foreground font-medium">{s.name}</p>
                                     </div>
-                                    <p className="text-[10px] font-black text-white/70">{s.value}%</p>
+                                    <p className="text-[10px] font-black text-foreground">{s.value}%</p>
                                 </div>
                             ))}
                         </div>
                         {/* Word Cloud */}
-                        <div className="mt-3 pt-3 border-t border-white/5">
-                            <p className="text-[9px] text-white/25 uppercase font-bold tracking-wider mb-2">Top Themes</p>
+                        <div className="mt-3 pt-3 border-t border-border">
+                            <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider mb-2">Top Themes</p>
                             <div className="flex flex-wrap gap-1">
                                 {data.wordCloud.slice(0, 10).map((w, i) => (
                                     <span key={w} className="text-[9px] font-bold px-1.5 py-0.5 rounded-md"
@@ -646,17 +646,17 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             {/* ─── GROWTH METRICS ROW ─── */}
             <div className="grid grid-cols-3 gap-4">
                 {[
-                    { label: 'New Families', val: data.newFamilies, icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10', sub: 'This month' },
-                    { label: 'Salvations', val: data.salvations, icon: Flame, color: 'text-amber-400', bg: 'bg-amber-500/10', sub: 'This month' },
-                    { label: 'Baptisms', val: data.baptisms, icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10', sub: 'This month' },
+                    { label: 'New Families', val: data.newFamilies, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10', sub: 'This month' },
+                    { label: 'Salvations', val: data.salvations, icon: Flame, color: 'text-amber-500', bg: 'bg-amber-500/10', sub: 'This month' },
+                    { label: 'Baptisms', val: data.baptisms, icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-500/10', sub: 'This month' },
                 ].map(g => (
-                    <div key={g.label} className="bg-[#111827] border border-white/5 rounded-2xl p-5 flex items-center gap-4">
+                    <div key={g.label} className="bg-card border border-border rounded-2xl p-5 flex items-center gap-4 shadow-sm">
                         <div className={`w-12 h-12 rounded-2xl ${g.bg} flex items-center justify-center`}>
                             <g.icon className={`w-6 h-6 ${g.color}`} />
                         </div>
                         <div>
-                            <p className="text-2xl font-black text-white">{g.val}</p>
-                            <p className="text-[10px] text-white/30 font-medium">{g.label} · {g.sub}</p>
+                            <p className="text-2xl font-black text-foreground">{g.val}</p>
+                            <p className="text-[10px] text-muted-foreground font-medium">{g.label} · {g.sub}</p>
                         </div>
                     </div>
                 ))}
@@ -668,8 +668,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                     {/* Prayer Request Tracker */}
-                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-5">
-                        <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Prayer Request Tracker</p>
+                    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+                        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4">Prayer Request Tracker</p>
                         <div className="flex items-center gap-4 mb-4">
                             <ResponsiveContainer width={100} height={100}>
                                 <PieChart>
@@ -683,12 +683,12 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                             </ResponsiveContainer>
                             <div className="space-y-2">
                                 <div className="text-center">
-                                    <p className="text-2xl font-black text-white">{data.prayerActive}</p>
-                                    <p className="text-[9px] text-white/30 font-bold uppercase">Active</p>
+                                    <p className="text-2xl font-black text-foreground">{data.prayerActive}</p>
+                                    <p className="text-[9px] text-muted-foreground font-bold uppercase">Active</p>
                                 </div>
                                 <div className="text-center">
-                                    <p className="text-xl font-black text-emerald-400">{data.prayerAnswered}</p>
-                                    <p className="text-[9px] text-white/30 font-bold uppercase">Answered</p>
+                                    <p className="text-xl font-black text-emerald-500 font-black">{data.prayerAnswered}</p>
+                                    <p className="text-[9px] text-muted-foreground font-bold uppercase">Answered</p>
                                 </div>
                             </div>
                         </div>
@@ -696,15 +696,15 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                             {data.prayerCategories.map(cat => (
                                 <div key={cat.name} className="flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: cat.color }} />
-                                    <p className="text-[10px] text-white/40 flex-1">{cat.name}</p>
-                                    <p className="text-[10px] font-black text-white/60">{cat.value}%</p>
+                                    <p className="text-[10px] text-muted-foreground flex-1">{cat.name}</p>
+                                    <p className="text-[10px] font-black text-foreground/60">{cat.value}%</p>
                                 </div>
                             ))}
                         </div>
                     </div>
 
                     {/* Member Care Alerts */}
-                    <div className="bg-[#111827] border border-red-500/10 rounded-2xl p-5">
+                    <div className="bg-card border border-red-500/20 rounded-2xl p-5 shadow-sm">
                         <div className="flex items-center justify-between mb-4">
                             <p className="text-xs font-black text-red-400 uppercase tracking-widest">Care Alerts</p>
                             <Badge className="bg-red-500/20 text-red-400 border-0 text-[9px] font-black">{data.alertMembers.length} FLAGGED</Badge>
@@ -717,8 +717,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                                             {m.name[0]}
                                         </div>
                                         <div>
-                                            <p className="text-xs font-bold text-white leading-none">{m.name}</p>
-                                            <p className="text-[9px] text-white/30 mt-0.5">
+                                            <p className="text-xs font-bold text-foreground leading-none">{m.name}</p>
+                                            <p className="text-[9px] text-muted-foreground mt-0.5">
                                                 {m.days_inactive}d inactive · Streak: {m.current_streak}
                                             </p>
                                         </div>
@@ -732,21 +732,21 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                     </div>
 
                     {/* Counseling Queue */}
-                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-5">
+                    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
                         <div className="flex items-center justify-between mb-4">
-                            <p className="text-xs font-black text-white/40 uppercase tracking-widest">Counseling Queue</p>
+                            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Counseling Queue</p>
                             <Badge className="bg-blue-500/20 text-blue-400 border-0 text-[9px]">LIVE</Badge>
                         </div>
                         <div className="space-y-3">
                             {data.counselingQueue.length > 0 ? data.counselingQueue.map((c, i) => (
-                                <div key={i} className="flex items-start justify-between gap-2 pb-3 border-b border-white/5 last:border-0">
+                                <div key={i} className="flex items-start justify-between gap-2 pb-3 border-b border-border last:border-0">
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-1.5">
-                                            <p className="text-xs font-bold text-white truncate">{c.name}</p>
+                                            <p className="text-xs font-bold text-foreground truncate">{c.name}</p>
                                             {c.urgent && <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />}
                                         </div>
-                                        <p className="text-[9px] text-violet-400 font-bold">{c.category}</p>
-                                        <p className="text-[9px] text-white/30">→ {c.leader} · {c.date}</p>
+                                        <p className="text-[9px] text-primary font-bold">{c.category}</p>
+                                        <p className="text-[9px] text-muted-foreground">→ {c.leader} · {c.date}</p>
                                     </div>
                                     <Button variant="ghost" className="h-7 px-2 text-[9px] font-black text-violet-400 hover:bg-violet-500/10 rounded-lg flex-shrink-0">
                                         FOLLOW UP
@@ -754,7 +754,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                                 </div>
                             )) : (
                                 <div className="text-center py-10">
-                                    <p className="text-[10px] text-white/20 font-bold uppercase tracking-widest">No active queue</p>
+                                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">No active queue</p>
                                 </div>
                             )}
                         </div>
@@ -768,13 +768,13 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                     {/* Skills Heatmap (NEW) */}
-                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-5 md:col-span-3 mb-4">
+                    <div className="bg-card border border-border rounded-2xl p-5 md:col-span-3 mb-4 shadow-sm">
                         <div className="flex items-center justify-between mb-6">
                             <div>
-                                <p className="text-xs font-black text-white/40 uppercase tracking-widest">Congregational Skills Heatmap</p>
-                                <p className="text-[10px] text-white/20 font-bold uppercase mt-1">Available talents for ministry placement</p>
+                                <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Congregational Skills Heatmap</p>
+                                <p className="text-[10px] text-muted-foreground/40 font-bold uppercase mt-1">Available talents for ministry placement</p>
                             </div>
-                            <Badge className="bg-violet-500/10 text-violet-400 border-violet-500/20 text-[9px] font-black">{data.skillsData.length} SPECIALIZATIONS</Badge>
+                            <Badge className="bg-primary/10 text-primary border-primary/20 text-[9px] font-black">{data.skillsData.length} SPECIALIZATIONS</Badge>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                             {data.skillsData.map((skill, i) => (
@@ -783,18 +783,18 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                                     initial={{ opacity: 0, scale: 0.9 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     transition={{ delay: i * 0.05 }}
-                                    className="p-4 rounded-xl border border-white/5 bg-white/2 flex flex-col items-center justify-center text-center group hover:bg-violet-500/5 hover:border-violet-500/20 transition-all cursor-default"
+                                    className="p-4 rounded-xl border border-border bg-muted/30 flex flex-col items-center justify-center text-center group hover:bg-primary/5 hover:border-primary/20 transition-all cursor-default shadow-sm"
                                 >
-                                    <p className="text-[10px] font-black text-white/40 group-hover:text-violet-400 transition-colors uppercase tracking-tight">{skill.name}</p>
-                                    <p className="text-xl font-black text-white mt-1">{skill.count}</p>
+                                    <p className="text-[10px] font-black text-muted-foreground group-hover:text-primary transition-colors uppercase tracking-tight">{skill.name}</p>
+                                    <p className="text-xl font-black text-foreground mt-1">{skill.count}</p>
                                 </motion.div>
                             ))}
                         </div>
                     </div>
 
                     {/* Ministry Participation Bar */}
-                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-5 md:col-span-2">
-                        <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Ministry Leadership Split</p>
+                    <div className="bg-card border border-border rounded-2xl p-5 md:col-span-2 shadow-sm">
+                        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4">Ministry Leadership Split</p>
                         <ResponsiveContainer width="100%" height={240}>
                             <BarChart data={data.ministryData} layout="vertical" barSize={10}>
                                 <XAxis type="number" hide />
@@ -813,34 +813,25 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                     </div>
 
                     {/* Volunteer Pipeline Funnel */}
-                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-5">
-                        <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Discipleship Pipeline</p>
-                        <div className="space-y-1.5">
-                            {[
-                                { label: 'Visitors', count: 84, color: '#94a3b8' },
-                                { label: 'Attendees', count: 61, color: '#60a5fa' },
-                                { label: 'Members', count: 247, color: '#8b5cf6' },
-                                { label: 'Volunteers', count: 89, color: '#34d399' },
-                                { label: 'Leaders', count: 24, color: '#fbbf24' },
-                                { label: 'Dept. Heads', count: 8, color: '#f87171' },
-                            ].map((stage, i) => (
+                    <div className="bg-card border border-border rounded-2xl p-5">
+                        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4">Discipleship Pipeline</p>
+                        <div className="space-y-3">
+                            {data.discipleshipData.map(stage => (
                                 <div key={stage.label} className="flex items-center gap-2">
-                                    <p className="text-[9px] text-white/30 w-20 text-right font-bold">{stage.label}</p>
-                                    <div className="flex-1 h-6 bg-white/3 rounded-md overflow-hidden">
+                                    <p className="text-[9px] text-muted-foreground/60 w-20 text-right font-bold">{stage.label}</p>
+                                    <div className="flex-1 h-6 bg-muted rounded-md overflow-hidden">
                                         <motion.div
                                             initial={{ width: 0 }}
-                                            animate={{ width: `${Math.min(100, (stage.count / 84) * 100)}%` }}
-                                            transition={{ delay: i * 0.1, duration: 0.8 }}
-                                            className="h-full rounded-md"
-                                            style={{ background: stage.color, opacity: 0.7 }}
+                                            animate={{ width: `${(stage.count / (data.totalMembers || 1)) * 100}%` }}
+                                            className="h-full bg-primary"
                                         />
                                     </div>
-                                    <p className="text-[9px] font-black text-white/60 w-6">{stage.count}</p>
+                                    <p className="text-[9px] font-black text-muted-foreground w-6">{stage.count}</p>
                                 </div>
                             ))}
                         </div>
-                        <div className="mt-4 pt-3 border-t border-white/5">
-                            <p className="text-[9px] text-white/25 font-bold uppercase tracking-wider mb-2">Staffing Gaps ⚠️</p>
+                        <div className="mt-4 pt-3 border-t border-border">
+                            <p className="text-[9px] text-muted-foreground/40 font-bold uppercase tracking-wider mb-2">Staffing Gaps ⚠️</p>
                             {data.staffingGaps.length > 0 ? data.staffingGaps.map(m => (
                                 <div key={m} className="flex items-center justify-between py-1">
                                     <p className="text-[10px] text-amber-400 font-medium">{m}</p>
@@ -856,35 +847,38 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
 
             {/* ─── ROW 4.5: GEOGRAPHIC INTELLIGENCE ─── */}
             <section className="mb-8">
-                <div className="bg-[#111827] border border-white/5 rounded-3xl p-8 relative overflow-hidden min-h-[350px]">
-                    <div className="absolute inset-0 opacity-10 grayscale pointer-events-none">
-                        <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=2000" className="w-full h-full object-cover" alt="Map" />
+                <div className="bg-card border border-border rounded-3xl p-8 relative overflow-hidden min-h-[350px] shadow-sm">
+                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-6 relative z-10">Global Mission Coverage</p>
+                    <div className="absolute inset-0 grayscale opacity-20 pointer-events-none"
+                        style={{ backgroundImage: `url('https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg')`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+                    />
+
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 relative z-10">
+                        {[
+                            { name: 'CHIBA', lat: '35.6074 N', lon: '140.1063 E', active: 45 },
+                            { name: 'KOBE', lat: '34.6901 N', lon: '135.1955 E', active: 22 },
+                            { name: 'SAITAMA', lat: '35.8617 N', lon: '139.6455 E', active: 31 },
+                            { name: 'GLOBAL', lat: 'ONLINE', lon: 'PORTAL', active: 56 },
+                        ].map((loc, i) => (
+                            <motion.div
+                                key={loc.name}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: i * 0.1 }}
+                                className="bg-muted backdrop-blur-md p-5 rounded-2xl border border-border"
+                            >
+                                <p className="text-[10px] text-muted-foreground/60 font-black uppercase mb-1 tracking-widest">{loc.name}</p>
+                                <p className="text-lg font-black text-foreground">{loc.active}</p>
+                                <p className="text-[8px] text-muted-foreground/30 font-mono mt-1">{loc.lat} / {loc.lon}</p>
+                            </motion.div>
+                        ))}
                     </div>
-                    <div className="relative z-10">
-                        <SectionHeader title="Geographic Member Clusters" subtitle="Spatial density of congregation — mapping fellowship group opportunities" />
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-                            {data.geoClusters.map((loc) => (
-                                <motion.div
-                                    whileHover={{ y: -5 }}
-                                    key={loc.name}
-                                    className="bg-white/5 backdrop-blur-md p-5 rounded-2xl border border-white/10"
-                                >
-                                    <p className="text-[10px] text-white/40 font-black uppercase mb-1 tracking-widest">{loc.name}</p>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-2xl font-black text-white">{loc.count}</span>
-                                        <Badge className="bg-violet-500/20 text-violet-400 border-0 text-[10px]">ACTIVE</Badge>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </div>
-                        <div className="mt-8 flex gap-3">
-                            <Button className="h-12 px-6 rounded-xl bg-violet-600 text-white font-black shadow-lg hover:bg-violet-500 transition-all">
-                                <Globe className="w-4 h-4 mr-2" /> INTERACTIVE CLUSTER MAP
-                            </Button>
-                            <Button variant="outline" className="h-12 px-6 rounded-xl border-white/10 text-white/60 font-black hover:bg-white/5">
-                                <MapPin className="w-4 h-4 mr-2" /> AREA ANALYSIS
-                            </Button>
-                        </div>
+
+                    <div className="absolute bottom-8 right-8 z-10">
+                        <Button variant="outline" className="h-12 px-6 rounded-xl border-border text-muted-foreground font-black hover:bg-muted">
+                            <Globe className="w-4 h-4 mr-2" />
+                            VIEW LIVE NETWORK MAP
+                        </Button>
                     </div>
                 </div>
             </section>
@@ -895,8 +889,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                     {/* Household Growth */}
-                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-5 md:col-span-2">
-                        <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Household Growth (6 Months)</p>
+                    <div className="bg-card border border-border rounded-2xl p-5 md:col-span-2">
+                        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4">Household Growth (6 Months)</p>
                         <ResponsiveContainer width="100%" height={200}>
                             <BarChart data={data.householdData} barSize={14}>
                                 <XAxis dataKey="month" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} />
@@ -911,15 +905,15 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                             {[{ label: 'Families', color: '#8b5cf6' }, { label: 'Couples', color: '#06b6d4' }, { label: 'Singles', color: '#34d399' }].map(l => (
                                 <div key={l.label} className="flex items-center gap-1.5">
                                     <div className="w-2 h-2 rounded-full" style={{ background: l.color }} />
-                                    <p className="text-[9px] text-white/30 font-bold">{l.label}</p>
+                                    <p className="text-[9px] text-muted-foreground/30 font-bold">{l.label}</p>
                                 </div>
                             ))}
                         </div>
                     </div>
 
                     {/* Evangelism Pipeline */}
-                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-5">
-                        <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Evangelism Pipeline</p>
+                    <div className="bg-card border border-border rounded-2xl p-5">
+                        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4">Evangelism Pipeline</p>
                         <div className="space-y-2">
                             {data.evangelismFunnel.map((stage, i) => {
                                 const pct = Math.round((stage.value / data.evangelismFunnel[0].value) * 100);
@@ -927,13 +921,13 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                                 return (
                                     <div key={stage.name}>
                                         <div className="flex items-center justify-between mb-1">
-                                            <p className="text-[9px] text-white/40 font-bold">{stage.name}</p>
+                                            <p className="text-[9px] text-muted-foreground/40 font-bold">{stage.name}</p>
                                             <div className="flex items-center gap-2">
                                                 {dropOff > 0 && <span className="text-[8px] text-red-400 font-bold">-{dropOff}%</span>}
-                                                <p className="text-[9px] font-black text-white/60">{stage.value}</p>
+                                                <p className="text-[9px] font-black text-muted-foreground">{stage.value}</p>
                                             </div>
                                         </div>
-                                        <div className="h-4 bg-white/3 rounded-md overflow-hidden">
+                                        <div className="h-4 bg-muted rounded-md overflow-hidden">
                                             <motion.div
                                                 initial={{ width: 0 }}
                                                 animate={{ width: `${pct}%` }}
@@ -949,12 +943,12 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                                 );
                             })}
                         </div>
-                        <div className="mt-4 pt-3 border-t border-white/5">
-                            <p className="text-[9px] text-white/25 font-bold uppercase tracking-wider">Overall Conversion</p>
+                        <div className="mt-4 pt-3 border-t border-border">
+                            <p className="text-[9px] text-muted-foreground/30 font-bold uppercase tracking-wider">Overall Conversion</p>
                             <p className="text-2xl font-black text-violet-400">
                                 {Math.round((data.evangelismFunnel[data.evangelismFunnel.length - 1].value / data.evangelismFunnel[0].value) * 100)}%
                             </p>
-                            <p className="text-[9px] text-white/30">Visitor → Membership rate</p>
+                            <p className="text-[9px] text-muted-foreground/30">Visitor → Membership rate</p>
                         </div>
                     </div>
                 </div>
@@ -975,10 +969,10 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                         ].map(f => (
                             <div key={f.label}>
                                 <div className="flex justify-between mb-1">
-                                    <p className="text-[10px] text-white/50">{f.label}</p>
+                                    <p className="text-[10px] text-muted-foreground/80">{f.label}</p>
                                     <p className="text-[10px] font-black text-violet-300">{f.score}/100</p>
                                 </div>
-                                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                                     <motion.div
                                         initial={{ width: 0 }}
                                         animate={{ width: `${f.score}%` }}
@@ -992,21 +986,21 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 </div>
 
                 {/* AI Daily Summary */}
-                <div className="bg-[#111827] border border-white/5 rounded-2xl p-6">
-                    <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Morning Pastor Briefing</p>
+                <div className="bg-card border border-border rounded-2xl p-6">
+                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4">Morning Pastor Briefing</p>
                     <div className="space-y-3">
                         {[
                             { q: "Who needs care now?", a: data.alertMembers.length > 0 ? `${data.alertMembers.length} members flagged for inactivity. ${data.prayerActive} crisis prayers unresolved.` : "All active members are engaged. No critical risks detected.", color: "text-red-400" },
                             { q: "Where is God moving?", a: `Youth attendance surged 24%. ${data.newMembersThisMonth} new arrivals this month.`, color: "text-emerald-400" },
                             { q: "Where must church go?", a: "Shinagawa area showing high density—consider new Circle. Media Ministry needs 2 volunteers.", color: "text-violet-400" },
                         ].map(b => (
-                            <div key={b.q} className="p-3 bg-white/3 rounded-xl border border-white/5">
-                                <p className="text-[9px] font-black text-white/30 uppercase tracking-wider mb-1">{b.q}</p>
+                            <div key={b.q} className="p-3 bg-muted rounded-xl border border-border">
+                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-wider mb-1">{b.q}</p>
                                 <p className={`text-xs font-semibold ${b.color}`}>{b.a}</p>
                             </div>
                         ))}
                     </div>
-                    <div className="mt-4 pt-3 border-t border-white/5 flex justify-between text-[9px] text-white/20">
+                    <div className="mt-4 pt-3 border-t border-border flex justify-between text-[9px] text-muted-foreground/30">
                         <span>AI Analysis · {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</span>
                         <span>JST +09:00</span>
                     </div>
@@ -1016,19 +1010,19 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             {/* ─── ROW 6: FINANCIAL STEWARDSHIP (NEW) ─── */}
             <section>
                 <SectionHeader title="Financial Stewardship" subtitle="Giving trends & budget intelligence — confidential leadership view" />
-                <div className="bg-[#111827] border border-white/5 rounded-3xl p-8">
+                <div className="bg-card border border-border rounded-3xl p-8">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div>
-                            <p className="text-4xl font-black text-white">¥ {(data.givingData[data.givingData.length - 1]?.amount || 0).toLocaleString()}</p>
+                            <p className="text-4xl font-black text-foreground">¥ {(data.givingData[data.givingData.length - 1]?.amount || 0).toLocaleString()}</p>
                             <p className="text-xs font-black text-emerald-400 uppercase tracking-widest mt-1">This Month's Tithes & Offerings</p>
                             <div className="mt-6 space-y-4">
-                                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                                    <p className="text-[10px] font-black text-white/30 uppercase mb-1">Growth Index</p>
-                                    <p className="text-lg font-black text-emerald-400">+12.4% <span className="text-[10px] text-white/20 font-bold ml-1">vs Average</span></p>
+                                <div className="p-4 rounded-2xl bg-muted border border-border">
+                                    <p className="text-[10px] font-black text-muted-foreground/30 uppercase mb-1">Growth Index</p>
+                                    <p className="text-lg font-black text-emerald-400">+12.4% <span className="text-[10px] text-muted-foreground/30 font-bold ml-1">vs Average</span></p>
                                 </div>
-                                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                                    <p className="text-[10px] font-black text-white/30 uppercase mb-1">Projected March Total</p>
-                                    <p className="text-lg font-black text-white">¥ 1,420,000</p>
+                                <div className="p-4 rounded-2xl bg-muted border border-border">
+                                    <p className="text-[10px] font-black text-muted-foreground/30 uppercase mb-1">Projected March Total</p>
+                                    <p className="text-lg font-black text-foreground">¥ 1,420,000</p>
                                 </div>
                             </div>
                         </div>

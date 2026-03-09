@@ -40,10 +40,20 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     useEffect(() => {
-        // Update body class for styling
-        const classes = [`theme-week-${week}`];
-        if (mode === 'dark') classes.push('dark');
-        document.body.className = classes.join(' ');
+        const root = window.document.documentElement;
+
+        // Remove old theme-week classes
+        root.classList.forEach(className => {
+            if (className.startsWith('theme-week-')) root.classList.remove(className);
+        });
+        root.classList.add(`theme-week-${week}`);
+
+        if (mode === 'dark') {
+            root.classList.add('dark');
+        } else {
+            root.classList.remove('dark');
+        }
+
         localStorage.setItem('theme-mode', mode);
     }, [week, mode]);
 
