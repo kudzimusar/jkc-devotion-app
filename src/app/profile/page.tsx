@@ -258,9 +258,19 @@ export default function ProfileHub() {
             const { data: orgRoleData } = await supabase.from('org_members').select('role').eq('user_id', userId).maybeSingle();
             setUserRole(orgRoleData?.role || 'visitor');
 
-            // Membership Request
-            const { data: mrData } = await supabase.from('membership_requests').select('*').eq('user_id', userId).maybeSingle();
+            // Membership Request (Get latest to avoid singular response errors)
+            const { data: mrData } = await supabase.from('membership_requests')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
             setMembershipRequest(mrData);
+
+            // Load Member Stats (Streak/Completed)
+            const s = await SoapJournal.getStats();
+            setStats(s);
 
         } catch (e) {
             console.error("Profile Load Error:", e);
@@ -554,18 +564,32 @@ export default function ProfileHub() {
     };
 
     const handleRequestMembership = async () => {
-        if (!user || !profile?.org_id) return;
+        if (!user) return;
+        let targetOrgId = profile?.org_id;
+
+        // Fallback for missing org_id
+        if (!targetOrgId) {
+            const { data: globalOrg } = await supabase.from('organizations').select('id').limit(1).maybeSingle();
+            targetOrgId = globalOrg?.id;
+        }
+
+        if (!targetOrgId) {
+            toast.error("Internal configuration error: Organizational context missing. Please refresh.");
+            return;
+        }
+
         setIsSaving(true);
         try {
             const { data, error } = await supabase.from('membership_requests').upsert({
                 user_id: user.id,
-                org_id: profile.org_id,
+                org_id: targetOrgId,
                 status: 'pending',
                 created_at: new Date().toISOString()
             }, { onConflict: 'user_id, org_id' }).select().single();
             if (error) throw error;
             setMembershipRequest(data);
             toast.success("Request submitted to leadership!");
+            loadData(user.id);
         } catch (e: any) {
             toast.error(e.message || "Submission failed");
         } finally {

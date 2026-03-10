@@ -43,7 +43,6 @@ export function TopNav({ user, userRole, stats, devotion, currentDate, onLoginCl
                         </button>
                     )}
                     <div className="flex gap-1 items-center">
-                        {user && <GlobalAIAssistant user={user} userRole={userRole || null} stats={stats} devotion={devotion} currentDate={currentDate} />}
                         <Button variant="ghost" size="icon" className="glass rounded-full h-9 w-9 md:h-11 md:w-11 relative" onClick={() => toast.info("There are no new notifications at this time.")}>
                             <Bell className="w-4 h-4 md:w-5 md:h-5 text-[var(--primary)]" />
                             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>

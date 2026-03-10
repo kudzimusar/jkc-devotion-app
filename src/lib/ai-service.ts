@@ -1,7 +1,18 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+// Lazy Initialization helper to ensure environment variables are ready
+let genAI: any = null;
+let model: any = null;
+
+const getAIModel = () => {
+    const key = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    if (!key || key === "YOUR_GEMINI_API_KEY" || key.trim() === "") return null;
+    if (!model) {
+        genAI = new GoogleGenerativeAI(key);
+        model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    }
+    return model;
+};
 
 // Gemini Service Account Reference (for audit/logging)
 // Email: gemini-devotion-bot@church-os-489402.iam.gserviceaccount.com
@@ -103,12 +114,11 @@ export const AIService = {
         const historyStr = chatHistory?.map(m => `${m.role.toUpperCase()}: ${m.content}`).join("\n") || "";
         const fullPrompt = `${SYSTEM_PROMPT}\n\n${contextStr}\n\nCONVERSATION HISTORY:\n${historyStr}\n\nUSER QUESTION: ${query}\n\nRESPONSE:`;
 
-        // REAL AI INTEGRATION: ENSURE THE KEY IS NOT THE PLACEHOLDER
-        const isPlaceholder = !apiKey || apiKey === "YOUR_GEMINI_API_KEY" || apiKey.trim() === "";
+        const aiModel = getAIModel();
 
-        if (!isPlaceholder) {
+        if (aiModel) {
             try {
-                const result = await model.generateContent(fullPrompt);
+                const result = await aiModel.generateContent(fullPrompt);
                 const response = await result.response;
                 const text = response.text();
                 if (text && text.length > 5) return text;

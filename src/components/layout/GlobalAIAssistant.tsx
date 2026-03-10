@@ -53,9 +53,9 @@ export function GlobalAIAssistant({ user, userRole, stats, devotion, currentDate
     return (
         <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-                <Button variant="ghost" className="glass rounded-full h-9 px-4 md:h-11 flex items-center gap-2 group border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-all mr-2">
-                    <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-primary group-hover:animate-pulse" />
-                    <span className="hidden md:inline font-bold text-xs uppercase tracking-widest text-primary">Ask AI</span>
+                <Button className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-2xl bg-primary text-white hover:scale-110 active:scale-95 transition-all z-[90] flex items-center justify-center p-0 group border-4 border-background">
+                    <Sparkles className="w-7 h-7 group-hover:animate-pulse" />
+                    <span className="sr-only">Ask AI Assistant</span>
                 </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-full sm:max-w-md border-l border-foreground/10 bg-background/95 backdrop-blur-3xl p-6 flex flex-col z-[300]">
