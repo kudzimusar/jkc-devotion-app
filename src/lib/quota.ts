@@ -1,8 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabaseAdmin as supabase } from './supabase-admin';
 
 export async function checkQuota(orgId: string): Promise<boolean> {
     const { data: org, error } = await supabase

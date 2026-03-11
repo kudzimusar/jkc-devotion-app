@@ -56,6 +56,7 @@ import { SoapJournal, SoapEntry, SOAP_EXPLANATION } from "@/lib/soap-journal";
 import { basePath as BP } from "@/lib/utils";
 import { TopNav } from "@/components/layout/TopNav";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { FeedSection } from "@/components/feed/FeedSection";
 
 const FloatingHearts = () => {
   const [hearts, setHearts] = useState<{ id: number; left: number; delay: number; duration: number; size: number }[]>([]);
@@ -507,6 +508,9 @@ export default function DevotionalApp() {
               </div>
             </div>
           </section>
+
+          {/* Member Feed — Personalised items from Mission Control */}
+          {user && <FeedSection />}
 
           {/* Sunday Check-In */}
           {format(currentDate, "EEEE") === "Sunday" && (

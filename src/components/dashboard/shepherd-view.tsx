@@ -57,6 +57,15 @@ interface DashboardData {
     counselingQueue: { name: string; category: string; leader: string; date: string; urgent: boolean }[];
     staffingGaps: string[];
     discipleshipData: { label: string; count: number }[];
+    churchHealth: {
+        totalMinistryTouches: number;
+        churchHealthScore: number;
+        healthyMinistries: number;
+        atRiskMinistries: number;
+        totalSalvations: number;
+        overdueMinistries: number;
+        totalVolunteers: number;
+    } | null;
 }
 
 interface AtRiskMember {
@@ -101,7 +110,8 @@ const INITIAL_DATA: DashboardData = {
     givingData: [],
     counselingQueue: [],
     staffingGaps: [],
-    discipleshipData: []
+    discipleshipData: [],
+    churchHealth: null
 };
 
 /* ─── Sub-components ─── */
@@ -232,7 +242,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 reconRes,
                 soapRes,
                 sentimentRes,
-                evangelismRes
+                evangelismRes,
+                ministryAnalyticsRes
             ] = await Promise.all([
                 db.from('profiles').select('*'),
                 db.from('member_stats').select('*'),
@@ -247,7 +258,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 db.from('vw_attendance_reconciliation').select('*').order('report_date', { ascending: false }).limit(1),
                 db.from('soap_entries').select('*'),
                 db.from('soap_sentiment_metrics').select('*'),
-                db.from('evangelism_pipeline').select('*')
+                db.from('evangelism_pipeline').select('*'),
+                db.from('ministry_analytics').select('ministry_id, health_score, avg_attendance, total_reports, salvations').eq('period_type', 'monthly')
             ]);
 
             const profiles = profilesRes.data || [];
@@ -261,6 +273,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             const soapEntries = soapRes.data || [];
             const soupSentimentData = sentimentRes.data || [];
             const evangelismData = evangelismRes.data || [];
+            const ministryAnalyticsData = ministryAnalyticsRes.data || [];
 
             // 2. Calculations
             const now = new Date();
@@ -369,6 +382,16 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             const pendingMembers = profiles.filter(p => p.membership_status === 'pending_approval');
             setMembershipRequests(pendingMembers);
 
+            // Church Health Metrics
+            const totalMinistryTouches = ministryAnalyticsData.reduce((sum: number, ma: any) => sum + ((ma.avg_attendance || 0) * (ma.total_reports || 0)), 0);
+            const churchHealthScore = ministryAnalyticsData.length > 0
+                ? Math.round(ministryAnalyticsData.reduce((sum: number, ma: any) => sum + (ma.health_score || 0), 0) / ministryAnalyticsData.length)
+                : 0;
+            const healthyMinistries = ministryAnalyticsData.filter((ma: any) => (ma.health_score || 0) >= 70).length;
+            const atRiskMinistries = ministryAnalyticsData.filter((ma: any) => (ma.health_score || 0) < 40).length;
+            const totalSalvations = ministryAnalyticsData.reduce((sum: number, ma: any) => sum + (ma.salvations || 0), 0);
+            const totalVolunteers = ministryMembers.length;
+
             setData(prev => ({
                 ...prev,
                 totalMembers: profiles.length,
@@ -394,11 +417,20 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 householdData: [{ month: format(now, 'MMM'), ...hhSplit }],
                 ministryData: ministryData.length > 0 ? ministryData : prev.ministryData,
                 evangelismFunnel: pipelineFunnel,
-                discipleshipData: pipelineFunnel.map(f => ({ label: f.name, count: f.value })),
+                discipleshipData: (pipelineFunnel || []).map(f => ({ label: f?.name, count: f?.value || 0 })),
                 skillsData: skillsData.length > 0 ? skillsData : prev.skillsData,
                 geoClusters: geoClusters.length > 0 ? geoClusters : prev.geoClusters,
                 devotionTrend: liveTrend.length > 0 || soapEntries.length > 0 ? liveTrend : prev.devotionTrend,
-                soapSentiment: liveSentiment.length > 0 ? liveSentiment : prev.soapSentiment
+                soapSentiment: liveSentiment.length > 0 ? liveSentiment : prev.soapSentiment,
+                churchHealth: {
+                    totalMinistryTouches,
+                    churchHealthScore,
+                    healthyMinistries,
+                    atRiskMinistries,
+                    totalSalvations,
+                    overdueMinistries: 0,
+                    totalVolunteers,
+                }
             }));
         } catch (e) {
             console.error("Dashboard Load Error:", e);
@@ -413,6 +445,21 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
 
     return (
         <div className="space-y-10 pb-16">
+
+            {/* ─── ROW 0: AI CHURCH HEALTH METRICS ─── */}
+            {data.churchHealth && (
+                <section>
+                    <SectionHeader title="AI Church Health Summary" subtitle="Aggregated metadata computed across all ministries" />
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-10">
+                        <MetricCard title="Touches" value={data.churchHealth.totalMinistryTouches} icon={Users} accentColor="cyan" />
+                        <MetricCard title="Health Score" value={`${data.churchHealth.churchHealthScore}%`} icon={Heart} accentColor={data.churchHealth.churchHealthScore >= 70 ? 'emerald' : 'amber'} />
+                        <MetricCard title="Healthy Min" value={data.churchHealth.healthyMinistries} icon={CheckCircle2} accentColor="emerald" />
+                        <MetricCard title="At-Risk Min" value={data.churchHealth.atRiskMinistries} icon={AlertTriangle} accentColor="red" />
+                        <MetricCard title="Salvations" value={data.churchHealth.totalSalvations} icon={Flame} accentColor="violet" />
+                        <MetricCard title="Volunteers" value={data.churchHealth.totalVolunteers} icon={ShieldCheck} accentColor="blue" />
+                    </div>
+                </section>
+            )}
 
             {/* ─── ROW 1: CORE METRICS ─── */}
             <section>
@@ -626,7 +673,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                                         <div className="w-2 h-2 rounded-full" style={{ background: s.color }} />
                                         <p className="text-[10px] text-muted-foreground font-medium">{s.name}</p>
                                     </div>
-                                    <p className="text-[10px] font-black text-foreground">{s.value}%</p>
+                                    <p className="text-[10px] font-black text-foreground">{s?.value || 0}%</p>
                                 </div>
                             ))}
                         </div>
@@ -704,7 +751,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                                 <div key={cat.name} className="flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: cat.color }} />
                                     <p className="text-[10px] text-muted-foreground flex-1">{cat.name}</p>
-                                    <p className="text-[10px] font-black text-foreground/60">{cat.value}%</p>
+                                    <p className="text-[10px] font-black text-foreground/60">{cat?.value || 0}%</p>
                                 </div>
                             ))}
                         </div>
@@ -923,15 +970,17 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                         <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4">Evangelism Pipeline</p>
                         <div className="space-y-2">
                             {data.evangelismFunnel.map((stage, i) => {
-                                const pct = Math.round((stage.value / data.evangelismFunnel[0].value) * 100);
-                                const dropOff = i > 0 ? Math.round(((data.evangelismFunnel[i - 1].value - stage.value) / data.evangelismFunnel[i - 1].value) * 100) : 0;
+                                const firstVal = data?.evangelismFunnel?.[0]?.value || 1;
+                                const pct = Math.round(((stage?.value || 0) / firstVal) * 100);
+                                const prevVal = data?.evangelismFunnel?.[i - 1]?.value || stage?.value || 1;
+                                const dropOff = i > 0 ? Math.round(((prevVal - (stage?.value || 0)) / prevVal) * 100) : 0;
                                 return (
                                     <div key={stage.name}>
                                         <div className="flex items-center justify-between mb-1">
                                             <p className="text-[9px] text-muted-foreground/40 font-bold">{stage.name}</p>
                                             <div className="flex items-center gap-2">
                                                 {dropOff > 0 && <span className="text-[8px] text-red-400 font-bold">-{dropOff}%</span>}
-                                                <p className="text-[9px] font-black text-muted-foreground">{stage.value}</p>
+                                                <p className="text-[9px] font-black text-muted-foreground">{stage?.value || 0}</p>
                                             </div>
                                         </div>
                                         <div className="h-4 bg-muted rounded-md overflow-hidden">
@@ -953,7 +1002,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                         <div className="mt-4 pt-3 border-t border-border">
                             <p className="text-[9px] text-muted-foreground/30 font-bold uppercase tracking-wider">Overall Conversion</p>
                             <p className="text-2xl font-black text-violet-400">
-                                {Math.round((data.evangelismFunnel[data.evangelismFunnel.length - 1].value / data.evangelismFunnel[0].value) * 100)}%
+                                {data?.evangelismFunnel && data.evangelismFunnel.length > 0 ? Math.round(((data.evangelismFunnel[data.evangelismFunnel.length - 1]?.value || 0) / (data.evangelismFunnel[0]?.value || 1)) * 100) : 0}%
                             </p>
                             <p className="text-[9px] text-muted-foreground/30">Visitor → Membership rate</p>
                         </div>

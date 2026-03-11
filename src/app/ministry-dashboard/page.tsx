@@ -122,10 +122,11 @@ function MinistryDashboardContent() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {memberships.map((m: any, idx: number) => {
             const min = Array.isArray(m.ministries) ? m.ministries[0] : m.ministries;
+            if (!min) return null;
             return (
               <Link 
                 key={idx} 
-                href={`/ministry-dashboard/${min.slug}`}
+                href={`/ministry-dashboard/${min.slug || ''}`}
                 className="block p-8 bg-[#0d1421] border border-white/10 rounded-3xl hover:border-violet-500/50 hover:bg-white/5 transition-all shadow-xl relative overflow-hidden group"
               >
                 <div className="absolute top-0 right-0 w-32 h-32 blur-[60px] opacity-20 group-hover:opacity-40 transition-opacity" style={{ backgroundColor: min.color || '#8b5cf6' }} />
@@ -134,10 +135,10 @@ function MinistryDashboardContent() {
                     className="w-14 h-14 rounded-2xl mb-6 flex items-center justify-center text-white shadow-lg" 
                     style={{ backgroundColor: min.color || '#8b5cf6' }}
                     >
-                    <span className="font-black text-xl">{min.name.charAt(0)}</span>
+                    <span className="font-black text-xl">{(min.name || 'M').charAt(0)}</span>
                     </div>
-                    <h2 className="text-xl font-bold mb-2 text-white">{min.name}</h2>
-                    <p className="text-violet-400 uppercase tracking-widest text-[10px] font-black mb-4">{m.ministry_role}</p>
+                    <h2 className="text-xl font-bold mb-2 text-white">{min.name || 'Untitled Ministry'}</h2>
+                    <p className="text-violet-400 uppercase tracking-widest text-[10px] font-black mb-4">{m.ministry_role || 'Member'}</p>
                     <p className="text-white/40 text-sm line-clamp-2 leading-relaxed">{min.description || 'No description provided.'}</p>
                 </div>
               </Link>

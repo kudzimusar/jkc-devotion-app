@@ -21,8 +21,9 @@ export default function MinistryLoginPage() {
     // If already logged in AND has ministry access, redirect to dashboard
     useEffect(() => {
         const checkExistingSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
+            const { data } = await supabase.auth.getSession();
+            const session = data?.session;
+            if (session?.user?.id) {
                 const { data } = await supabase
                     .from('ministry_members')
                     .select('id')
@@ -52,17 +53,18 @@ export default function MinistryLoginPage() {
             password
         });
 
-        if (authError || !data.user) {
+        if (authError || !data?.user) {
             setError(authError?.message || "Login failed due to invalid credentials.");
             setLoading(false);
             return;
         }
 
-        // Check ministry access
+        const userId = data.user.id;
+
         const { data: membershipData, error: membershipError } = await supabase
             .from('ministry_members')
             .select('id')
-            .eq('user_id', data.user.id)
+            .eq('user_id', userId)
             .eq('is_active', true)
             .in('ministry_role', ['leader', 'assistant', 'volunteer', 'member'])
             .limit(1);

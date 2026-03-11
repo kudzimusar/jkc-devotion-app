@@ -1,11 +1,10 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
 
-// Service role for auth-bypass checks in edges/proxies
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+// Use existing singletons
+const db = supabaseAdmin
 
 export async function proxy(request: NextRequest) {
     // 1. Maintain Supabase session
@@ -22,7 +21,7 @@ export async function proxy(request: NextRequest) {
 
     // Match /admin or /onboarding (accounting for potential basePath usage if Next.js includes it)
     if (pathname.includes('/admin') || pathname.includes('/onboarding')) {
-        const { data: member, error: memberError } = await supabase
+        const { data: member, error: memberError } = await db
             .from('org_members')
             .select('org_id')
             .eq('user_id', user.id)
