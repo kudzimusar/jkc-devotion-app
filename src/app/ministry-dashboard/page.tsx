@@ -21,22 +21,23 @@ function MinistryDashboardContent() {
       setSessionUser(session?.user || null);
       if (!session?.user) {
         setLoading(false);
-      } else if (redirectParams) {
-        router.push(redirectParams);
       }
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user && !sessionUser && redirectParams) {
-        router.push(redirectParams);
-      }
       setSessionUser(session?.user || null);
     });
 
     return () => subscription.unsubscribe();
-  }, [redirectParams, sessionUser, router]);
+  }, []); // Run only once
+
+  useEffect(() => {
+    if (sessionUser && redirectParams) {
+      router.push(redirectParams);
+    }
+  }, [sessionUser, redirectParams, router]);
 
   useEffect(() => {
     if (sessionUser) {

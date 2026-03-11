@@ -67,10 +67,20 @@ export const MinistryAuth = {
     },
 
     async requireAccess(slug: string, minimumRole: MinistryRole = 'member'): Promise<MinistrySession> {
-        const session = await this.getMinistrySession(slug);
-        if (!session) {
+        const { data: { session: authSession } } = await supabase.auth.getSession();
+        
+        if (!authSession?.user) {
             if (typeof window !== 'undefined') {
                 window.location.href = `${BP}/ministry-dashboard?redirect=/ministry-dashboard/${slug}`;
+            }
+            throw new Error('Access denied: You are not logged in.');
+        }
+
+        const session = await this.getMinistrySession(slug);
+        
+        if (!session) {
+            if (typeof window !== 'undefined') {
+                window.location.href = `${BP}/ministry-dashboard`;
             }
             throw new Error('Access denied: You are not a member of this ministry.');
         }
