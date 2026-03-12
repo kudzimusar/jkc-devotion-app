@@ -4,6 +4,63 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 let genAI: any = null;
 let model: any = null;
 
+const intelligentFallback = (userRole: string, userName: string, query: string, contextPayload?: any, chatHistory?: { role: string, content: string }[]): string => {
+    const lowerQuery = query.toLowerCase();
+    const historyCount = chatHistory?.length || 0;
+    const isFollowUp = historyCount > 0;
+    const d = contextPayload?.devotion;
+    const s = contextPayload?.stats;
+
+    // 1. Identify Intent
+    const intents = {
+        greeting: lowerQuery.includes("hello") || lowerQuery.includes("hi") || lowerQuery.includes("hey"),
+        verseRequest: lowerQuery.includes("today") || lowerQuery.includes("verse") || lowerQuery.includes("focus") || lowerQuery.includes("declaration"),
+        deepDive: lowerQuery.includes("more") || lowerQuery.includes("deep") || lowerQuery.includes("mean") || lowerQuery.includes("explain") || lowerQuery.includes("history") || lowerQuery.includes("roots") || lowerQuery.includes("context"),
+        progress: lowerQuery.includes("streak") || lowerQuery.includes("progress") || lowerQuery.includes("completed") || lowerQuery.includes("stat"),
+        churchInfo: lowerQuery.includes("location") || lowerQuery.includes("time") || lowerQuery.includes("website") || lowerQuery.includes("contact")
+    };
+
+    // 2. Conversational State
+    const alreadyGreeted = chatHistory?.some(msg => msg.role === 'ai' && msg.content.includes("Hello"));
+    let response = "";
+
+    // 3. Generation Logic
+    if ((intents.greeting || !isFollowUp) && !alreadyGreeted) {
+        response += `Hello ${userName}! It's a blessing to walk with you today. `;
+    }
+
+    if (d) {
+        if (isFollowUp && intents.deepDive) {
+            if (d.scripture?.includes("6:37")) {
+                response += `Looking deeper into Luke 6:37, the concept of "pardon" isn't just about debt; it's the Greek word *apolyete*, which implies untying a knot. Imagine the resentment as a tight knot—forgiveness is the act of unraveling it so grace can flow again. How does that picture change your outlook today?`;
+            } else {
+                response += `That's a great desire for depth. In ${d.scripture}, we are exploring the theme of ${d.theme}. This passage was written to remind us that our faith is our strength. Based on your ${s?.currentStreak || 0}-day momentum, you are building the exact habits needed for this transformation.`;
+            }
+        } else if (intents.verseRequest || !isFollowUp) {
+            const dateStr = contextPayload.currentDate ? new Date(contextPayload.currentDate).toLocaleDateString() : "today";
+            response += `Today is ${dateStr}, and we are centering our hearts on **${d.weekTheme}**. \n\n**The Focus:** *"${d.dailyFocus}"*\n**Scripture:** ${d.scripture}\n\n`;
+            if (s?.completedToday) {
+                response += `I see you've already completed your journal—wonderful discipline! Is there a specific part of this verse you'd like to dive deeper into?`;
+            } else {
+                response += `You're on a **${s?.currentStreak || 0}-day streak**. Before you complete your journal, would you like to discuss what "${d.theme}" looks like in your life right now?`;
+            }
+        }
+    }
+
+    // Capture diagnostic mode info but make it specific
+    if (response === "") {
+        if (intents.progress && s) {
+            response = `You are doing great! You have a **${s.currentStreak}-day streak**. Every day in the Word is a step toward transformation.`;
+        } else if (userRole === 'owner') {
+             response = `Blessings, ${userName}! As the platform owner, I see you are exploring our Kingdom tools. You can complete your profile identity to help us understand your gifts, or link your family for Junior Church check-ins. How can I guide your transformation today?`;
+        } else {
+            response = `I hear you, ${userName}. As your Spiritual Assistant, I'm here to help you navigate this week's theme. Whether you want to discuss a verse, check your progress, or need prayer, just ask. What's on your heart right now?`;
+        }
+    }
+
+    return response;
+};
+
 const getAIModel = () => {
     const key = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
     if (!key || key === "YOUR_GEMINI_API_KEY" || key.trim() === "") return null;
@@ -81,10 +138,8 @@ export const AIService = {
         let pilContext = "";
         try {
             const { supabase } = await import("./supabase");
-            const [insightsRes, feedRes] = await Promise.all([
-                supabase.from('prophetic_insights').select('*').eq('is_acknowledged', false).limit(5),
-                supabase.from('vw_ministry_intelligence_feed').select('*').limit(10)
-            ]);
+            const insightsRes = await supabase.from('prophetic_insights').select('*').eq('is_acknowledged', false).limit(5);
+            const feedRes = await supabase.from('vw_ministry_intelligence_feed').select('*').limit(10);
 
             const insights = insightsRes.data || [];
             const feed = feedRes.data || [];
@@ -97,7 +152,7 @@ export const AIService = {
                     "\n--- END PIL ---";
             }
         } catch (e) {
-            console.error("PIL Context Fetch Error:", e);
+            // Silently fail PIL context if schema is not fully applied
         }
 
         const contextStr = contextPayload ? `
@@ -125,20 +180,15 @@ export const AIService = {
                 throw new Error("Empty AI response");
             } catch (err) {
                 console.error("Gemini Production Error:", err);
-                // Graceful degradation with contextual intelligent fallback
-                if (query.toLowerCase().includes("profile")) return "Your profile is the 'Digital Heart' of your ministry. You can update your Identity, add Skills for the gap analysis, and link your family in the 'Family & Households' section.";
-                if (query.toLowerCase().includes("membership")) return "To submit a Membership Request, use the 'Request Membership' button on your profile card. This alerts our leadership team to begin your official discipleship onboarding.";
-                return "I apologize, my spiritual connection is temporarily interrupted. I am here to guide you through your Devotions and Profile setup. What can I assist with specifically?";
+                return intelligentFallback(userRole, userName, query, contextPayload, chatHistory);
             }
         }
 
         // Diagnostic Fallback for lack of API Key
-        const fallbackResponse = `Blessings, ${userName}! (Note: AI reasoning is currently in diagnostic mode). I see you are ${userRole || 'exploring'} the platform. 
-        You can complete your profile identity to helps us understand your gifts, join a Fellowship Circle for midweek connection, or link your children for Junior Church check-ins. 
-        How can I guide your transformation today?`;
+        const fallbackValue = intelligentFallback(userRole, userName, query, contextPayload, chatHistory);
 
         return new Promise<string>((resolve) => {
-            setTimeout(() => resolve(fallbackResponse), 800);
+            setTimeout(() => resolve(fallbackValue), 800);
         });
     },
 

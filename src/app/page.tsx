@@ -273,6 +273,7 @@ export default function DevotionalApp() {
 
   const [stats, setStats] = useState<{ completed: number; total: number; streak: number; lastCompletedJST: string | null; completedDays: number[] }>({ completed: 0, total: 31, streak: 0, lastCompletedJST: null, completedDays: [] });
 
+  const [mounted, setMounted] = useState(false);
   const loadStats = async () => {
     if (user) {
       const s = await SoapJournal.getStats();
@@ -281,6 +282,7 @@ export default function DevotionalApp() {
   };
 
   useEffect(() => {
+    setMounted(true);
     loadStats();
   }, [user]);
 
@@ -455,12 +457,14 @@ export default function DevotionalApp() {
               </h2>
               <p className="text-xs md:text-sm font-bold uppercase tracking-[0.3em] opacity-30 pt-4">Building Healthy Habits & Holy Lives</p>
 
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 inline-flex max-w-2xl mx-auto items-center p-4 px-6 rounded-[2rem] glass bg-[var(--primary)]/5 border border-[var(--primary)]/20 shadow-[0_10px_30px_rgba(var(--primary-rgb),0.1)] gap-4 text-left">
-                <Sparkles className="w-8 h-8 text-[var(--primary)] shrink-0" />
-                <p className="text-sm font-bold leading-relaxed text-foreground/90 italic tracking-wide">
-                  "{AIService.generateHeroMessage(stats.streak, stats.completed, stats.total)}"
-                </p>
-              </motion.div>
+              {mounted && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 inline-flex max-w-2xl mx-auto items-center p-4 px-6 rounded-[2rem] glass bg-[var(--primary)]/5 border border-[var(--primary)]/20 shadow-[0_10px_30px_rgba(var(--primary-rgb),0.1)] gap-4 text-left">
+                  <Sparkles className="w-8 h-8 text-[var(--primary)] shrink-0" />
+                  <p className="text-sm font-bold leading-relaxed text-foreground/90 italic tracking-wide">
+                    "{AIService.generateHeroMessage(stats.streak, stats.completed, stats.total)}"
+                  </p>
+                </motion.div>
+              )}
             </motion.div>
           </section>
 
@@ -538,7 +542,7 @@ export default function DevotionalApp() {
                 </div>
                 <div className="space-y-0.5">
                   <h3 className="font-black text-xl leading-none">Week {devotion?.week}: {devotion?.week_theme}</h3>
-                  <p className="text-xs font-bold text-[var(--primary)] tracking-widest uppercase opacity-80">{format(currentDate, "EEEE, MMMM d")}</p>
+                  <p className="text-xs font-bold text-[var(--primary)] tracking-widest uppercase opacity-80" suppressHydrationWarning>{format(currentDate, "EEEE, MMMM d")}</p>
                 </div>
               </div>
               {stats.completedDays.includes(devotion?.id || 0) && (
@@ -685,7 +689,7 @@ export default function DevotionalApp() {
           <PopoverTrigger asChild>
             <Button className="rounded-full h-12 px-8 bg-foreground text-background hover:bg-foreground/90 font-black gap-3 transition-all">
               <Calendar className="w-5 h-5" />
-              <span>{format(currentDate, "MMMM d")}</span>
+              <span suppressHydrationWarning>{format(currentDate, "MMMM d")}</span>
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0 rounded-[2rem] border-0 overflow-hidden shadow-2xl bg-white/95 backdrop-blur-3xl">
