@@ -13,15 +13,15 @@ const intelligentFallback = (userRole: string, userName: string, query: string, 
 
     // 1. Identify Intent
     const intents = {
-        greeting: lowerQuery.includes("hello") || lowerQuery.includes("hi") || lowerQuery.includes("hey"),
+        greeting: lowerQuery.includes("hello") || lowerQuery.includes("hi") || lowerQuery.includes("hey") || lowerQuery.includes("blessings"),
         verseRequest: lowerQuery.includes("today") || lowerQuery.includes("verse") || lowerQuery.includes("focus") || lowerQuery.includes("declaration"),
-        deepDive: lowerQuery.includes("more") || lowerQuery.includes("deep") || lowerQuery.includes("mean") || lowerQuery.includes("explain") || lowerQuery.includes("history") || lowerQuery.includes("roots") || lowerQuery.includes("context"),
+        deepDive: lowerQuery.includes("more") || lowerQuery.includes("deep") || lowerQuery.includes("mean") || lowerQuery.includes("explain") || lowerQuery.includes("history") || lowerQuery.includes("roots") || lowerQuery.includes("context") || lowerQuery.includes("discuss") || lowerQuery.includes("ask") || lowerQuery.includes("question") || lowerQuery.includes("start"),
         progress: lowerQuery.includes("streak") || lowerQuery.includes("progress") || lowerQuery.includes("completed") || lowerQuery.includes("stat"),
         churchInfo: lowerQuery.includes("location") || lowerQuery.includes("time") || lowerQuery.includes("website") || lowerQuery.includes("contact")
     };
 
     // 2. Conversational State
-    const alreadyGreeted = chatHistory?.some(msg => msg.role === 'ai' && msg.content.includes("Hello"));
+    const alreadyGreeted = chatHistory?.some(msg => msg.role === 'ai' && msg.content.includes("Hello") || msg.content.includes("Blessings"));
     let response = "";
 
     // 3. Generation Logic
@@ -31,14 +31,29 @@ const intelligentFallback = (userRole: string, userName: string, query: string, 
 
     if (d) {
         if (isFollowUp && intents.deepDive) {
-            if (d.scripture?.includes("6:37")) {
-                response += `Looking deeper into Luke 6:37, the concept of "pardon" isn't just about debt; it's the Greek word *apolyete*, which implies untying a knot. Imagine the resentment as a tight knot—forgiveness is the act of unraveling it so grace can flow again. How does that picture change your outlook today?`;
+            // Contextual discussion logic
+            if (lowerQuery.includes("ask") || lowerQuery.includes("discuss") || lowerQuery.includes("question")) {
+                const questions = [
+                    `Based on today's focus ("${d.dailyFocus}"), what is one area of your life where you feel reconciliation is hardest right now?`,
+                    `The scripture ${d.scripture} tells us to be reconciled. When you think about this passage, which specific word or phrase stands out to you as a challenge?`,
+                    `In the context of ${d.theme}, how do you think God is inviting you to change your perspective on a relationship you're currently praying about?`,
+                    `Reflecting on "${d.text?.trim()?.substring(0, 50)}...", which part of this promise feels most urgent for your soul today?`
+                ];
+                // Select a question based on query length/content for pseudo-randomness
+                const qIdx = (lowerQuery.length + historyCount) % questions.length;
+                response += questions[qIdx];
+            } else if (d.scripture?.includes("6:37") || d.scripture?.includes("5:23")) {
+                if (d.scripture.includes("6:37")) {
+                    response += `Looking deeper into ${d.scripture}, the word "pardon" (apolyete) implies untying a knot. Imagine resentment as a tight knot in your heart—forgiveness is the act of unraveling it. Since we are in **Week ${d.week}: ${d.theme}**, how does this "untying" change your outlook today?`;
+                } else {
+                    response += `In Matthew 5:23-24, Jesus emphasizes that spiritual offerings are secondary to relational peace. The word "first" (proton) suggests that reconciliation is the prerequisite for true worship. How does this priority shift your focus for this week's theme of **${d.theme}**?`;
+                }
             } else {
-                response += `That's a great desire for depth. In ${d.scripture}, we are exploring the theme of ${d.theme}. This passage was written to remind us that our faith is our strength. Based on your ${s?.currentStreak || 0}-day momentum, you are building the exact habits needed for this transformation.`;
+                response += `That's a great desire for depth. In ${d.scripture}, we are exploring **${d.theme}**. This passage reminds us that our faith is our strength. Based on your ${s?.currentStreak || 0}-day momentum, you are building the exact habits needed for this transformation. What specific part of this passage stands out to you?`;
             }
         } else if (intents.verseRequest || !isFollowUp) {
             const dateStr = contextPayload.currentDate ? new Date(contextPayload.currentDate).toLocaleDateString() : "today";
-            response += `Today is ${dateStr}, and we are centering our hearts on **${d.weekTheme}**. \n\n**The Focus:** *"${d.dailyFocus}"*\n**Scripture:** ${d.scripture}\n\n`;
+            response += `Today is ${dateStr}, and we are centering our hearts on **Week ${d.week}: ${d.theme}**. \n\n**The Focus:** *"${d.dailyFocus}"*\n**Scripture:** ${d.scripture}\n\n`;
             if (s?.completedToday) {
                 response += `I see you've already completed your journal—wonderful discipline! Is there a specific part of this verse you'd like to dive deeper into?`;
             } else {
@@ -50,11 +65,9 @@ const intelligentFallback = (userRole: string, userName: string, query: string, 
     // Capture diagnostic mode info but make it specific
     if (response === "") {
         if (intents.progress && s) {
-            response = `You are doing great! You have a **${s.currentStreak}-day streak**. Every day in the Word is a step toward transformation.`;
-        } else if (userRole === 'owner') {
-             response = `Blessings, ${userName}! As the platform owner, I see you are exploring our Kingdom tools. You can complete your profile identity to help us understand your gifts, or link your family for Junior Church check-ins. How can I guide your transformation today?`;
+            response = `You are doing great! You have a **${s.currentStreak}-day streak**. Every day in the Word is a step toward transformation. Keep standing on the promises!`;
         } else {
-            response = `I hear you, ${userName}. As your Spiritual Assistant, I'm here to help you navigate this week's theme. Whether you want to discuss a verse, check your progress, or need prayer, just ask. What's on your heart right now?`;
+            response = `I hear you, ${userName}. As your Spiritual Assistant, I'm here to help you navigate this week's theme${d ? ` of **${d.theme}**` : ''}. \n\nWhether you want to discuss a verse, check your progress, or need prayer, just ask. What's on your heart right now?`;
         }
     }
 
@@ -66,7 +79,7 @@ const getAIModel = () => {
     if (!key || key === "YOUR_GEMINI_API_KEY" || key.trim() === "") return null;
     if (!model) {
         genAI = new GoogleGenerativeAI(key);
-        model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
     }
     return model;
 };
@@ -170,21 +183,26 @@ export const AIService = {
         const fullPrompt = `${SYSTEM_PROMPT}\n\n${contextStr}\n\nCONVERSATION HISTORY:\n${historyStr}\n\nUSER QUESTION: ${query}\n\nRESPONSE:`;
 
         const aiModel = getAIModel();
+        console.log(`[AI SERVICE] Initializing with: ${aiModel ? 'GEMINI_REAL' : 'INTELLIGENT_FALLBACK'}`);
 
         if (aiModel) {
             try {
                 const result = await aiModel.generateContent(fullPrompt);
                 const response = await result.response;
                 const text = response.text();
-                if (text && text.length > 5) return text;
+                if (text && text.length > 5) {
+                    console.log("[AI SERVICE] Real AI Response Successful");
+                    return text;
+                }
                 throw new Error("Empty AI response");
-            } catch (err) {
-                console.error("Gemini Production Error:", err);
+            } catch (err: any) {
+                console.warn("[AI SERVICE] Real AI Failed, Using Fallback. Reason:", err.message);
                 return intelligentFallback(userRole, userName, query, contextPayload, chatHistory);
             }
         }
 
         // Diagnostic Fallback for lack of API Key
+        console.log("[AI SERVICE] No API Key Found, Executing Contextual Fallback");
         const fallbackValue = intelligentFallback(userRole, userName, query, contextPayload, chatHistory);
 
         return new Promise<string>((resolve) => {
