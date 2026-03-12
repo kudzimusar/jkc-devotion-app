@@ -5,69 +5,69 @@ let genAI: any = null;
 let model: any = null;
 
 const intelligentFallback = (userRole: string, userName: string, query: string, contextPayload?: any, chatHistory?: { role: string, content: string }[]): string => {
-    const lowerQuery = query.toLowerCase();
+    const lowerQuery = query.toLowerCase().trim();
     const historyCount = chatHistory?.length || 0;
     const isFollowUp = historyCount > 0;
     const d = contextPayload?.devotion;
     const s = contextPayload?.stats;
 
+    // Safety extractions
+    const themeName = d?.week_theme || d?.theme || "Reconciliation";
+    const weekNum = d?.week || (themeName.includes("Forgiveness") ? 1 : themeName.includes("Reconciliation") ? 2 : 3);
+    const scripture = d?.scripture || "the current passage";
+
     // 1. Identify Intent
     const intents = {
-        greeting: lowerQuery.includes("hello") || lowerQuery.includes("hi") || lowerQuery.includes("hey") || lowerQuery.includes("blessings"),
+        greeting: lowerQuery.includes("hello") || lowerQuery.includes("hi") || lowerQuery.includes("hey") || lowerQuery.includes("blessings") || lowerQuery.includes("morning"),
         verseRequest: lowerQuery.includes("today") || lowerQuery.includes("verse") || lowerQuery.includes("focus") || lowerQuery.includes("declaration"),
         deepDive: lowerQuery.includes("more") || lowerQuery.includes("deep") || lowerQuery.includes("mean") || lowerQuery.includes("explain") || lowerQuery.includes("history") || lowerQuery.includes("roots") || lowerQuery.includes("context") || lowerQuery.includes("discuss") || lowerQuery.includes("ask") || lowerQuery.includes("question") || lowerQuery.includes("start"),
+        affirmation: ["ok", "yes", "sure", "fine", "cool", "alright", "amen", "true", "i will", "yep", "yeah"].some(token => lowerQuery === token || lowerQuery.startsWith(token + " ")),
+        spiritual: ["god", "jesus", "lord", "holy spirit", "faith", "spirit", "bible", "prayer"].some(token => lowerQuery.includes(token)),
         progress: lowerQuery.includes("streak") || lowerQuery.includes("progress") || lowerQuery.includes("completed") || lowerQuery.includes("stat"),
-        churchInfo: lowerQuery.includes("location") || lowerQuery.includes("time") || lowerQuery.includes("website") || lowerQuery.includes("contact")
     };
 
     // 2. Conversational State
-    const alreadyGreeted = chatHistory?.some(msg => msg.role === 'ai' && msg.content.includes("Hello") || msg.content.includes("Blessings"));
+    const alreadyGreeted = chatHistory?.some(msg => msg.role === 'ai' && (msg.content.includes("Hello") || msg.content.includes("Blessings")));
     let response = "";
 
-    // 3. Generation Logic
+    // 3. Logic Flow
     if ((intents.greeting || !isFollowUp) && !alreadyGreeted) {
-        response += `Hello ${userName}! It's a blessing to walk with you today. `;
+        response += `Hello ${userName}! It's a blessing to connect with you. `;
     }
 
     if (d) {
-        if (isFollowUp && intents.deepDive) {
-            // Contextual discussion logic
-            if (lowerQuery.includes("ask") || lowerQuery.includes("discuss") || lowerQuery.includes("question")) {
-                const questions = [
-                    `Based on today's focus ("${d.dailyFocus}"), what is one area of your life where you feel reconciliation is hardest right now?`,
-                    `The scripture ${d.scripture} tells us to be reconciled. When you think about this passage, which specific word or phrase stands out to you as a challenge?`,
-                    `In the context of ${d.theme}, how do you think God is inviting you to change your perspective on a relationship you're currently praying about?`,
-                    `Reflecting on "${d.text?.trim()?.substring(0, 50)}...", which part of this promise feels most urgent for your soul today?`
-                ];
-                // Select a question based on query length/content for pseudo-randomness
-                const qIdx = (lowerQuery.length + historyCount) % questions.length;
-                response += questions[qIdx];
-            } else if (d.scripture?.includes("6:37") || d.scripture?.includes("5:23")) {
-                if (d.scripture.includes("6:37")) {
-                    response += `Looking deeper into ${d.scripture}, the word "pardon" (apolyete) implies untying a knot. Imagine resentment as a tight knot in your heart—forgiveness is the act of unraveling it. Since we are in **Week ${d.week}: ${d.theme}**, how does this "untying" change your outlook today?`;
-                } else {
-                    response += `In Matthew 5:23-24, Jesus emphasizes that spiritual offerings are secondary to relational peace. The word "first" (proton) suggests that reconciliation is the prerequisite for true worship. How does this priority shift your focus for this week's theme of **${d.theme}**?`;
-                }
-            } else {
-                response += `That's a great desire for depth. In ${d.scripture}, we are exploring **${d.theme}**. This passage reminds us that our faith is our strength. Based on your ${s?.currentStreak || 0}-day momentum, you are building the exact habits needed for this transformation. What specific part of this passage stands out to you?`;
-            }
+        if (isFollowUp && (intents.deepDive || intents.affirmation || intents.spiritual)) {
+            // Conversational questions to maintain engagement
+            const questions = [
+                `Since we are in **Week ${weekNum}: ${themeName}**, how do you feel God is specifically challenging you regarding ${scripture} right now?`,
+                `The declaration for today is "${d.dailyFocus}". When you speak those words, which part feels like a promise you're holding onto?`,
+                `In the context of ${themeName}, is there someone or something on your heart that you'd like us to pray for or discuss further?`,
+                `Looking at ${scripture}, do you find it easy or difficult to apply this focus to your current season?`
+            ];
+            // Cycle questions based on query + history for variety
+            const qIdx = (lowerQuery.length + historyCount) % questions.length;
+            response += questions[qIdx];
         } else if (intents.verseRequest || !isFollowUp) {
             const dateStr = contextPayload.currentDate ? new Date(contextPayload.currentDate).toLocaleDateString() : "today";
-            response += `Today is ${dateStr}, and we are centering our hearts on **Week ${d.week}: ${d.theme}**. \n\n**The Focus:** *"${d.dailyFocus}"*\n**Scripture:** ${d.scripture}\n\n`;
+            response += `Today is ${dateStr}. We are focusing on **Week ${weekNum}: ${themeName}**. \n\n**Focus:** *"${d.dailyFocus}"*\n**Scripture:** ${scripture}\n\n`;
             if (s?.completedToday) {
-                response += `I see you've already completed your journal—wonderful discipline! Is there a specific part of this verse you'd like to dive deeper into?`;
+                response += `I see your journal is done—great discipline! Is there a specific thought from your reflection you'd like to share?`;
             } else {
-                response += `You're on a **${s?.currentStreak || 0}-day streak**. Before you complete your journal, would you like to discuss what "${d.theme}" looks like in your life right now?`;
+                response += `You've got a **${s?.currentStreak || 0}-day streak** going. Before you finish journaling, what does "${themeName}" mean to you today?`;
             }
         }
     }
 
-    // Capture diagnostic mode info but make it specific
+    // 4. Catch-All - Still Conversational
     if (response === "") {
-        if (intents.progress && s) {
-            response = `You are doing great! You have a **${s.currentStreak}-day streak**. Every day in the Word is a step toward transformation. Keep standing on the promises!`;
+        if (intents.spiritual) {
+            response = `Amen. God is definitely in the details of our transformation. Speaking of ${themeName}, how are you finding the ${scripture} study today?`;
+        } else if (intents.affirmation) {
+            response = `Absolutely. Let's keep that momentum. Based on today's focus ("${d?.dailyFocus || 'the theme'}"), what's one practical step you're taking today?`;
+        } else if (intents.progress && s) {
+            response = `You're standing strong with a **${s.currentStreak}-day streak**! Every single day counts toward your 90-day transformation. What can I help you with next?`;
         } else {
-            response = `I hear you, ${userName}. As your Spiritual Assistant, I'm here to help you navigate this week's theme${d ? ` of **${d.theme}**` : ''}. \n\nWhether you want to discuss a verse, check your progress, or need prayer, just ask. What's on your heart right now?`;
+            response = `I'm with you, ${userName}. As we walk through **${themeName}** this week, what's been the most impactful thing you've learned from ${scripture}?`;
         }
     }
 
@@ -76,6 +76,8 @@ const intelligentFallback = (userRole: string, userName: string, query: string, 
 
 const getAIModel = () => {
     const key = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    console.log(`[AI SERVICE] Diagnostic - API Key check: ${key ? `Found (Len: ${key.length})` : 'MISSING'}`);
+    
     if (!key || key === "YOUR_GEMINI_API_KEY" || key.trim() === "") return null;
     if (!model) {
         genAI = new GoogleGenerativeAI(key);
@@ -92,9 +94,15 @@ const SERVICE_ACCOUNT_INFO = {
     name: process.env.GEMINI_SERVICE_ACCOUNT_NAME || "gemini-devotion-bot"
 };
 
-const SYSTEM_PROMPT = `You are the "Japan Kingdom Church (JKC) Spiritual Assistant", a specialized AI shepherd. 
-Your goal is to guide members through their "90 Days of Transformation" journey and onboard them to the Church OS platform.
+const SYSTEM_PROMPT = `You are the Spiritual Assistant for Japan Kingdom Church (JKC), a natural, warm, and deeply insightful companion. 
+Your goal is to shepherd users through their 90-day transformation (March-May 2026).
 
+CONVERSATIONAL PROTOCOLS:
+1. NEVER be robotic. Avoid repetitive "I hear you" or "Blessings" greetings in follow-up messages.
+2. BE PROACTIVE. If a user gives a short answer like "ok", "yes", or "God", interpret their current devotional context and ask a deep, meaningful question to keep the transformation moving.
+3. DATA GROUNDING: Use the provided [CONTEXT] (Stats, Week, Scripture) to make your answers specific. Don't just give general advice; connect it to the current Week's theme.
+4. If a user asks a question, answer with theological depth (mention Greek/Hebrew roots if relevant) but keep it accessible.
+5. You are currently in the 90-day cycle. Today's date and the user's progress should inform your tone (encouraging for long streaks, motivating for new starters).
 ONBOARDING & FEATURE GUIDANCE:
 - If a user is NEW (Visitor/Pending), prioritize guiding them through the setup:
   1. Complete their Identity Profile (Gender, Birthdate, Contact).
@@ -187,7 +195,21 @@ export const AIService = {
 
         if (aiModel) {
             try {
-                const result = await aiModel.generateContent(fullPrompt);
+                const result = await aiModel.generateContent({
+                    contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+                    generationConfig: {
+                        temperature: 0.7,
+                        topK: 40,
+                        topP: 0.95,
+                        maxOutputTokens: 1024,
+                    },
+                    safetySettings: [
+                        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+                        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+                        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+                        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+                    ]
+                });
                 const response = await result.response;
                 const text = response.text();
                 if (text && text.length > 5) {

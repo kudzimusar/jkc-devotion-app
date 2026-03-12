@@ -35,7 +35,12 @@ export function GlobalAIAssistant({ user, userRole, stats, devotion, currentDate
 
             const contextPayload = {
                 stats: stats ? { currentStreak: stats.streak, completedToday: isCompletedToday } : null,
-                devotion: devotion ? { weekTheme: `Week ${devotion.week}: ${devotion.week_theme}`, dailyFocus: devotion.declaration, scripture: devotion.scripture, text: devotion.fullScriptureText || devotion.scripture, theme: devotion.theme } : null,
+                devotion: devotion ? { 
+                    ...devotion, 
+                    weekTheme: `Week ${devotion.week}: ${devotion.week_theme}`,
+                    dailyFocus: devotion.declaration, 
+                    text: devotion.fullScriptureText || devotion.scripture
+                } : null,
                 currentDate: currentDate?.toISOString(),
                 currentPage: currentPage || window.location.pathname,
                 membershipStatus: userRole || ' visitor'
