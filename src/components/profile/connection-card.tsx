@@ -135,9 +135,9 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
             });
 
             if (isAdmin && targetId) {
-                const { data: notesData } = await supabase.from('pastoral_notes').select('notes').eq('member_id', targetId).single();
+                const { data: notesData } = await supabase.from('pastoral_notes').select('note').eq('member_user_id', targetId).maybeSingle();
                 if (notesData) {
-                    setPastoralNotes(notesData.notes || '');
+                    setPastoralNotes(notesData.note || '');
                 }
             }
 
@@ -224,7 +224,11 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
             setSavingNotes(true);
             const { error } = await supabase
                 .from('pastoral_notes')
-                .upsert({ member_id: profile.id, notes: pastoralNotes, updated_at: new Date().toISOString() });
+                .upsert({ 
+                    member_user_id: profile.id, 
+                    note: pastoralNotes, 
+                    updated_at: new Date().toISOString() 
+                }, { onConflict: 'member_user_id,category,is_resolved' });
 
             if (error) throw error;
             toast.success("Pastoral notes saved successfully!");

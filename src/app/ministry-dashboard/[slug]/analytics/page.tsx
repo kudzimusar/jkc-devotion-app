@@ -43,10 +43,10 @@ export default function AnalyticsPage() {
         // Compute local stats from reports
         const attendanceLogs = (reports || []).filter(r => r.report_type === 'attendance');
         const eventLogs = (reports || []).filter(r => r.report_type === 'event');
-        const totalAttendees = attendanceLogs.reduce((sum, r) => sum + (r.report_data?.total_attendees || 0), 0);
+        const totalAttendees = attendanceLogs.reduce((sum, r) => sum + (r.data?.total_attendees || 0), 0);
         const avgAttendance = attendanceLogs.length > 0 ? Math.round(totalAttendees / attendanceLogs.length) : 0;
-        const totalSalvations = attendanceLogs.reduce((sum, r) => sum + (r.report_data?.salvations || 0), 0);
-        const totalFirstTimers = attendanceLogs.reduce((sum, r) => sum + (r.report_data?.first_timers || 0), 0);
+        const totalSalvations = attendanceLogs.reduce((sum, r) => sum + (r.data?.salvations || 0), 0);
+        const totalFirstTimers = attendanceLogs.reduce((sum, r) => sum + (r.data?.first_timers || 0), 0);
 
         setAnalytics({ ...analyticsData, totalAttendees, avgAttendance, totalSalvations, totalFirstTimers, attendanceLogs, eventLogs });
         setRecentReports(reports || []);
@@ -126,10 +126,10 @@ export default function AnalyticsPage() {
                                     <div className="flex-1">
                                         <p className="text-white font-bold text-sm capitalize">{report.report_type} Report</p>
                                         {report.report_type === 'attendance' && (
-                                            <p className="text-white/40 text-xs mt-0.5">{report.report_data?.total_attendees} attendees · {report.report_data?.service_type}</p>
+                                            <p className="text-white/40 text-xs mt-0.5">{report.data?.total_attendees} attendees · {report.data?.service_type}</p>
                                         )}
                                         {report.report_type === 'event' && (
-                                            <p className="text-white/40 text-xs mt-0.5">{report.report_data?.event_name} · {report.report_data?.event_type}</p>
+                                            <p className="text-white/40 text-xs mt-0.5">{report.data?.event_name} · {report.data?.event_type}</p>
                                         )}
                                         {report.report_type !== 'attendance' && report.report_type !== 'event' && (
                                             <p className="text-white/40 text-xs mt-0.5">Custom report form</p>

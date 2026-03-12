@@ -16,6 +16,12 @@ export default function MissionControlAnnouncementsPage() {
     const [selectedMinistryId, setSelectedMinistryId] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const replyTo = (announcement: any) => {
+        setSelectedMinistryId(announcement.ministry_id);
+        setComposeTitle(`RE: ${announcement.title}`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     const fetchAnnouncements = async (orgId: string) => {
         setLoading(true);
         const { data, error } = await supabaseAdmin
@@ -138,6 +144,14 @@ export default function MissionControlAnnouncementsPage() {
                                 <p className="text-white/60 text-sm leading-relaxed whitespace-pre-wrap">{a.body}</p>
                                 {a.author?.name && (
                                     <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mt-4">Transmitted by {a.author.name}</p>
+                                )}
+                                {a.direction === 'upward' && (
+                                    <button 
+                                        onClick={() => replyTo(a)}
+                                        className="mt-4 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-colors"
+                                    >
+                                        <Send className="w-3 h-3" /> Reply Downward
+                                    </button>
                                 )}
                             </div>
                         ))}

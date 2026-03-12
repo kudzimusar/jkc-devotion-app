@@ -101,7 +101,7 @@ export default function DynamicFormRenderer({ template, ministryId, onSuccess }:
 
             if (error) throw error;
             
-            toast.success(`${template.name} submitted successfully`);
+            toast.success('Report saved and sent to Mission Control! Your leadership contribution score and ministry analytics have been updated in real time.');
             if (onSuccess) onSuccess();
             else router.refresh();
         } catch (error: any) {

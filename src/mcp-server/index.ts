@@ -7,7 +7,7 @@ import {
     ListResourcesRequestSchema,
     ReadResourceRequestSchema
 } from "@modelcontextprotocol/sdk/types.js";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import crypto from "crypto";
 import express from "express";
 import cors from "cors";
@@ -24,12 +24,7 @@ if (fs.existsSync(envPath)) {
     }
 }
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://localhost:54321";
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "dummy";
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false }
-});
+// Use singleton from lib/supabase-admin
 
 // Guard Agent 2
 async function validateApiKey(apiKey: string): Promise<boolean> {

@@ -70,21 +70,20 @@ export default function AttendancePage() {
             org_id: 'fa547adf-f820-412f-9458-d6bade11517d',
             submitted_by: user?.id,
             report_type: 'attendance',
-            report_data: reportData,
+            service_date: serviceDate,
+            data: reportData,
             status: 'submitted',
         });
 
         if (error) {
             toast.error('Failed to submit: ' + error.message);
         } else {
-            toast.success('Attendance recorded & sent to Mission Control!');
-            setSubmitted(true);
+            toast.success('Report saved and sent to Mission Control! Your leadership contribution score and ministry analytics have been updated in real time.');
             setTotalAttendees('');
             setFirstTimers('');
             setSalvations('');
             setWaterBaptisms('');
             setNotes('');
-            setSubmitted(false);
             loadRecentLogs(session.ministryId);
         }
         setSubmitting(false);
@@ -177,11 +176,11 @@ export default function AttendancePage() {
                             recentLogs.map((log) => (
                                 <div key={log.id} className="bg-[#0d1421] border border-white/10 rounded-2xl p-4 text-sm">
                                     <div className="flex justify-between items-center mb-2">
-                                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">{log.report_data?.service_type}</span>
+                                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">{log.data?.service_type}</span>
                                         <span className="text-[10px] text-white/30">{new Date(log.created_at).toLocaleDateString()}</span>
                                     </div>
-                                    <p className="text-white font-bold text-lg">{log.report_data?.total_attendees} <span className="text-white/40 text-xs font-normal">attendees</span></p>
-                                    {log.report_data?.first_timers > 0 && <p className="text-white/40 text-xs mt-1">{log.report_data.first_timers} first timers · {log.report_data?.salvations || 0} salvations</p>}
+                                    <p className="text-white font-bold text-lg">{log.data?.total_attendees} <span className="text-white/40 text-xs font-normal">attendees</span></p>
+                                    {log.data?.first_timers > 0 && <p className="text-white/40 text-xs mt-1">{log.data.first_timers} first timers · {log.data?.salvations || 0} salvations</p>}
                                 </div>
                             ))
                         )}

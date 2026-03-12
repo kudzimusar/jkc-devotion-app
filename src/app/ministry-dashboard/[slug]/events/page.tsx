@@ -54,27 +54,30 @@ export default function EventsPage() {
 
         const { data: { user } } = await supabase.auth.getUser();
 
+        const reportData = {
+            event_name: eventName,
+            event_type: eventType,
+            event_date: eventDate,
+            location,
+            expected_attendees: parseInt(expectedAttendees) || 0,
+            budget: parseFloat(budget) || 0,
+            description,
+        };
+
         const { error } = await supabase.from('ministry_reports').insert({
             ministry_id: session.ministryId,
             org_id: 'fa547adf-f820-412f-9458-d6bade11517d',
             submitted_by: user?.id,
             report_type: 'event',
-            report_data: {
-                event_name: eventName,
-                event_type: eventType,
-                event_date: eventDate,
-                location,
-                expected_attendees: parseInt(expectedAttendees) || 0,
-                budget: parseFloat(budget) || 0,
-                description,
-            },
+            service_date: eventDate,
+            data: reportData,
             status: 'submitted',
         });
 
         if (error) {
             toast.error('Failed to submit: ' + error.message);
         } else {
-            toast.success('Event logged & sent to Mission Control!');
+            toast.success('Report saved and sent to Mission Control! Your leadership contribution score and ministry analytics have been updated in real time.');
             setEventName(''); setEventDate(''); setLocation('');
             setExpectedAttendees(''); setBudget(''); setDescription('');
             loadEvents(session.ministryId);
@@ -177,12 +180,12 @@ export default function EventsPage() {
                             events.map(ev => (
                                 <div key={ev.id} className="bg-[#0d1421] border border-white/10 rounded-2xl p-4">
                                     <div className="flex justify-between items-start gap-2 mb-2">
-                                        <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{ev.report_data?.event_type}</span>
-                                        <span className="text-[10px] text-white/30">{ev.report_data?.event_date}</span>
+                                        <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{ev.data?.event_type}</span>
+                                        <span className="text-[10px] text-white/30">{ev.data?.event_date}</span>
                                     </div>
-                                    <p className="text-white font-bold text-sm">{ev.report_data?.event_name}</p>
-                                    {ev.report_data?.location && <p className="text-white/40 text-xs mt-1">{ev.report_data.location}</p>}
-                                    {ev.report_data?.expected_attendees > 0 && <p className="text-white/40 text-xs mt-1">{ev.report_data.expected_attendees} expected</p>}
+                                    <p className="text-white font-bold text-sm">{ev.data?.event_name}</p>
+                                    {ev.data?.location && <p className="text-white/40 text-xs mt-1">{ev.data.location}</p>}
+                                    {ev.data?.expected_attendees > 0 && <p className="text-white/40 text-xs mt-1">{ev.data.expected_attendees} expected</p>}
                                 </div>
                             ))
                         )}

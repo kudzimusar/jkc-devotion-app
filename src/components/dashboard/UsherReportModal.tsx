@@ -42,19 +42,21 @@ export function UsherReportModal({ registeredCount, onReportSubmitted }: UsherRe
             const org_id = profile?.org_id;
 
             const { error } = await supabase.from('ministry_reports').insert([{
-                org_id,
-                ministry_name: "Ushers",
-                report_date: new Date().toISOString().split('T')[0],
-                submitted_by: user.id as any,
-                metrics: {
+                org_id: org_id || 'fa547adf-f820-412f-9458-d6bade11517d',
+                ministry_id: '03361b54-1169-4ad5-8119-84b8712ba0a6', // Ushering Ministry
+                submitted_by: user.id,
+                report_type: 'attendance',
+                service_date: new Date().toISOString().split('T')[0],
+                data: {
                     ...formData,
                     total: totalManual,
                     adults: formData.adults_count,
                     children: formData.children_count,
                     first_timers: formData.first_timers_count,
-                    returning: formData.returning_visitors_count
+                    returning: formData.returning_visitors_count,
+                    summary: `Sunday Service Report: ${totalManual} total headcount.`
                 },
-                summary: `Sunday Service Report: ${totalManual} total headcount.`
+                status: 'submitted'
             }]);
 
             if (error) throw error;

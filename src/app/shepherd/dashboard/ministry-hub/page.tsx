@@ -15,6 +15,7 @@ import { supabase } from "@/lib/supabase";
 export default function MinistryHub() {
     const [loading, setLoading] = useState(true);
     const [ministriesHealth, setMinistriesHealth] = useState<any[]>([]);
+    const [equipmentReports, setEquipmentReports] = useState<any[]>([]);
     const [stats, setStats] = useState({ active: 0, critical: 0, volunteers: 0, reports: 0 });
 
     const loadData = async () => {
@@ -44,6 +45,13 @@ export default function MinistryHub() {
                 }, { active: 0, critical: 0, volunteers: 0, reports: 0 });
 
                 if (v) setStats(v);
+
+                // Load equipment reports
+                const { data: equipData } = await supabaseAdmin
+                    .from('vw_equipment_reports')
+                    .select('*')
+                    .limit(10);
+                setEquipmentReports(equipData || []);
             }
         } catch (err: any) {
             console.error(err);
@@ -153,6 +161,73 @@ export default function MinistryHub() {
                         </div>
                     </div>
                 ))}
+            </div>
+
+            {/* Equipment & Resources Intelligence */}
+            <div className="bg-[#111827] border border-white/10 rounded-[2.5rem] p-8 shadow-2xl">
+                <div className="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 className="text-2xl font-black tracking-tighter uppercase">Equipment & Resources</h2>
+                        <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mt-1">Maintenance & Asset Integrity Matrix</p>
+                    </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="border-b border-white/5">
+                                <th className="pb-4 text-[10px] font-black text-white/40 uppercase tracking-widest">Ministry</th>
+                                <th className="pb-4 text-[10px] font-black text-white/40 uppercase tracking-widest">Equipment</th>
+                                <th className="pb-4 text-[10px] font-black text-white/40 uppercase tracking-widest">Status</th>
+                                <th className="pb-4 text-[10px] font-black text-white/40 uppercase tracking-widest">Urgency</th>
+                                <th className="pb-4 text-[10px] font-black text-white/40 uppercase tracking-widest text-right">Last Reported</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                            {equipmentReports.map((report) => (
+                                <tr key={report.id} className="group transition-colors hover:bg-white/5">
+                                    <td className="py-4">
+                                        <p className="font-bold text-white text-sm">{report.ministry_name}</p>
+                                    </td>
+                                    <td className="py-4">
+                                        <p className="text-white font-medium text-sm">{report.equipment_name}</p>
+                                        <p className="text-[10px] text-white/40 font-bold uppercase truncate max-w-[200px]">
+                                            {report.damage_description || 'No damage reported'}
+                                        </p>
+                                    </td>
+                                    <td className="py-4">
+                                        <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border ${
+                                            report.equipment_status === 'Working'
+                                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                                : report.equipment_status === 'Needs Repair' || report.repair_required === 'true'
+                                                ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                                : 'bg-red-500/10 text-red-400 border-red-500/20'
+                                        }`}>
+                                            {report.equipment_status}
+                                        </span>
+                                    </td>
+                                    <td className="py-4">
+                                         <span className={`text-[10px] font-black uppercase tracking-widest ${
+                                            report.urgency === 'Critical' ? 'text-red-400' : report.urgency === 'Medium' ? 'text-amber-400' : 'text-white/40'
+                                         }`}>
+                                             {report.urgency || 'Normal'}
+                                         </span>
+                                    </td>
+                                    <td className="py-4 text-right">
+                                        <p className="text-xs font-bold text-white/60">
+                                            {new Date(report.service_date).toLocaleDateString()}
+                                        </p>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                {equipmentReports.length === 0 && (
+                    <div className="text-center py-12">
+                        <p className="text-white/20 text-xs font-black uppercase tracking-widest italic">All systems operational. No asset alerts detected.</p>
+                    </div>
+                )}
             </div>
 
             {ministriesHealth.length === 0 && !loading && (

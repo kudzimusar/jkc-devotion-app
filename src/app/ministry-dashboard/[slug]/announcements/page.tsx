@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { MinistryAuth, MinistrySession } from '@/lib/ministry-auth';
 import { toast } from 'sonner';
 import { AlertCircle, ArrowUpCircle, MessageCircle, Send } from 'lucide-react';
+import Link from 'next/link';
 
 export default function MinistryAnnouncementsPage() {
     const params = useParams();
@@ -69,7 +70,7 @@ export default function MinistryAnnouncementsPage() {
             });
 
             if (error) throw error;
-            toast.success("Update sent to Mission Control");
+            toast.success("Your message has been delivered to Mission Control.");
             setComposeTitle('');
             setComposeBody('');
             fetchAnnouncements(session);
@@ -90,9 +91,14 @@ export default function MinistryAnnouncementsPage() {
         <div className="min-h-screen bg-[#080c14] text-white p-6 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-violet-900/10 to-transparent pointer-events-none" />
             <div className="max-w-4xl mx-auto space-y-8 relative z-10">
-                <div>
-                    <h1 className="text-2xl font-black text-white tracking-wide">{session.ministryName} Announcements</h1>
-                    <p className="text-white/40 text-sm mt-1 font-medium uppercase tracking-widest">Two-way communication with Mission Control.</p>
+                <div className="flex items-center justify-between border-b border-white/10 pb-6">
+                    <div>
+                        <h1 className="text-2xl font-black text-white tracking-wide">{session.ministryName} Announcements</h1>
+                        <p className="text-white/40 text-sm mt-1 font-medium uppercase tracking-widest">Two-way communication with Mission Control.</p>
+                    </div>
+                     <Link href={`/ministry-dashboard/${slug}`} className="text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white transition-colors border border-white/10 px-4 py-2 rounded-full bg-[#0d1421]">
+                        ← Back to Ministry Hub
+                    </Link>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -107,7 +113,7 @@ export default function MinistryAnnouncementsPage() {
                         {announcements.map(a => (
                             <div key={a.id} className={`p-5 rounded-3xl border shadow-xl ${
                                 a.direction === 'downward' 
-                                    ? 'bg-violet-950/20 border-violet-500/30' 
+                                    ? 'bg-violet-950/20 border-violet-500/30 border-l-4 border-l-violet-500' 
                                     : 'bg-[#0d1421] border-white/10'
                             }`}>
                                 <div className="flex items-center justify-between mb-2">
@@ -120,7 +126,7 @@ export default function MinistryAnnouncementsPage() {
                                         <span className={`text-[10px] font-black uppercase tracking-widest ${
                                             a.direction === 'downward' ? 'text-violet-400' : 'text-emerald-400'
                                         }`}>
-                                            {a.direction === 'downward' ? 'FROM ADMIN' : 'MY UPDATE'}
+                                            {a.direction === 'downward' ? 'FROM LEADERSHIP' : 'MY UPDATE'}
                                         </span>
                                     </div>
                                     <span className="text-[10px] text-white/30 font-medium">
