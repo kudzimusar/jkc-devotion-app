@@ -26,6 +26,7 @@ const NAV_ITEMS = [
     { label: "Growth Intelligence", icon: TrendingUp, path: "/growth" },
     { label: "AI Command Center", icon: Sparkles, path: "/ai" },
     { label: "Ministry Hub", icon: LayoutGrid, path: "/ministry-hub" },
+    { label: "Ministry Comms", icon: Megaphone, path: "/ministries/announcements" },
     { label: "Newsletters", icon: Megaphone, path: "/newsletters" },
     { label: "Reports & Data", icon: FileText, path: "/reports" },
     { label: "Settings", icon: Settings, path: "/settings" },
@@ -67,7 +68,8 @@ export function Sidebar() {
                         const fullPath = `${BASE_PATH}${item.path}`;
                         const isActive = item.path === ""
                             ? pathname === BASE_PATH || pathname === BASE_PATH + "/"
-                            : pathname.includes(item.path);
+                            : pathname === `${BASE_PATH}${item.path}` || 
+                              pathname === `${BASE_PATH}${item.path}/`;
                         const Icon = item.icon;
 
                         return (

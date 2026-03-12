@@ -28,7 +28,7 @@ export default function MinistryAnnouncementsPage() {
                 *,
                 author:profiles(name)
             `)
-            .or(`ministry_id.is.null,ministry_id.eq.${sess.ministryId}`)
+            .eq('ministry_id', sess.ministryId)
             .order('created_at', { ascending: false })
             .limit(50);
             

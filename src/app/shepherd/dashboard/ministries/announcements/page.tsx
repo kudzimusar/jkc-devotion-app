@@ -69,23 +69,41 @@ export default function MissionControlAnnouncementsPage() {
             const { data: { user } } = await supabase.auth.getUser();
             const { data: profile } = await supabase.from('profiles').select('org_id').eq('id', user?.id).single();
             
-            const { error } = await supabaseAdmin.from('ministry_announcements').insert({
-                org_id: profile?.org_id,
-                ministry_id: selectedMinistryId, // null means broadcast
-                author_id: user?.id,
-                direction: 'downward',
-                title: composeTitle,
-                body: composeBody,
-                priority: 'normal'
-            });
+            if (selectedMinistryId) {
+                // Single ministry transmission
+                const { error } = await supabaseAdmin.from('ministry_announcements').insert({
+                    org_id: profile?.org_id,
+                    ministry_id: selectedMinistryId,
+                    author_id: user?.id,
+                    direction: 'downward',
+                    title: composeTitle,
+                    body: composeBody,
+                    priority: 'normal'
+                });
+                if (error) throw error;
+            } else {
+                // Broadcast to all ministries - iterate and insert specific rows
+                // This ensures all ministries can see the broadcast under RLS
+                const inserts = ministries.map(m => ({
+                    org_id: profile?.org_id,
+                    ministry_id: m.id,
+                    author_id: user?.id,
+                    direction: 'downward',
+                    title: composeTitle,
+                    body: composeBody,
+                    priority: 'normal'
+                }));
 
-            if (error) throw error;
-            toast.success("Announcement broadcasted");
+                const { error } = await supabaseAdmin.from('ministry_announcements').insert(inserts);
+                if (error) throw error;
+            }
+
+            toast.success(selectedMinistryId ? "Announcement sent" : "Broadcast transmitted to all ministries");
             setComposeTitle('');
             setComposeBody('');
             loadData();
         } catch (error: any) {
-            toast.error(error.message || "Failed to broadcast");
+            toast.error(error.message || "Failed to transmit");
         } finally {
             setIsSubmitting(false);
         }
