@@ -100,9 +100,22 @@ export default function NewsletterManager() {
 
         setIsPostingFeed(true);
         try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Not authenticated");
+
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('org_id')
+                .eq('id', user.id)
+                .single();
+            
+            if (!profile?.org_id) throw new Error("No organization found for user");
+
             const { error } = await supabaseAdmin
                 .from('member_feed_items')
                 .insert({
+                    org_id: profile.org_id,
+                    created_by: user.id,
                     feed_type: feedData.feed_type,
                     title: feedData.title,
                     body: feedData.body,
