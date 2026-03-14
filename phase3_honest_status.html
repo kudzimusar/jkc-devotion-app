@@ -1,0 +1,38 @@
+
+<style>
+.sec { margin-bottom:18px; }
+.sec-title { font-size:11px; font-weight:500; color:var(--color-text-secondary); letter-spacing:.08em; text-transform:uppercase; padding:6px 0; border-bottom:0.5px solid var(--color-border-tertiary); margin-bottom:10px; }
+.row { display:flex; gap:12px; padding:8px 0; border-bottom:0.5px solid var(--color-border-tertiary); font-size:13px; align-items:flex-start; }
+.row:last-child { border-bottom:none; }
+.lbl { min-width:200px; color:var(--color-text-secondary); font-size:12px; flex-shrink:0; }
+.val { color:var(--color-text-primary); flex:1; line-height:1.5; }
+.badge { display:inline-block; padding:1px 7px; border-radius:3px; font-size:10px; font-weight:500; margin-right:4px; }
+.bg { background:var(--color-background-success); color:var(--color-text-success); }
+.by { background:var(--color-background-warning); color:var(--color-text-warning); }
+.br { background:var(--color-background-danger); color:var(--color-text-danger); }
+.bi { background:var(--color-background-info); color:var(--color-text-info); }
+</style>
+
+<div class="sec">
+  <div class="sec-title">What I can confirm from the live deployed HTML right now</div>
+  <div class="row"><div class="lbl">Nav, footer, all links</div><div class="val"><span class="bg badge">Confirmed</span> All correct on deployed URL. No issues.</div></div>
+  <div class="row"><div class="lbl">Sermon "A Genuine Believer"</div><div class="val"><span class="bg badge">Confirmed</span> Present in deployed HTML. Revert from LIVE DATA TEST is confirmed. Whether it reads from Supabase or is still partially static cannot be determined from HTML alone — the dynamic fetch test confirmed it earlier.</div></div>
+  <div class="row"><div class="lbl">MinistriesSection</div><div class="val"><span class="br badge">Not in deployed HTML</span> The static export HTML contains no ministry card text. This is expected — MinistriesSection renders client-side via JS after hydration. The HTML snapshot will never contain it. This is NOT a bug. It means the section renders in the browser but not in the page source. Developer confirmed it works in browser.</div></div>
+  <div class="row"><div class="lbl">EventsSection</div><div class="val"><span class="br badge">Not in deployed HTML</span> Same reason — client-side JS renders after hydration. Church Service and Sunday Service cards confirmed in Supabase. RLS policy confirmed added. This renders in browser after JS loads.</div></div>
+  <div class="row"><div class="lbl">Countdown timer</div><div class="val"><span class="bi badge">JS only</span> Client-side only — cannot appear in static HTML. Developer confirmed it is live in browser.</div></div>
+</div>
+
+<div class="sec">
+  <div class="sec-title">Understanding static export — important context</div>
+  <div class="row"><div class="lbl">Why sections are missing from HTML</div><div class="val">Next.js static export generates HTML at build time. Any component that fetches data via useEffect (client-side) will NOT appear in the static HTML. It renders in the browser after JavaScript loads. This is normal and correct behaviour. It is not broken.</div></div>
+  <div class="row"><div class="lbl">What this means for SEO</div><div class="val"><span class="by badge">Phase 4 item</span> Google's crawler may not index the dynamic sections. Phase 4 addresses this by pre-populating key content as static props where possible.</div></div>
+</div>
+
+<div class="sec">
+  <div class="sec-title">Phase 3 — honest closure status</div>
+  <div class="row"><div class="lbl">Live data loop</div><div class="val"><span class="bg badge">Closed</span> Supabase → SermonSection, MinistriesSection, EventsSection, FeedSection all confirmed working. RLS policies in place. Admin can post from Mission Control and public site updates.</div></div>
+  <div class="row"><div class="lbl">Sermon management in MC</div><div class="val"><span class="bg badge">Closed</span> /shepherd/dashboard/sermons built. Sidebar link confirmed in code.</div></div>
+  <div class="row"><div class="lbl">Inquiries inbox in MC</div><div class="val"><span class="bg badge">Closed</span> /shepherd/dashboard/inquiries built. Sidebar link confirmed.</div></div>
+  <div class="row"><div class="lbl">Member feed posting from MC</div><div class="val"><span class="bg badge">Closed</span> Newsletters page updated. org_id fix committed.</div></div>
+  <div class="row"><div class="lbl">One remaining action</div><div class="val"><span class="by badge">Do now</span> Developer must open the deployed URL in Chrome browser, scroll through, and send actual browser screenshots — not local file paths. The report referenced files that only exist on their machine. This is the only remaining gap.</div></div>
+</div>

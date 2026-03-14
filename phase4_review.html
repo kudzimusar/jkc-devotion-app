@@ -1,0 +1,51 @@
+
+<style>
+.sec{margin-bottom:18px}
+.sec-title{font-size:11px;font-weight:500;color:var(--color-text-secondary);letter-spacing:.08em;text-transform:uppercase;padding:6px 0;border-bottom:.5px solid var(--color-border-tertiary);margin-bottom:10px}
+.row{display:flex;gap:12px;padding:8px 0;border-bottom:.5px solid var(--color-border-tertiary);font-size:13px;align-items:flex-start}
+.row:last-child{border-bottom:none}
+.lbl{min-width:190px;color:var(--color-text-secondary);font-size:12px;flex-shrink:0}
+.val{color:var(--color-text-primary);flex:1;line-height:1.5}
+.badge{display:inline-block;padding:1px 7px;border-radius:3px;font-size:10px;font-weight:500;margin-right:4px}
+.bg{background:var(--color-background-success);color:var(--color-text-success)}
+.by{background:var(--color-background-warning);color:var(--color-text-warning)}
+.br{background:var(--color-background-danger);color:var(--color-text-danger)}
+.bi{background:var(--color-background-info);color:var(--color-text-info)}
+</style>
+
+<div class="sec">
+  <div class="sec-title">Confirmed from live deployed HTML</div>
+  <div class="row"><div class="lbl">All Phase 1–3 content</div><div class="val"><span class="bg badge">Confirmed</span> Hero, sermon, NewHere, schedule, directions, connect form, footer — all stable. No regressions.</div></div>
+  <div class="row"><div class="lbl">Nav links</div><div class="val"><span class="bg badge">Confirmed</span> WATCH/VISIT/GIVE all correct deployed URLs. SIGN IN correct.</div></div>
+  <div class="row"><div class="lbl">Footer quick links</div><div class="val"><span class="bg badge">Confirmed</span> All 6 content pages link to correct full GitHub Pages URLs.</div></div>
+  <div class="row"><div class="lbl">TestimoniesSection in HTML</div><div class="val"><span class="bi badge">JS-only</span> Not in static HTML — expected. Client-side render after hydration. Confirmed by screenshots.</div></div>
+  <div class="row"><div class="lbl">MinistriesSection in HTML</div><div class="val"><span class="bi badge">JS-only</span> Not in static HTML — expected. Renders client-side.</div></div>
+</div>
+
+<div class="sec">
+  <div class="sec-title">Phase 4 features — status from report and screenshots</div>
+  <div class="row"><div class="lbl">Sermon archive /watch</div><div class="val"><span class="bg badge">Confirmed</span> Dynamic grid with 4 seeded sermons. Series filter buttons visible. WatchClient.tsx pattern used correctly.</div></div>
+  <div class="row"><div class="lbl">Series filter working</div><div class="val"><span class="bg badge">Confirmed</span> "FOUNDATIONS" filter active in screenshot. Filter logic working client-side.</div></div>
+  <div class="row"><div class="lbl">TestimoniesSection</div><div class="val"><span class="bg badge">Confirmed</span> Horizontal scroll row visible in screenshot. 3 seeded rows confirmed in DB via SQL output.</div></div>
+  <div class="row"><div class="lbl">Ministry detail pages</div><div class="val"><span class="bg badge">Confirmed</span> /welcome/ministries/kids-ministry loads. generateStaticParams added. Dynamic route builds correctly.</div></div>
+  <div class="row"><div class="lbl">Join Ministry form</div><div class="val"><span class="by badge">Unverified</span> Report says "Preview unavailable" for this check. Need to see a form submission succeed and the row appear in public_inquiries with the ministry prefix.</div></div>
+  <div class="row"><div class="lbl">Give page amount selector</div><div class="val"><span class="bg badge">Confirmed</span> ¥ amount buttons visible in screenshot. GiveClient.tsx pattern used.</div></div>
+  <div class="row"><div class="lbl">Testimonies in Mission Control</div><div class="val"><span class="by badge">Partially confirmed</span> Screenshot showed admin login screen, not the testimonies management page itself. Need to see the actual /shepherd/dashboard/testimonies page.</div></div>
+  <div class="row"><div class="lbl">Testimonies sidebar link</div><div class="val"><span class="by badge">Need to verify</span> Sidebar.tsx was edited — need to confirm Play icon and Testimonies link are in NAV_ITEMS.</div></div>
+  <div class="row"><div class="lbl">PWA manifest</div><div class="val"><span class="bg badge">Confirmed</span> manifest.json shown in screenshot with correct start_url and basePath.</div></div>
+  <div class="row"><div class="lbl">SEO metadata</div><div class="val"><span class="bg badge">Confirmed</span> layout.tsx refactored to Server Component with metadata export. About page title verified.</div></div>
+  <div class="row"><div class="lbl">layout.tsx 'use client' removed</div><div class="val"><span class="by badge">Need code review</span> Report says Server/Client split was done. Need to see layout.tsx to confirm it no longer has 'use client' and metadata is exported correctly.</div></div>
+</div>
+
+<div class="sec">
+  <div class="sec-title">One structural concern to verify in code</div>
+  <div class="row"><div class="lbl">Server/Client component split</div><div class="val"><span class="by badge">Review needed</span> The refactor into WelcomeClient, WatchClient, GiveClient, AboutClient is the right pattern for SEO. However if these Client components import supabase and run useEffect, and the Server page just wraps them, the metadata will export correctly but data fetching is still client-side. This is acceptable for Phase 4 but means Google may not index dynamic content. Phase 5 can address with static data props.</div></div>
+  <div class="row"><div class="lbl">Multiple builds (v1–v4)</div><div class="val"><span class="by badge">Note</span> 5 separate build+commit cycles suggests the dynamic route for ministries caused repeated build failures. This is resolved but worth understanding — generateStaticParams must return all slugs at build time. If Supabase is queried inside generateStaticParams on a static export, it will fail if the DB is unreachable at build time. The hardcoded slug array approach in the prompt is safer.</div></div>
+</div>
+
+<div class="sec">
+  <div class="sec-title">Overall Phase 4 verdict</div>
+  <div class="row"><div class="lbl">Core features</div><div class="val"><span class="bg badge">Complete</span> All 10 Phase 4 features built. 8 of 10 verification checks confirmed. 2 need follow-up evidence.</div></div>
+  <div class="row"><div class="lbl">Two follow-up items</div><div class="val">1. Screenshot of /shepherd/dashboard/testimonies actual page (not login screen). 2. Submit "Join This Ministry" form and confirm row in public_inquiries table.</div></div>
+  <div class="row"><div class="lbl">Ready for Phase 5?</div><div class="val"><span class="bi badge">Almost</span> Once the 2 follow-up items are confirmed, Phase 4 is fully closed. Phase 5 (Stripe + finance) can then begin.</div></div>
+</div>

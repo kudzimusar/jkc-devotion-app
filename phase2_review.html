@@ -1,0 +1,49 @@
+
+<style>
+.sec { margin-bottom:18px; }
+.sec-title { font-size:11px; font-weight:500; color:var(--color-text-secondary); letter-spacing:.08em; text-transform:uppercase; padding:6px 0; border-bottom:0.5px solid var(--color-border-tertiary); margin-bottom:10px; }
+.row { display:flex; gap:12px; padding:7px 0; border-bottom:0.5px solid var(--color-border-tertiary); font-size:13px; align-items:flex-start; }
+.row:last-child { border-bottom:none; }
+.lbl { min-width:180px; color:var(--color-text-secondary); font-size:12px; flex-shrink:0; }
+.val { color:var(--color-text-primary); flex:1; line-height:1.5; }
+.badge { display:inline-block; padding:1px 7px; border-radius:3px; font-size:10px; font-weight:500; margin-right:4px; }
+.bg { background:var(--color-background-success); color:var(--color-text-success); }
+.by { background:var(--color-background-warning); color:var(--color-text-warning); }
+.bi { background:var(--color-background-info); color:var(--color-text-info); }
+.br { background:var(--color-background-danger); color:var(--color-text-danger); }
+</style>
+
+<div class="sec">
+  <div class="sec-title">Navigation & Footer — code review</div>
+  <div class="row"><div class="lbl">Desktop nav links</div><div class="val"><span class="bg badge">Pass</span> WATCH / VISIT / GIVE all correct hrefs. Tracking, font-black, hover state correct.</div></div>
+  <div class="row"><div class="lbl">Mobile drawer</div><div class="val"><span class="bg badge">Pass</span> All 6 links present. Full-screen black overlay. Close button top-right. SIGN IN at bottom. Closes on link click.</div></div>
+  <div class="row"><div class="lbl">Footer contact data</div><div class="val"><span class="bg badge">Pass</span> Address, email, phone, all 5 socials (YouTube, Facebook, Instagram, Twitter, TikTok) — all correct.</div></div>
+  <div class="row"><div class="lbl">Footer quick links</div><div class="val"><span class="by badge">Fix needed</span> <code>Link href="/welcome/about"</code> — missing basePath. On GitHub Pages these 404. Must be <code>href="/jkc-devotion-app/welcome/about"</code> for all 6 content page links. Or use the <code>BP</code> basePath helper already in the codebase.</div></div>
+  <div class="row"><div class="lbl">Nav links (same issue)</div><div class="val"><span class="by badge">Fix needed</span> <code>href="/welcome/watch"</code> etc — same missing basePath issue affects desktop nav and mobile drawer. Must match pattern used in TopNav: <code>${BP}/welcome/watch</code>.</div></div>
+  <div class="row"><div class="lbl">Logo href in nav</div><div class="val"><span class="by badge">Fix needed</span> <code>Link href="/welcome"</code> — missing basePath. Should be <code>/jkc-devotion-app/welcome</code>.</div></div>
+  <div class="row"><div class="lbl">Client Login in footer</div><div class="val"><span class="by badge">Fix needed</span> <code>Link href="/"</code> — should be <code>/jkc-devotion-app/</code> to match how the devotion app root is referenced elsewhere.</div></div>
+  <div class="row"><div class="lbl">TikTok in footer</div><div class="val"><span class="by badge">Minor</span> Rendered as text "TIKTOK" because lucide-react has no TikTok icon. Acceptable for now — can replace with an SVG icon in a polish pass.</div></div>
+</div>
+
+<div class="sec">
+  <div class="sec-title">Phase 2 content — confirmed from report</div>
+  <div class="row"><div class="lbl">SundayCheckIn extracted</div><div class="val"><span class="bg badge">Done</span> Shows on /welcome Sundays only. Guest prompt included.</div></div>
+  <div class="row"><div class="lbl">FeedSection on /welcome</div><div class="val"><span class="bg badge">Done</span> Visible logged-in, hidden logged-out. Reads member_feed_items.</div></div>
+  <div class="row"><div class="lbl">EventsSection</div><div class="val"><span class="bg badge">Done</span> Column name fix applied (name→title, event_date→date). Returns null if no events.</div></div>
+  <div class="row"><div class="lbl">/welcome/about</div><div class="val"><span class="bg badge">Done</span> History, vision/mission, 12-point faith, outreach cards.</div></div>
+  <div class="row"><div class="lbl">/welcome/our-pastor</div><div class="val"><span class="bg badge">Done</span> Bio, 4 books with Amazon links, speaking CTA.</div></div>
+  <div class="row"><div class="lbl">/welcome/staff</div><div class="val"><span class="bg badge">Done</span> 8 staff with initials avatars and roles.</div></div>
+  <div class="row"><div class="lbl">/welcome/watch</div><div class="val"><span class="bg badge">Done</span> YouTube embed, sermon details, testimonies CTA.</div></div>
+  <div class="row"><div class="lbl">/welcome/visit</div><div class="val"><span class="bg badge">Done</span> Directions, schedule, what to expect, Plan My Visit.</div></div>
+  <div class="row"><div class="lbl">/welcome/give</div><div class="val"><span class="bg badge">Done</span> Two giving cards, Malachi scripture quote.</div></div>
+</div>
+
+<div class="sec">
+  <div class="sec-title">What Phase 3 adds — the live data + Elevation-level upgrades</div>
+  <div class="row"><div class="lbl">public_sermons table</div><div class="val"><span class="bi badge">Phase 3</span> Admin posts new sermon in Mission Control → /welcome homepage auto-updates. No more hardcoded sermon data.</div></div>
+  <div class="row"><div class="lbl">Sermon admin panel</div><div class="val"><span class="bi badge">Phase 3</span> New page in /shepherd/dashboard for posting sermon title, speaker, YouTube URL, date.</div></div>
+  <div class="row"><div class="lbl">Events from Mission Control</div><div class="val"><span class="bi badge">Phase 3</span> EventsSection already reads live. Admin posts events in /shepherd/dashboard/events → appears on /welcome automatically. Verify the existing events page supports this.</div></div>
+  <div class="row"><div class="lbl">member_feed_items from admin</div><div class="val"><span class="bi badge">Phase 3</span> Verify admin can post to member_feed_items from Mission Control so the FeedSection on /welcome always has fresh content.</div></div>
+  <div class="row"><div class="lbl">public_inquiries in admin</div><div class="val"><span class="bi badge">Phase 3</span> Contact form submissions from /welcome need to be visible in Mission Control so admin can respond.</div></div>
+  <div class="row"><div class="lbl">Elevation-style upgrades</div><div class="val"><span class="bi badge">Phase 3</span> Animated sermon card, ministry cards section on /welcome, testimonies video row, countdown to next Sunday service.</div></div>
+</div>

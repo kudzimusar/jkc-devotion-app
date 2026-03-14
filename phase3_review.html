@@ -1,0 +1,39 @@
+
+<style>
+.sec { margin-bottom:18px; }
+.sec-title { font-size:11px; font-weight:500; color:var(--color-text-secondary); letter-spacing:.08em; text-transform:uppercase; padding:6px 0; border-bottom:0.5px solid var(--color-border-tertiary); margin-bottom:10px; }
+.row { display:flex; gap:12px; padding:8px 0; border-bottom:0.5px solid var(--color-border-tertiary); font-size:13px; align-items:flex-start; }
+.row:last-child { border-bottom:none; }
+.lbl { min-width:200px; color:var(--color-text-secondary); font-size:12px; flex-shrink:0; }
+.val { color:var(--color-text-primary); flex:1; line-height:1.5; }
+.badge { display:inline-block; padding:1px 7px; border-radius:3px; font-size:10px; font-weight:500; margin-right:4px; }
+.bg { background:var(--color-background-success); color:var(--color-text-success); }
+.by { background:var(--color-background-warning); color:var(--color-text-warning); }
+.bi { background:var(--color-background-info); color:var(--color-text-info); }
+.br { background:var(--color-background-danger); color:var(--color-text-danger); }
+</style>
+
+<div class="sec">
+  <div class="sec-title">Confirmed from live deployed site fetch</div>
+  <div class="row"><div class="lbl">All Phase 1 & 2 content</div><div class="val"><span class="bg badge">Live</span> Hero, sermon, schedule, directions, connect form, footer — all present and correct on deployed URL.</div></div>
+  <div class="row"><div class="lbl">Nav links</div><div class="val"><span class="bg badge">Live</span> WATCH/VISIT/GIVE all resolve to correct full GitHub Pages URLs.</div></div>
+  <div class="row"><div class="lbl">Footer links</div><div class="val"><span class="bg badge">Live</span> All 6 content page links have correct full basePath URLs.</div></div>
+  <div class="row"><div class="lbl">Sermon on live site</div><div class="val"><span class="by badge">Static export issue</span> "A Genuine Believer" / Elder Sanna Patterson is showing — but this is a static export. The Supabase fetch runs client-side after load. Cannot confirm from HTML alone whether it is reading from DB or still hardcoded. Need the developer to change the sermon title in Supabase and confirm the live site updates.</div></div>
+  <div class="row"><div class="lbl">MinistriesSection on live site</div><div class="val"><span class="br badge">Not visible</span> The deployed HTML does not contain any ministry cards section. Either it did not deploy yet, or it is not rendering due to a Supabase fetch issue on the public read of ministries table.</div></div>
+  <div class="row"><div class="lbl">EventsSection on live site</div><div class="val"><span class="br badge">Not visible</span> No event cards in the deployed HTML. The test event may have been inserted but the public_read_events RLS policy or column name mismatch may still be blocking the fetch.</div></div>
+  <div class="row"><div class="lbl">Service countdown</div><div class="val"><span class="by badge">Cannot confirm</span> Countdown is JS-rendered client-side — not visible in static HTML. Developer must screenshot the live deployed URL showing the countdown numbers.</div></div>
+</div>
+
+<div class="sec">
+  <div class="sec-title">Confirmed from report (localhost only — not yet verified on deployed)</div>
+  <div class="row"><div class="lbl">Sermon management page</div><div class="val"><span class="by badge">Localhost only</span> /shepherd/dashboard/sermons built and shown in screenshot — but local path reference, not deployed URL. Need to verify it exists on main branch.</div></div>
+  <div class="row"><div class="lbl">Inquiries inbox</div><div class="val"><span class="by badge">Localhost only</span> /shepherd/dashboard/inquiries shown in screenshot — same issue.</div></div>
+  <div class="row"><div class="lbl">Member feed posting</div><div class="val"><span class="by badge">Localhost only</span> Success toast shown but org_id fix was committed separately. Need confirmation the deployed version includes the fix.</div></div>
+  <div class="row"><div class="lbl">Sidebar Sermons/Inquiries links</div><div class="val"><span class="by badge">Unconfirmed</span> Not mentioned explicitly in report. Need Sidebar.tsx to verify these were added.</div></div>
+</div>
+
+<div class="sec">
+  <div class="sec-title">Two critical issues to resolve before Phase 4</div>
+  <div class="row"><div class="lbl">MinistriesSection missing</div><div class="val"><span class="br badge">Must fix</span> Not rendering on the live deployed site. Likely cause: ministries table has no public SELECT RLS policy, so the Supabase fetch returns empty and the fallback hardcoded data is also not rendering — suggests a component-level error. Need MinistriesSection.tsx file to diagnose.</div></div>
+  <div class="row"><div class="lbl">EventsSection missing</div><div class="val"><span class="br badge">Must fix</span> Not rendering on live site despite test event being inserted. EventsSection.tsx is querying title/date but actual columns are name/event_date — the fix was applied to the query but may not have been rebuilt and deployed. Need EventsSection.tsx to confirm.</div></div>
+</div>
