@@ -68,6 +68,75 @@ export default function GiveClient() {
           </motion.p>
         </div>
       </section>
+      
+      {/* Fix 9: Pastor Marcel Video */}
+      <section className="max-w-4xl mx-auto px-6 py-8">
+        <div
+          className="relative w-full rounded-[2.5rem] overflow-hidden
+                      border border-white/10 shadow-2xl"
+          style={{ paddingTop: '56.25%' }}
+        >
+          <video
+            className="absolute inset-0 w-full h-full object-cover"
+            src="https://video.wixstatic.com/video/91bb3f_5e20958a3d664fc89eff9dcef222dd9a/1080p/mp4/file.mp4"
+            controls
+            playsInline
+          />
+        </div>
+        <p className="text-center text-white/30 text-xs font-black
+                     tracking-widest uppercase mt-4">
+          A message from Pastor Marcel
+        </p>
+      </section>
+
+      {/* Fix 10: Legal Tax Status */}
+      <section className="max-w-3xl mx-auto px-6 py-8 space-y-6">
+        <p className="text-white/70 text-base leading-relaxed font-medium">
+          Japan Kingdom Church operates both as a recognized 501(c)(3)
+          nonprofit organization in the USA as{' '}
+          <strong className="text-white">
+            Kingdom Garden International Ministries
+          </strong>{' '}
+          and as a nonprofit organization in Japan as{' '}
+          <strong className="text-white">
+            Japan Kingdom Builders, Inc
+          </strong>.
+        </p>
+        <ul className="space-y-4">
+          <li className="flex gap-4 items-start">
+            <span className="text-[var(--primary)] font-black mt-1 shrink-0">
+              •
+            </span>
+            <p className="text-white/60 text-base leading-relaxed">
+              <strong className="text-white/80">USA Donations:</strong> All
+              donations made to our 501(c)(3) organization in the USA are
+              tax-deductible to the full extent allowed by law.
+            </p>
+          </li>
+          <li className="flex gap-4 items-start">
+            <span className="text-[var(--primary)] font-black mt-1 shrink-0">
+              •
+            </span>
+            <p className="text-white/60 text-base leading-relaxed">
+              <strong className="text-white/80">
+                International Donations:
+              </strong>{' '}
+              Donations made directly to our nonprofit organization in Japan,
+              while appreciated, are not tax-deductible under U.S. tax law,
+              even if the payment is made in USD and converted to JPY.
+            </p>
+          </li>
+        </ul>
+        <p className="text-white/60 text-base leading-relaxed font-medium">
+          Your generous contributions support our mission and various
+          programs, helping us make a positive impact in our community
+          both in the USA and Japan.
+        </p>
+        <p className="text-white/80 text-base font-black">
+          Thank you for your support!
+        </p>
+      </section>
+
 
       <div className="max-w-screen-xl mx-auto px-6 pb-32 space-y-40">
         
@@ -94,10 +163,10 @@ export default function GiveClient() {
                </div>
                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
-                    { usd: '$20', jpy: '¥2,500' },
-                    { usd: '$40', jpy: '¥5,000' },
-                    { usd: '$80', jpy: '¥10,000' },
-                    { usd: '$800', jpy: '¥100,000' }
+                    { usd: '$25.00', jpy: '¥2,500' },
+                    { usd: '$50.00', jpy: '¥5,000' },
+                    { usd: '$100.00', jpy: '¥10,000' },
+                    { usd: '$1,000.00', jpy: '¥100,000' }
                   ].map((pair, idx) => (
                     <div key={idx} className="bg-black/20 p-4 rounded-2xl border border-white/5 text-center">
                       <p className="text-xs font-black text-white/30 uppercase mb-1">{pair.usd}</p>
@@ -124,7 +193,7 @@ export default function GiveClient() {
                  <p className="text-white/40 text-sm font-medium">Official giving portal for Japan Kingdom Church</p>
                </div>
                <a 
-                 href="https://tithe.ly/give?c=123" 
+                 href="https://tithe.ly/give_new/www/#/tithely/give-one-time/4010992" 
                  target="_blank" 
                  className="block w-full bg-[var(--primary)] text-white font-black py-6 rounded-2xl text-sm tracking-[0.3em] shadow-xl shadow-[var(--primary)]/20 hover:scale-105 active:scale-95 transition-all"
                >
@@ -150,14 +219,25 @@ export default function GiveClient() {
                 <p className="text-white/40 text-xs font-bold uppercase tracking-widest">Fast Mobile Giving</p>
               </div>
               <div className="pt-4 flex items-center justify-between">
-                <span className="text-lg font-black text-white">$JKCTokyo</span>
+                <span className="text-lg font-black text-white">$JapanKingdomChurch</span>
                 <button 
-                  onClick={() => copyToClipboard('$JKCTokyo', 'cashapp')}
+                  onClick={() => copyToClipboard('$JapanKingdomChurch', 'cashapp')}
                   className="p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-all"
                 >
                   {copiedField === 'cashapp' ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-white/20" />}
                 </button>
               </div>
+              <a 
+                href="https://cash.app/$JapanKingdomChurch"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 block text-center bg-emerald-500/10 border
+                           border-emerald-500/20 text-emerald-400 font-black
+                           text-[10px] tracking-widest uppercase py-3 rounded-xl
+                           hover:bg-emerald-500/20 transition-all"
+              >
+                GIVE VIA CASH APP →
+              </a>
             </div>
 
             {/* Zelle */}
@@ -168,14 +248,30 @@ export default function GiveClient() {
                 <p className="text-white/40 text-xs font-bold uppercase tracking-widest">Direct Bank Transfer</p>
               </div>
               <div className="pt-4 flex items-center justify-between">
-                <span className="text-sm font-black text-white">finance@jkc.church</span>
+                <div className="space-y-1">
+                  <span className="text-sm font-black text-white">finance.jkchurch@gmail.com</span>
+                  <p className="text-[10px] text-white/30 font-bold">
+                    Kingdom Garden International Ministries
+                  </p>
+                </div>
                 <button 
-                   onClick={() => copyToClipboard('finance@jkc.church', 'zelle')}
+                   onClick={() => copyToClipboard('finance.jkchurch@gmail.com', 'zelle')}
                    className="p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-all"
                 >
                   {copiedField === 'zelle' ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-white/20" />}
                 </button>
               </div>
+              <a 
+                href="https://www.zellepay.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 block text-center bg-violet-500/10 border
+                           border-violet-500/20 text-violet-400 font-black
+                           text-[10px] tracking-widest uppercase py-3 rounded-xl
+                           hover:bg-violet-500/20 transition-all"
+              >
+                GIVE VIA ZELLE →
+              </a>
             </div>
 
             {/* Wells Fargo */}
@@ -184,6 +280,9 @@ export default function GiveClient() {
               <div className="space-y-1">
                 <h3 className="text-xl font-black">Wells Fargo</h3>
                 <p className="text-white/40 text-xs font-bold uppercase tracking-widest">Wire Transfer / Deposit</p>
+                <p className="text-[11px] text-white/30 font-bold leading-relaxed">
+                  Kingdom Garden International Ministries
+                </p>
               </div>
               <div className="space-y-3 pt-4">
                  <div className="flex justify-between items-center text-[10px] font-black tracking-widest">
@@ -193,13 +292,16 @@ export default function GiveClient() {
                       <button onClick={() => copyToClipboard('125200057', 'wf_rtn')} className="hover:text-white transition-colors"><Copy className="w-3 h-3" /></button>
                     </div>
                  </div>
-                 <div className="flex justify-between items-center text-[10px] font-black tracking-widest">
+                  <div className="flex justify-between items-center text-[10px] font-black tracking-widest">
                     <span className="text-white/20 uppercase">Account</span>
                     <div className="flex items-center gap-3">
-                      <span className="text-white/60">8123456789</span>
-                      <button onClick={() => copyToClipboard('8123456789', 'wf_acc')} className="hover:text-white transition-colors"><Copy className="w-3 h-3" /></button>
+                      <span className="text-white/60">7520856647</span>
+                      <button onClick={() => copyToClipboard('7520856647', 'wf_acc')} className="hover:text-white transition-colors"><Copy className="w-3 h-3" /></button>
                     </div>
                  </div>
+                 <p className="text-[10px] text-white/20 leading-relaxed mt-2">
+                    3300 Arctic Blvd ste 201-1433, Anchorage, AK 99503-4579
+                  </p>
               </div>
             </div>
           </div>
@@ -216,7 +318,7 @@ export default function GiveClient() {
                 <h3 className="text-2xl font-black">General Fund</h3>
                 <p className="text-white/40 text-sm font-medium">Standard PayPal missions giving</p>
               </div>
-              <a href="https://paypal.me/JKCTokyo" target="_blank" className="bg-blue-600 text-white font-black px-12 py-4 rounded-full text-[10px] tracking-[0.2em] hover:bg-blue-500 transition-all">GIVE VIA PAYPAL</a>
+              <a href="https://www.paypal.com/paypalme/japankingdombuilders" target="_blank" className="bg-blue-600 text-white font-black px-12 py-4 rounded-full text-[10px] tracking-[0.2em] hover:bg-blue-500 transition-all">GIVE VIA PAYPAL</a>
            </div>
 
            {/* Personal Love Offering */}
@@ -228,7 +330,7 @@ export default function GiveClient() {
                 <h3 className="text-2xl font-black">Pastor Love Offering</h3>
                 <p className="text-white/40 text-sm font-medium">Personal appreciation for the Pastor & Family</p>
               </div>
-              <a href="https://paypal.me/JonteFamily" target="_blank" className="bg-pink-600 text-white font-black px-12 py-4 rounded-full text-[10px] tracking-[0.2em] hover:bg-pink-500 transition-all">SEND LOVE OFFERING</a>
+              <a href="https://www.paypal.com/paypalme/pastormarcelsfamily" target="_blank" className="bg-pink-600 text-white font-black px-12 py-4 rounded-full text-[10px] tracking-[0.2em] hover:bg-pink-500 transition-all">SEND LOVE OFFERING</a>
            </div>
         </section>
 
@@ -248,11 +350,14 @@ export default function GiveClient() {
 
               <div className="lg:col-span-3 space-y-4">
                  {[
-                   { label: 'Bank Name', val: 'Mitsubishi UFJ Bank ( MUFG )' },
-                   { label: 'Branch', val: 'Akishima Branch ( 281 )' },
+                   { label: 'Account Name', val: 'Japan Kingdom Builders' },
+                   { label: 'Bank Name', val: 'MUFG Bank, Ltd.' },
+                   { label: 'Bank Code', val: '316' },
+                   { label: 'Branch', val: 'Fussa Branch' },
                    { label: 'Account Type', val: 'Ordinary ( Futsu )' },
                    { label: 'Account Number', val: '0286887' },
-                   { label: 'Account Name', val: 'JAPAN KINGDOM CHURCH' }
+                   { label: 'SWIFT (8 digit)', val: 'BOTKJPJT' },
+                   { label: 'SWIFT (11 digit)', val: 'BOTKJPJTXXX' },
                  ].map((item, i) => (
                    <div key={i} className="flex flex-col md:flex-row md:items-center justify-between p-6 rounded-2xl bg-white/5 border border-white/5 group hover:bg-white/10 transition-all">
                       <span className="text-[10px] font-black tracking-widest text-white/20 uppercase mb-1 md:mb-0">{item.label}</span>
@@ -304,7 +409,7 @@ export default function GiveClient() {
                   Stand with us consistently. Monthly partners enable long-term mission planning and sustainability for the JKC community.
                 </p>
               </div>
-              <a href="https://tithe.ly/give?c=123" target="_blank" className="relative z-10 inline-flex items-center gap-6 bg-white text-[oklch(0.08_0.04_255)] font-black px-12 py-6 rounded-full text-sm tracking-[0.2em] shadow-2xl hover:scale-105 active:scale-95 transition-all group">
+              <a href="https://tithe.ly/give_new/www/#/tithely/give-one-time/4010992" target="_blank" className="relative z-10 inline-flex items-center gap-6 bg-white text-[oklch(0.08_0.04_255)] font-black px-12 py-6 rounded-full text-sm tracking-[0.2em] shadow-2xl hover:scale-105 active:scale-95 transition-all group">
                 JOIN THE MISSION <ArrowRightLeft className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
               </a>
            </div>
