@@ -2,6 +2,7 @@
 
 import { MapPin, Mail, Phone, Globe, Youtube, Facebook, Instagram, Twitter } from 'lucide-react';
 import Link from 'next/link';
+import { basePath as BP } from '@/lib/utils';
 
 export default function PublicFooter() {
   const currentYear = new Date().getFullYear();
@@ -85,19 +86,19 @@ export default function PublicFooter() {
               <span>Church Website</span>
               <Globe className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
             </a>
-            <Link href="/welcome/about" className="text-white/60 hover:text-[var(--primary)] transition-colors">About Us</Link>
-            <Link href="/welcome/our-pastor" className="text-white/60 hover:text-[var(--primary)] transition-colors">Our Pastor</Link>
-            <Link href="/welcome/staff" className="text-white/60 hover:text-[var(--primary)] transition-colors">Leadership & Staff</Link>
-            <Link href="/welcome/watch" className="text-white/60 hover:text-[var(--primary)] transition-colors">Watch</Link>
-            <Link href="/welcome/visit" className="text-white/60 hover:text-[var(--primary)] transition-colors">Visit</Link>
-            <Link href="/welcome/give" className="text-white/60 hover:text-[var(--primary)] transition-colors">Give</Link>
+            <Link href={`${BP}/welcome/about`} className="text-white/60 hover:text-[var(--primary)] transition-colors">About Us</Link>
+            <Link href={`${BP}/welcome/our-pastor`} className="text-white/60 hover:text-[var(--primary)] transition-colors">Our Pastor</Link>
+            <Link href={`${BP}/welcome/staff`} className="text-white/60 hover:text-[var(--primary)] transition-colors">Leadership & Staff</Link>
+            <Link href={`${BP}/welcome/watch`} className="text-white/60 hover:text-[var(--primary)] transition-colors">Watch</Link>
+            <Link href={`${BP}/welcome/visit`} className="text-white/60 hover:text-[var(--primary)] transition-colors">Visit</Link>
+            <Link href={`${BP}/welcome/give`} className="text-white/60 hover:text-[var(--primary)] transition-colors">Give</Link>
             
             <a href="#" className="text-white/60 hover:text-[var(--primary)] transition-colors pt-2 border-t border-white/5 opacity-40">Privacy Policy</a>
             <a href="#" className="text-white/60 hover:text-[var(--primary)] transition-colors opacity-40">Terms of Service</a>
             
             <div className="pt-4 border-t border-white/5">
               <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-2">Internal</p>
-              <Link href="/" className="text-white/60 hover:text-[var(--primary)] transition-colors">Client Login</Link>
+              <Link href={`${BP}/`} className="text-white/60 hover:text-[var(--primary)] transition-colors">Client Login</Link>
             </div>
           </div>
         </div>
