@@ -44,17 +44,36 @@ export default function WatchClient() {
       </section>
 
       <div className="max-w-screen-xl mx-auto px-6 py-24 space-y-32">
-        {sermons.filter(s => s.featured)[0] && (
+        {/* Latest Featured Sermon (Big) */}
+        {sermons.length > 0 && sermons.some(s => s.featured) && (
           <section className="space-y-12">
-            <div className="space-y-4 text-center">
-              <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">FEATURED SERMON</p>
-              <h2 className="text-4xl md:text-5xl font-black italic font-serif">"{sermons.find(s => s.featured)?.title}"</h2>
-            </div>
-            <div className="glass rounded-[3rem] border border-white/10 overflow-hidden shadow-2xl">
-              <div className="aspect-video w-full bg-black">
-                <iframe className="w-full h-full" src={sermons.find(s => s.featured)?.youtube_url.replace('watch?v=', 'embed/')} title="Featured Sermon" frameBorder="0" allowFullScreen />
-              </div>
-            </div>
+            {(() => {
+              const featured = sermons.find(s => s.featured);
+              const embedUrl = featured?.youtube_url?.includes('watch?v=') 
+                ? featured.youtube_url.replace('watch?v=', 'embed/')
+                : featured?.youtube_url;
+              
+              return (
+                <>
+                  <div className="space-y-4 text-center">
+                    <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">FEATURED SERMON</p>
+                    <h2 className="text-4xl md:text-5xl font-black italic font-serif">"{featured?.title}"</h2>
+                  </div>
+                  
+                  <div className="glass rounded-[3rem] border border-white/10 overflow-hidden shadow-2xl">
+                    <div className="aspect-video w-full bg-black">
+                      <iframe 
+                        className="w-full h-full"
+                        src={embedUrl} 
+                        title="Featured Sermon"
+                        frameBorder="0"
+                        allowFullScreen
+                      />
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
           </section>
         )}
 
@@ -76,7 +95,12 @@ export default function WatchClient() {
               <div key={s.id} className="group glass rounded-[2rem] p-8 border border-white/10 hover:border-[var(--primary)]/30 transition-all flex flex-col justify-between">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <p className="text-[10px] tracking-[0.3em] font-black text-[var(--primary)] opacity-60 uppercase">{new Date(s.date).toLocaleDateString()}</p>
+                    <p 
+                      suppressHydrationWarning
+                      className="text-[10px] tracking-[0.3em] font-black text-[var(--primary)] opacity-60 uppercase"
+                    >
+                      {new Date(s.date).toLocaleDateString()}
+                    </p>
                     {s.series && <span className="bg-[var(--primary)]/10 text-[var(--primary)] text-[9px] font-black tracking-widest px-3 py-1 rounded-full uppercase">{s.series}</span>}
                   </div>
                   <h3 className="text-xl font-black leading-snug group-hover:text-[var(--primary)] transition-colors">{s.title}</h3>
