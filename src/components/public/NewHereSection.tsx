@@ -35,7 +35,7 @@ export default function NewHereSection() {
           </div>
           <div className="pt-6">
             <Link 
-              href="/jkc-devotion-app/" 
+              href="/" 
               className="inline-block border border-white/20 text-white font-black px-10 py-5 rounded-full text-xs tracking-[0.2em] group-hover:bg-white/5 group-hover:border-white/40 active:scale-95 transition-all text-center"
             >
               SIGN IN TO CHURCH OS
