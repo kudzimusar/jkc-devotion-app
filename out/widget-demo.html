@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widget Demo - Transformed Life</title>
+    <style>
+        /* HOST LEAK TEST CSS */
+        /* This CSS should aggressively target elements to ensure the widget is isolated */
+        body {
+            font-family: 'Comic Sans MS', cursive;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 2rem;
+        }
+
+        /* The following should NOT affect the widget due to Shadow DOM */
+        div {
+            background-color: red !important;
+            padding: 10px !important;
+            margin: 10px !important;
+            border: 5px solid yellow !important;
+        }
+
+        h3 {
+            color: green !important;
+            font-size: 50px !important;
+        }
+
+        p {
+            font-size: 8px !important;
+            color: purple !important;
+            text-transform: uppercase !important;
+        }
+
+        button {
+            background-color: black !important;
+            color: white !important;
+            padding: 20px !important;
+            border-radius: 0 !important;
+        }
+
+        strong,
+        span {
+            color: pink !important;
+            font-size: 100px !important;
+        }
+
+        /* The container hosting the widget */
+        .wrapper {
+            background: white !important;
+            border: 1px solid #ccc !important;
+            max-width: 800px;
+            margin: 0 auto !important;
+            border-radius: 8px !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+            padding: 2rem !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <h2 style="font-family: Arial; margin-bottom: 0;">Host Website</h2>
+        <p style="font-size: 16px !important; color: #333 !important; text-transform: none !important;">
+            This page simulates a generic host website (WordPress, Wix, etc.). The aggressive CSS rules applied globally
+            (e.g., all divs are red, paragraphs are tiny and purple) should NOT leak into the Transformed Life widget
+            below.
+        </p>
+
+        <hr style="margin: 2rem 0;">
+
+        <!-- Our Universal Web Component -->
+        <!-- Try out valid API key to test fetching -->
+        <transformed-life-widget id="tl-widget" data-api-key="demo-key" data-lang="EN" data-api-host="">
+            <!-- Keep data-api-host empty to use the same host for dev -->
+        </transformed-life-widget>
+
+        <script>
+            // Set dynamic API host so it doesn't break if port changes
+            document.getElementById('tl-widget').setAttribute('data-api-host', window.location.origin);
+        </script>
+    </div>
+
+    <!-- Script to load the widget bundle -->
+    <script src="/widget.js"></script>
+</body>
+
+</html>

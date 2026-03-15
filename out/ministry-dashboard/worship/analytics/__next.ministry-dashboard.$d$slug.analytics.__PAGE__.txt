@@ -1,0 +1,9 @@
+1:"$Sreact.fragment"
+2:I[47257,["/jkc-devotion-app/_next/static/chunks/ff1a16fafef87110.js","/jkc-devotion-app/_next/static/chunks/a2dfb6fc5208ab9b.js"],"ClientPageRoot"]
+3:I[51728,["/jkc-devotion-app/_next/static/chunks/83d0223d7cf2626b.js","/jkc-devotion-app/_next/static/chunks/a5ee180871ef6d62.js","/jkc-devotion-app/_next/static/chunks/93389c5f68ddbd6f.js","/jkc-devotion-app/_next/static/chunks/c9cb4198d473eb26.js","/jkc-devotion-app/_next/static/chunks/df2a4318daa83683.js"],"default"]
+6:I[97367,["/jkc-devotion-app/_next/static/chunks/ff1a16fafef87110.js","/jkc-devotion-app/_next/static/chunks/a2dfb6fc5208ab9b.js"],"OutletBoundary"]
+7:"$Sreact.suspense"
+0:{"buildId":"n7-3pilt2qaC7l7rymT6-","rsc":["$","$1","c",{"children":[["$","$L2",null,{"Component":"$3","serverProvidedParams":{"searchParams":{},"params":{"slug":"worship"},"promises":["$@4","$@5"]}}],[["$","script","script-0",{"src":"/jkc-devotion-app/_next/static/chunks/c9cb4198d473eb26.js","async":true}],["$","script","script-1",{"src":"/jkc-devotion-app/_next/static/chunks/df2a4318daa83683.js","async":true}]],["$","$L6",null,{"children":["$","$7",null,{"name":"Next.MetadataOutlet","children":"$@8"}]}]]}],"loading":null,"isPartial":false}
+4:{}
+5:"$0:rsc:props:children:0:props:serverProvidedParams:params"
+8:null

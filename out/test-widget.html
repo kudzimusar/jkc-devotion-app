@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformed Life Widget Demo</title>
+
+    <!-- Host Leak Test Styles -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            padding: 2rem;
+            color: #333;
+        }
+
+        /* HOST LEAK TEST: This global style should NOT leak into the widget */
+        div {
+            background: red !important;
+            border: 5px solid lime !important;
+        }
+
+        .container {
+            background: #fff !important;
+            /* To override the above for our safe background */
+            border: none !important;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+
+    <!-- Include our built widget script -->
+    <script src="/widget.js" defer></script>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Host Leak Test & Widget Demo</h2>
+        <p>
+            There is a global CSS rule styling all <code>&lt;div&gt;</code> elements with a red background and lime
+            border.
+            Because the Transformed Life widget uses a CLOSED Shadow DOM, it is completely immune to this leakage.
+        </p>
+
+        <!-- The actual Widget with valid API key -->
+        <transformed-life-widget data-api-key="LIVE_KEY_123" data-lang="EN">
+        </transformed-life-widget>
+
+        <hr style="margin: 3rem 0; border: none; border-top: 1px solid #ccc;">
+
+        <h3>Error State Test (Invalid API Key)</h3>
+        <transformed-life-widget data-api-key="INVALID_KEY" data-lang="EN">
+        </transformed-life-widget>
+
+        <hr style="margin: 3rem 0; border: none; border-top: 1px solid #ccc;">
+
+        <h3>Error State Test (Expired API Key)</h3>
+        <transformed-life-widget data-api-key="EXPIRED_KEY" data-lang="EN">
+        </transformed-life-widget>
+    </div>
+
+</body>
+
+</html>
