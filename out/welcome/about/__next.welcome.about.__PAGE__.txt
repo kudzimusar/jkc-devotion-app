@@ -2,5 +2,5 @@
 2:I[93285,["/jkc-devotion-app/_next/static/chunks/83d0223d7cf2626b.js","/jkc-devotion-app/_next/static/chunks/a5ee180871ef6d62.js","/jkc-devotion-app/_next/static/chunks/93389c5f68ddbd6f.js","/jkc-devotion-app/_next/static/chunks/df2a4318daa83683.js","/jkc-devotion-app/_next/static/chunks/e81e2c81847a439b.js","/jkc-devotion-app/_next/static/chunks/3d7f09d75f7ed214.js","/jkc-devotion-app/_next/static/chunks/54f5521b308d5e1e.js"],"default"]
 3:I[97367,["/jkc-devotion-app/_next/static/chunks/ff1a16fafef87110.js","/jkc-devotion-app/_next/static/chunks/a2dfb6fc5208ab9b.js"],"OutletBoundary"]
 4:"$Sreact.suspense"
-0:{"buildId":"pBqdHzQpqMBmwVbEeUezh","rsc":["$","$1","c",{"children":[["$","$L2",null,{}],[["$","script","script-0",{"src":"/jkc-devotion-app/_next/static/chunks/54f5521b308d5e1e.js","async":true}]],["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"loading":null,"isPartial":false}
+0:{"buildId":"ex6TOhzcfCNGXqvZoNQ7_","rsc":["$","$1","c",{"children":[["$","$L2",null,{}],[["$","script","script-0",{"src":"/jkc-devotion-app/_next/static/chunks/54f5521b308d5e1e.js","async":true}]],["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"loading":null,"isPartial":false}
 5:null
