@@ -95,7 +95,14 @@ export function GlobalAIAssistant({ user, userRole, stats, devotion, currentDate
                     {chatHistory.length === 0 && (!isAdmin) && (
                         <div className="flex flex-col items-center justify-center h-full opacity-40 text-center space-y-4 px-8">
                             <Sparkles className="w-12 h-12 text-primary" />
-                            <p className="text-sm font-medium">Hello {user?.name || 'Friend'}. I am here to guide your daily devotion, answer context about scriptures, and encourage your personal growth.</p>
+                            <p className="text-sm font-medium">
+                                {user?.name
+                                    ? `Hello ${user.name}. I am here to guide your daily devotion, answer context about scriptures, and encourage your personal growth.`
+                                    : currentPage === 'welcome' 
+                                        ? `Welcome to Japan Kingdom Church! I can help you with directions, service times, church history, giving options, or anything else about our community. What would you like to know?`
+                                        : `Hello Friend. I am here to guide your daily devotion, answer context about scriptures, and encourage your personal growth.`
+                                }
+                            </p>
                         </div>
                     )}
 

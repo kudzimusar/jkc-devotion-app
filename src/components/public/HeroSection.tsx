@@ -32,9 +32,19 @@ export default function HeroSection() {
     return () => clearInterval(interval);
   }, []);
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
+    <section 
+      className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16"
+      style={{
+        backgroundImage: 'url(/jkc-devotion-app/images/hero-background.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      {/* Dark overlay for readability */}
+      <div className="absolute inset-0 bg-black/60 z-0" />
+
       {/* Background Orbs */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         <motion.div 
           className="absolute top-[-20%] left-[-10%] w-[80%] h-[80%] bg-[var(--primary)] blur-[120px] rounded-full opacity-20"
           animate={{
@@ -90,7 +100,24 @@ export default function HeroSection() {
             SUNDAYS · PRAYER 9:30AM · SERVICE 10:30AM JST
           </div>
 
-          <div className="flex gap-6 justify-center mt-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-10">
+            <Link 
+              href="/welcome/visit"
+              className="w-full sm:w-auto bg-[var(--primary)] text-white font-black px-10 py-5 rounded-full text-xs tracking-[0.2em] shadow-2xl shadow-primary/40 hover:scale-105 active:scale-95 transition-all text-center uppercase"
+            >
+              NEW HERE?
+            </Link>
+            <a 
+              href="https://youtube.com/japankingdomchurch" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto border border-white/20 text-white font-black px-10 py-5 rounded-full text-xs tracking-[0.2em] hover:bg-white/5 hover:border-white/40 active:scale-95 transition-all text-center"
+            >
+              WATCH LIVE
+            </a>
+          </div>
+
+          <div className="flex gap-6 justify-center mt-12 scale-90 opacity-80">
             {[
               { value: timeLeft.days, label: 'DAYS' },
               { value: timeLeft.hours, label: 'HRS' },
@@ -109,23 +136,6 @@ export default function HeroSection() {
           <p className="text-[10px] text-white/30 tracking-widest uppercase mt-2">
             Until next Sunday service
           </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-10">
-            <Link 
-              href="#visit"
-              className="w-full sm:w-auto bg-[var(--primary)] text-white font-black px-10 py-5 rounded-full text-xs tracking-[0.2em] shadow-2xl shadow-primary/40 hover:scale-105 active:scale-95 transition-all text-center"
-            >
-              NEW HERE?
-            </Link>
-            <a 
-              href="https://youtube.com/japankingdomchurch" 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto border border-white/20 text-white font-black px-10 py-5 rounded-full text-xs tracking-[0.2em] hover:bg-white/5 hover:border-white/40 active:scale-95 transition-all text-center"
-            >
-              WATCH LIVE
-            </a>
-          </div>
         </motion.div>
       </div>
 

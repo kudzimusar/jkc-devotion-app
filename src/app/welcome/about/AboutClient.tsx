@@ -73,10 +73,10 @@ export default function AboutClient() {
               <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">THE BEGINNING</p>
               <h2 className="text-4xl md:text-5xl font-black italic font-serif">A Vision for Japan</h2>
             </div>
-            <div className="space-y-6 text-white/60 text-lg leading-relaxed font-bold">
-              <p>In 2017, Japan Kingdom Church held its first service in Pastor Marcel's living room...</p>
+            <div className="space-y-6 text-white/60 text-lg leading-relaxed">
+              <p>In 2017, Japan Kingdom Church held its first service in Pastor Marcel's living room, gathering those who had no knowledge of Christ from the streets. By following Christ's example of focusing on the lost, the poor, and the needy, the small house church began to grow.</p>
               
-              <p>Recognizing the need to further support the community, Pastor Marcel envisioned a church facility...</p>
+              <p>Recognizing the need to further support the community, Pastor Marcel envisioned a church facility that provided not only space for worship services but also practical support, including a shower room for the homeless. Miraculously, God led the church to a building that could accommodate both English and Japanese worship services as well as a care center.</p>
 
               {/* History Gallery */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-8">
@@ -96,7 +96,7 @@ export default function AboutClient() {
                 ))}
               </div>
 
-              <p>Since then, Japan Kingdom Church has rehabilitated over a dozen homeless individuals...</p>
+              <p>Since then, Japan Kingdom Church has rehabilitated over a dozen homeless individuals and has witnessed both foreigners and Japanese natives give their lives to Christ and become disciples.</p>
 
               {/* Service Photos */}
               <div className="grid grid-cols-3 gap-4 my-8">
@@ -110,6 +110,8 @@ export default function AboutClient() {
                   </div>
                 ))}
               </div>
+
+              <p>Japan Kingdom Church has since relocated to a prominent location just two minutes from Akishima train station, offering high visibility for more outreach to the lost. JKC continues its mission to save souls and support those in need.</p>
             </div>
           </div>
           <div className="relative aspect-square md:aspect-auto md:h-[600px] glass rounded-[3rem] border border-white/10 overflow-hidden group">

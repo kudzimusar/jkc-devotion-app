@@ -11,7 +11,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
     const PUBLIC_PATHS = [
         '/welcome', '/about', '/visit', '/our-pastor',
-        '/staff', '/give', '/watch', '/contact'
+        '/staff', '/give', '/watch', '/contact',
+        '/privacy', '/terms'
     ];
     const isPublic = PUBLIC_PATHS.some(p =>
         pathname.startsWith(`/jkc-devotion-app${p}`) || pathname === p || pathname.startsWith(`${p}/`)

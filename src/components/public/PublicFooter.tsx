@@ -13,9 +13,9 @@ export default function PublicFooter() {
         {/* Column 1: Brand */}
         <div className="space-y-6">
           <img 
-            src="/jkc-devotion-app/church-logo.png" 
-            alt="JKC Logo" 
-            className="h-12 w-auto opacity-80" 
+            src="/jkc-devotion-app/images/logo-horizontal.png" 
+            alt="Japan Kingdom Church" 
+            className="h-8 w-auto opacity-80" 
           />
           <div className="space-y-2">
             <h4 className="font-serif text-2xl font-black">Japan Kingdom Church</h4>
@@ -93,8 +93,8 @@ export default function PublicFooter() {
             <Link href="/welcome/visit" className="text-white/60 hover:text-[var(--primary)] transition-colors">Visit</Link>
             <Link href="/welcome/give" className="text-white/60 hover:text-[var(--primary)] transition-colors">Give</Link>
             
-            <a href="#" className="text-white/60 hover:text-[var(--primary)] transition-colors pt-2 border-t border-white/5 opacity-40">Privacy Policy</a>
-            <a href="#" className="text-white/60 hover:text-[var(--primary)] transition-colors opacity-40">Terms of Service</a>
+            <Link href="/welcome/privacy" className="text-white/60 hover:text-[var(--primary)] transition-colors pt-2 border-t border-white/5 opacity-40">Privacy Policy</Link>
+            <Link href="/welcome/terms" className="text-white/60 hover:text-[var(--primary)] transition-colors opacity-40">Terms of Service</Link>
             
             <div className="pt-4 border-t border-white/5">
               <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-2">Internal</p>
