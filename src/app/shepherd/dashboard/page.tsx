@@ -4,32 +4,16 @@ import { useState, useEffect } from "react";
 import { ShepherdView } from "@/components/dashboard/shepherd-view";
 import { useAdminCtx } from "./layout";
 import { supabase } from "@/lib/supabase";
+import { withRoleGuard } from "@/components/auth/withRoleGuard";
 
-export default function ShepherdDashboardPage() {
+function ShepherdDashboardPage() {
     const { userName } = useAdminCtx();
     const [dashLang, setDashLang] = useState<"EN" | "JP">("EN");
     const [userRole, setUserRole] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        async function checkRole() {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                const { data } = await supabase
-                    .from('org_members')
-                    .select('role')
-                    .eq('user_id', user.id)
-                    .single();
-
-                if (data?.role === 'ministry_leader') {
-                    window.location.href = '/shepherd/dashboard/ministry-hub';
-                    return;
-                }
-                setUserRole(data?.role || null);
-            }
-            setLoading(false);
-        }
-        checkRole();
+        setLoading(false);
     }, []);
 
     if (loading) return (
@@ -61,3 +45,5 @@ export default function ShepherdDashboardPage() {
         </div>
     );
 }
+
+export default withRoleGuard(ShepherdDashboardPage, ['admin', 'shepherd', 'super_admin', 'owner', 'pastor']);

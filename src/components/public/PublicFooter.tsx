@@ -1,129 +1,166 @@
 'use client';
-
 import { MapPin, Mail, Phone, Globe, Youtube, Facebook, Instagram, Twitter } from 'lucide-react';
 import Link from 'next/link';
-import { basePath as BP } from '@/lib/utils';
+import { usePublicTheme } from './PublicThemeWrapper';
 
 export default function PublicFooter() {
+  const { isDark } = usePublicTheme();
   const currentYear = new Date().getFullYear();
+
+  // Footer is a "Dark Island" — it ALWAYS stays Navy/White
+  const footerBg = '#1b3a6b';
+  const textColor = '#ffffff';
+  const mutedText = 'rgba(255,255,255,0.7)';
+  const dimText = 'rgba(255,255,255,0.4)';
+  const borderColor = 'rgba(255,255,255,0.1)';
 
   return (
     <footer 
       className="w-full pt-20 pb-12 relative z-10"
       style={{ 
-        background: '#1b3a6b',
-        borderTop: '1px solid rgba(255,255,255,0.1)',
-        color: 'white'
-      }}>
-      <div className="max-w-screen-xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-16">
-        {/* Column 1: Brand */}
-        <div className="space-y-6">
-          <img 
-            src="/jkc-devotion-app/images/logo-horizontal.png" 
-            alt="Japan Kingdom Church" 
-            className="h-8 w-auto opacity-80" 
-          />
-          <div className="space-y-2">
-            <h4 className="font-serif text-2xl font-black" 
-                style={{ color: 'white' }}>Japan Kingdom Church</h4>
-            <p className="text-sm max-w-sm leading-relaxed font-medium"
-               style={{ color: 'rgba(255,255,255,0.65)' }}>
-              Equipping believers for transformation and raising disciples for Christ in Japan.
+        backgroundColor: footerBg,
+        borderTop: `1px solid ${borderColor}`,
+        color: textColor
+      }}
+    >
+      <div className="max-w-screen-xl mx-auto px-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-20">
+          
+          {/* Column 1: Brand */}
+          <div className="flex flex-col gap-6">
+            <Link href="/welcome">
+              <img 
+                src="/jkc-devotion-app/images/logo-horizontal.png" 
+                alt="Japan Kingdom Church" 
+                className="h-8 w-auto block" 
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
+            </Link>
+            <div className="space-y-3">
+              <h4 className="font-serif text-2xl font-black m-0" style={{ color: textColor }}>
+                Japan Kingdom Church
+              </h4>
+              <p className="text-sm max-w-sm leading-relaxed" style={{ color: mutedText }}>
+                Equipping believers for transformation and raising disciples for Christ in Japan. Representing Christ to Japanese Society through spiritual excellence.
+              </p>
+            </div>
+            <div className="flex gap-5 pt-2">
+              {[
+                { Icon: Youtube, href: "https://www.youtube.com/@japankingdomchurch" },
+                { Icon: Facebook, href: "https://www.facebook.com/japankingdomchurch" },
+                { Icon: Instagram, href: "https://www.instagram.com/jkctokyo" },
+                { Icon: Twitter, href: "http://twitter.com/jkctokyo" }
+              ].map(({ Icon, href }, i) => (
+                <a 
+                  key={i} 
+                  href={href} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:scale-110 transition-transform"
+                  style={{ color: mutedText }}
+                >
+                  <Icon size={20} />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Column 2: Contact Info */}
+          <div className="flex flex-col gap-8">
+            <h5 className="font-black uppercase tracking-[0.3em] text-[10px]" style={{ color: dimText }}>
+              Contact & Location
+            </h5>
+            <div className="flex flex-col gap-6">
+              <div className="flex gap-4 items-start">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border"
+                     style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderColor: borderColor }}>
+                  <MapPin className="w-4 h-4" style={{ color: '#f5a623' }} />
+                </div>
+                <div className="text-sm">
+                  <p className="font-bold m-0" style={{ color: textColor }}>〒196-0015 東京都昭島市昭和町2-1-6</p>
+                  <p className="m-0 mt-1" style={{ color: mutedText }}>TE Bldg. 3F, Akishima-shi, Tokyo</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-4 items-start">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border"
+                     style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderColor: borderColor }}>
+                  <Mail className="w-4 h-4" style={{ color: '#f5a623' }} />
+                </div>
+                <div className="text-sm">
+                  <p className="font-bold m-0" style={{ color: textColor }}>jkc.contact@gmail.com</p>
+                  <p className="m-0 mt-1" style={{ color: mutedText }}>Get in touch for prayers or info</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 items-start">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border"
+                     style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderColor: borderColor }}>
+                  <Phone className="w-4 h-4" style={{ color: '#f5a623' }} />
+                </div>
+                <div className="text-sm">
+                  <p className="font-bold m-0" style={{ color: textColor }}>042-519-4940</p>
+                  <p className="m-0 mt-1" style={{ color: mutedText }}>Church Office: Tue-Sun</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 3: Navigation */}
+          <div className="flex flex-col gap-8">
+            <h5 className="font-black uppercase tracking-[0.3em] text-[10px]" style={{ color: dimText }}>
+              Navigation
+            </h5>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+              {[
+                { label: 'Watch', href: '/welcome/watch' },
+                { label: 'Visit', href: '/welcome/visit' },
+                { label: 'Give', href: '/welcome/give' },
+                { label: 'About', href: '/welcome/about' },
+                { label: 'Pastor', href: '/welcome/our-pastor' },
+                { label: 'Staff', href: '/welcome/staff' },
+              ].map(link => (
+                <Link key={link.label} href={link.href} 
+                      className="text-sm font-bold hover:text-[#f5a623] transition-colors"
+                      style={{ color: mutedText }}>
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+            
+            <div className="pt-6 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+              <div className="flex flex-col gap-3">
+                <p className="text-[10px] font-black uppercase tracking-widest m-0" style={{ color: dimText }}>
+                  Partners & Links
+                </p>
+                <a href="https://japankingdomchurch.com" target="_blank" rel="noopener noreferrer" 
+                   className="text-sm font-bold flex items-center gap-2 hover:text-[#f5a623] transition-colors"
+                   style={{ color: mutedText }}>
+                  <Globe className="w-4 h-4" />
+                  Official Website
+                </a>
+                <Link href="/" className="text-sm font-bold hover:text-[#f5a623] transition-colors" style={{ color: mutedText }}>
+                  Internal Login
+                </Link>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="mt-24 pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-6"
+             style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+          <div className="flex items-center gap-3">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#f5a623]" />
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] m-0" style={{ color: dimText }}>
+              © {currentYear} Japan Kingdom Builders, Inc.
             </p>
           </div>
-          <div className="flex gap-4 pt-2">
-            <a href="https://www.youtube.com/@japankingdomchurch" target="_blank" style={{ color: 'rgba(255,255,255,0.5)' }} className="hover:opacity-100 transition-colors">
-              <Youtube size={20} />
-            </a>
-            <a href="https://www.facebook.com/japankingdomchurch" target="_blank" style={{ color: 'rgba(255,255,255,0.5)' }} className="hover:opacity-100 transition-colors">
-              <Facebook size={20} />
-            </a>
-            <a href="https://www.instagram.com/jkctokyo" target="_blank" style={{ color: 'rgba(255,255,255,0.5)' }} className="hover:opacity-100 transition-colors">
-              <Instagram size={20} />
-            </a>
-            <a href="http://twitter.com/jkctokyo" target="_blank" style={{ color: 'rgba(255,255,255,0.5)' }} className="hover:opacity-100 transition-colors">
-              <Twitter size={20} />
-            </a>
-            <a href="http://tiktok.com/@jkctokyo" target="_blank" style={{ color: 'rgba(255,255,255,0.5)' }} className="hover:opacity-100 transition-colors flex items-center">
-              <span className="text-[10px] font-black">TIKTOK</span>
-            </a>
-          </div>
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] m-0" style={{ color: dimText }}>
+            REPRESENTING CHRIST TO JAPANESE SOCIETY
+          </p>
         </div>
-
-        {/* Column 2: Contact & Location */}
-        <div className="space-y-8">
-          <h5 className="font-black uppercase tracking-[0.2em] text-[10px]"
-              style={{ color: 'rgba(255,255,255,0.5)' }}>
-            Contact & Location
-          </h5>
-          <div className="space-y-6">
-            <div className="flex gap-4 group">
-              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 group-hover:border-[var(--primary)]/30 transition-colors">
-                <MapPin className="w-4 h-4 text-[var(--primary)]" />
-              </div>
-              <div className="text-sm space-y-1">
-                <p className="text-white/90 font-bold">〒196-0015 東京都昭島市昭和町2-1-6</p>
-                <p className="text-white/60">TE Bldg. 3F, Akishima-shi, Tokyo</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-4 group">
-              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 group-hover:border-[var(--primary)]/30 transition-colors">
-                <Mail className="w-4 h-4 text-[var(--primary)]" />
-              </div>
-              <div className="text-sm space-y-1">
-                <p className="text-white/90 font-bold">jkc.contact@gmail.com</p>
-                <p className="text-white/60">Email us anytime</p>
-              </div>
-            </div>
-
-            <div className="flex gap-4 group">
-              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10 group-hover:border-[var(--primary)]/30 transition-colors">
-                <Phone className="w-4 h-4 text-[var(--primary)]" />
-              </div>
-              <div className="text-sm space-y-1">
-                <p className="text-white/90 font-bold">042-519-4940</p>
-                <p className="text-white/60">Office Hours: Tue-Sun</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Column 3: Quick Links */}
-        <div className="space-y-8">
-          <h5 className="font-black uppercase tracking-[0.2em] text-[10px]"
-              style={{ color: 'rgba(255,255,255,0.5)' }}>
-            Quick Links
-          </h5>
-          <div className="flex flex-col gap-4 text-sm font-bold">
-            <a href="https://japankingdomchurch.com" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.65)' }} className="hover:opacity-100 transition-opacity flex items-center justify-between group">
-              <span>Church Website</span>
-              <Globe className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </a>
-            <Link href="/welcome/about" className="text-white/60 hover:text-[var(--primary)] transition-colors">About Us</Link>
-            <Link href="/welcome/our-pastor" className="text-white/60 hover:text-[var(--primary)] transition-colors">Our Pastor</Link>
-            <Link href="/welcome/staff" className="text-white/60 hover:text-[var(--primary)] transition-colors">Leadership & Staff</Link>
-            <Link href="/welcome/watch" className="text-white/60 hover:text-[var(--primary)] transition-colors">Watch</Link>
-            <Link href="/welcome/visit" className="text-white/60 hover:text-[var(--primary)] transition-colors">Visit</Link>
-            <Link href="/welcome/give" className="text-white/60 hover:text-[var(--primary)] transition-colors">Give</Link>
-            
-            <Link href="/welcome/privacy" className="text-white/60 hover:text-[var(--primary)] transition-colors pt-2 border-t border-white/5 opacity-40">Privacy Policy</Link>
-            <Link href="/welcome/terms" className="text-white/60 hover:text-[var(--primary)] transition-colors opacity-40">Terms of Service</Link>
-            
-            <div className="pt-4 border-t border-white/5">
-              <p className="text-[10px] font-black uppercase tracking-widest mb-2"
-                 style={{ color: 'rgba(255,255,255,0.4)' }}>
-                Internal
-              </p>
-              <Link href="/" className="text-white/60 hover:text-[var(--primary)] transition-colors">Client Login</Link>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-screen-xl mx-auto px-6 mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">
-        <p style={{ color: 'rgba(255,255,255,0.3)' }}>© {currentYear} Japan Kingdom Builders, Inc.</p>
-        <p style={{ color: 'rgba(255,255,255,0.3)' }}>REPRESENTING CHRIST TO JAPANESE SOCIETY</p>
       </div>
     </footer>
   );

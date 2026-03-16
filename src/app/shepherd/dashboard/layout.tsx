@@ -38,7 +38,7 @@ export default function ShepherdDashboardLayout({ children }: { children: React.
     const loadSession = useCallback(async () => {
         const session = await AdminAuth.getAdminSession();
         if (!session) {
-            router.replace("/shepherd/login/");
+            router.replace(`${BP}/login/`);
             return;
         }
 

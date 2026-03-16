@@ -86,7 +86,7 @@ export async function POST(req: Request) {
 
         // 3. Run PIL Engine Sweep (Predictive Models)
         const { PILEngine } = await import('@/lib/pil-engine');
-        const sweepResults = await PILEngine.runIntelligenceSweep();
+        const sweepResults = await PILEngine.runIntelligenceSweep('jkc-main');
 
         return NextResponse.json({
             success: true,

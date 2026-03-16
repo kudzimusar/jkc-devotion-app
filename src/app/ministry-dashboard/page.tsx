@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { basePath as BP } from '@/lib/utils';
 import { Flame } from 'lucide-react';
+import { withRoleGuard } from '@/components/auth/withRoleGuard';
 
 function MinistryDashboardContent() {
   const router = useRouter();
@@ -18,9 +19,7 @@ function MinistryDashboardContent() {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
-        if (typeof window !== 'undefined') {
-          window.location.href = `${BP}/ministry/login/`;
-        }
+        router.replace(`${BP}/login/`);
         return;
       }
       setSessionUser(session.user);
@@ -32,7 +31,7 @@ function MinistryDashboardContent() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session?.user) {
-         if (typeof window !== 'undefined') window.location.href = `${BP}/ministry/login/`;
+         router.replace(`${BP}/login/`);
       } else if (!sessionUser) {
          setSessionUser(session.user);
          loadMemberships(session.user.id);
@@ -85,7 +84,7 @@ function MinistryDashboardContent() {
           <button 
              onClick={async () => {
                  await supabase.auth.signOut();
-                 window.location.href = `${BP}/ministry/login/`;
+                 router.replace(`${BP}/login/`);
              }}
              className="w-full h-12 rounded-xl bg-white/5 border border-white/10 font-bold text-white hover:bg-white/10 transition-colors"
           >
@@ -111,7 +110,7 @@ function MinistryDashboardContent() {
             <button 
                 onClick={async () => {
                    await supabase.auth.signOut();
-                   window.location.href = `${BP}/ministry/login/`;
+                   router.replace(`${BP}/login/`);
                 }}
                 className="text-xs text-white/40 font-bold hover:text-white transition-colors uppercase tracking-widest"
             >
@@ -150,7 +149,7 @@ function MinistryDashboardContent() {
   );
 }
 
-export default function MinistryDashboardIndex() {
+function MinistryDashboardIndex() {
   return (
     <Suspense fallback={
         <div className="flex items-center justify-center min-h-screen bg-[#080c14]">
@@ -161,3 +160,5 @@ export default function MinistryDashboardIndex() {
     </Suspense>
   )
 }
+
+export default withRoleGuard(MinistryDashboardIndex, ['ministry_leader', 'ministry_lead', 'admin', 'shepherd', 'super_admin', 'owner', 'pastor', 'member']);

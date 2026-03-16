@@ -11,6 +11,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import { getPastorDashboardData } from "@/lib/pastor-hq-actions";
+import { withRoleGuard } from "@/components/auth/withRoleGuard";
 
 const container = {
     hidden: { opacity: 0 },
@@ -27,7 +28,7 @@ const item = {
     show: { opacity: 1, y: 0 }
 };
 
-export default function PastorHQDashboard() {
+function PastorHQDashboard() {
     const { userName } = usePastorCtx();
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -71,7 +72,9 @@ export default function PastorHQDashboard() {
                     <p className="text-muted-foreground font-medium tracking-wide">
                         The spiritual and strategic climate of JKC is categorized as
                     </p>
-                    <span className="text-emerald-500 font-bold uppercase tracking-widest text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10">Vibrant</span>
+                    <span className="text-emerald-500 font-bold uppercase tracking-widest text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10">
+                        {data?.climate?.theme || "Vibrant"}
+                    </span>
                 </div>
             </header>
 
@@ -337,3 +340,5 @@ function Globe(props: any) {
     )
 }
 
+
+export default withRoleGuard(PastorHQDashboard, ['pastor', 'super_admin', 'owner']);

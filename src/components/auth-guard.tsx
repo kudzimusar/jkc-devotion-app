@@ -12,10 +12,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     const PUBLIC_PATHS = [
         '/welcome', '/about', '/visit', '/our-pastor',
         '/staff', '/give', '/watch', '/contact',
-        '/privacy', '/terms'
+        '/privacy', '/terms', '/login', '/invite'
     ];
+    // Normalize pathname by removing base path if present
+    const cleanPath = pathname.replace(new RegExp(`^${BP}`), '') || '/';
+    
     const isPublic = PUBLIC_PATHS.some(p =>
-        pathname.startsWith(`/jkc-devotion-app${p}`) || pathname === p || pathname.startsWith(`${p}/`)
+        cleanPath === p || cleanPath.startsWith(`${p}/`)
     );
 
     useEffect(() => {
@@ -72,7 +75,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
     const isProtected = pathname.startsWith("/admin") || 
                        pathname.startsWith("/onboarding") || 
-                       pathname.startsWith("/shepherd");
+                       pathname.startsWith("/shepherd") ||
+                       pathname.startsWith("/pastor-hq");
 
     if (loading && isProtected) {
         return (
