@@ -17,7 +17,20 @@ export default function ServiceSchedule() {
   ];
 
   return (
-    <section id="visit" className="py-32 px-6 text-center bg-black/20 scroll-mt-20">
+  <div data-section="schedule" className="relative">
+    {/* Wave top — from cream into navy */}
+    <div className="h-16 bg-[#fef8ec] overflow-hidden">
+      <svg viewBox="0 0 1440 64" className="w-full h-full"
+        preserveAspectRatio="none">
+        <path 
+          className="wave-navy"
+          d="M0,0 C360,64 1080,64 1440,0 L1440,64 L0,64 Z"
+          fill="#1b3a6b" 
+        />
+      </svg>
+    </div>
+    <section id="visit" data-section="schedule"
+      className="py-32 px-6 text-center bg-black/20 scroll-mt-20">
       <div className="max-w-4xl mx-auto space-y-12">
         <div className="space-y-4">
           <p className="text-[10px] font-black tracking-[0.4em] text-white/40 uppercase">
@@ -56,5 +69,17 @@ export default function ServiceSchedule() {
         </div>
       </div>
     </section>
+    {/* Wave bottom — navy into cream */}
+    <div className="h-16 bg-[#1b3a6b] overflow-hidden">
+      <svg viewBox="0 0 1440 64" className="w-full h-full"
+        preserveAspectRatio="none">
+        <path 
+          className="wave-cream"
+          d="M0,64 C360,0 1080,0 1440,64 L1440,64 L0,64 Z"
+          fill="#f8f6f0" 
+        />
+      </svg>
+    </div>
+  </div>
   );
 }

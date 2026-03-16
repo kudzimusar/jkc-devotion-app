@@ -44,7 +44,7 @@ export default function MinistriesSection() {
   }, []);
 
   return (
-    <section className="py-32 px-6 scroll-mt-20 border-t border-white/5 bg-black/20">
+    <section data-section="ministries" className="py-32 px-6 scroll-mt-20 border-t border-white/5 bg-black/20">
       <div className="max-w-screen-xl mx-auto">
         <div className="space-y-4 mb-16">
           <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">

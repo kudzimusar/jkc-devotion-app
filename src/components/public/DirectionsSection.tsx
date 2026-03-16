@@ -17,7 +17,7 @@ export default function DirectionsSection() {
   ];
 
   return (
-    <section className="py-32 px-6 max-w-screen-xl mx-auto">
+    <section data-section="directions" className="py-32 px-6 max-w-screen-xl mx-auto">
       <div className="grid md:grid-cols-2 gap-16 items-stretch">
         {/* Left — Google Maps embed */}
         <div className="rounded-[3rem] overflow-hidden aspect-video md:aspect-auto h-full min-h-[400px] border border-white/10 shadow-2xl relative">

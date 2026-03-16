@@ -45,7 +45,19 @@ export default function TestimoniesSection() {
   }
 
   return (
-    <section className="py-32 overflow-hidden bg-black/5">
+  <div data-section="testimonies" className="relative">
+    {/* Wave top — flows from cream into navy */}
+    <div className="h-16 bg-[#fffdf7] overflow-hidden">
+      <svg viewBox="0 0 1440 64" className="w-full h-full"
+        preserveAspectRatio="none">
+        <path 
+          className="wave-navy"
+          d="M0,0 C360,64 1080,64 1440,0 L1440,64 L0,64 Z"
+          fill="#1b3a6b" 
+        />
+      </svg>
+    </div>
+    <section data-section="testimonies" className="py-32 overflow-hidden bg-black/5">
       <div className="max-w-screen-xl mx-auto px-6 mb-16 space-y-4">
         <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">
           CHECK OUT TESTIMONIES
@@ -88,5 +100,17 @@ export default function TestimoniesSection() {
         ))}
       </div>
     </section>
+    {/* Wave bottom — navy flows into gold */}
+    <div className="h-16 bg-[#1b3a6b] overflow-hidden">
+      <svg viewBox="0 0 1440 64" className="w-full h-full"
+        preserveAspectRatio="none">
+        <path 
+          className="wave-gold"
+          d="M0,64 C360,0 1080,0 1440,64 L1440,64 L0,64 Z"
+          fill="#fde68a" 
+        />
+      </svg>
+    </div>
+  </div>
   );
 }

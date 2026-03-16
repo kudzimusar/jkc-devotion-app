@@ -48,7 +48,7 @@ export default function ConnectSection() {
   };
 
   return (
-    <section id="give" className="py-32 px-6 scroll-mt-20">
+    <section id="give" data-section="connect" className="py-32 px-6 scroll-mt-20">
       <div className="max-w-2xl mx-auto text-center space-y-12">
         <div className="space-y-4">
           <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">

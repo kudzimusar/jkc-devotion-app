@@ -22,7 +22,7 @@ export default function SermonSection() {
   const watchUrl = sermon?.youtube_url || "https://www.youtube.com/@JapanKingdomChurch/streams";
 
   return (
-    <section id="watch" className="py-32 px-6 scroll-mt-20">
+    <section id="watch" data-section="sermon" className="py-32 px-6 scroll-mt-20">
       <div className="max-w-screen-xl mx-auto grid md:grid-cols-2 gap-16 items-center">
         {/* Left column — YouTube embed */}
         <div className="relative group">
