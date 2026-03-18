@@ -14,41 +14,36 @@ type Ministry = {
 };
 
 const fallbacks: Ministry[] = [
-  {
-    name: "Children's Ministry", slug: "kids-ministry",
-    description: "Nurturing the next generation in faith."
-  },
-  {
-    name: "Youth Ministry", slug: "youth-ministry",
-    description: "Empowering young people to live for Christ."
-  },
-  {
-    name: "Worship Ministry", slug: "worship-ministry",
-    description: "Leading the congregation into God's presence."
-  },
-  {
-    name: "Women's Ministry", slug: "womens-ministry",
-    description: "Equipping women to walk in purpose and grace."
-  },
-  {
-    name: "Men's Ministry", slug: "mens-ministry",
-    description: "Building men of faith, character, and vision."
-  },
-  {
-    name: "Language School", slug: "language-school",
-    description: "Kingdom Language School — bridging cultures."
-  }
+  { name: "Worship Ministry", slug: "worship-ministry", description: "Leading the sound of worship to our King." },
+  { name: "Ushering Ministry", slug: "ushers", description: "Providing a warm welcome and order for every guest." },
+  { name: "Evangelism Ministry", slug: "evangelism", description: "Taking the light of Christ to the streets of Tokyo." },
+  { name: "Prayer Ministry", slug: "prayer", description: "Interceding for hearts, our city, and our nation." },
+  { name: "Children's Ministry", slug: "kids-ministry", description: "Nurturing the future of the Kingdom of God." },
+  { name: "Youth Ministry", slug: "youth-ministry", description: "Empowering young lives for spiritual transformation." },
 ];
 
-/* Accent colours rotate across cards for visual variety */
-const accentColors = [
-  { border: 'var(--jkc-gold)',  dot: 'var(--jkc-gold)' },
-  { border: 'var(--jkc-navy)', dot: 'var(--jkc-navy)' },
-  { border: 'var(--jkc-gold)', dot: 'var(--jkc-gold)' },
-  { border: 'var(--jkc-navy)', dot: 'var(--jkc-navy)' },
-  { border: 'var(--jkc-gold)', dot: 'var(--jkc-gold)' },
-  { border: 'var(--jkc-navy)', dot: 'var(--jkc-navy)' },
-];
+const MINISTRY_IMAGES: Record<string, string> = {
+  'worship-ministry': '/jkc-devotion-app/images/ministry_worship_card.png',
+  'worship': '/jkc-devotion-app/images/ministry_worship_card.png',
+  'ushers': '/jkc-devotion-app/images/ministry_ushers_card.png',
+  'ushers-ministry': '/jkc-devotion-app/images/ministry_ushers_card.png',
+  'evangelism': '/jkc-devotion-app/images/outreach_street_evangelism.png',
+  'prayer': '/jkc-devotion-app/images/ministry_prayer_card.png',
+  'kids-ministry': '/jkc-devotion-app/images/ministry_kids_card.png',
+  'childrens': '/jkc-devotion-app/images/ministry_kids_card.png',
+  'youth-ministry': '/jkc-devotion-app/images/outreach_toyoko.png',
+  'youth': '/jkc-devotion-app/images/outreach_toyoko.png',
+  'finance': '/jkc-devotion-app/images/ministry_finance_card.png',
+  'finance-ministry': '/jkc-devotion-app/images/ministry_finance_card.png',
+  'hospitality': '/jkc-devotion-app/images/ministry_hospitality_card.png',
+  'hospitality-ministry': '/jkc-devotion-app/images/ministry_hospitality_card.png',
+  'fellowship': '/jkc-devotion-app/images/ministry_fellowship_card.png',
+  'fellowship-circles': '/jkc-devotion-app/images/ministry_fellowship_card.png',
+  'akiramenai': '/jkc-devotion-app/images/outreach_akiramenai.png',
+  'food-pantry': '/jkc-devotion-app/images/ministry_foodpantry_card.png',
+  'media': '/jkc-devotion-app/images/hero-background.jpg',
+  'missions': '/jkc-devotion-app/images/church/building-banner.png',
+};
 
 export default function MinistriesSection() {
   const { isDark } = usePublicTheme();
@@ -58,6 +53,7 @@ export default function MinistriesSection() {
     supabase
       .from('ministries')
       .select('id, name, slug, description')
+      .order('name', { ascending: true })
       .limit(6)
       .then(({ data }) => {
         if (data && data.length > 0) {
@@ -67,83 +63,83 @@ export default function MinistriesSection() {
   }, []);
 
   return (
-    <section data-section="ministries" className="py-32 px-6 scroll-mt-20"
+    <section data-section="ministries" className="py-24 px-6 scroll-mt-20"
              style={{ background: 'var(--section-alt)', borderTop: '1px solid var(--border)' }}>
       <div className="max-w-screen-xl mx-auto">
-        <div className="space-y-3 mb-16">
-          <p className="text-[10px] font-black tracking-[0.4em] uppercase"
-             style={{ color: 'var(--jkc-gold)' }}>
-            GET INVOLVED
-          </p>
-          <h2 className="text-4xl md:text-5xl font-black" style={{ color: 'var(--foreground)' }}>
-            Find Your <span className="font-serif italic font-medium" style={{ color: 'var(--jkc-navy)' }}>Community</span>
-          </h2>
-          <p className="text-base max-w-xl" style={{ color: 'var(--muted-foreground)' }}>
-            Every ministry exists to help you grow deeper, connect further, and serve wider.
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+          <div className="space-y-3">
+            <p className="text-[10px] font-black tracking-[0.4em] uppercase"
+               style={{ color: 'var(--jkc-gold)' }}>
+              GET INVOLVED
+            </p>
+            <h2 className="text-3xl md:text-5xl font-black" style={{ color: 'var(--foreground)' }}>
+              Find Your <span className="font-serif italic font-medium" style={{ color: 'var(--jkc-navy)' }}>Community</span>
+            </h2>
+          </div>
+          <p className="text-sm max-w-sm" style={{ color: 'var(--muted-foreground)' }}>
+            Every ministry exists to help you grow deeper, connect further, and serve wider together.
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {ministries.map((m, idx) => {
-            const accent = accentColors[idx % accentColors.length];
-            const imageUrl = (m as any).image_url;
+            const slugMatch = MINISTRY_IMAGES[m.slug];
+            const nameMatch = Object.entries(MINISTRY_IMAGES).find(([k]) => m.name.toLowerCase().includes(k))?.[1];
+            const imageUrl = (m as any).image_url || slugMatch || nameMatch || '/jkc-devotion-app/images/hero-background.jpg';
+            
             return (
-              <div
+              <Link
                 key={m.id || m.slug}
-                className="group relative flex flex-col justify-end min-h-[360px] transition-all duration-300 cursor-pointer overflow-hidden rounded-[2.5rem] border"
+                href={`/welcome/ministries/${m.slug}`}
+                className="group relative flex flex-col justify-end min-h-[220px] transition-all duration-300 overflow-hidden rounded-[2rem] border shadow-sm hover:-translate-y-2"
                 style={{
                   borderColor: 'var(--border)',
                   boxShadow: 'var(--card-shadow)',
                 }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-5px)';
-                  (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-2xl)';
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-                  (e.currentTarget as HTMLElement).style.boxShadow = 'var(--card-shadow)';
-                }}
               >
                 {/* Background Image */}
-                {imageUrl && (
-                  <>
-                    <img 
-                      src={imageUrl} 
-                      alt={m.name} 
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-                  </>
-                )}
+                <div className="absolute inset-0">
+                  <img 
+                    src={imageUrl} 
+                    alt={m.name} 
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+                </div>
 
                 {/* Content Overlay */}
-                <div className="relative p-8 space-y-4">
-                  <div className="space-y-2">
-                    <h3 className="text-2xl font-black leading-tight text-white drop-shadow-md">
+                <div className="relative p-6 space-y-2">
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-black uppercase tracking-wide text-white drop-shadow-lg">
                       {m.name}
                     </h3>
-                    <p className="text-sm leading-relaxed text-slate-200 line-clamp-2">
+                  </div>
+                  <div className="overflow-hidden h-0 group-hover:h-12 transition-all duration-300">
+                    <p className="text-[11px] leading-relaxed text-slate-200 line-clamp-2">
                       {m.description}
                     </p>
                   </div>
-
                   <div className="pt-2">
-                    <Link
-                      href={`/welcome/ministries/${m.slug}`}
-                      className="text-[10px] font-black tracking-[0.25em] uppercase inline-flex items-center gap-2 group-hover:gap-3 transition-all"
+                    <span 
+                      className="text-[9px] font-black tracking-[0.2em] uppercase inline-flex items-center gap-2"
                       style={{ color: 'var(--jkc-gold)' }}
                     >
                       LEARN MORE <span>→</span>
-                    </Link>
+                    </span>
                   </div>
                 </div>
 
-                {/* Accent Dot */}
-                <div className="absolute top-8 right-8 w-2 h-2 rounded-full ring-4 ring-white/10"
-                     style={{ background: accent.dot }} />
-              </div>
+                {/* Accent Line on hover */}
+                <div className="absolute top-0 left-0 w-0 h-1 bg-[var(--jkc-gold)] group-hover:w-full transition-all duration-500" />
+              </Link>
             );
           })}
+        </div>
+
+        <div className="mt-16 text-center">
+           <Link href="/welcome/ministries" className="text-[10px] font-black tracking-widest uppercase py-4 px-10 rounded-full border border-[var(--jkc-navy)] text-[var(--jkc-navy)] hover:bg-[var(--jkc-navy)] hover:text-white transition-all">
+             VIEW ALL DEPARTMENTS
+           </Link>
         </div>
       </div>
     </section>
