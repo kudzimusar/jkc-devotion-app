@@ -75,7 +75,7 @@ export default function PublicNav() {
   const navLinks = [
     { label: 'WATCH', href: '/welcome/watch' },
     { label: 'VISIT', href: '/welcome/visit' },
-    { label: 'OUTREACH', href: '/welcome/outreach' },
+    { label: 'ABOUT', href: '/welcome/about' },
     { label: 'GIVE', href: '/welcome/give' },
     { label: 'DEVOTION', href: '/' },
   ];
@@ -83,7 +83,7 @@ export default function PublicNav() {
   const LIVE_URL = 'https://www.youtube.com/@JapanKingdomChurch/streams';
 
   const mobileNavLinks = [
-    ...navLinks,
+    ...navLinks.filter(l => l.label !== 'ABOUT'),
     { label: 'ABOUT', href: '/welcome/about' },
     { label: 'OUR PASTOR', href: '/welcome/our-pastor' },
     { label: 'STAFF', href: '/welcome/staff' },

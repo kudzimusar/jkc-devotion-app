@@ -30,8 +30,8 @@ By offering practical assistance and sharing the love of Christ, we strive to ma
     image: '/jkc-devotion-app/images/outreach_toyoko.png',
     color: '#8B5CF6',
     scripture: '"The Spirit of the Lord is on me, because he has anointed me to proclaim good news to the poor." — Luke 4:18',
-    signupUrl: 'https://www.japankingdomchurch.com/contact',
-    donateUrl: 'https://www.japankingdomchurch.com/give',
+    signupUrl: '/welcome/visit',
+    donateUrl: '/welcome/give',
     howToHelp: [
       'Volunteer your time during monthly outreach nights',
       'Provide financial support for care packages and meals',
@@ -52,7 +52,7 @@ Volunteers come together to create care packs and deliver them to the homeless. 
     color: '#EF4444',
     scripture: '"Do not forget to do good and to share with others, for with such sacrifices God is pleased." — Hebrews 13:16',
     signupUrl: 'https://form.jotform.me/81070224484451',
-    donateUrl: 'https://www.japankingdomchurch.com/give',
+    donateUrl: '/welcome/give',
     moreInfo: 'https://www.jpkb.org/akiramenai',
     howToHelp: [
       'Join us every 3rd Saturday for hands-on outreach',
@@ -73,8 +73,8 @@ We welcome volunteers to support our mission by donating to the food pantry or h
     image: '/jkc-devotion-app/images/ministry_foodpantry_card.png',
     color: '#F59E0B',
     scripture: '"I was hungry and you gave me food, I was thirsty and you gave me drink." — Matthew 25:35',
-    signupUrl: 'https://www.japankingdomchurch.com/contact',
-    donateUrl: 'https://www.japankingdomchurch.com/give',
+    signupUrl: '/welcome/visit',
+    donateUrl: '/welcome/give',
     howToHelp: [
       'Donate non-perishable food items to the pantry',
       'Volunteer to help sort and distribute food',
@@ -94,8 +94,8 @@ Jesus said, "Go out and share the gospel" (Mark 16:15). Japan needs the seeds of
     image: '/jkc-devotion-app/images/outreach_street_evangelism.png',
     color: '#10B981',
     scripture: '"Go into all the world and preach the gospel to all creation." — Mark 16:15',
-    signupUrl: 'https://www.japankingdomchurch.com/contact',
-    donateUrl: 'https://www.japankingdomchurch.com/give',
+    signupUrl: '/welcome/visit',
+    donateUrl: '/welcome/give',
     howToHelp: [
       'Join the team for street outreach events',
       'Share your musical gifts (guitar, voice, etc.)',

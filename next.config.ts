@@ -17,8 +17,10 @@ const nextConfig: NextConfig = {
   basePath: '/jkc-devotion-app',
   assetPrefix: '/jkc-devotion-app/',
   trailingSlash: true,
-  // Provide empty turbopack config to avoid Turbopack errors
-  turbopack: {},
+  // NOTE: Turbopack removed — it causes "Lock broken by another request
+  // with the 'steal' option" AbortError in Next.js 16 on some setups.
+  // Run with: next dev --turbopack to opt back in manually when stable.
 };
 
 export default withPWA(nextConfig);
+

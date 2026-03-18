@@ -760,11 +760,11 @@ export default function DevotionalApp() {
             </div>
           </div>
           <div className="space-y-4">
-            <h5 className="font-black uppercase tracking-widest text-xs opacity-40">Quick Links</h5>
+            <h5 className="font-black uppercase tracking-widest text-xs opacity-40">Navigation</h5>
             <div className="space-y-2 text-sm flex flex-col">
-              <a href="https://japankingdomchurch.com" target="_blank" className="opacity-80 hover:text-primary transition-colors hover:opacity-100 w-fit font-bold">Church Website</a>
-              <a href="#" className="opacity-80 hover:text-primary transition-colors hover:opacity-100 w-fit font-bold">Privacy Policy</a>
-              <a href="#" className="opacity-80 hover:text-primary transition-colors hover:opacity-100 w-fit font-bold">Terms of Service</a>
+              <Link href="/welcome" className="opacity-80 hover:text-primary transition-colors hover:opacity-100 w-fit font-bold decoration-none">JKC Portal</Link>
+              <Link href="/welcome/about" className="opacity-80 hover:text-primary transition-colors hover:opacity-100 w-fit font-bold decoration-none">About Us</Link>
+              <Link href="/welcome/give" className="opacity-80 hover:text-primary transition-colors hover:opacity-100 w-fit font-bold decoration-none">Give</Link>
             </div>
           </div>
         </div>

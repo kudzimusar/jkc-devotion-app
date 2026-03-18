@@ -27,7 +27,9 @@ const fallbacks: Ministry[] = [
   { name: "Men's Ministry", slug: "mens-ministry",
     description: "Building men of faith, character, and vision." },
   { name: "Language School", slug: "language-school",
-    description: "Kingdom Language School — bridging cultures." }
+    description: "Kingdom Language School — bridging cultures." },
+  { name: "Pastoral Care", slug: "pastoral",
+    description: "Spiritual support, counseling, and guidance for our church family." }
 ];
 
 export default function MinistryClient({ slug }: { slug: string }) {

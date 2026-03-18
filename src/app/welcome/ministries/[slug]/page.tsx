@@ -8,7 +8,7 @@ export async function generateStaticParams() {
     'mens-ministry', 'language-school', 'evangelism', 'prayer', 'media', 
     'hospitality', 'missions', 'finance', 'ushers', 'fellowship',
     'fellowship-circles', 'akiramenai', 'food-pantry', 'toyoko-youth-outreach',
-    'street-evangelism', 'worship', 'childrens', 'youth'
+    'street-evangelism', 'worship', 'childrens', 'youth', 'pastoral'
   ];
   return slugs.map(slug => ({ slug }));
 }
