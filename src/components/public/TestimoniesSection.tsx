@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Play, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export default function TestimoniesSection() {
   const [testimonies, setTestimonies] = useState<any[]>([]);
@@ -63,40 +63,67 @@ export default function TestimoniesSection() {
           </p>
         </div>
 
-        <div className="flex gap-6 overflow-x-auto px-6 pb-12 no-scrollbar scroll-snap-x-mandatory snap-x">
+        <div className="flex gap-8 overflow-x-auto px-6 pb-12 no-scrollbar scroll-snap-x-mandatory snap-x">
           {testimonies.map((t) => (
             <div
               key={t.id}
-              className="flex-none w-[320px] rounded-[2rem] p-8 space-y-6 snap-start transition-all group border"
+              className="flex-none w-[380px] rounded-[2rem] p-6 space-y-6 snap-start transition-all group border flex flex-col justify-between"
               style={{
                 background: 'var(--card)',
                 borderColor: 'var(--border)',
                 boxShadow: 'var(--shadow-xl)'
               }}
             >
-              <div className="aspect-video bg-black/20 rounded-2xl flex items-center justify-center border border-white/5 relative overflow-hidden">
-                <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <Play className="w-12 h-12 text-white/20 group-hover:text-[var(--jkc-gold)] transition-all" />
+              <div className="space-y-6">
+                <div className="aspect-video bg-black rounded-2xl border border-white/5 relative overflow-hidden shadow-lg">
+                  <iframe
+                    src={t.youtube_url?.replace('watch?v=', 'embed/')}
+                    className="absolute inset-0 w-full h-full"
+                    allowFullScreen
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    title={t.name}
+                    loading="lazy"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-black leading-tight line-clamp-2" style={{ color: 'var(--footer-fg)' }}>
+                    {t.name}
+                  </h3>
+                  <p className="text-sm line-clamp-3" style={{ color: 'var(--footer-muted)' }}>
+                    {t.description}
+                  </p>
+                </div>
               </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-black leading-tight" style={{ color: 'var(--footer-fg)' }}>
-                  {t.name}
-                </h3>
-                <p className="text-sm line-clamp-2" style={{ color: 'var(--footer-muted)' }}>
-                  {t.description}
-                </p>
+              <div className="pt-4 border-t border-white/5">
+                <a
+                  href={t.youtube_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-[10px] font-black tracking-[0.2em] uppercase transition-all hover:gap-3"
+                  style={{ color: 'var(--jkc-gold)' }}
+                >
+                  WATCH ON YOUTUBE →
+                </a>
               </div>
-              <a
-                href={t.youtube_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-[10px] font-black tracking-[0.2em] uppercase group-hover:translate-x-2 transition-transform"
-                style={{ color: 'var(--jkc-gold)' }}
-              >
-                WATCH TESTIMONY →
-              </a>
             </div>
           ))}
+        </div>
+
+        {/* WATCH MORE button */}
+        <div className="max-w-screen-xl mx-auto px-6 pb-16 flex justify-center">
+          <a
+            href="https://www.youtube.com/@JapanKingdomChurch"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-3 px-12 py-5 rounded-full text-sm font-black tracking-[0.2em] uppercase transition-all hover:scale-105 active:scale-95"
+            style={{
+              background: 'var(--jkc-navy)',
+              color: 'white',
+              boxShadow: '0 8px 32px rgba(27,58,107,0.4)'
+            }}
+          >
+            WATCH MORE →
+          </a>
         </div>
       </section>
 

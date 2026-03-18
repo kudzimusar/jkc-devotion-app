@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Menu, X, User, Settings, LogOut, BookOpen,
          ChevronDown } from 'lucide-react';
@@ -17,6 +17,33 @@ export default function PublicNav() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [scrolled, setScrolled] = useState(false);
+  const [isLive, setIsLive] = useState(false);
+
+  // Poll for live events every 60 seconds
+  useEffect(() => {
+    const checkLive = async () => {
+      try {
+        const { data } = await supabase
+          .from('events')
+          .select('id')
+          .eq('is_live', true)
+          .limit(1);
+        setIsLive(!!(data && data.length > 0));
+      } catch {
+        // silently ignore
+      }
+    };
+    checkLive();
+    const interval = setInterval(checkLive, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     Auth.getCurrentUser().then(setUser);
@@ -48,24 +75,31 @@ export default function PublicNav() {
   const navLinks = [
     { label: 'WATCH', href: '/welcome/watch' },
     { label: 'VISIT', href: '/welcome/visit' },
+    { label: 'OUTREACH', href: '/welcome/outreach' },
     { label: 'GIVE', href: '/welcome/give' },
     { label: 'DEVOTION', href: '/' },
   ];
+
+  const LIVE_URL = 'https://www.youtube.com/@JapanKingdomChurch/streams';
 
   const mobileNavLinks = [
     ...navLinks,
     { label: 'ABOUT', href: '/welcome/about' },
     { label: 'OUR PASTOR', href: '/welcome/our-pastor' },
     { label: 'STAFF', href: '/welcome/staff' },
+    { label: 'MINISTRIES', href: '/welcome/ministries' },
   ];
 
   return (
     <>
-      <nav className="fixed top-0 w-full z-50 h-16 transition-all"
-           style={{ 
-             background: 'var(--nav-bg)', 
-             borderBottom: '1px solid var(--nav-border)' 
-           }}>
+      <nav
+        className="fixed top-0 w-full z-50 h-16 transition-all duration-300"
+        style={{
+          background: 'var(--nav-bg)',
+          borderBottom: scrolled ? '1px solid var(--nav-border)' : '1px solid transparent',
+          boxShadow: scrolled ? 'var(--nav-shadow)' : 'none',
+        }}
+      >
         <div className="max-w-screen-xl mx-auto px-6 h-full flex
                         items-center justify-between">
 
@@ -90,8 +124,24 @@ export default function PublicNav() {
             ))}
           </div>
 
-          {/* Desktop right — auth */}
+          {/* Desktop right — LIVE badge + auth */}
           <div className="hidden md:flex items-center gap-3">
+            {/* LIVE badge — only renders when admin marks an event as live */}
+            {isLive && (
+              <a
+                href={LIVE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase transition-all hover:opacity-90"
+                style={{ background: '#ef4444', color: '#ffffff' }}
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#fca5a5' }} />
+                  <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: '#ffffff' }} />
+                </span>
+                LIVE
+              </a>
+            )}
             {user ? (
               <div className="relative">
                 <button
@@ -150,12 +200,7 @@ export default function PublicNav() {
             ) : (
               <button
                 onClick={() => setIsAuthModalOpen(true)}
-                className="rounded-full px-6 py-2 text-[10px] font-black tracking-widest transition-all"
-                style={{
-                  background: 'var(--jkc-navy)',
-                  color: 'var(--primary-foreground)',
-                  border: '1px solid var(--jkc-navy)'
-                }}
+                className="btn-navy rounded-full px-6 py-2 text-[10px] font-black tracking-widest"
               >
                 SIGN IN
               </button>

@@ -54,9 +54,9 @@ const FEED_TYPE_CONFIG: Record<string, {
     },
     church_announcement: {
         icon: Bell,
-        accentColor: 'text-white/70',
-        bgColor: 'bg-white/5',
-        borderColor: 'border-white/10',
+        accentColor: 'var(--jkc-navy)',
+        bgColor: 'var(--section-alt)',
+        borderColor: 'var(--border)',
         badgeLabel: 'Announcement',
     },
     attendance_milestone: {
@@ -78,29 +78,34 @@ function FeedCard({ item, onDismiss }: { item: FeedItem; onDismiss: (id: string)
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10, scale: 0.97 }}
-            className={`relative rounded-2xl border ${cfg.borderColor} ${cfg.bgColor} p-4 overflow-hidden`}
+            className="relative rounded-2xl border p-5 overflow-hidden group shadow-sm"
+            style={{ 
+              backgroundColor: 'var(--card)', 
+              borderColor: 'var(--border)',
+              borderLeft: `3px solid ${item.feed_type === 'church_announcement' ? 'var(--jkc-gold)' : 'currentColor'}`,
+              color: 'var(--foreground)'
+            }}
         >
-            {/* Subtle glow */}
-            <div className={`absolute inset-0 opacity-[0.03] ${cfg.bgColor} pointer-events-none`} />
-
-            <div className="relative flex items-start gap-3">
-                <div className={`w-9 h-9 rounded-xl ${cfg.bgColor} border ${cfg.borderColor} flex items-center justify-center flex-shrink-0`}>
-                    <Icon className={`w-4.5 h-4.5 ${cfg.accentColor}`} />
+            <div className="relative flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                     style={{ backgroundColor: 'var(--section-alt)', border: '1px solid var(--border)' }}>
+                    <Icon className="w-5 h-5" style={{ color: item.feed_type === 'church_announcement' ? 'var(--jkc-navy)' : 'var(--jkc-gold)' }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className={`text-[8px] font-black uppercase tracking-widest ${cfg.accentColor}`}>
+                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
+                              style={{ backgroundColor: 'var(--section-alt)', color: 'var(--muted-foreground)', border: '1px solid var(--border)' }}>
                             {cfg.badgeLabel}
                         </span>
                     </div>
-                    <p className="text-sm font-bold text-white leading-snug">{item.title}</p>
-                    <p className="text-xs text-white/50 mt-1 leading-relaxed">{item.body}</p>
+                    <h4 className="text-base font-black leading-tight mb-1" style={{ color: 'var(--foreground)' }}>{item.title}</h4>
+                    <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>{item.body}</p>
 
                     {item.cta_text && item.cta_url && (
                         <Link
                             href={item.cta_url}
-                            className={`inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-lg text-[10px] font-black 
-                                ${cfg.bgColor} border ${cfg.borderColor} ${cfg.accentColor} hover:brightness-110 transition-all`}
+                            className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full text-[10px] font-black tracking-widest uppercase transition-all hover:scale-105 active:scale-95"
+                            style={{ backgroundColor: 'var(--jkc-navy)', color: 'white' }}
                         >
                             {item.cta_text} →
                         </Link>
@@ -109,9 +114,10 @@ function FeedCard({ item, onDismiss }: { item: FeedItem; onDismiss: (id: string)
 
                 <button
                     onClick={() => onDismiss(item.id)}
-                    className="w-6 h-6 rounded-lg flex items-center justify-center text-white/20 hover:text-white/50 hover:bg-white/5 transition-colors flex-shrink-0"
+                    className="w-7 h-7 rounded-full flex items-center justify-center transition-colors flex-shrink-0 hover:bg-black/5 dark:hover:bg-white/5"
+                    style={{ color: 'var(--muted-foreground)' }}
                 >
-                    <X className="w-3 h-3" />
+                    <X className="w-4 h-4" />
                 </button>
             </div>
         </motion.div>
@@ -144,8 +150,8 @@ export function FeedSection() {
     return (
         <section className="w-full max-w-xl mx-auto px-4 pb-2">
             <div className="flex items-center gap-2 mb-3">
-                <Bell className="w-3.5 h-3.5 text-white/30" />
-                <p className="text-[9px] font-black text-white/30 uppercase tracking-[0.25em]">
+                <Bell className="w-3.5 h-3.5" style={{ color: 'var(--muted-foreground)' }} />
+                <p className="text-[9px] font-black uppercase tracking-[0.25em]" style={{ color: 'var(--muted-foreground)' }}>
                     From Your Church
                 </p>
             </div>

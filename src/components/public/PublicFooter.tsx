@@ -76,10 +76,15 @@ export default function PublicFooter() {
                   style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: borderColor }}>
                   <MapPin className="w-4 h-4" style={{ color: 'var(--jkc-gold)' }} />
                 </div>
-                <div className="text-sm">
+                <a 
+                  href="https://www.google.com/maps?q=Japan+Kingdom+Church+TE+Building+Akishima+Tokyo" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-sm hover:opacity-80 transition-opacity"
+                >
                   <p className="font-bold m-0" style={{ color: textColor }}>〒196-0015 東京都昭島市昭和町2-1-6</p>
                   <p className="m-0 mt-1" style={{ color: mutedText }}>TE Bldg. 3F, Akishima-shi, Tokyo</p>
-                </div>
+                </a>
               </div>
 
               <div className="flex gap-4 items-start">
@@ -115,6 +120,8 @@ export default function PublicFooter() {
               {[
                 { label: 'Watch', href: '/welcome/watch' },
                 { label: 'Visit', href: '/welcome/visit' },
+                { label: 'Outreach', href: '/welcome/outreach' },
+                { label: 'Ministries', href: '/welcome/ministries' },
                 { label: 'Give', href: '/welcome/give' },
                 { label: 'About', href: '/welcome/about' },
                 { label: 'Pastor', href: '/welcome/our-pastor' },

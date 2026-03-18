@@ -84,16 +84,19 @@ export default function DirectionsSection() {
           </div>
 
           <div className="pt-6">
-              <button
-                className="inline-flex items-center gap-4 rounded-full px-10 py-5 text-sm font-black tracking-[0.2em] transition-all w-full md:w-auto justify-center md:justify-start"
-                style={{
-                  background: 'var(--jkc-navy)',
-                  color: 'var(--primary-foreground)',
-                  boxShadow: 'var(--shadow-md)'
-                }}
-              >
-                GET DIRECTIONS <ArrowRight className="w-4 h-4" />
-              </button>
+            <a
+              href="https://www.google.com/maps?q=Japan+Kingdom+Church+TE+Building+Akishima+Tokyo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-4 rounded-full px-10 py-5 text-sm font-black tracking-[0.2em] transition-all w-full md:w-auto justify-center md:justify-start"
+              style={{
+                background: 'var(--jkc-navy)',
+                color: 'white',
+                boxShadow: 'var(--shadow-md)'
+              }}
+            >
+              GET DIRECTIONS <ArrowRight className="w-4 h-4" />
+            </a>
           </div>
         </div>
       </div>

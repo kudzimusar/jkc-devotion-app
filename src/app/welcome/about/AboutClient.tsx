@@ -1,7 +1,7 @@
-
 'use client';
 
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 
 export default function AboutClient() {
   const beliefs = [
@@ -20,162 +20,183 @@ export default function AboutClient() {
   ];
 
   const outreach = [
-    { 
-      title: "Akiramenai Homeless Program", 
-      desc: "Rehabilitating and supporting homeless individuals in Tokyo.",
-      image: "/jkc-devotion-app/images/outreach/akiramenai.jpg"
+    {
+      title: "Toyoko Youth Outreach",
+      slug: "toyoko-youth-outreach",
+      desc: "Breaking the cycle of poverty and exploitation among youth in Kabukicho, Shinjuku.",
+      image: "/jkc-devotion-app/images/outreach_toyoko.png",
+      color: "#8B5CF6"
     },
-    { 
-      title: "Food Pantry", 
-      desc: "Providing food support to those in need in our community.",
-      image: "/jkc-devotion-app/images/outreach/food-pantry.jpg"
+    {
+      title: "Akiramenai — Don't Give Up",
+      slug: "akiramenai",
+      desc: "Providing food, care, and shelter to Tokyo's homeless population every 3rd Saturday.",
+      image: "/jkc-devotion-app/images/outreach_akiramenai.png",
+      color: "#EF4444"
     },
-    { 
-      title: "PinkLove Women's Outreach", 
-      desc: "Supporting and caring for women in Tokyo's urban environment.",
-      image: "/jkc-devotion-app/images/outreach/pinklove.jpg"
+    {
+      title: "The Food Pantry",
+      slug: "food-pantry",
+      desc: "Combating hunger by providing nourishment to single mothers and low-income families.",
+      image: "/jkc-devotion-app/images/ministry_foodpantry_card.png",
+      color: "#F59E0B"
     },
-    { 
-      title: "Street Evangelism", 
-      desc: "Sharing hope and faith on the streets of Tokyo.",
-      image: "/jkc-devotion-app/images/outreach/street-evangelism.jpg"
+    {
+      title: "Street Evangelism",
+      slug: "street-evangelism",
+      desc: "Taking the gospel of Christ outside the 4 walls of the church into the streets of Tokyo.",
+      image: "/jkc-devotion-app/images/outreach_street_evangelism.png",
+      color: "#10B981"
     },
-    { 
-      title: "Toyoko Youth Program", 
-      desc: "Providing a safe space and mentorship for young people.",
-      image: "/jkc-devotion-app/images/outreach/toyoko-youth.jpg"
-    }
   ];
 
   return (
-    <div className="pt-16 min-h-screen">
-      <section data-section="about-hero" className="relative py-32 px-6 flex items-center justify-center overflow-hidden bg-black/40">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[var(--primary)] blur-[120px] rounded-full opacity-10" />
+    <div className="pt-16 min-h-screen" style={{ background: 'var(--background)' }}>
+      {/* Hero */}
+      <section data-section="about-hero" className="relative py-40 px-6 flex items-center justify-center overflow-hidden bg-slate-900">
+        <div className="absolute inset-0">
+          <img
+            src="/jkc-devotion-app/images/outreach_akiramenai.png"
+            alt="JKC About"
+            className="w-full h-full object-cover opacity-10"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 to-slate-950" />
         </div>
         <div className="relative z-10 text-center space-y-4">
           <p className="text-[10px] font-black tracking-[0.4em] text-white/40 uppercase">OUR STORY · OUR BELIEFS · OUR MISSION</p>
-          <h1 className="text-5xl md:text-7xl font-sans leading-none font-black uppercase tracking-tight">
-            <span className="font-serif italic font-medium pr-4 normal-case text-white/90">About</span> Us
+          <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-white">
+            About <span className="font-serif italic font-medium normal-case" style={{ color: 'var(--jkc-gold)' }}>Us</span>
           </h1>
-          <nav className="flex justify-center gap-2 text-[10px] font-black tracking-widest text-white/30 uppercase pt-6">
-            <span className="text-[var(--primary)]">Welcome</span>
-            <span>/</span>
-            <span>About Us</span>
-          </nav>
+          <div className="w-20 h-1 mx-auto" style={{ background: 'var(--jkc-gold)' }} />
         </div>
       </section>
 
-
       <div className="max-w-screen-xl mx-auto px-6 py-24 space-y-32">
+
+        {/* History */}
         <section data-section="about-history" className="grid lg:grid-cols-2 gap-20 items-start">
           <div className="space-y-8">
             <div className="space-y-2">
-              <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">THE BEGINNING</p>
-              <h2 className="text-4xl md:text-5xl font-black italic font-serif">A Vision for Japan</h2>
+              <p className="text-[10px] font-black tracking-[0.4em] uppercase" style={{ color: 'var(--jkc-gold)' }}>THE BEGINNING</p>
+              <h2 className="text-4xl md:text-5xl font-black italic" style={{ color: 'var(--foreground)' }}>A Vision for Japan</h2>
+              <div className="w-12 h-1" style={{ background: 'var(--jkc-navy)' }} />
             </div>
-            <div className="space-y-6 text-white/60 text-lg leading-relaxed">
+            <div className="space-y-6 text-lg leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
               <p>In 2017, Japan Kingdom Church held its first service in Pastor Marcel's living room, gathering those who had no knowledge of Christ from the streets. By following Christ's example of focusing on the lost, the poor, and the needy, the small house church began to grow.</p>
-              
-              <p>Recognizing the need to further support the community, Pastor Marcel envisioned a church facility that provided not only space for worship services but also practical support, including a shower room for the homeless. Miraculously, God led the church to a building that could accommodate both English and Japanese worship services as well as a care center.</p>
-
-              {/* History Gallery */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-8">
-                {[
-                  { src: '/jkc-devotion-app/images/history/beginning-1.png', alt: 'JKC early days' },
-                  { src: '/jkc-devotion-app/images/history/beginning-2.png', alt: 'JKC congregation' },
-                  { src: '/jkc-devotion-app/images/history/beginning-3.png', alt: 'JKC growth' },
-                ].map(img => (
-                  <div key={img.src} className="rounded-[1.5rem] overflow-hidden aspect-video border border-white/10 glass">
-                    <img
-                      src={img.src}
-                      alt={img.alt}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <p>Since then, Japan Kingdom Church has rehabilitated over a dozen homeless individuals and has witnessed both foreigners and Japanese natives give their lives to Christ and become disciples.</p>
-
-              {/* Service Photos */}
-              <div className="grid grid-cols-3 gap-4 my-8">
-                {[
-                  '/jkc-devotion-app/images/history/service-1.jpg',
-                  '/jkc-devotion-app/images/history/service-2.jpg',
-                  '/jkc-devotion-app/images/history/service-3.jpg',
-                ].map(src => (
-                  <div key={src} className="rounded-2xl overflow-hidden aspect-square border border-white/10 glass">
-                    <img src={src} alt="JKC service" className="w-full h-full object-cover" loading="lazy" />
-                  </div>
-                ))}
-              </div>
-
-              <p>Japan Kingdom Church has since relocated to a prominent location just two minutes from Akishima train station, offering high visibility for more outreach to the lost. JKC continues its mission to save souls and support those in need.</p>
+              <p>Recognizing the need to further support the community, Pastor Marcel envisioned a church facility that provided not only space for worship services but also practical support, including a shower room for the homeless. Miraculously, God led the church to a building that could accommodate both English and Japanese worship services.</p>
+              <p>Japan Kingdom Church has since relocated to a prominent location just two minutes from Akishima train station. JKC continues its mission to save souls and support those in need.</p>
             </div>
           </div>
-          <div className="relative aspect-square md:aspect-auto md:h-[600px] glass rounded-[3rem] border border-white/10 overflow-hidden group">
-            <img 
-              src="/jkc-devotion-app/images/pastor/pastor-and-chiaki.png" 
+          <div className="relative rounded-[3rem] overflow-hidden group" style={{ border: '1px solid var(--border)' }}>
+            <img
+              src="/jkc-devotion-app/images/pastor/pastor-and-chiaki.png"
               alt="Pastor Marcel and Chiaki"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
+              className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-1000"
             />
           </div>
         </section>
 
+        {/* Vision / Mission */}
         <section data-section="about-vision" className="grid md:grid-cols-2 gap-8">
-          <div className="glass rounded-[3rem] p-12 border border-white/10 border-l-4 border-l-[var(--primary)] space-y-6 bg-white/5">
-            <p className="text-[10px] font-black tracking-[0.3em] text-[var(--primary)] uppercase">OUR VISION</p>
-            <p className="text-3xl font-black italic font-serif leading-tight">"To Make a Difference In Japan and Around the World Together!"</p>
+          <div className="rounded-[3rem] p-12 border space-y-6" style={{ background: 'var(--card)', borderColor: 'var(--border)', borderLeft: '4px solid var(--jkc-gold)' }}>
+            <p className="text-[10px] font-black tracking-[0.3em] uppercase" style={{ color: 'var(--jkc-gold)' }}>OUR VISION</p>
+            <p className="text-3xl font-black italic leading-tight" style={{ color: 'var(--foreground)' }}>"To Make a Difference In Japan and Around the World Together!"</p>
           </div>
-          <div className="glass rounded-[3rem] p-12 border border-white/10 border-l-4 border-l-indigo-400 space-y-6 bg-white/5">
-            <p className="text-[10px] font-black tracking-[0.3em] text-indigo-400 uppercase">OUR MISSION</p>
-            <p className="text-3xl font-black italic font-serif leading-tight">"We exist to build a strong Christian community that represents Christ to society."</p>
+          <div className="rounded-[3rem] p-12 border space-y-6" style={{ background: 'var(--card)', borderColor: 'var(--border)', borderLeft: '4px solid var(--jkc-navy)' }}>
+            <p className="text-[10px] font-black tracking-[0.3em] uppercase" style={{ color: 'var(--jkc-navy)' }}>OUR MISSION</p>
+            <p className="text-3xl font-black italic leading-tight" style={{ color: 'var(--foreground)' }}>"We exist to build a strong Christian community that represents Christ to society."</p>
           </div>
         </section>
 
         {/* Outreach Section */}
         <section data-section="about-outreach" className="space-y-12">
           <div className="text-center space-y-4">
-            <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">OUR IMPACT</p>
-            <h2 className="text-4xl md:text-6xl font-black italic font-serif">Community Outreach</h2>
+            <p className="text-[10px] font-black tracking-[0.4em] uppercase" style={{ color: 'var(--jkc-gold)' }}>OUR IMPACT</p>
+            <h2 className="text-4xl md:text-6xl font-black" style={{ color: 'var(--foreground)' }}>
+              Community <span className="font-serif italic font-medium">Outreach</span>
+            </h2>
+            <p className="max-w-xl mx-auto" style={{ color: 'var(--muted-foreground)' }}>
+              We believe the church exists for the world. Here are our active outreach programs in Tokyo.
+            </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {outreach.map((item, idx) => (
-              <div key={idx} className="group glass rounded-[2.5rem] overflow-hidden border border-white/10 flex flex-col h-full bg-white/5">
-                <div className="aspect-video overflow-hidden">
-                  <img 
-                    src={item.image} 
-                    alt={item.title} 
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {outreach.map((item) => (
+              <Link
+                key={item.slug}
+                href={`/welcome/outreach/${item.slug}`}
+                className="group rounded-[2.5rem] overflow-hidden border flex flex-col transition-all duration-300 hover:-translate-y-2"
+                style={{ background: 'var(--card)', borderColor: 'var(--border)', boxShadow: 'var(--card-shadow)' }}
+              >
+                <div className="relative h-52 overflow-hidden">
+                  <img
+                    src={item.image}
+                    alt={item.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 to-transparent" />
+                  <div
+                    className="absolute top-4 left-4 px-3 py-1 rounded-full text-[9px] font-black tracking-widest uppercase text-white"
+                    style={{ background: item.color }}
+                  >
+                    OUTREACH
+                  </div>
                 </div>
-                <div className="p-8 space-y-4">
-                  <h3 className="text-sm font-black text-white uppercase tracking-widest">{item.title}</h3>
-                  <p className="text-white/50 text-xs font-medium leading-relaxed">{item.desc}</p>
+                <div className="p-8 space-y-3 flex-1 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-black uppercase tracking-wide" style={{ color: 'var(--foreground)' }}>
+                      {item.title}
+                    </h3>
+                    <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
+                      {item.desc}
+                    </p>
+                  </div>
+                  <span
+                    className="inline-flex items-center gap-2 text-[10px] font-black tracking-[0.2em] uppercase group-hover:gap-3 transition-all mt-4"
+                    style={{ color: item.color }}
+                  >
+                    LEARN MORE <ArrowRight className="w-3 h-3" />
+                  </span>
                 </div>
-              </div>
+              </Link>
             ))}
+          </div>
+
+          <div className="text-center">
+            <Link
+              href="/welcome/outreach"
+              className="inline-flex items-center gap-3 px-10 py-5 rounded-full text-sm font-black tracking-[0.2em] uppercase text-white transition-all hover:scale-105"
+              style={{ background: 'var(--jkc-navy)', boxShadow: '0 8px 24px rgba(27,58,107,0.3)' }}
+            >
+              VIEW ALL OUTREACH PROGRAMS →
+            </Link>
           </div>
         </section>
 
-        <section data-section="about-beliefs" className="space-y-12 bg-white/5 rounded-[4rem] p-12 md:p-20 border border-white/5 shadow-2xl">
+        {/* Statement of Faith */}
+        <section data-section="about-beliefs" className="space-y-12 rounded-[4rem] p-12 md:p-20 border" style={{ background: 'var(--section-alt)', borderColor: 'var(--border)' }}>
           <div className="text-center space-y-4">
-            <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">WHAT WE BELIEVE</p>
-            <h2 className="text-4xl md:text-6xl font-black italic font-serif">Statement of Faith</h2>
+            <p className="text-[10px] font-black tracking-[0.4em] uppercase" style={{ color: 'var(--jkc-gold)' }}>WHAT WE BELIEVE</p>
+            <h2 className="text-4xl md:text-6xl font-black" style={{ color: 'var(--foreground)' }}>
+              Statement of <span className="font-serif italic font-medium">Faith</span>
+            </h2>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 pt-10">
             {beliefs.map((belief, idx) => (
               <div key={idx} className="flex gap-4 items-start group">
-                <div className="mt-1 w-6 h-6 rounded-full bg-[var(--primary)]/10 flex items-center justify-center shrink-0 border border-[var(--primary)]/20 group-hover:bg-[var(--primary)] group-hover:text-white transition-all"><CheckCircle2 className="w-4 h-4 text-[var(--primary)] group-hover:text-white" /></div>
-                <p className="text-white/80 font-bold leading-relaxed">{belief}</p>
+                <div
+                  className="mt-1 w-6 h-6 rounded-full flex items-center justify-center shrink-0 border transition-all group-hover:scale-110"
+                  style={{ background: 'rgba(245,166,35,0.1)', borderColor: 'rgba(245,166,35,0.3)' }}
+                >
+                  <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--jkc-gold)' }} />
+                </div>
+                <p className="font-bold leading-relaxed" style={{ color: 'var(--foreground)' }}>{belief}</p>
               </div>
             ))}
           </div>
         </section>
-      </div>
 
+      </div>
     </div>
   );
 }

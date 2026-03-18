@@ -95,20 +95,32 @@ export default function MinistryClient({ slug }: { slug: string }) {
   );
 
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen pt-16" style={{ background: 'var(--background)' }}>
       {/* Hero Strip */}
-      <section className="relative py-32 px-6 flex items-center justify-center overflow-hidden bg-black/40 border-b border-white/5">
+      <section className="relative py-48 px-6 flex items-center justify-center overflow-hidden border-b border-white/5 bg-slate-900">
+        {/* Background Image Overlay */}
+        {(ministry as any).image_url && (
+          <>
+            <img 
+              src={(ministry as any).image_url} 
+              alt={ministry.name} 
+              className="absolute inset-0 w-full h-full object-cover opacity-30" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent to-slate-950" />
+          </>
+        )}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] bg-[var(--primary)] blur-[120px] rounded-full opacity-10" />
+          <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] bg-[var(--jkc-gold)] blur-[120px] rounded-full opacity-5" />
         </div>
-        <div className="relative z-10 text-center space-y-4">
-          <Link href="/welcome" className="inline-flex items-center gap-2 text-[10px] font-black tracking-[0.4em] text-white/30 uppercase hover:text-[var(--primary)] transition-colors mb-6">
-            <ChevronLeft className="w-4 h-4" /> BACK TO HOME
+        <div className="relative z-10 text-center space-y-6 max-w-4xl mx-auto">
+          <Link href="/welcome" className="inline-flex items-center gap-2 text-[10px] font-black tracking-[0.4em] text-white/40 uppercase hover:text-[var(--jkc-gold)] transition-colors mb-6">
+            <ChevronLeft className="w-4 h-4" /> BACK TO ALL MINISTRIES
           </Link>
-          <h1 className="text-5xl md:text-7xl font-sans leading-none font-black uppercase tracking-tight">
+          <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter text-white">
              {ministry.name}
           </h1>
-          <p className="text-white/40 text-lg max-w-2xl mx-auto italic font-medium pt-4">
+          <div className="w-24 h-1 bg-[var(--jkc-gold)] mx-auto" />
+          <p className="text-slate-300 text-xl font-medium pt-4 leading-relaxed italic drop-shadow-sm">
              {ministry.description}
           </p>
         </div>
@@ -119,80 +131,89 @@ export default function MinistryClient({ slug }: { slug: string }) {
           {/* Details Content */}
           <div className="space-y-12">
             <div className="space-y-6">
-               <h2 className="text-3xl font-black italic">About this ministry</h2>
-               <p className="text-white/60 leading-relaxed text-lg font-medium">
-                  {ministry.description} Our {ministry.name} is a vital part of our community. 
+               <h2 className="text-3xl font-black italic" style={{ color: 'var(--foreground)' }}>About this ministry</h2>
+               <div className="w-12 h-1 bg-[var(--jkc-navy)]" />
+               <p className="text-lg leading-relaxed font-medium" style={{ color: 'var(--muted-foreground)' }}>
+                  Our {ministry.name} is a vital part of our community here at Japan Kingdom Church. 
                   We believe in building a strong foundation of faith and providing a space where 
-                  everyone can grow and serve according to their gifts.
+                  everyone can grow together, worship, and serve Japan according to their unique divine gifts.
                </p>
-               {ministry.leader_name && (
-                 <div className="pt-6">
-                    <p className="text-[10px] font-black tracking-widest text-white/30 uppercase">LEAD BY</p>
-                    <p className="text-xl font-black">{ministry.leader_name}</p>
+               {ministry.description.includes('Led by') || (ministry as any).leader_name ? (
+                 <div className="pt-8 p-8 rounded-3xl border border-dashed border-[var(--border)]" style={{ background: 'var(--section-alt)' }}>
+                    <p className="text-[10px] font-black tracking-widest text-[var(--jkc-gold)] uppercase mb-2">MINISTRY VISION</p>
+                    <p className="text-xl font-bold italic" style={{ color: 'var(--foreground)' }}>
+                      "To represent Christ to Japanese society through excellence and love."
+                    </p>
                  </div>
-               )}
+               ) : null}
             </div>
 
             <div className="grid grid-cols-2 gap-6">
-               <div className="glass rounded-3xl p-8 space-y-2 border border-white/5">
-                  <p className="text-[10px] font-black tracking-widest text-[var(--primary)] uppercase">MEETS</p>
-                  <p className="text-lg font-black italic">Weekly</p>
+               <div className="rounded-3xl p-8 space-y-2 border" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+                  <p className="text-[10px] font-black tracking-widest text-[var(--jkc-gold)] uppercase">FREQUENCY</p>
+                  <p className="text-lg font-black italic" style={{ color: 'var(--foreground)' }}>
+                    {ministry.description.includes('Every') ? 'Regular Gatherings' : 'Weekly'}
+                  </p>
                </div>
-               <div className="glass rounded-3xl p-8 space-y-2 border border-white/5">
-                  <p className="text-[10px] font-black tracking-widest text-[var(--primary)] uppercase">OPEN TO</p>
-                  <p className="text-lg font-black italic">Everyone</p>
+               <div className="rounded-3xl p-8 space-y-2 border" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+                  <p className="text-[10px] font-black tracking-widest text-[var(--jkc-gold)] uppercase">OPPORTUNITY</p>
+                  <p className="text-lg font-black italic" style={{ color: 'var(--foreground)' }}>Service & Outreach</p>
                </div>
             </div>
           </div>
 
           {/* Inquiry Form */}
-          <div className="glass rounded-[3rem] p-12 border border-white/10 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--primary)]/10 blur-3xl rounded-full" />
+          <div className="rounded-[3rem] p-12 border shadow-2xl relative overflow-hidden" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+            <div className="absolute top-0 right-0 w-32 h-32 blur-3xl rounded-full" style={{ background: 'rgba(245,166,35,0.08)' }} />
             <div className="relative space-y-8">
               <div className="space-y-2 text-center">
-                 <h2 className="text-3xl font-black">Join this Ministry</h2>
-                 <p className="text-white/40 text-sm italic font-medium">Interested in serving? Let us know.</p>
+                 <h2 className="text-3xl font-black" style={{ color: 'var(--foreground)' }}>Join this Ministry</h2>
+                 <p className="text-sm italic font-medium" style={{ color: 'var(--muted-foreground)' }}>Interested in serving? Let us know.</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black tracking-widest text-white/30 uppercase ml-1">Full Name</label>
+                  <label className="text-[10px] font-black tracking-widest uppercase ml-1" style={{ color: 'var(--muted-foreground)' }}>Full Name</label>
                   <input 
                     required
                     value={formData.name}
                     onChange={e => setFormData({...formData, name: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 text-white placeholder:text-white/20 focus:border-[var(--primary)]/50 transition-all outline-none"
+                    className="w-full rounded-2xl px-8 py-5 transition-all outline-none border"
+                    style={{ background: 'var(--section-alt)', borderColor: 'var(--border)', color: 'var(--foreground)' }}
                     placeholder="Your full name"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black tracking-widest text-white/30 uppercase ml-1">Email Address</label>
+                  <label className="text-[10px] font-black tracking-widest uppercase ml-1" style={{ color: 'var(--muted-foreground)' }}>Email Address</label>
                   <input 
                     required
                     type="email"
                     value={formData.email}
                     onChange={e => setFormData({...formData, email: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 text-white placeholder:text-white/20 focus:border-[var(--primary)]/50 transition-all outline-none"
+                    className="w-full rounded-2xl px-8 py-5 transition-all outline-none border"
+                    style={{ background: 'var(--section-alt)', borderColor: 'var(--border)', color: 'var(--foreground)' }}
                     placeholder="you@example.com"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black tracking-widest text-white/30 uppercase ml-1">Message</label>
+                  <label className="text-[10px] font-black tracking-widest uppercase ml-1" style={{ color: 'var(--muted-foreground)' }}>Message</label>
                   <textarea 
                     required
                     value={formData.message}
                     onChange={e => setFormData({...formData, message: e.target.value})}
                     rows={4}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 text-white placeholder:text-white/20 focus:border-[var(--primary)]/50 transition-all outline-none resize-none"
+                    className="w-full rounded-2xl px-8 py-5 transition-all outline-none resize-none border"
+                    style={{ background: 'var(--section-alt)', borderColor: 'var(--border)', color: 'var(--foreground)' }}
                     placeholder="Tell us a bit about why you'd like to join..."
                   />
                 </div>
 
                 <button 
                   disabled={submitting}
-                  className="w-full bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white font-black py-6 rounded-2xl transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 shadow-2xl shadow-primary/20"
+                  className="w-full text-white font-black py-6 rounded-2xl transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3"
+                  style={{ background: 'var(--jkc-navy)', boxShadow: '0 8px 24px rgba(27,58,107,0.3)' }}
                 >
                   {submitting ? <Loader2 className="w-6 h-6 animate-spin" /> : <><Send className="w-5 h-5" /> SEND INTEREST</>}
                 </button>

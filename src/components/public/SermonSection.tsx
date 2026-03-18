@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { usePublicTheme } from './PublicThemeWrapper';
 
 export default function SermonSection() {
-  const { isDark } = usePublicTheme();
   const [sermon, setSermon] = useState<any>(null);
 
   useEffect(() => {
@@ -19,20 +17,25 @@ export default function SermonSection() {
       });
   }, []);
 
-  const title = sermon?.title || "A Genuine Believer";
-  const speaker = sermon?.speaker || "Elder Sanna Patterson";
-  const watchUrl = sermon?.youtube_url || "https://www.youtube.com/@JapanKingdomChurch/streams";
+  const title    = sermon?.title    || "LET'S TUNE IN! / チューニングを合わせよう";
+  const speaker  = sermon?.speaker  || "Yutaka Nakamura";
+  const watchUrl = sermon?.youtube_url || "https://www.youtube.com/watch?v=l3aOmvsaLRU";
 
   return (
     <section id="watch" data-section="sermon" className="py-32 px-6 scroll-mt-20"
-             style={{ background: 'var(--section-alt)' }}>
+             style={{ background: 'var(--background)' }}>
       <div className="max-w-screen-xl mx-auto grid md:grid-cols-2 gap-16 items-center">
-        {/* Left column — YouTube embed */}
+
+        {/* Left — YouTube embed in a premium frame */}
         <div className="relative group">
-          <div className="absolute -inset-4 bg-primary/20 blur-3xl rounded-full opacity-0 group-hover:opacity-40 transition-opacity" />
-          <div className="relative aspect-video rounded-[2.5rem] overflow-hidden bg-black shadow-2xl border border-white/10">
+          {/* Glow ring visible in dark mode, tasteful shadow in light */}
+          <div className="relative aspect-video rounded-2xl overflow-hidden"
+               style={{
+                 boxShadow: 'var(--shadow-xl)',
+                 border: '1px solid var(--border)',
+               }}>
             <iframe
-              src="https://www.youtube.com/embed?listType=user_uploads&list=japankingdomchurch"
+              src={`${watchUrl.replace('/watch?v=', '/embed/')}?autoplay=1&mute=1&rel=0&modestbranding=1`}
               className="w-full h-full"
               allowFullScreen
               title="Latest Sermon"
@@ -41,26 +44,29 @@ export default function SermonSection() {
           </div>
         </div>
 
-        {/* Right column */}
+        {/* Right — Text content */}
         <div className="space-y-8">
-          <div className="space-y-4">
+          {/* Gold top rule — accent strip that Elevation uses */}
+          <div className="w-12 h-1 rounded-full" style={{ background: 'var(--jkc-gold)' }} />
+
+          <div className="space-y-3">
             <p className="text-[10px] font-black tracking-[0.4em] uppercase"
-               style={{ color: 'var(--jkc-navy)' }}>
+               style={{ color: 'var(--jkc-gold)' }}>
               LATEST SERMON
             </p>
-            <h2 className="text-4xl md:text-6xl font-serif italic font-black leading-tight"
+            <h2 className="text-4xl md:text-5xl font-serif italic font-black leading-tight"
                 style={{ color: 'var(--foreground)' }}>
               {title}
             </h2>
           </div>
 
-          <div className="space-y-2">
-            <p className="text-[10px] font-black tracking-widest uppercase"
+          <div className="rounded-xl px-5 py-4 inline-block"
+               style={{ background: 'var(--section-alt)', border: '1px solid var(--border)' }}>
+            <p className="text-[10px] font-black tracking-widest uppercase m-0"
                style={{ color: 'var(--muted-foreground)' }}>
               SPEAKER
             </p>
-            <p className="text-2xl font-black"
-               style={{ color: 'var(--jkc-gold)' }}>
+            <p className="text-xl font-black mt-1 m-0" style={{ color: 'var(--jkc-navy)' }}>
               {speaker}
             </p>
           </div>
@@ -70,17 +76,12 @@ export default function SermonSection() {
             Watch our latest message and discover how we are growing together in faith and purpose.
           </p>
 
-          <div className="pt-4">
-            <a 
-              href={watchUrl} 
+          <div className="pt-2">
+            <a
+              href={watchUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-4 rounded-full px-10 py-5 text-xs font-black tracking-[0.2em] transition-all"
-              style={{ 
-                background: 'var(--jkc-navy)',
-                color: 'var(--primary-foreground)',
-                boxShadow: 'var(--shadow-md)'
-              }}
+              className="btn-navy inline-flex items-center gap-3 rounded-full px-10 py-5 text-xs font-black tracking-[0.2em] uppercase"
             >
               WATCH MORE ON YOUTUBE →
             </a>
