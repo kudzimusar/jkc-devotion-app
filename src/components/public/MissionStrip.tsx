@@ -5,28 +5,30 @@ export default function MissionStrip() {
     <div data-section="mission" className="relative">
       <section
         data-section="mission"
-        className="py-24 px-6 text-center bg-[#f5a623] border-y border-[#e8940a]/30"
+        className="py-24 px-6 text-center border-y"
+        style={{ background: 'var(--jkc-gold)', borderColor: 'var(--border)' }}
       >
         <div className="max-w-4xl mx-auto">
-          <p className="text-2xl md:text-5xl font-serif italic font-medium text-[#1b3a6b]/90 leading-relaxed md:leading-tight">
+          <p className="text-2xl md:text-5xl font-serif italic font-medium leading-relaxed md:leading-tight"
+             style={{ color: 'var(--jkc-navy)' }}>
             "Building a Strong Christian Community that Represents{' '}
-            <span className="text-[#1b3a6b] non-italic font-black">Christ</span>{' '}
+            <span className="non-italic font-black">Christ</span>{' '}
             to Japanese Society"
           </p>
         </div>
       </section>
-      {/* Wave bottom — cream flows into next section */}
-      <div className="relative h-16 bg-[#f5a623] overflow-hidden">
+      {/* Wave bottom — flows into next section background */}
+      <div className="relative h-16 overflow-hidden" style={{ background: 'var(--jkc-gold)' }}>
         <svg
           viewBox="0 0 1440 64"
           className="absolute bottom-0 w-full"
           preserveAspectRatio="none"
           style={{ height: '64px' }}
         >
-          <path 
-            className="wave-cream"
+          <path
+            className="wave-gray"
             d="M0,64 C360,0 1080,0 1440,64 L1440,64 L0,64 Z"
-            fill="#fffdf7" 
+            fill="var(--section-alt)"
           />
         </svg>
       </div>

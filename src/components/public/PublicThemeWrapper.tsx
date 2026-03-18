@@ -1,8 +1,13 @@
 'use client';
 import { createContext, useContext, useState, useEffect } from 'react';
 import { Sun, Moon } from 'lucide-react';
+import { useTheme } from '@/components/theme-provider';
 
-const ThemeContext = createContext({ isDark: true });
+interface ThemeContextType {
+  isDark: boolean;
+}
+
+const ThemeContext = createContext<ThemeContextType>({ isDark: false });
 
 export const usePublicTheme = () => useContext(ThemeContext);
 
@@ -11,88 +16,42 @@ export function PublicThemeWrapper({
 }: {
   children: React.ReactNode
 }) {
-  const [isDark, setIsDark] = useState(true);
+  const { mode, toggleMode } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
+  // Avoid hydration mismatch
   useEffect(() => {
-    const saved = localStorage.getItem('jkc-public-theme');
-    if (saved) setIsDark(saved === 'dark');
+    setMounted(true);
   }, []);
 
-  const toggle = () => {
-    const next = !isDark;
-    setIsDark(next);
-    localStorage.setItem('jkc-public-theme', next ? 'dark' : 'light');
-  };
+  const isDark = mode === 'dark';
+
+  if (!mounted) {
+    // Initial SSR render or pre-hydration
+    return (
+      <div style={{ minHeight: '100vh', background: 'var(--jkc-ivory)', color: 'var(--jkc-navy)' }}>
+        {children}
+      </div>
+    );
+  }
 
   return (
     <ThemeContext.Provider value={{ isDark }}>
       <div
-        data-theme={isDark ? 'dark' : 'light'}
-        className={isDark ? 'jkc-dark' : 'jkc-light'}
+        className="min-h-screen transition-colors duration-300"
         style={{
-          '--primary': isDark ? '#3b82f6' : '#1b3a6b',
-          '--gold': '#f5a623',
-        } as React.CSSProperties}
+          background: 'var(--background)',
+          color: 'var(--foreground)'
+        }}
       >
-        <style>{`
-          .jkc-dark {
-            background: #0d1b2e;
-            color: white;
-          }
-          .jkc-light {
-            background: #fdfaf3;
-            color: #1b3a6b;
-          }
-          /* Core transition */
-          .jkc-dark, .jkc-light {
-            transition: background-color 0.3s ease, color 0.3s ease;
-            min-height: 100vh;
-          }
-          
-          /* Nav adjustments — minimal to avoid logo regression */
-          .jkc-light nav {
-            background: rgba(255,255,255,0.95) !important;
-            border-bottom: 2px solid rgba(27,58,107,0.1) !important;
-          }
-          .jkc-light nav a {
-            color: #1b3a6b !important;
-          }
-          .jkc-light nav .text-white {
-            color: #1b3a6b !important;
-          }
-          .jkc-light nav .border-white\\/20 {
-            border-color: rgba(27,58,107,0.3) !important;
-          }
-
-          /* Global background helpers — only for light mode, minimal */
-          .jkc-light .glass-card, 
-          .jkc-light .glass {
-            background: rgba(255,255,255,0.8) !important;
-            border-color: rgba(27,58,107,0.1) !important;
-            color: #1b3a6b !important;
-          }
-        `}</style>
-
         {/* Theme toggle */}
         <button
-          onClick={toggle}
+          onClick={toggleMode}
+          className="fixed bottom-20 right-6 z-[9998] w-10 h-10 rounded-full flex items-center justify-center border shadow-xl transition-all hover:scale-110 active:scale-95"
           style={{
-            position: 'fixed',
-            bottom: '5rem',
-            right: '1.5rem',
-            zIndex: 9998,
-            width: '2.5rem',
-            height: '2.5rem',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: isDark ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(0,0,0,0.15)',
-            background: isDark ? 'rgba(255,255,255,0.1)' : 'white',
-            color: isDark ? 'white' : '#1b3a6b',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
+            borderColor: 'var(--border)',
+            background: 'var(--card)',
+            color: 'var(--foreground)'
           }}
           aria-label="Toggle theme"
         >

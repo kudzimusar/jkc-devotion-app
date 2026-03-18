@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { ThemeProvider as NextThemesProvider, useTheme as useNextTheme } from "next-themes";
 import { usePathname } from "next/navigation";
 
 type ThemeContextType = {
@@ -12,15 +13,21 @@ type ThemeContextType = {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+export function ThemeProvider({ 
+  children,
+  ...props 
+}: { 
+  children: React.ReactNode
+} & React.ComponentProps<typeof NextThemesProvider>) {
     const [week, setWeek] = useState(1);
-    const [mode, setMode] = useState<'light' | 'dark'>('dark');
-    const pathname = usePathname();
+    const { theme, setTheme, resolvedTheme } = useNextTheme();
+    const [mounted, setMounted] = useState(false);
+    
+    // Bridge next-themes 'theme' to internal 'mode'
+    const mode = (resolvedTheme || theme || 'light') as 'light' | 'dark';
 
     useEffect(() => {
-        const savedMode = localStorage.getItem('theme-mode') as 'light' | 'dark';
-        if (savedMode) setMode(savedMode);
-        else if (window.matchMedia('(prefers-color-scheme: dark)').matches) setMode('dark');
+        setMounted(true);
     }, []);
 
     useEffect(() => {
@@ -40,29 +47,31 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     useEffect(() => {
+        if (!mounted) return;
         const root = window.document.documentElement;
 
-        // Remove old theme-week classes
+        // Apply week theme class
         root.classList.forEach(className => {
             if (className.startsWith('theme-week-')) root.classList.remove(className);
         });
         root.classList.add(`theme-week-${week}`);
+    }, [week, mounted]);
 
-        if (mode === 'dark') {
-            root.classList.add('dark');
-        } else {
-            root.classList.remove('dark');
-        }
-
-        localStorage.setItem('theme-mode', mode);
-    }, [week, mode]);
-
-    const toggleMode = () => setMode(m => m === 'light' ? 'dark' : 'light');
+    const toggleMode = () => {
+        setTheme(mode === 'light' ? 'dark' : 'light');
+    };
 
     return (
-        <ThemeContext.Provider value={{ week, mode, setWeek, toggleMode }}>
-            {children}
-        </ThemeContext.Provider>
+        <NextThemesProvider 
+          attribute="class" 
+          defaultTheme="light" 
+          enableSystem={false}
+          {...props}
+        >
+            <ThemeContext.Provider value={{ week, mode, setWeek, toggleMode }}>
+                {children}
+            </ThemeContext.Provider>
+        </NextThemesProvider>
     );
 }
 

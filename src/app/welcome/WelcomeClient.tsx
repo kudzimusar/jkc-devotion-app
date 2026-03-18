@@ -19,6 +19,7 @@ import TestimoniesSection from '@/components/public/TestimoniesSection';
 import { GlobalAIAssistant } from '@/components/layout/GlobalAIAssistant';
 
 import { motion } from 'framer-motion';
+import { usePublicTheme } from '@/components/public/PublicThemeWrapper';
 
 const FadeInSection = ({
   children,
@@ -38,6 +39,7 @@ const FadeInSection = ({
 );
 
 export default function WelcomeClient() {
+  const { isDark } = usePublicTheme();
   const [user, setUser] = useState<any>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -57,7 +59,7 @@ export default function WelcomeClient() {
   }, []);
 
   return (
-    <div className="overflow-x-hidden pt-16">
+    <div className="overflow-x-hidden pt-16" style={{ background: 'var(--background)' }}>
       <HeroSection />
       
       <FadeInSection>
@@ -65,13 +67,14 @@ export default function WelcomeClient() {
       </FadeInSection>
       
       {user?.id && (
-        <section className="bg-black/20 border-y border-white/5 py-12">
+        <section className="border-y py-12" style={{ background: 'var(--muted)', borderColor: 'var(--border)' }}>
           <div className="max-w-screen-xl mx-auto px-6">
             <div className="flex items-center gap-4 mb-8 ml-4">
-              <div className="w-10 h-10 rounded-full bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)]">
-                <span className="text-xs font-black">FEED</span>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center"
+                   style={{ background: 'var(--jkc-navy)', color: 'white' }}>
+                <span className="text-[10px] font-black tracking-widest">FEED</span>
               </div>
-              <h2 className="text-2xl font-black italic">Church Announcements</h2>
+              <h2 className="text-2xl font-black italic" style={{ color: 'var(--foreground)' }}>Church Announcements</h2>
             </div>
             <div className="max-w-3xl mx-auto">
               <FeedSection />

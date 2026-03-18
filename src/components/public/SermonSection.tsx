@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { usePublicTheme } from './PublicThemeWrapper';
 
 export default function SermonSection() {
+  const { isDark } = usePublicTheme();
   const [sermon, setSermon] = useState<any>(null);
 
   useEffect(() => {
@@ -22,7 +24,8 @@ export default function SermonSection() {
   const watchUrl = sermon?.youtube_url || "https://www.youtube.com/@JapanKingdomChurch/streams";
 
   return (
-    <section id="watch" data-section="sermon" className="py-32 px-6 scroll-mt-20">
+    <section id="watch" data-section="sermon" className="py-32 px-6 scroll-mt-20"
+             style={{ background: 'var(--section-alt)' }}>
       <div className="max-w-screen-xl mx-auto grid md:grid-cols-2 gap-16 items-center">
         {/* Left column — YouTube embed */}
         <div className="relative group">
@@ -41,24 +44,29 @@ export default function SermonSection() {
         {/* Right column */}
         <div className="space-y-8">
           <div className="space-y-4">
-            <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">
+            <p className="text-[10px] font-black tracking-[0.4em] uppercase"
+               style={{ color: 'var(--jkc-navy)' }}>
               LATEST SERMON
             </p>
-            <h2 className="text-4xl md:text-6xl font-serif italic font-black text-white/90 leading-tight">
+            <h2 className="text-4xl md:text-6xl font-serif italic font-black leading-tight"
+                style={{ color: 'var(--foreground)' }}>
               {title}
             </h2>
           </div>
 
           <div className="space-y-2">
-            <p className="text-[10px] font-black tracking-widest text-white/30 uppercase">
+            <p className="text-[10px] font-black tracking-widest uppercase"
+               style={{ color: 'var(--muted-foreground)' }}>
               SPEAKER
             </p>
-            <p className="text-2xl font-black text-white/80">
+            <p className="text-2xl font-black"
+               style={{ color: 'var(--jkc-gold)' }}>
               {speaker}
             </p>
           </div>
 
-          <p className="text-white/50 text-base leading-relaxed max-w-md">
+          <p className="text-base leading-relaxed max-w-md"
+             style={{ color: 'var(--muted-foreground)' }}>
             Watch our latest message and discover how we are growing together in faith and purpose.
           </p>
 
@@ -67,7 +75,12 @@ export default function SermonSection() {
               href={watchUrl} 
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-4 border border-white/20 rounded-full px-10 py-5 text-xs font-black tracking-[0.2em] text-white hover:bg-white/5 hover:border-white/40 transition-all active:scale-95"
+              className="inline-flex items-center gap-4 rounded-full px-10 py-5 text-xs font-black tracking-[0.2em] transition-all"
+              style={{ 
+                background: 'var(--jkc-navy)',
+                color: 'var(--primary-foreground)',
+                boxShadow: 'var(--shadow-md)'
+              }}
             >
               WATCH MORE ON YOUTUBE →
             </a>

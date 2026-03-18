@@ -116,21 +116,21 @@ export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: A
             <DialogContent className="max-w-md p-0 overflow-hidden border-0 bg-transparent shadow-none" aria-describedby="auth-modal-description">
                 <DialogTitle className="sr-only">Authenticate to Church OS</DialogTitle>
                 <DialogDescription id="auth-modal-description" className="sr-only">Login or register to access Church OS dashboard.</DialogDescription>
-                <div className="bg-background/80 backdrop-blur-3xl rounded-[3.5rem] border border-foreground/10 overflow-hidden shadow-2xl p-6 md:p-10 transition-all duration-500 animate-in zoom-in-95 fade-in duration-300">
+                <div className="bg-background rounded-[3.5rem] border border-border overflow-hidden shadow-2xl p-6 md:p-10 transition-all duration-500 animate-in zoom-in-95 fade-in duration-300">
                     <div className="flex flex-col items-center gap-4 relative mb-6">
                         <img src={`${BP}/church-logo.png`} alt="JKC" className="w-16 h-16 object-contain" />
                         <div className="space-y-1 text-center">
                             <h3 className="text-3xl font-serif">Join the Journey</h3>
-                            <p className="text-sm opacity-50 px-8">Your private journal, synced anywhere.</p>
+                            <p className="text-sm px-8" style={{ color: 'var(--muted-foreground)' }}>Your private journal, synced anywhere.</p>
                         </div>
-                        <button onClick={onClose} className="absolute top-0 right-0 opacity-40 hover:opacity-100 transition-opacity">
+                        <button onClick={onClose} className="absolute top-0 right-0 hover:opacity-100 transition-opacity" style={{ color: 'var(--muted-foreground)' }}>
                             <Trash2 className="w-6 h-6 rotate-45" />
                         </button>
                     </div>
 
                     <div className="space-y-6">
                         <Tabs value={authMode} onValueChange={(v: any) => setAuthMode(v)}>
-                            <TabsList className="grid w-full grid-cols-2 rounded-full h-14 mb-10 bg-foreground/5 border border-foreground/10 p-1">
+                            <TabsList className="grid w-full grid-cols-2 rounded-full h-14 mb-10 bg-muted border border-border p-1">
                                 <TabsTrigger value="login" className="rounded-full font-black text-xs tracking-widest">LOGIN</TabsTrigger>
                                 <TabsTrigger value="register" className="rounded-full font-black text-xs tracking-widest">NEW ACCOUNT</TabsTrigger>
                             </TabsList>
@@ -142,14 +142,14 @@ export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: A
                                         type="email"
                                         value={email}
                                         onChange={e => setEmail(e.target.value)}
-                                        className="h-16 rounded-3xl bg-foreground/5 border-0 px-8 text-lg placeholder:opacity-30 focus:bg-foreground/10 transition-colors"
+                                        className="h-16 rounded-3xl bg-muted border-0 px-8 text-lg placeholder:text-muted-foreground/50 focus:bg-accent transition-colors"
                                     />
                                     <Input
                                         placeholder="Password"
                                         type="password"
                                         value={password}
                                         onChange={e => setPassword(e.target.value)}
-                                        className="h-16 rounded-3xl bg-foreground/5 border-0 px-8 text-lg placeholder:opacity-30 focus:bg-foreground/10 transition-colors"
+                                        className="h-16 rounded-3xl bg-muted border-0 px-8 text-lg placeholder:text-muted-foreground/50 focus:bg-accent transition-colors"
                                     />
                                 </div>
                                 <Button
@@ -161,10 +161,10 @@ export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: A
                                 </Button>
 
                                 <div className="flex justify-between items-center px-2">
-                                    <Button variant="ghost" onClick={() => setAuthMode("magic")} className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-40 hover:opacity-100 transition-all h-auto py-2">
+                                    <Button variant="ghost" onClick={() => setAuthMode("magic")} className="text-[10px] font-bold uppercase tracking-[0.2em] transition-all h-auto py-2" style={{ color: 'var(--muted-foreground)' }}>
                                         Magic Link
                                     </Button>
-                                    <Button variant="ghost" onClick={() => setAuthMode("forgot")} className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-40 hover:opacity-100 transition-all h-auto py-2">
+                                    <Button variant="ghost" onClick={() => setAuthMode("forgot")} className="text-[10px] font-bold uppercase tracking-[0.2em] transition-all h-auto py-2" style={{ color: 'var(--muted-foreground)' }}>
                                         Forgot Password?
                                     </Button>
                                 </div>

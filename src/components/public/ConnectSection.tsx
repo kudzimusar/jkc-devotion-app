@@ -7,8 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import { usePublicTheme } from './PublicThemeWrapper';
 
 export default function ConnectSection() {
+  const { isDark } = usePublicTheme();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     first_name: '',
@@ -48,47 +50,58 @@ export default function ConnectSection() {
   };
 
   return (
-    <section id="give" data-section="connect" className="py-32 px-6 scroll-mt-20">
+    <section id="give" data-section="connect" className="py-32 px-6 scroll-mt-20 border-t"
+             style={{ background: 'var(--section-alt)', borderColor: 'var(--border)' }}>
       <div className="max-w-2xl mx-auto text-center space-y-12">
         <div className="space-y-4">
-          <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">
+          <p className="text-[10px] font-black tracking-[0.4em] uppercase"
+             style={{ color: 'var(--jkc-navy)' }}>
             GET CONNECTED
           </p>
-          <h2 className="text-4xl md:text-5xl font-black text-white/90">
+          <h2 className="text-4xl md:text-5xl font-black" style={{ color: 'var(--foreground)' }}>
             Inquiries & Questions
           </h2>
-          <p className="text-white/50 text-base leading-relaxed">
+          <p className="text-base leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
             Have a question or want to know more about our community? Fill out the form below and we'll get back to you shortly.
           </p>
         </div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="glass-card rounded-[3rem] p-10 md:p-12 border border-white/10 shadow-2xl space-y-8 text-left bg-white/5"
+          className="rounded-[3rem] p-10 md:p-12 border shadow-2xl space-y-8 text-left"
+          style={{ 
+             background: 'var(--card)', 
+             borderColor: 'var(--border)',
+             boxShadow: isDark ? 'none' : 'var(--shadow-xl)'
+          }}
         >
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-4">
-                  First Name <span className="text-[var(--primary)]">*</span>
+                <label className="text-[10px] font-black uppercase tracking-widest ml-4"
+                       style={{ color: 'var(--muted-foreground)' }}>
+                  First Name <span className="text-[var(--jkc-gold)]">*</span>
                 </label>
-                <Input 
+                <Input
                   required
                   placeholder="John"
-                  className="bg-black/20 border-white/10 rounded-2xl h-14 px-6 focus:border-[var(--primary)]/50 transition-colors"
+                  className="rounded-2xl h-14 px-6 focus:ring-1 focus:ring-[var(--jkc-gold)] transition-all"
+                  style={{ background: 'var(--card)', borderColor: 'var(--border)', color: 'var(--foreground)' }}
                   value={formData.first_name}
                   onChange={e => setFormData({ ...formData, first_name: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-4">
+                <label className="text-[10px] font-black uppercase tracking-widest ml-4"
+                       style={{ color: 'var(--muted-foreground)' }}>
                   Last Name
                 </label>
-                <Input 
+                <Input
                   placeholder="Doe"
-                  className="bg-black/20 border-white/10 rounded-2xl h-14 px-6 focus:border-[var(--primary)]/50 transition-colors"
+                  className="rounded-2xl h-14 px-6 focus:ring-1 focus:ring-[var(--jkc-gold)] transition-all"
+                  style={{ background: 'var(--card)', borderColor: 'var(--border)', color: 'var(--foreground)' }}
                   value={formData.last_name}
                   onChange={e => setFormData({ ...formData, last_name: e.target.value })}
                 />
@@ -96,36 +109,45 @@ export default function ConnectSection() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-4">
-                Email Address <span className="text-[var(--primary)]">*</span>
+              <label className="text-[10px] font-black uppercase tracking-widest ml-4"
+                     style={{ color: 'var(--muted-foreground)' }}>
+                Email Address <span className="text-[var(--jkc-gold)]">*</span>
               </label>
-              <Input 
+              <Input
                 required
                 type="email"
                 placeholder="john@example.com"
-                className="bg-black/20 border-white/10 rounded-2xl h-14 px-6 focus:border-[var(--primary)]/50 transition-colors"
+                className="rounded-2xl h-14 px-6 focus:ring-1 focus:ring-[var(--jkc-gold)] transition-all"
+                style={{ background: 'var(--card)', borderColor: 'var(--border)', color: 'var(--foreground)' }}
                 value={formData.email}
                 onChange={e => setFormData({ ...formData, email: e.target.value })}
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-4">
+              <label className="text-[10px] font-black uppercase tracking-widest ml-4"
+                     style={{ color: 'var(--muted-foreground)' }}>
                 Your inquiry here...
               </label>
-              <Textarea 
+              <Textarea
                 placeholder="Tell us how we can help you..."
-                className="bg-black/20 border-white/10 rounded-[2rem] min-h-[160px] p-6 focus:border-[var(--primary)]/50 transition-colors resize-none"
+                className="rounded-[2rem] min-h-[160px] p-6 focus:ring-1 focus:ring-[var(--jkc-gold)] transition-all resize-none"
+                style={{ background: 'var(--card)', borderColor: 'var(--border)', color: 'var(--foreground)' }}
                 value={formData.message}
                 onChange={e => setFormData({ ...formData, message: e.target.value })}
               />
             </div>
 
             <div className="pt-4">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={loading}
-                className="w-full h-16 bg-[var(--primary)] text-white font-black text-xs tracking-[0.3em] rounded-full shadow-2xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all"
+                className="w-full h-16 font-black text-xs tracking-[0.3em] rounded-full transition-all"
+                style={{
+                   background: 'var(--jkc-navy)',
+                   color: 'var(--primary-foreground)',
+                   boxShadow: 'var(--shadow-md)'
+                }}
               >
                 {loading ? "SENDING..." : "SUBMIT INQUIRY"}
               </Button>

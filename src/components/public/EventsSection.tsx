@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { MapPin, Calendar } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import { usePublicTheme } from './PublicThemeWrapper';
 
 export default function EventsSection() {
+  const { isDark } = usePublicTheme();
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -45,10 +47,11 @@ export default function EventsSection() {
   return (
     <section className="py-20 px-6 max-w-screen-xl mx-auto">
       <div className="space-y-4 mb-12">
-        <p className="text-[10px] font-black tracking-[0.3em] text-[var(--primary)] opacity-60 uppercase">
+        <p className="text-[10px] font-black tracking-[0.3em] uppercase"
+           style={{ color: 'var(--jkc-navy)' }}>
           Upcoming Events
         </p>
-        <h2 className="text-4xl md:text-5xl font-black text-white/90">
+        <h2 className="text-4xl md:text-5xl font-black" style={{ color: 'var(--foreground)' }}>
           What's <span className="font-serif italic font-medium">Happening</span>
         </h2>
       </div>
@@ -57,32 +60,41 @@ export default function EventsSection() {
         {events.map((event) => (
           <div 
             key={event.id}
-            className="glass rounded-[2.5rem] p-10 border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all group flex flex-col justify-between"
+            className="rounded-[2.5rem] p-10 transition-all group flex flex-col justify-between border"
+            style={{
+               background: 'var(--card)',
+               borderColor: 'var(--border)',
+               boxShadow: 'var(--shadow-xl)'
+            }}
           >
             <div className="space-y-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)] border border-[var(--primary)]/20">
-                  <Calendar className="w-6 h-6" />
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center border"
+                     style={{ background: 'var(--jkc-navy)', borderColor: 'var(--border)' }}>
+                  <Calendar className="w-6 h-6 text-white" />
                 </div>
-                <div className="text-[10px] font-black tracking-[0.2em] text-[var(--primary)] opacity-80 uppercase">
+                <div className="text-[10px] font-black tracking-[0.2em] uppercase"
+                     style={{ color: 'var(--jkc-gold)' }}>
                   {format(parseISO(event.date), 'MMM dd')}
                 </div>
               </div>
 
               <div className="space-y-3">
-                <h3 className="text-2xl font-black text-white/90 group-hover:text-[var(--primary)] transition-colors">
+                <h3 className="text-2xl font-black transition-colors"
+                    style={{ color: 'var(--foreground)' }}>
                   {event.title}
                 </h3>
                 
                 {event.location && (
-                  <div className="flex items-center gap-2 text-white/40">
+                  <div className="flex items-center gap-2" style={{ color: 'var(--muted-foreground)' }}>
                     <MapPin className="w-3.5 h-3.5" />
                     <span className="text-xs font-bold uppercase tracking-widest">{event.location}</span>
                   </div>
                 )}
                 
                 {event.description && (
-                  <p className="text-sm text-white/50 leading-relaxed line-clamp-2 italic">
+                  <p className="text-sm leading-relaxed line-clamp-2 italic"
+                     style={{ color: 'var(--muted-foreground)' }}>
                     {event.description}
                   </p>
                 )}
@@ -90,8 +102,9 @@ export default function EventsSection() {
             </div>
 
             <div className="pt-8">
-              <div className="h-px w-full bg-white/5 mb-6" />
-              <button className="text-[10px] font-black tracking-[0.3em] text-white/30 uppercase group-hover:text-[var(--primary)] transition-colors">
+              <div className="h-px w-full mb-6" style={{ background: 'var(--border)' }} />
+              <button className="text-[10px] font-black tracking-[0.3em] uppercase transition-colors"
+                      style={{ color: 'var(--jkc-navy)' }}>
                 LEARN MORE →
               </button>
             </div>

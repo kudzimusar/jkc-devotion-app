@@ -35,7 +35,7 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section 
+    <section
       className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 bg-slate-900"
       style={{
         backgroundImage: 'url("/jkc-devotion-app/images/hero-background.jpg")',
@@ -44,8 +44,8 @@ export default function HeroSection() {
       }}
     >
       {/* Heavy dark overlay to GUARANTEE readability of white/gold text on top of photo */}
-      <div 
-        className="absolute inset-0 z-0 bg-black/60 shadow-[inset_0_0_100px_rgba(0,0,0,0.5)]"
+      <div
+        className="absolute inset-0 z-0 bg-slate-950/70"
       />
 
       <div className="relative z-10 max-w-screen-xl mx-auto px-6 text-center">
@@ -56,55 +56,60 @@ export default function HeroSection() {
           className="space-y-8"
         >
           <div className="space-y-2">
-            <p className="text-[10px] md:text-xs font-black tracking-[0.5em] uppercase text-white/40">
-              JAPAN KINGDOM CHURCH · TOKYO, JAPAN
+            <p className="text-[10px] md:text-xs font-black tracking-[0.5em] uppercase"
+               style={{ color: 'var(--footer-muted)' }}>
+              Japan Kingdom Church · Tokyo, Japan
             </p>
-            <div className="w-12 h-px bg-white/20 mx-auto mt-2" />
+            <div className="w-12 h-px mx-auto mt-2" 
+                 style={{ background: 'var(--jkc-gold)' }} />
           </div>
 
           <h1 className="flex flex-col gap-2">
-            <span className="text-4xl md:text-7xl font-serif italic text-white/90 leading-tight">
+            <span className="text-4xl md:text-7xl font-serif italic leading-tight"
+                  style={{ color: 'var(--footer-fg)' }}>
               Welcome to
             </span>
-            <span className="text-6xl md:text-[10rem] font-black uppercase tracking-tighter leading-[0.85] text-[#f5a623] drop-shadow-2xl">
+            <span className="text-6xl md:text-[10rem] font-black uppercase tracking-tighter leading-[0.85] drop-shadow-2xl" 
+                  style={{ color: 'var(--jkc-gold)' }}>
               Japan Kingdom <br className="hidden md:block" /> Church
             </span>
           </h1>
 
-          <p className="text-sm md:text-xl font-medium tracking-[0.1em] text-white/70 max-w-3xl mx-auto leading-relaxed">
-            Building a Strong Christian Community that represents Christ to Japanese Society
+          <p className="text-sm md:text-xl font-medium tracking-[0.1em] max-w-3xl mx-auto leading-relaxed"
+             style={{ color: 'var(--footer-fg)' }}>
+            BUILDING A STRONG CHRISTIAN COMMUNITY REPRESENTING CHRIST TO JAPANESE SOCIETY
           </p>
 
-          <div className="inline-flex rounded-full px-12 py-4 text-xs font-black tracking-[0.2em] mt-4"
-               style={{ 
-                 background: 'rgba(255,255,255,0.08)', 
-                 border: '1px solid rgba(255,255,255,0.2)',
-                 color: 'rgba(255,255,255,0.95)',
-                 backdropFilter: 'blur(20px)'
-               }}>
-            SUNDAYS · 9:30AM (PRAYER) · 10:30AM (SERVICE)
+          <div className="inline-flex rounded-full px-12 py-4 text-xs font-black tracking-[0.2em] mt-4 border"
+            style={{
+              background: 'var(--footer-bg)',
+              borderColor: 'var(--jkc-gold)',
+              color: 'var(--jkc-gold)',
+            }}>
+            SUNDAYS · 9:30AM PRAYER · 10:30AM SERVICE
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-8 mt-12">
-            <Link 
+            <Link
               href="/welcome/visit"
               className="w-full sm:w-auto font-black px-12 py-6 rounded-full text-xs tracking-[0.2em] shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 text-center uppercase"
               style={{
-                background: '#f5a623',
-                color: '#1b3a6b',
-                boxShadow: '0 15px 40px rgba(245,166,35,0.25)'
+                background: 'var(--jkc-gold)',
+                color: 'var(--jkc-navy)',
+                boxShadow: 'var(--shadow-md)'
               }}
             >
               NEW HERE?
             </Link>
-            <a 
-              href="https://youtube.com/japankingdomchurch" 
+            <a
+              href="https://youtube.com/japankingdomchurch"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full sm:w-auto font-black px-12 py-6 rounded-full text-xs tracking-[0.2em] transition-all duration-300 hover:bg-white/10 active:scale-95 text-center uppercase"
+              className="w-full sm:w-auto font-black px-12 py-6 rounded-full text-xs tracking-[0.2em] transition-all duration-300 active:scale-95 text-center uppercase"
               style={{
-                border: '1px solid rgba(255,255,255,0.4)',
-                color: 'white',
+                border: '1px solid var(--jkc-gold)',
+                background: 'transparent',
+                color: 'var(--jkc-gold)',
               }}
             >
               WATCH LIVE
@@ -118,10 +123,11 @@ export default function HeroSection() {
               { value: timeLeft.minutes, label: 'MIN' }
             ].map(({ value, label }) => (
               <div key={label} className="text-center group">
-                <div className="text-4xl md:text-5xl font-black text-[#f5a623]">
+                <div className="text-4xl md:text-5xl font-black" style={{ color: 'var(--jkc-gold)' }}>
                   {String(value).padStart(2, '0')}
                 </div>
-                <div className="text-[10px] font-black tracking-[0.3em] text-white/30 uppercase mt-1">
+                <div className="text-[10px] font-black tracking-[0.3em] uppercase mt-1"
+                     style={{ color: 'var(--footer-muted)' }}>
                   {label}
                 </div>
               </div>
@@ -131,13 +137,14 @@ export default function HeroSection() {
       </div>
 
       {/* Scroll Indicator */}
-      <motion.div 
+      <motion.div
         className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 group"
         animate={{ y: [0, 10, 0] }}
         transition={{ duration: 2, repeat: Infinity }}
       >
-        <span className="text-[10px] font-black tracking-[0.4em] text-white/30 uppercase">SCROLL</span>
-        <div className="w-px h-16 bg-gradient-to-b from-[#f5a623]/60 to-transparent" />
+        <span className="text-[10px] font-black tracking-[0.4em] uppercase"
+              style={{ color: 'var(--footer-muted)' }}>SCROLL</span>
+        <div className="w-px h-16 bg-gradient-to-b from-[var(--jkc-gold)] to-transparent" />
       </motion.div>
     </section>
   );

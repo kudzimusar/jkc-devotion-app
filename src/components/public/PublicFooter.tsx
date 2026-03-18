@@ -7,17 +7,17 @@ export default function PublicFooter() {
   const { isDark } = usePublicTheme();
   const currentYear = new Date().getFullYear();
 
-  // Footer is a "Dark Island" — it ALWAYS stays Navy/White
-  const footerBg = '#1b3a6b';
-  const textColor = '#ffffff';
-  const mutedText = 'rgba(255,255,255,0.7)';
-  const dimText = 'rgba(255,255,255,0.4)';
-  const borderColor = 'rgba(255,255,255,0.1)';
+  // Footer is a "Dark Island" — it follows high-inversion variables
+  const footerBg = 'var(--footer-bg)';
+  const textColor = 'var(--footer-fg)';
+  const mutedText = 'var(--footer-muted)';
+  const dimText = 'var(--footer-muted)';
+  const borderColor = 'rgba(255, 255, 255, 0.1)';
 
   return (
-    <footer 
+    <footer
       className="w-full pt-20 pb-12 relative z-10"
-      style={{ 
+      style={{
         backgroundColor: footerBg,
         borderTop: `1px solid ${borderColor}`,
         color: textColor
@@ -25,14 +25,14 @@ export default function PublicFooter() {
     >
       <div className="max-w-screen-xl mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-20">
-          
+
           {/* Column 1: Brand */}
           <div className="flex flex-col gap-6">
             <Link href="/welcome">
-              <img 
-                src="/jkc-devotion-app/images/logo-horizontal.png" 
-                alt="Japan Kingdom Church" 
-                className="h-8 w-auto block" 
+              <img
+                src="/jkc-devotion-app/images/logo-horizontal.png"
+                alt="Japan Kingdom Church"
+                className="h-8 w-auto block"
                 style={{ filter: 'brightness(0) invert(1)' }}
               />
             </Link>
@@ -51,10 +51,10 @@ export default function PublicFooter() {
                 { Icon: Instagram, href: "https://www.instagram.com/jkctokyo" },
                 { Icon: Twitter, href: "http://twitter.com/jkctokyo" }
               ].map(({ Icon, href }, i) => (
-                <a 
-                  key={i} 
-                  href={href} 
-                  target="_blank" 
+                <a
+                  key={i}
+                  href={href}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="hover:scale-110 transition-transform"
                   style={{ color: mutedText }}
@@ -73,19 +73,19 @@ export default function PublicFooter() {
             <div className="flex flex-col gap-6">
               <div className="flex gap-4 items-start">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border"
-                     style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderColor: borderColor }}>
-                  <MapPin className="w-4 h-4" style={{ color: '#f5a623' }} />
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: borderColor }}>
+                  <MapPin className="w-4 h-4" style={{ color: 'var(--jkc-gold)' }} />
                 </div>
                 <div className="text-sm">
                   <p className="font-bold m-0" style={{ color: textColor }}>〒196-0015 東京都昭島市昭和町2-1-6</p>
                   <p className="m-0 mt-1" style={{ color: mutedText }}>TE Bldg. 3F, Akishima-shi, Tokyo</p>
                 </div>
               </div>
-              
+
               <div className="flex gap-4 items-start">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border"
-                     style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderColor: borderColor }}>
-                  <Mail className="w-4 h-4" style={{ color: '#f5a623' }} />
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: borderColor }}>
+                  <Mail className="w-4 h-4" style={{ color: 'var(--jkc-gold)' }} />
                 </div>
                 <div className="text-sm">
                   <p className="font-bold m-0" style={{ color: textColor }}>jkc.contact@gmail.com</p>
@@ -95,8 +95,8 @@ export default function PublicFooter() {
 
               <div className="flex gap-4 items-start">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border"
-                     style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderColor: borderColor }}>
-                  <Phone className="w-4 h-4" style={{ color: '#f5a623' }} />
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: borderColor }}>
+                  <Phone className="w-4 h-4" style={{ color: 'var(--jkc-gold)' }} />
                 </div>
                 <div className="text-sm">
                   <p className="font-bold m-0" style={{ color: textColor }}>042-519-4940</p>
@@ -120,26 +120,26 @@ export default function PublicFooter() {
                 { label: 'Pastor', href: '/welcome/our-pastor' },
                 { label: 'Staff', href: '/welcome/staff' },
               ].map(link => (
-                <Link key={link.label} href={link.href} 
-                      className="text-sm font-bold hover:text-[#f5a623] transition-colors"
-                      style={{ color: mutedText }}>
+                <Link key={link.label} href={link.href}
+                  className="text-sm font-bold hover:text-[var(--jkc-gold)] transition-colors"
+                  style={{ color: mutedText }}>
                   {link.label}
                 </Link>
               ))}
             </div>
-            
-            <div className="pt-6 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+
+            <div className="pt-6 border-t" style={{ borderColor: 'var(--border)' }}>
               <div className="flex flex-col gap-3">
                 <p className="text-[10px] font-black uppercase tracking-widest m-0" style={{ color: dimText }}>
                   Partners & Links
                 </p>
-                <a href="https://japankingdomchurch.com" target="_blank" rel="noopener noreferrer" 
-                   className="text-sm font-bold flex items-center gap-2 hover:text-[#f5a623] transition-colors"
-                   style={{ color: mutedText }}>
+                <a href="https://japankingdomchurch.com" target="_blank" rel="noopener noreferrer"
+                  className="text-sm font-bold flex items-center gap-2 hover:text-[var(--jkc-gold)] transition-colors"
+                  style={{ color: mutedText }}>
                   <Globe className="w-4 h-4" />
                   Official Website
                 </a>
-                <Link href="/" className="text-sm font-bold hover:text-[#f5a623] transition-colors" style={{ color: mutedText }}>
+                <Link href="/" className="text-sm font-bold hover:text-[var(--jkc-gold)] transition-colors" style={{ color: mutedText }}>
                   Internal Login
                 </Link>
               </div>
@@ -150,9 +150,9 @@ export default function PublicFooter() {
 
         {/* Bottom Bar */}
         <div className="mt-24 pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-6"
-             style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+          style={{ borderColor: 'var(--border)' }}>
           <div className="flex items-center gap-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#f5a623]" />
+            <div className="w-1.5 h-1.5 rounded-full bg-[var(--jkc-gold)]" />
             <p className="text-[10px] font-black uppercase tracking-[0.4em] m-0" style={{ color: dimText }}>
               © {currentYear} Japan Kingdom Builders, Inc.
             </p>

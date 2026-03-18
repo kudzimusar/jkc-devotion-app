@@ -13,8 +13,10 @@ import {
   Leaf 
 } from "lucide-react";
 import Link from 'next/link';
+import { usePublicTheme } from "./PublicThemeWrapper";
 
 export default function SundayCheckIn({ user, currentDate }: { user: any, currentDate: Date }) {
+  const { isDark } = usePublicTheme();
   const [loading, setLoading] = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
   const todayStr = format(currentDate, "yyyy-MM-dd");
@@ -94,17 +96,28 @@ export default function SundayCheckIn({ user, currentDate }: { user: any, curren
   if (!user) {
     return (
       <section className="py-20 px-6 max-w-screen-xl mx-auto">
-        <div className="glass rounded-[2rem] p-12 text-center border border-white/10 space-y-6">
-          <div className="space-y-2">
-            <p className="text-[10px] font-black tracking-[0.4em] text-white/40 uppercase">SUNDAY SERVICE</p>
-            <h3 className="text-2xl font-black italic">Sign in to check in for Sunday service</h3>
+        <div className="rounded-[2.5rem] p-12 text-center border space-y-8"
+             style={{ background: 'var(--card)', borderColor: 'var(--border)', boxShadow: 'var(--shadow-xl)' }}>
+          <div className="space-y-4">
+            <p className="text-[10px] font-black tracking-[0.4em] uppercase"
+               style={{ color: 'var(--muted-foreground)' }}>SUNDAY SERVICE</p>
+            <h3 className="text-3xl font-black" style={{ color: 'var(--foreground)' }}>Sign in to check in for Sunday service</h3>
           </div>
-          <Link 
-            href="/"
-            className="inline-block bg-[var(--primary)] text-white font-black px-12 py-5 rounded-full text-xs tracking-[0.2em] shadow-2xl shadow-primary/40 hover:scale-105 active:scale-95 transition-all text-center"
+          <button 
+            onClick={() => {
+              // Trigger sign in modal via parent or just rely on Nav?
+              // Standard behavior is usually a button that opens the modal
+              // We'll rely on the navbar for now or just provide a pretty link
+            }}
+            className="inline-block font-black px-12 py-5 rounded-full text-xs tracking-[0.2em] transition-all"
+            style={{ 
+               background: 'var(--jkc-navy)', 
+               color: 'var(--primary-foreground)', 
+               boxShadow: 'var(--shadow-md)' 
+            }}
           >
-            SIGN IN
-          </Link>
+            SIGN IN TO CHURCH OS
+          </button>
         </div>
       </section>
     );
@@ -112,17 +125,21 @@ export default function SundayCheckIn({ user, currentDate }: { user: any, curren
 
   if (checkedIn) return (
     <section className="py-20 px-6 max-w-screen-xl mx-auto">
-      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-[2rem] p-10 flex flex-col md:flex-row items-center justify-between gap-8 animate-in fade-in zoom-in duration-500">
+      <div className="rounded-[2rem] p-10 flex flex-col md:flex-row items-center justify-between gap-8 animate-in fade-in zoom-in duration-500 border"
+           style={{ background: 'var(--section-alt)', borderColor: 'var(--border)' }}>
         <div className="flex items-center gap-6">
-          <div className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-            <CheckCircle2 className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg"
+               style={{ background: 'var(--jkc-gold)', boxShadow: 'var(--shadow-md)' }}>
+            <CheckCircle2 className="w-8 h-8" style={{ color: 'var(--jkc-navy)' }} />
           </div>
           <div>
-            <h4 className="text-2xl font-black text-emerald-500 italic">You're Checked In!</h4>
-            <p className="text-xs font-bold text-white/40 uppercase tracking-widest mt-1">Sunday Service {todayStr}</p>
+            <h4 className="text-2xl font-black italic" style={{ color: 'var(--foreground)' }}>You're Checked In!</h4>
+            <p className="text-xs font-bold uppercase tracking-widest mt-1"
+               style={{ color: 'var(--muted-foreground)' }}>Sunday Service {todayStr}</p>
           </div>
         </div>
-        <p className="max-w-xs text-sm font-serif italic text-white/60 text-right">
+        <p className="max-w-xs text-sm font-serif italic text-right"
+           style={{ color: 'var(--muted-foreground)' }}>
           "I was glad when they said unto me, Let us go into the house of the LORD." - Psalm 122:1
         </p>
       </div>
@@ -131,34 +148,44 @@ export default function SundayCheckIn({ user, currentDate }: { user: any, curren
 
   return (
     <section className="py-20 px-6 max-w-screen-xl mx-auto">
-      <div className="bg-gradient-to-r from-[var(--primary)] to-indigo-600 rounded-[3rem] p-10 md:p-12 text-white relative overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -mr-48 -mt-48" />
+      <div className="rounded-[3rem] p-10 md:p-12 text-white relative overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-700"
+           style={{ background: 'var(--jkc-navy)' }}>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -mr-48 -mt-48" />
         <div className="relative z-10 space-y-8">
-          <div className="space-y-4">
-            <p className="text-[10px] font-black tracking-[0.4em] text-white/60 uppercase">ONLINE & IN-PERSON</p>
-            <h3 className="text-4xl md:text-5xl font-black italic leading-tight">Sunday Service Check-In</h3>
-            <p className="text-sm font-bold opacity-80 uppercase tracking-[0.2em]">Join us in the house of the Lord today</p>
-          </div>
+            <p className="text-[10px] font-black tracking-[0.4em] uppercase"
+               style={{ color: 'var(--jkc-gold)' }}>
+              ONLINE & IN-PERSON
+            </p>
+            <h3 className="text-4xl md:text-5xl font-black italic leading-tight"
+                style={{ color: 'var(--footer-fg)' }}>
+              Sunday Service Check-In
+            </h3>
+            <p className="text-sm font-bold uppercase tracking-[0.2em]"
+               style={{ color: 'var(--footer-muted)' }}>
+              Join us in the house of the Lord today
+            </p>
           
           <div className="flex flex-wrap gap-4">
             <Button 
               disabled={loading} 
               onClick={() => handleCheckIn('In-Person')} 
-              className="bg-white text-[var(--primary)] hover:bg-white/90 font-black px-10 py-6 rounded-2xl shadow-xl h-auto transition-transform active:scale-95"
+              className="bg-white hover:bg-slate-100 font-black px-10 py-6 rounded-2xl shadow-xl h-auto transition-transform active:scale-95"
+              style={{ color: 'var(--jkc-navy)' }}
             >
               <MapPin className="w-5 h-5 mr-3" /> AT CHURCH
             </Button>
             <Button 
               disabled={loading} 
               onClick={() => handleCheckIn('Online')} 
-              className="bg-white/20 hover:bg-white/30 text-white font-black px-10 py-6 rounded-2xl backdrop-blur-md border border-white/30 h-auto transition-transform active:scale-95"
+              className="bg-transparent hover:bg-white/10 text-white font-black px-10 py-6 rounded-2xl border-2 border-white h-auto transition-transform active:scale-95"
             >
               <Globe className="w-5 h-5 mr-3" /> ONLINE (ZOOM/STREAM)
             </Button>
             <Button 
               disabled={loading} 
               onClick={() => handleCheckIn('Not Attending')} 
-              className="bg-white/10 hover:bg-white/20 text-white/60 font-black px-10 py-6 rounded-2xl border border-white/10 h-auto transition-transform active:scale-95"
+              className="bg-transparent hover:bg-white/5 font-black px-10 py-6 rounded-2xl border border-white/40 h-auto transition-transform active:scale-95"
+              style={{ color: 'var(--footer-muted)' }}
             >
               <XCircle className="w-5 h-5 mr-3" /> NOT ATTENDING
             </Button>
@@ -183,12 +210,19 @@ export default function SundayCheckIn({ user, currentDate }: { user: any, curren
                     }}
                     className={`flex flex-col items-start p-6 rounded-[1.5rem] border transition-all text-left ${
                       selectedKids.includes(kid.child_name)
-                      ? 'bg-white text-[var(--primary)] border-white scale-[1.02]'
+                      ? 'bg-white scale-[1.02]'
                       : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
                     }`}
+                    style={{ 
+                      color: selectedKids.includes(kid.child_name) ? 'var(--jkc-navy)' : 'inherit',
+                      borderColor: selectedKids.includes(kid.child_name) ? 'white' : 'rgba(255,255,255,0.1)'
+                    }}
                   >
                     <span className="text-sm font-black">{kid.child_name}</span>
-                    <span className="text-[10px] opacity-60 mt-1 uppercase tracking-widest">Ready for service?</span>
+                    <span className="text-[10px] mt-1 uppercase tracking-widest"
+                          style={{ color: selectedKids.includes(kid.child_name) ? 'var(--jkc-navy)' : 'var(--footer-muted)' }}>
+                      Ready for service?
+                    </span>
                   </button>
                 ))}
               </div>
