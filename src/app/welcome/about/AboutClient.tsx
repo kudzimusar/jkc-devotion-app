@@ -64,6 +64,15 @@ export default function AboutClient() {
                   the late Bishop Nathaniel Holcomb of the Christian House of Prayer (CHOP) 
                   in Killeen Texas, and earned his Pastorate in 2017.
                 </p>
+                <div className="pt-4">
+                  <Link 
+                    href="/welcome/our-pastor"
+                    className="inline-flex items-center gap-4 px-10 py-5 rounded-full text-xs font-black tracking-[0.3em] uppercase transition-all hover:scale-105 active:scale-95"
+                    style={{ background: 'var(--jkc-navy)', color: 'white' }}
+                  >
+                    LEARN MORE <ArrowRight className="w-4 h-4 ml-1" />
+                  </Link>
+                </div>
               </div>
             </div>
           </div>

@@ -1,5 +1,8 @@
+
 'use client';
 
+import { motion } from 'framer-motion';
+import { ChevronLeft, ArrowRight, Quote, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 
 export default function OurPastorPage() {
@@ -7,156 +10,195 @@ export default function OurPastorPage() {
     {
       title: "Power of Purpose",
       src: "/jkc-devotion-app/images/books/book-power-of-purpose.png",
-      link: "https://a.co/d/0hKjjYn1"
+      link: "https://a.co/d/0hKjjYn1",
+      desc: "Discovering why you are here and where you are going."
     },
     {
       title: "A Miraculous Encounter",
       src: "/jkc-devotion-app/images/books/book-miraculous-encounter.webp",
-      link: "https://a.co/d/0eXyvya6"
+      link: "https://a.co/d/0eXyvya6",
+      desc: "A true story of how God intervened in the most unlikely place."
     },
     {
       title: "The Reason I'm Black",
       src: "/jkc-devotion-app/images/books/book-why-i-am-black.png",
-      link: "https://a.co/d/00mPTRES"
+      link: "https://a.co/d/00mPTRES",
+      desc: "Navigating identity, race, and grace in a global context."
     },
     {
-      title: "The Ultimate Love Challenge Guide",
+      title: "The Ultimate Love Challenge",
       src: "/jkc-devotion-app/images/books/book-love-challenge.jpg",
-      link: "https://form.jotform.com/202568624678467"
+      link: "https://form.jotform.com/202568624678467",
+      desc: "A guide to building radical and Christ-centered relationships."
     }
   ];
 
   return (
-    <div className="pt-16 min-h-screen">
-      {/* Hero Strip */}
-      <section className="relative py-32 px-6 flex items-center justify-center overflow-hidden bg-black/40">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-indigo-500 blur-[120px] rounded-full opacity-10" />
+    <div className="min-h-screen pt-16" style={{ background: 'var(--background)' }}>
+      {/* 1. HERO: BOLD & EDITORIAL */}
+      <section className="relative h-[90vh] flex items-center overflow-hidden bg-white dark:bg-slate-950">
+        <div className="absolute right-0 top-0 w-1/2 h-full hidden lg:block">
+            <div className="absolute inset-0 bg-gradient-to-r from-white dark:from-slate-950 via-transparent to-transparent z-10" />
+            <img 
+                src="/jkc-devotion-app/images/pastor/pastor-profile.png" 
+                className="w-full h-full object-cover object-top grayscale-[0.2] contrast-125"
+                alt="Pastor Marcel"
+            />
         </div>
-        <div className="relative z-10 text-center space-y-4">
-          <p className="text-[10px] font-black tracking-[0.4em] text-white/40 uppercase">PASTOR MARCEL JONTE GADSDEN</p>
-          <h1 className="text-5xl md:text-7xl font-sans leading-none font-black uppercase tracking-tight">
-            <span className="font-serif italic font-medium pr-4 normal-case text-white/90">Our</span> Pastor
-          </h1>
-          <nav className="flex justify-center gap-2 text-[10px] font-black tracking-widest text-white/30 uppercase pt-6">
-            <span className="text-[var(--primary)]">Welcome</span>
-            <span>/</span>
-            <span>Our Pastor</span>
-          </nav>
+
+        <div className="max-w-screen-xl mx-auto px-6 w-full relative z-20">
+          <div className="max-w-2xl space-y-8">
+            <Link 
+              href="/welcome/about" 
+              className="inline-flex items-center gap-2 text-[10px] font-black tracking-widest uppercase hover:translate-x-[-4px] transition-transform"
+              style={{ color: 'var(--jkc-gold)' }}
+            >
+              <ChevronLeft className="w-4 h-4" /> Back to About
+            </Link>
+            
+            <div className="space-y-4">
+              <h1 className="text-6xl md:text-9xl font-black uppercase tracking-tighter leading-[0.8] text-slate-900 dark:text-white">
+                PASTOR <br/>
+                <span style={{ color: 'var(--jkc-navy)' }}>MARCEL</span>
+              </h1>
+              <p className="text-2xl md:text-3xl font-serif italic text-slate-500 dark:text-slate-400">
+                Author, CEO, and Visionary Leader.
+              </p>
+            </div>
+
+            <p className="text-xl md:text-2xl leading-relaxed text-slate-600 dark:text-slate-300 font-medium">
+              A man with a mission to bridge cultures and transform lives through the power of purpose and Christ's love.
+            </p>
+          </div>
         </div>
       </section>
 
-      <div className="max-w-screen-xl mx-auto px-6 py-24 space-y-24">
-        {/* Bio Section */}
-        <section className="grid lg:grid-cols-2 gap-16 items-start">
-          <div className="relative order-2 lg:order-1">
-            <div className="rounded-[2rem] overflow-hidden aspect-[4/3] md:aspect-auto md:h-[600px] glass border border-white/10">
-              <img
-                src="/jkc-devotion-app/images/pastor/pastor-profile.png"
-                alt="Pastor Marcel Jonte Gadsden"
-                className="w-full h-full object-cover object-top"
-                loading="eager"
-              />
-            </div>
-          </div>
-          
-          <div className="space-y-8 order-1 lg:order-2">
-            <div className="space-y-4">
-              <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] uppercase">MEET OUR LEADER</p>
-              <h2 className="text-4xl md:text-6xl font-black italic font-serif leading-none">Pastor <br/>Marcel Jonte</h2>
-            </div>
-            <div className="space-y-6 text-white/60 text-lg leading-relaxed font-bold max-w-full overflow-hidden">
-              <p>
-                Pastor Marcel Jonte is an American CEO and Pastor abiding in Tokyo,
-                Japan who is an expert communicator and motivational speaker to all
-                nationalities and ages of people and has gained a unique perspective
-                on life, relationships and living your purpose.
-              </p>
-              <p className="font-medium text-white/50">
-                Pastor Marcel was born in Kamp Lintford, Germany and traveled the
-                world through his father's military career and arrived in Japan in
-                July of 1999. Moving to Tokyo was a challenge for Marcel as he didn't
-                understand the Japanese culture nor the language. However, through a
-                passion to communicate with the Japanese people, Marcel challenged
-                himself to learn and become fluent in the language.
-              </p>
-              <p className="font-medium text-white/50">
-                Pastor Marcel studied for several years under the tutelage of
-                overseeing Bishop, the late Bishop Nathaniel Holcomb of the Christian
-                House of Prayer (CHOP) in Killeen Texas and earned his Pastorate in
-                2017. He and his wife Chiaki founded Japan Kingdom Church when he was
-                just 29 years old in Fussa city of west Tokyo.
-              </p>
-              <p className="font-medium text-white/50">
-                In that same year, Pastor Marcel and his wife Chiaki founded Japan
-                Kingdom Builders, Inc which currently holds Japan Kingdom Church,
-                Akiramenai Homeless Program, Food Pantry and Gospel Music Workshop
-                programs.
-              </p>
-            </div>
-            
-            {/* Secondary Photo */}
-            <div className="rounded-[2rem] overflow-hidden aspect-video mt-8 border border-white/10">
-              <img
-                src="/jkc-devotion-app/images/pastor/pastor-event.jpg"
-                alt="Pastor Marcel at an event"
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* Books Section */}
-        <section className="space-y-12">
-          <div className="space-y-4 text-center">
-            <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">AUTHOR & SPEAKER</p>
-            <h2 className="text-4xl md:text-5xl font-black italic font-serif">Books by Pastor Marcel</h2>
-          </div>
-          
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 pt-10">
-            {books.map((book, idx) => (
-              <div key={idx} className="group flex flex-col items-center">
-                <div className="aspect-[2/3] w-full rounded-xl overflow-hidden glass border border-white/10 mb-6 flex flex-col">
-                  <img
-                    src={book.src}
-                    alt={book.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    loading="lazy"
-                  />
+      {/* 2. THE JOURNEY: MIXED LAYOUT */}
+      <section className="py-24 px-6 relative overflow-hidden">
+        <div className="max-w-screen-xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+            <div className="lg:col-span-5 space-y-12">
+                <div className="space-y-4">
+                    <p className="text-[10px] font-black tracking-[0.5em] text-[var(--jkc-gold)] uppercase">THE ORIGIN STORY</p>
+                    <h2 className="text-4xl md:text-6xl font-black italic text-slate-900 dark:text-white">From Germany to Tokyo.</h2>
                 </div>
-                <div className="text-center space-y-4 px-2">
-                  <h3 className="text-[10px] font-black text-white/90 leading-tight uppercase tracking-[0.2em] min-h-[2.5rem] flex items-center justify-center">
-                    {book.title}
-                  </h3>
-                  <a 
-                    href={book.link} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-block text-[9px] font-black tracking-[0.3em] text-[var(--primary)] uppercase hover:text-white transition-colors border border-white/10 rounded-full px-6 py-3"
-                  >
-                    GET BOOK →
-                  </a>
+                
+                <div className="space-y-6 text-xl text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                    <p>
+                        Born in Kamp Lintford, Germany, Marcel's life was defined by the movement and discipline of a military family. In 1999, he arrived in Japan as a "military brat," initially apprehensive about his place in such a vastly different culture.
+                    </p>
+                    <p>
+                        Far from retreating, Marcel chose to immerse himself. He began working at a 7-Eleven in Tokyo—a humble start that became his greatest classroom. It was here he began to learn not just the language, but the heart of the Japanese people.
+                    </p>
+                </div>
+            </div>
+
+            <div className="lg:col-span-7 relative">
+                <div className="rounded-[4rem] overflow-hidden rotate-2 shadow-2xl border-b-8 border-r-8 border-[var(--jkc-navy)]">
+                   <img src="/jkc-devotion-app/images/pastor/pastor-event.jpg" className="w-full aspect-video object-cover" alt="Marcel Preaching" />
+                </div>
+                <div className="absolute -bottom-8 -left-8 bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl max-w-xs space-y-4 border border-[var(--jkc-gold)]">
+                   <Quote className="w-10 h-10 text-[var(--jkc-navy)]" />
+                   <p className="text-lg font-bold italic leading-snug">"Purpose is the only thing that gives life its true north."</p>
+                </div>
+            </div>
+        </div>
+      </section>
+
+      {/* 3. SHINJUKU STREETS & THE CALL */}
+      <section className="py-32 px-6" style={{ background: 'var(--jkc-navy)' }}>
+         <div className="max-w-screen-xl mx-auto space-y-16">
+            <div className="text-center space-y-6">
+                <h2 className="text-5xl md:text-8xl font-black text-white uppercase tracking-tighter">THE CALLING</h2>
+                <div className="w-20 h-2 bg-[var(--jkc-gold)] mx-auto" />
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12">
+                <div className="bg-white/5 p-12 rounded-[3rem] border border-white/10 space-y-6">
+                   <div className="w-12 h-12 rounded-full bg-[var(--jkc-gold)] flex items-center justify-center text-white font-black">1</div>
+                   <h3 className="text-2xl font-black text-white italic">Street Evangelism</h3>
+                   <p className="text-white/70 text-lg leading-relaxed">
+                     Fluent in Japanese and fueled by faith, Marcel took to the streets of Shinjuku. His pulpit was the sidewalk, and his audience was the bustling world of Tokyo.
+                   </p>
+                </div>
+
+                <div className="bg-white/5 p-12 rounded-[3rem] border border-white/10 space-y-6">
+                   <div className="w-12 h-12 rounded-full bg-[var(--jkc-gold)] flex items-center justify-center text-white font-black">2</div>
+                   <h3 className="text-2xl font-black text-white italic">Divine Partnership</h3>
+                   <p className="text-white/70 text-lg leading-relaxed">
+                     During his journey, he met Chiaki. Despite social and cultural hurdles, their love story became part of the foundation of what would become Japan Kingdom Church.
+                   </p>
+                </div>
+
+                <div className="bg-white/5 p-12 rounded-[3rem] border border-white/10 space-y-6">
+                   <div className="w-12 h-12 rounded-full bg-[var(--jkc-gold)] flex items-center justify-center text-white font-black">3</div>
+                   <h3 className="text-2xl font-black text-white italic">Founding JKC</h3>
+                   <p className="text-white/70 text-lg leading-relaxed">
+                     At just 29, Marcel and Chiaki founded JKC in Fussa. Today, he leads a thriving international community and oversees numerous outreach programs.
+                   </p>
+                </div>
+            </div>
+         </div>
+      </section>
+
+      {/* 4. THE AUTHOR: LITERARY WORKS */}
+      <section className="py-24 px-6">
+        <div className="max-w-screen-xl mx-auto space-y-20">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div className="space-y-4">
+               <p className="text-[10px] font-black tracking-[0.5em] text-[var(--jkc-navy)] uppercase">LITERARY LEGACY</p>
+               <h2 className="text-5xl md:text-7xl font-black italic text-slate-900 dark:text-white leading-none">Books by Marcel.</h2>
+            </div>
+            <div className="max-w-md text-slate-500 font-medium">
+               Pastor Marcel's wisdom extends beyond the pulpit. His books have reached thousands of readers around the globe seeking purpose and spiritual growth.
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
+            {books.map((book, idx) => (
+              <div key={idx} className="group space-y-6">
+                <div className="aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl transition-all duration-700 group-hover:scale-105 group-hover:-rotate-2">
+                   <img src={book.src} className="w-full h-full object-cover" alt={book.title} />
+                </div>
+                <div className="space-y-3">
+                   <h3 className="text-xl font-black italic uppercase text-slate-900 dark:text-white">{book.title}</h3>
+                   <p className="text-slate-500 font-medium text-sm line-clamp-2">{book.desc}</p>
+                   <a 
+                     href={book.link}
+                     target="_blank"
+                     className="inline-flex items-center gap-2 text-[10px] font-black tracking-widest text-[var(--jkc-gold)] hover:text-[var(--jkc-navy)] uppercase transition-colors"
+                   >
+                     GET ON AMAZON <ArrowRight className="w-3 h-3" />
+                   </a>
                 </div>
               </div>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Speaking CTA */}
-        <section className="relative rounded-[4rem] overflow-hidden bg-white/5 border border-white/5 p-16 md:p-32 text-center group">
-          <div className="absolute inset-0 bg-gradient-to-br from-[var(--primary)]/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-          <div className="relative z-10 space-y-10 focus-within:z-20">
-            <h2 className="text-4xl md:text-6xl font-black italic font-serif max-w-2xl mx-auto">Book Pastor Marcel for your next event</h2>
-            <Link 
-              href="/welcome/contact"
-              className="inline-block bg-white text-black font-black px-12 py-6 rounded-full text-xs tracking-[0.3em] shadow-2xl hover:scale-105 active:scale-95 transition-all"
-            >
-              BOOK TODAY
-            </Link>
-          </div>
-        </section>
-      </div>
+      {/* 5. CTA: CONNECT */}
+      <section className="py-24 px-6 md:px-0">
+         <div className="max-w-screen-xl mx-auto h-[400px] rounded-[5rem] overflow-hidden relative group">
+            <img 
+               src="/jkc-devotion-app/images/church/building-banner.png" 
+               className="absolute inset-0 w-full h-full object-cover grayscale opacity-20 brightness-50 group-hover:scale-110 transition-transform duration-1000" 
+               alt="Church"
+            />
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--jkc-navy)]/80 to-[var(--jkc-navy)]/40 flex flex-col items-center justify-center text-center p-12 space-y-8">
+               <h2 className="text-4xl md:text-7xl font-black italic text-white leading-tight">
+                  Connect with Pastor Marcel.
+               </h2>
+               <div className="flex flex-wrap justify-center gap-6">
+                 <Link href="/welcome/visit" className="px-12 py-5 bg-[var(--jkc-gold)] text-white font-black text-xs tracking-widest uppercase rounded-full hover:scale-105 transition-transform">
+                    Visit JKC
+                 </Link>
+                 <Link href="/welcome/give" className="px-12 py-5 bg-white text-[var(--jkc-navy)] font-black text-xs tracking-widest uppercase rounded-full hover:scale-105 transition-transform">
+                    Give to Ministry
+                 </Link>
+               </div>
+            </div>
+         </div>
+      </section>
     </div>
   );
 }
