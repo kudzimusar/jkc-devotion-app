@@ -29,32 +29,32 @@ export default function AboutClient() {
             <div className="absolute bottom-0 left-0 w-[300px] h-[300px] rounded-full bg-black/20 blur-[80px] -ml-32 -mb-32" />
         </div>
 
-        <div className="max-w-screen-xl mx-auto px-6 w-full relative z-10 py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="max-w-screen-xl mx-auto px-6 w-full relative z-10 py-12 md:py-20">
+          <div className="flex flex-col md:grid md:grid-cols-2 gap-8 md:gap-12 items-center">
             {/* Left Column: Pastor Image */}
-            <div className="relative">
+            <div className="relative w-full max-w-[280px] md:max-w-none mx-auto md:mx-0">
               <div className="relative z-10 transform -rotate-1 hover:rotate-0 transition-transform duration-700">
                 <img 
                   src="/jkc-devotion-app/images/pastor/pastor-and-chiaki.png" 
                   alt="Pastor Marcel & Chiaki" 
-                  className="w-full h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)]"
+                  className="w-full h-auto drop-shadow-[0_10px_30px_rgba(0,0,0,0.3)] md:drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)]"
                 />
               </div>
               {/* Decorative background shape */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[80%] bg-white/5 rounded-[4rem] rotate-6 pointer-events-none" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[80%] bg-white/5 rounded-[2rem] md:rounded-[4rem] rotate-6 pointer-events-none" />
             </div>
 
             {/* Right Column: Pastor History */}
-            <div className="space-y-8 text-white">
-              <div className="space-y-4">
-                <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-[0.9]">
+            <div className="space-y-6 md:space-y-8 text-white text-center md:text-left">
+              <div className="space-y-2 md:space-y-4">
+                <h1 className="text-4xl sm:text-6xl md:text-8xl font-black uppercase tracking-tighter leading-[0.9]">
                   <span className="block opacity-90">OUR</span>
                   <span className="block" style={{ color: 'var(--jkc-navy)' }}>PASTOR</span>
                 </h1>
-                <div className="w-20 h-2 bg-white" />
+                <div className="w-16 md:w-20 h-1.5 md:h-2 bg-white mx-auto md:mx-0" />
               </div>
               
-              <div className="space-y-6 text-xl md:text-2xl font-medium leading-relaxed opacity-95">
+              <div className="space-y-4 md:space-y-6 text-base sm:text-lg md:text-2xl font-medium leading-relaxed opacity-95">
                 <p>
                   Pastor Marcel Jonte Gadsden was born in Kamp Lintford, Germany and traveled the world 
                   through his father's military career, and arrived in Japan in July of 1999.

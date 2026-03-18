@@ -36,9 +36,9 @@ export default function OurPastorPage() {
   return (
     <div className="min-h-screen pt-16" style={{ background: 'var(--background)' }}>
       {/* 1. HERO: BOLD & EDITORIAL */}
-      <section className="relative h-[90vh] flex items-center overflow-hidden bg-white dark:bg-slate-950">
-        <div className="absolute right-0 top-0 w-1/2 h-full hidden lg:block">
-            <div className="absolute inset-0 bg-gradient-to-r from-white dark:from-slate-950 via-transparent to-transparent z-10" />
+      <section className="relative min-h-[60vh] md:h-[90vh] flex items-center overflow-hidden bg-white dark:bg-slate-950">
+        <div className="absolute right-0 top-0 w-[40%] md:w-1/2 h-full opacity-40 md:opacity-100">
+            <div className="absolute inset-0 bg-gradient-to-r from-white dark:from-slate-950 md:via-transparent to-transparent z-10" />
             <img 
                 src="/jkc-devotion-app/images/pastor/pastor-profile.png" 
                 className="w-full h-full object-cover object-top grayscale-[0.2] contrast-125"
@@ -46,8 +46,8 @@ export default function OurPastorPage() {
             />
         </div>
 
-        <div className="max-w-screen-xl mx-auto px-6 w-full relative z-20">
-          <div className="max-w-2xl space-y-8">
+        <div className="max-w-screen-xl mx-auto px-6 w-full relative z-20 py-12">
+          <div className="max-w-2xl space-y-4 md:space-y-8">
             <Link 
               href="/welcome/about" 
               className="inline-flex items-center gap-2 text-[10px] font-black tracking-widest uppercase hover:translate-x-[-4px] transition-transform"
@@ -56,17 +56,17 @@ export default function OurPastorPage() {
               <ChevronLeft className="w-4 h-4" /> Back to About
             </Link>
             
-            <div className="space-y-4">
-              <h1 className="text-6xl md:text-9xl font-black uppercase tracking-tighter leading-[0.8] text-slate-900 dark:text-white">
+            <div className="space-y-2 md:space-y-4">
+              <h1 className="text-5xl sm:text-7xl md:text-9xl font-black uppercase tracking-tighter leading-[0.8] text-slate-900 dark:text-white">
                 PASTOR <br/>
                 <span style={{ color: 'var(--jkc-navy)' }}>MARCEL</span>
               </h1>
-              <p className="text-2xl md:text-3xl font-serif italic text-slate-500 dark:text-slate-400">
+              <p className="text-xl sm:text-2xl md:text-3xl font-serif italic text-slate-500 dark:text-slate-400">
                 Author, CEO, and Visionary Leader.
               </p>
             </div>
 
-            <p className="text-xl md:text-2xl leading-relaxed text-slate-600 dark:text-slate-300 font-medium">
+            <p className="text-base sm:text-xl md:text-2xl leading-relaxed text-slate-600 dark:text-slate-300 font-medium max-w-sm sm:max-w-md md:max-w-none">
               A man with a mission to bridge cultures and transform lives through the power of purpose and Christ's love.
             </p>
           </div>
@@ -153,21 +153,21 @@ export default function OurPastorPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 pt-6">
             {books.map((book, idx) => (
-              <div key={idx} className="group space-y-6">
-                <div className="aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl transition-all duration-700 group-hover:scale-105 group-hover:-rotate-2">
+              <div key={idx} className="group space-y-4 max-w-[160px] mx-auto md:max-w-none">
+                <div className="aspect-[3/4] rounded-xl overflow-hidden shadow-xl transition-all duration-700 group-hover:scale-105 group-hover:-rotate-2 border border-black/5 dark:border-white/5">
                    <img src={book.src} className="w-full h-full object-cover" alt={book.title} />
                 </div>
-                <div className="space-y-3">
-                   <h3 className="text-xl font-black italic uppercase text-slate-900 dark:text-white">{book.title}</h3>
-                   <p className="text-slate-500 font-medium text-sm line-clamp-2">{book.desc}</p>
+                <div className="space-y-2 text-center md:text-left">
+                   <h3 className="text-sm md:text-base font-black italic uppercase text-slate-900 dark:text-white leading-tight">{book.title}</h3>
+                   <p className="text-slate-500 font-medium text-[10px] md:text-xs line-clamp-2 md:line-clamp-none">{book.desc}</p>
                    <a 
                      href={book.link}
                      target="_blank"
-                     className="inline-flex items-center gap-2 text-[10px] font-black tracking-widest text-[var(--jkc-gold)] hover:text-[var(--jkc-navy)] uppercase transition-colors"
+                     className="inline-flex items-center gap-1.5 text-[8px] md:text-[10px] font-black tracking-widest text-[var(--jkc-gold)] hover:text-[var(--jkc-navy)] uppercase transition-colors"
                    >
-                     GET ON AMAZON <ArrowRight className="w-3 h-3" />
+                     GET ON AMAZON <ArrowRight className="w-2.5 md:w-3 h-2.5 md:h-3" />
                    </a>
                 </div>
               </div>
