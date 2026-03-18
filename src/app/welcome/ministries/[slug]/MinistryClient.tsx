@@ -152,7 +152,7 @@ export default function MinistryClient({ slug }: { slug: string }) {
                <div className="rounded-3xl p-8 space-y-2 border" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
                   <p className="text-[10px] font-black tracking-widest text-[var(--jkc-gold)] uppercase">FREQUENCY</p>
                   <p className="text-lg font-black italic" style={{ color: 'var(--foreground)' }}>
-                    {ministry.description.includes('Every') ? 'Regular Gatherings' : 'Weekly'}
+                    {ministry.description?.includes('Every') ? 'Regular Gatherings' : 'Weekly'}
                   </p>
                </div>
                <div className="rounded-3xl p-8 space-y-2 border" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
