@@ -98,6 +98,9 @@ export default function GiveClient() {
           <video
             className="absolute inset-0 w-full h-full object-cover"
             src="https://video.wixstatic.com/video/91bb3f_5e20958a3d664fc89eff9dcef222dd9a/1080p/mp4/file.mp4"
+            autoPlay
+            muted
+            loop
             controls
             playsInline
           />
