@@ -304,4 +304,99 @@ export class ShopService {
     if (error) throw error;
     return data as MerchandiseOrder;
   }
+
+  /**
+   * Cart and Wishlist Persistence
+   */
+  static async getCart(userId: string) {
+    const { data, error } = await supabase
+      .from('merchandise_cart_items')
+      .select('*, product:merchandise(*)')
+      .eq('user_id', userId);
+    
+    if (error) throw error;
+    return data;
+  }
+
+  static async syncCart(userId: string, localItems: any[]) {
+    // 1. Get existing cart items
+    const { data: existingItems } = await supabase
+      .from('merchandise_cart_items')
+      .select('*')
+      .eq('user_id', userId);
+
+    const updates = localItems.map(local => {
+      const existing = (existingItems || []).find(i => i.product_id === local.id);
+      return {
+        user_id: userId,
+        product_id: local.id,
+        quantity: existing ? existing.quantity + local.quantity : local.quantity,
+        metadata: local.metadata || {}
+      };
+    });
+
+    if (updates.length > 0) {
+      const { error } = await supabase
+        .from('merchandise_cart_items')
+        .upsert(updates, { onConflict: 'user_id, product_id' });
+      if (error) throw error;
+    }
+    
+    // Clear local storage after sync
+    localStorage.removeItem('merchandise_cart');
+  }
+
+  static async updateCartQuantity(userId: string, productId: string, quantity: number) {
+    if (quantity <= 0) {
+      const { error } = await supabase
+        .from('merchandise_cart_items')
+        .delete()
+        .eq('user_id', userId)
+        .eq('product_id', productId);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from('merchandise_cart_items')
+        .upsert({ 
+          user_id: userId, 
+          product_id: productId, 
+          quantity 
+        }, { onConflict: 'user_id, product_id' });
+      if (error) throw error;
+    }
+  }
+
+  static async getWishlist(userId: string) {
+    const { data, error } = await supabase
+      .from('merchandise_wishlist')
+      .select('product_id')
+      .eq('user_id', userId);
+    
+    if (error) throw error;
+    return (data || []).map(i => i.product_id);
+  }
+
+  static async toggleWishlist(userId: string, productId: string) {
+    const { data: existing } = await supabase
+      .from('merchandise_wishlist')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('product_id', productId)
+      .maybeSingle();
+
+    if (existing) {
+      const { error } = await supabase
+        .from('merchandise_wishlist')
+        .delete()
+        .eq('id', existing.id);
+      if (error) throw error;
+      return false; // Not liked anymore
+    } else {
+      const { error } = await supabase
+        .from('merchandise_wishlist')
+        .insert({ user_id: userId, product_id: productId });
+      if (error) throw error;
+      return true; // Liked
+    }
+  }
 }

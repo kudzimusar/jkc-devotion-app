@@ -19,6 +19,10 @@ export const metadata: Metadata = {
   title: "JKC Transformed Life 2026",
   description: "90 Days of Transformation - March 2026 Devotional",
   manifest: "/jkc-devotion-app/manifest.json",
+  icons: {
+    icon: "/jkc-devotion-app/icon.png",
+    apple: "/jkc-devotion-app/apple-icon.png",
+  },
 };
 
 export default function RootLayout({

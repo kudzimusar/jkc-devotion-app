@@ -10,6 +10,7 @@ import { AuthModal } from '@/components/auth/AuthModal';
 import { toast } from 'sonner';
 
 import { usePublicTheme } from './PublicThemeWrapper';
+import { ShopService } from '@/lib/shop-service';
 
 export default function PublicNav() {
   const { isDark } = usePublicTheme();
@@ -72,9 +73,19 @@ export default function PublicNav() {
     };
   }, []);
 
-  const updateCartCount = () => {
-    const cart = JSON.parse(localStorage.getItem('merchandise_cart') || '[]');
-    setCartCount(cart.reduce((acc: number, item: any) => acc + item.quantity, 0));
+  const updateCartCount = async () => {
+    const currentUser = await Auth.getCurrentUser();
+    if (currentUser) {
+        try {
+            const dbCart = await ShopService.getCart(currentUser.id);
+            setCartCount(dbCart.reduce((acc: number, item: any) => acc + item.quantity, 0));
+        } catch (e: any) {
+            console.error("Nav cart fetch error:", e.message || e);
+        }
+    } else {
+        const cart = JSON.parse(localStorage.getItem('merchandise_cart') || '[]');
+        setCartCount(cart.reduce((acc: number, item: any) => acc + item.quantity, 0));
+    }
   };
 
   const handleSignOut = async () => {

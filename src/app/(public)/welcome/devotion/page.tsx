@@ -257,9 +257,32 @@ export default function DevotionalApp() {
   const [isDeclared, setIsDeclared] = useState(false);
 
   useEffect(() => {
-    const dateKey = formatInTimeZone(currentDate, 'Asia/Tokyo', "yyyy-MM-dd");
-    setIsDeclared(localStorage.getItem(`declared-${dateKey}`) === "true");
-  }, [currentDate]);
+    const checkDeclaration = async () => {
+        const dateKey = formatInTimeZone(currentDate, 'Asia/Tokyo', "yyyy-MM-dd");
+        const localStatus = localStorage.getItem(`declared-${dateKey}`) === "true";
+        
+        if (user && devotion) {
+            try {
+                const { data } = await supabase
+                    .from('user_declarations')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .eq('devotion_id', devotion.id.toString())
+                    .maybeSingle();
+                
+                if (data) {
+                    setIsDeclared(true);
+                    return;
+                }
+            } catch (e) {
+                console.error("Error checking declaration:", e);
+            }
+        }
+        setIsDeclared(localStatus);
+    };
+    
+    checkDeclaration();
+  }, [currentDate, user, devotion?.id]);
 
   // Ask Bible Chat State
   const [askChatOpen, setAskChatOpen] = useState(false);
@@ -290,9 +313,6 @@ export default function DevotionalApp() {
   useEffect(() => {
     setMounted(true);
     loadStats();
-    // Load local declaration status
-    const saved = localStorage.getItem(`declared-${format(currentDate, "yyyy-MM-dd")}`);
-    setIsDeclared(!!saved);
   }, [user, currentDate]);
 
   useEffect(() => {

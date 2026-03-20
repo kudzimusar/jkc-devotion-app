@@ -23,6 +23,8 @@ import {
 import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { Auth } from "@/lib/auth";
 
 export default function ProductDetailClient({ slug }: { slug: string }) {
     const router = useRouter();
@@ -34,38 +36,91 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
     const [scrolled, setScrolled] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
     const [wishlist, setWishlist] = useState<string[]>([]);
+    const [user, setUser] = useState<any>(null);
 
     const ORG_ID = "fa547adf-f820-412f-9458-d6bade11517d";
 
     useEffect(() => {
-        if (slug) loadProduct();
-        
-        // Load wishlist from localStorage
-        const stored = JSON.parse(localStorage.getItem("merchandise_wishlist") || "[]");
-        setWishlist(stored);
-        if (product && stored.includes(product.id)) setIsLiked(true);
+        const initData = async () => {
+             const currentUser = await Auth.getCurrentUser();
+             setUser(currentUser);
+             
+             if (slug) await loadProduct();
+
+             if (currentUser) {
+                 const dbWishlist = await ShopService.getWishlist(currentUser.id);
+                 setWishlist(dbWishlist);
+             } else {
+                 const stored = JSON.parse(localStorage.getItem("merchandise_wishlist") || "[]");
+                 setWishlist(stored);
+             }
+        };
+
+        initData();
         
         const handleScroll = () => setScrolled(window.scrollY > 400);
         window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, [slug, product?.id]);
 
-    const toggleLike = () => {
-        if (!product) return;
-        const newIsLiked = !isLiked;
-        setIsLiked(newIsLiked);
-        
-        let newWishlist = wishlist;
-        if (newIsLiked) {
-            newWishlist = [...wishlist, product.id];
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (session?.user) {
+                const u = await Auth.getCurrentUser();
+                setUser(u);
+                if (u) {
+                    const dbWishlist = await ShopService.getWishlist(u.id);
+                    setWishlist(dbWishlist);
+                }
+            } else {
+                setUser(null);
+                const stored = JSON.parse(localStorage.getItem("merchandise_wishlist") || "[]");
+                setWishlist(stored);
+            }
+        });
+
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+            subscription.unsubscribe();
+        };
+    }, [slug]);
+
+    useEffect(() => {
+        if (product && wishlist.includes(product.id)) {
+            setIsLiked(true);
         } else {
-            newWishlist = wishlist.filter(id => id !== product.id);
+            setIsLiked(false);
         }
+    }, [product?.id, wishlist]);
+
+    const toggleLike = async () => {
+        if (!product) return;
         
-        setWishlist(newWishlist);
-        localStorage.setItem("merchandise_wishlist", JSON.stringify(newWishlist));
-        
-        if (newIsLiked) toast.success("Added to your Kingdom Wishlist");
+        if (user) {
+            try {
+                const liked = await ShopService.toggleWishlist(user.id, product.id);
+                setIsLiked(liked);
+                if (liked) {
+                    setWishlist(prev => [...prev, product.id]);
+                    toast.success("Added to your Kingdom Wishlist");
+                } else {
+                    setWishlist(prev => prev.filter(id => id !== product.id));
+                }
+            } catch (e) {
+                toast.error("Failed to update wishlist");
+            }
+        } else {
+            const newIsLiked = !isLiked;
+            setIsLiked(newIsLiked);
+            
+            let newWishlist = wishlist;
+            if (newIsLiked) {
+                newWishlist = [...wishlist, product.id];
+                toast.success("Added to your Kingdom Wishlist");
+            } else {
+                newWishlist = wishlist.filter(id => id !== product.id);
+            }
+            
+            setWishlist(newWishlist);
+            localStorage.setItem("merchandise_wishlist", JSON.stringify(newWishlist));
+        }
     };
 
     async function loadProduct() {
@@ -90,19 +145,48 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
         }
     }
 
-    const addToCart = () => {
+    const addToCart = async () => {
         if (!product) return;
-        const cart = JSON.parse(localStorage.getItem("merchandise_cart") || "[]");
-        const existing = cart.find((item: any) => item.id === product.id);
         
-        if (existing) {
-            existing.quantity += quantity;
+        if (user) {
+            try {
+                // Get existing item from DB to increment quantity
+                const cart = await ShopService.getCart(user.id);
+                const existing = cart.find((i: any) => i.product_id === product.id);
+                const newQuantity = (existing?.quantity || 0) + quantity;
+                
+                await ShopService.updateCartQuantity(user.id, product.id, newQuantity);
+                toast.success(`Victory! ${product.name} added to your cloud cart.`);
+                
+                // Dispatch event for Navbar
+                window.dispatchEvent(new CustomEvent('cart-updated'));
+            } catch (e) {
+                toast.error("Failed to add to cart");
+            }
         } else {
-            cart.push({ ...product, quantity });
+            // Guest mode
+            const cart = JSON.parse(localStorage.getItem("merchandise_cart") || "[]");
+            const existing = cart.find((item: any) => item.id === product.id);
+            
+            if (existing) {
+                existing.quantity += quantity;
+            } else {
+                cart.push({ 
+                    id: product.id, 
+                    name: product.name, 
+                    price: product.price,
+                    images: product.images,
+                    org_id: product.org_id,
+                    quantity: quantity 
+                });
+            }
+            
+            localStorage.setItem("merchandise_cart", JSON.stringify(cart));
+            toast.success(`Victory! ${product.name} added to cart.`);
+            
+            // Dispatch event for Navbar
+            window.dispatchEvent(new CustomEvent('cart-updated'));
         }
-        
-        localStorage.setItem("merchandise_cart", JSON.stringify(cart));
-        toast.success(`Victory! ${product.name} added to cart.`);
     };
 
     if (loading) {

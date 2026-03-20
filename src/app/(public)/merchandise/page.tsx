@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/lib/supabase";
+import { Auth } from "@/lib/auth";
 
 export default function MerchandisePage() {
     const [products, setProducts] = useState<Merchandise[]>([]);
@@ -23,31 +25,105 @@ export default function MerchandisePage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [wishlist, setWishlist] = useState<string[]>([]);
+    const [user, setUser] = useState<any>(null);
 
     // Japan Kingdom Church ORG_ID
     const ORG_ID = "fa547adf-f820-412f-9458-d6bade11517d"; 
 
     useEffect(() => {
-        loadProducts();
-        updateCartCount();
-        const stored = JSON.parse(localStorage.getItem("merchandise_wishlist") || "[]");
-        setWishlist(stored);
+        const initData = async () => {
+            const currentUser = await Auth.getCurrentUser();
+            setUser(currentUser);
+            
+            await loadProducts();
+
+            if (currentUser) {
+                // 1. Sync local cart if any
+                const localCart = JSON.parse(localStorage.getItem("merchandise_cart") || "[]");
+                if (localCart.length > 0) {
+                    try {
+                        await ShopService.syncCart(currentUser.id, localCart);
+                    } catch (e) {
+                        console.error("Cart sync error:", e);
+                    }
+                }
+                
+                // 2. Fetch from DB
+                try {
+                    const [dbWishlist, dbCart] = await Promise.all([
+                        ShopService.getWishlist(currentUser.id),
+                        ShopService.getCart(currentUser.id)
+                    ]);
+                    setWishlist(dbWishlist);
+                    setCartCount(dbCart.reduce((acc: number, item: any) => acc + item.quantity, 0));
+                } catch (e: any) {
+                    console.error("Data fetch error:", e.message || e);
+                }
+            } else {
+                // Guest mode
+                updateCartCount();
+                const stored = JSON.parse(localStorage.getItem("merchandise_wishlist") || "[]");
+                setWishlist(stored);
+            }
+        };
+
+        initData();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (session?.user) {
+                const currentUser = await Auth.getCurrentUser();
+                setUser(currentUser);
+                if (currentUser) {
+                     const localCart = JSON.parse(localStorage.getItem("merchandise_cart") || "[]");
+                     if (localCart.length > 0) await ShopService.syncCart(currentUser.id, localCart);
+                     const [dbWishlist, dbCart] = await Promise.all([
+                        ShopService.getWishlist(currentUser.id),
+                        ShopService.getCart(currentUser.id)
+                     ]);
+                     setWishlist(dbWishlist);
+                     setCartCount(dbCart.reduce((acc: number, item: any) => acc + item.quantity, 0));
+                }
+            } else {
+                setUser(null);
+                updateCartCount();
+                const stored = JSON.parse(localStorage.getItem("merchandise_wishlist") || "[]");
+                setWishlist(stored);
+            }
+        });
+
+        return () => subscription.unsubscribe();
     }, []);
 
-    const toggleLike = (id: string, name: string, e: React.MouseEvent) => {
+    const toggleLike = async (id: string, name: string, e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
         
-        let newWishlist: string[];
-        if (wishlist.includes(id)) {
-            newWishlist = wishlist.filter(item => item !== id);
+        if (user) {
+            try {
+                const isLiked = await ShopService.toggleWishlist(user.id, id);
+                if (isLiked) {
+                    setWishlist(prev => [...prev, id]);
+                    toast.success(`Liked ${name}`);
+                } else {
+                    setWishlist(prev => prev.filter(item => item !== id));
+                    toast.success(`Unliked ${name}`);
+                }
+            } catch (e) {
+                toast.error("Failed to update wishlist");
+            }
         } else {
-            newWishlist = [...wishlist, id];
-            toast.success(`Liked ${name}`);
+            // Guest mode
+            let newWishlist: string[];
+            if (wishlist.includes(id)) {
+                newWishlist = wishlist.filter(item => item !== id);
+                toast.success(`Unliked ${name}`);
+            } else {
+                newWishlist = [...wishlist, id];
+                toast.success(`Liked ${name}`);
+            }
+            setWishlist(newWishlist);
+            localStorage.setItem("merchandise_wishlist", JSON.stringify(newWishlist));
         }
-        
-        setWishlist(newWishlist);
-        localStorage.setItem("merchandise_wishlist", JSON.stringify(newWishlist));
     };
 
     async function loadProducts() {
@@ -68,26 +144,48 @@ export default function MerchandisePage() {
         setCartCount(cart.reduce((acc: number, item: any) => acc + item.quantity, 0));
     };
 
-    const addToCart = (product: Merchandise) => {
-        const cart = JSON.parse(localStorage.getItem("merchandise_cart") || "[]");
-        const existingItem = cart.find((item: any) => item.id === product.id);
-        
-        if (existingItem) {
-            existingItem.quantity += 1;
+    const addToCart = async (product: Merchandise) => {
+        if (user) {
+            try {
+                // Get existing item from DB to increment quantity
+                const cart = await ShopService.getCart(user.id);
+                const existing = cart.find(i => i.product_id === product.id);
+                const newQuantity = (existing?.quantity || 0) + 1;
+                
+                await ShopService.updateCartQuantity(user.id, product.id, newQuantity);
+                setCartCount(prev => prev + 1);
+                toast.success(`${product.name} added to your cloud cart!`);
+                
+                // Dispatch event for Navbar
+                window.dispatchEvent(new CustomEvent('cart-updated'));
+            } catch (e) {
+                toast.error("Failed to add to cart");
+            }
         } else {
-            cart.push({ 
-                id: product.id,
-                name: product.name,
-                price: product.price,
-                images: product.images,
-                org_id: product.org_id,
-                quantity: 1 
-            });
+            // Guest mode
+            const cart = JSON.parse(localStorage.getItem("merchandise_cart") || "[]");
+            const existingItem = cart.find((item: any) => item.id === product.id);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ 
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    images: product.images,
+                    org_id: product.org_id,
+                    quantity: 1 
+                });
+            }
+            
+            localStorage.setItem("merchandise_cart", JSON.stringify(cart));
+            updateCartCount();
+            toast.success(`${product.name} added to cart!`);
+            
+            // Dispatch event for Navbar
+            window.dispatchEvent(new CustomEvent('cart-updated'));
         }
-        
-        localStorage.setItem("merchandise_cart", JSON.stringify(cart));
-        updateCartCount();
-        toast.success(`${product.name} added to cart!`);
     };
 
     const filteredProducts = products.filter(p => 
