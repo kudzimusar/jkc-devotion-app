@@ -40,15 +40,17 @@ export default function CheckoutPage() {
             // Check Supabase first for logged-in users
             if (currentUser) {
                 try {
-                    const dbCart = await ShopService.getCart(currentUser.id);
-                    if (dbCart.length > 0) {
-                        setCart(dbCart.map((item: any) => ({
-                            ...item.product,
-                            quantity: item.quantity,
-                            db_id: item.id
-                        })));
+                    const mapped = dbCart.map((item: any) => ({
+                        ...item.product,
+                        quantity: item.quantity,
+                        db_id: item.id,
+                        is_saved: item.is_saved
+                    })).filter((item: any) => !item.is_saved);
+
+                    if (mapped.length > 0) {
+                        setCart(mapped);
                     } else {
-                        router.push("/merchandise");
+                        router.push("/merchandise/cart");
                     }
                 } catch (e) {
                     console.error("Checkout cart fetch error:", e);
@@ -70,9 +72,9 @@ export default function CheckoutPage() {
 
     const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     const taxRate = 0.1; // 10% JCT
-    const taxAmount = subtotal * taxRate;
+    const taxAmount = Math.round(subtotal * taxRate);
     const shipping = subtotal > 10000 ? 0 : 500;
-    const total = subtotal + shipping;
+    const total = subtotal + taxAmount + shipping; // FIX: Included tax in total
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;

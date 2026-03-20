@@ -312,7 +312,8 @@ export class ShopService {
     const { data, error } = await supabase
       .from('merchandise_cart_items')
       .select('*, product:merchandise(*)')
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
     
     if (error) throw error;
     return data;
@@ -360,10 +361,21 @@ export class ShopService {
         .upsert({ 
           user_id: userId, 
           product_id: productId, 
-          quantity 
+          quantity,
+          is_saved: false // When updating quantity, it should be in the active cart
         }, { onConflict: 'user_id, product_id' });
       if (error) throw error;
     }
+  }
+
+  static async toggleSaveForLater(userId: string, productId: string, isSaved: boolean) {
+    const { error } = await supabase
+      .from('merchandise_cart_items')
+      .update({ is_saved: isSaved })
+      .eq('user_id', userId)
+      .eq('product_id', productId);
+    
+    if (error) throw error;
   }
 
   static async getWishlist(userId: string) {

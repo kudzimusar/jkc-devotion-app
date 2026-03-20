@@ -55,7 +55,7 @@ export default function MerchandisePage() {
                         ShopService.getCart(currentUser.id)
                     ]);
                     setWishlist(dbWishlist);
-                    setCartCount(dbCart.reduce((acc: number, item: any) => acc + item.quantity, 0));
+                    setCartCount(dbCart.filter((item: any) => !item.is_saved).reduce((acc: number, item: any) => acc + item.quantity, 0));
                 } catch (e: any) {
                     console.error("Data fetch error:", e.message || e);
                 }
@@ -81,7 +81,7 @@ export default function MerchandisePage() {
                         ShopService.getCart(currentUser.id)
                      ]);
                      setWishlist(dbWishlist);
-                     setCartCount(dbCart.reduce((acc: number, item: any) => acc + item.quantity, 0));
+                     setCartCount(dbCart.filter((item: any) => !item.is_saved).reduce((acc: number, item: any) => acc + item.quantity, 0));
                 }
             } else {
                 setUser(null);
