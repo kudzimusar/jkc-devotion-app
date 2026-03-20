@@ -28,14 +28,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { SoapJournal } from "@/lib/soap-journal";
 
+import { mapProfileFromDB, mapProfileToDB } from "@/lib/profileFieldMap";
+
 interface ProfileData {
     id: string;
     name: string;
     email: string;
-    birthdate?: string;
+    date_of_birth?: string;
     wedding_anniversary?: string;
-    physical_address?: string;
-    phone_number?: string;
+    full_address?: string;
+    phone?: string;
     country_of_origin?: string;
     preferred_language?: string;
 }
@@ -91,16 +93,17 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                 .single();
 
             if (profileData) {
+                const mapped = mapProfileFromDB(profileData);
                 setProfile({
                     id: targetId,
-                    name: profileData.name || '',
-                    email: authUser?.email || '', // In a real app we'd fetch member's email securely, maybe we can ignore it if not available
-                    birthdate: profileData.birthdate,
-                    wedding_anniversary: profileData.wedding_anniversary,
-                    physical_address: profileData.physical_address,
-                    phone_number: profileData.phone_number,
-                    country_of_origin: profileData.country_of_origin,
-                    preferred_language: profileData.preferred_language || 'EN',
+                    name: mapped.name || '',
+                    email: authUser?.email || '',
+                    date_of_birth: mapped.date_of_birth,
+                    wedding_anniversary: mapped.wedding_anniversary,
+                    full_address: mapped.full_address,
+                    phone: mapped.phone,
+                    country_of_origin: mapped.country_of_origin,
+                    preferred_language: mapped.preferred_language || 'EN',
                 });
             } else if (authUser && !memberId) {
                 setProfile({
@@ -153,17 +156,19 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
         if (!profile) return;
         try {
             setSaving(true);
+            const updatePayload = mapProfileToDB({
+                name: profile.name,
+                date_of_birth: profile.date_of_birth,
+                wedding_anniversary: profile.wedding_anniversary,
+                full_address: profile.full_address,
+                phone: profile.phone,
+                country_of_origin: profile.country_of_origin,
+                preferred_language: profile.preferred_language,
+            });
+
             const { error } = await supabase
                 .from('profiles')
-                .update({
-                    name: profile.name,
-                    birthdate: profile.birthdate,
-                    wedding_anniversary: profile.wedding_anniversary,
-                    physical_address: profile.physical_address,
-                    phone_number: profile.phone_number,
-                    country_of_origin: profile.country_of_origin,
-                    preferred_language: profile.preferred_language,
-                })
+                .update(updatePayload)
                 .eq('id', profile.id);
 
             if (error) throw error;
@@ -287,8 +292,8 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Phone Number</label>
                                         <Input
-                                            value={profile.phone_number || ''}
-                                            onChange={e => setProfile({ ...profile, phone_number: e.target.value })}
+                                            value={profile.phone || ''}
+                                            onChange={e => setProfile({ ...profile, phone: e.target.value })}
                                             className="glass border-foreground/10 rounded-2xl h-12"
                                             placeholder="+81 000-0000-0000"
                                         />
@@ -297,8 +302,8 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                         <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Birthdate</label>
                                         <Input
                                             type="date"
-                                            value={profile.birthdate || ''}
-                                            onChange={e => setProfile({ ...profile, birthdate: e.target.value })}
+                                            value={profile.date_of_birth || ''}
+                                            onChange={e => setProfile({ ...profile, date_of_birth: e.target.value })}
                                             className="glass border-foreground/10 rounded-2xl h-12 text-foreground/60"
                                         />
                                     </div>
@@ -314,8 +319,8 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                     <div className="space-y-2 md:col-span-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Physical Address</label>
                                         <Input
-                                            value={profile.physical_address || ''}
-                                            onChange={e => setProfile({ ...profile, physical_address: e.target.value })}
+                                            value={profile.full_address || ''}
+                                            onChange={e => setProfile({ ...profile, full_address: e.target.value })}
                                             className="glass border-foreground/10 rounded-2xl h-12"
                                             placeholder="1-2-3 Minato-ku, Tokyo, Japan"
                                         />

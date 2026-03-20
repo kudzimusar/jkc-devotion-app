@@ -34,7 +34,7 @@ export default function MembershipRequestsPage() {
                     *,
                     profiles:user_id(
                         name, email, city, ward, 
-                        phone_number, growth_stage, 
+                        phone, growth_stage, 
                         referral_source, church_background,
                         created_at
                     )
@@ -247,6 +247,10 @@ export default function MembershipRequestsPage() {
                                                             <p className="text-[10px] text-muted-foreground uppercase font-black">Ward</p>
                                                             <p className="font-bold text-sm">{selectedRequest.profiles?.ward || 'Unspecified'}</p>
                                                         </div>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <p className="text-[10px] text-muted-foreground uppercase font-black">Phone</p>
+                                                        <p className="font-bold text-sm">{selectedRequest.profiles?.phone || 'Not provided'}</p>
                                                     </div>
                                                     <div className="space-y-1">
                                                         <p className="text-[10px] text-muted-foreground uppercase font-black">Notes from Applicant</p>

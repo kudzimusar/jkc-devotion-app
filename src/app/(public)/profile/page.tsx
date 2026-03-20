@@ -23,6 +23,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { basePath as BP } from "@/lib/utils";
 import { MINISTRY_OPTIONS, SKILL_OPTIONS, PRAYER_CATEGORIES } from "@/lib/constants";
+import { mapProfileFromDB, mapProfileToDB } from "@/lib/profileFieldMap";
 
 const identitySchema = z.object({
     name: z.string().min(2, "Name is required"),
@@ -181,25 +182,11 @@ export default function ProfileHub() {
                 }
 
                 setProfile({ ...pData, org_id: currentOrgId });
-                idForm.reset({
-                    name: pData.name,
-                    gender: pData.gender || '',
-                    phone_number: pData.phone_number || '',
-                    birthdate: pData.birthdate || '',
-                    marital_status: pData.marital_status || '',
-                    wedding_anniversary: pData.wedding_anniversary || '',
-                    physical_address: pData.physical_address || pData.address || '',
-                    city: pData.city || '',
-                    ward: pData.ward || '',
-                    postal_code: pData.postal_code || '',
-                    country_of_origin: pData.country_of_origin || '',
-                    preferred_language: pData.preferred_language || '',
-                    years_in_japan: pData.years_in_japan,
-                    occupation: pData.occupation || '',
-                    education_level: pData.education_level || '',
-                    invited_by_name: pData.invited_by_name || '',
-                    invite_method: pData.invite_method || ''
-                });
+                
+                // Use Centralized Mapping Layer to initialize form
+                const mappedData = mapProfileFromDB(pData);
+                idForm.reset(mappedData);
+
                 setGivingData({
                     tithe_status: pData.tithe_status || false,
                     preferred_giving_method: pData.preferred_giving_method || 'Cash'
@@ -299,38 +286,22 @@ export default function ProfileHub() {
                 cleanData.years_in_japan = parseInt(cleanData.years_in_japan.toString()) || 0;
             }
 
-            const { error } = await supabase.from('profiles').update({
-                name: cleanData.name,
-                phone: cleanData.phone_number,
-                gender: cleanData.gender,
-                date_of_birth: cleanData.birthdate,
+            // Use Centralized Mapping Layer to prepare payload
+            const dbPayload = {
+                ...mapProfileToDB(cleanData),
                 marital_status: cleanData.marital_status,
                 wedding_anniversary: cleanData.wedding_anniversary,
-                full_address: cleanData.physical_address,
-                city: cleanData.city,
-                ward: cleanData.ward,
-                postal_code: cleanData.postal_code,
-                country_of_origin: cleanData.country_of_origin,
-                preferred_language: cleanData.preferred_language,
-                years_in_japan: cleanData.years_in_japan,
-                occupation: cleanData.occupation,
                 industry: cleanData.industry,
-                education_level: cleanData.education_level,
-                church_background: cleanData.church_background,
-                salvation_date: cleanData.salvation_date,
-                baptism_status: cleanData.baptism_status,
-                baptism_date: cleanData.baptism_date,
-                referral_name: cleanData.invited_by_name,
-                referral_source: cleanData.invite_method,
                 household_type,
-                updated_at: new Date().toISOString()
-            }).eq('id', user.id);
+            };
+
+            const { error } = await supabase.from('profiles').update(dbPayload).eq('id', user.id);
 
             if (error) throw error;
             toast.success("Identity updated successfully!");
-        } catch (e) {
+        } catch (e: any) {
             console.error("Profile Save Error:", e);
-            toast.error("Failed to update profile");
+            toast.error(e.message || "Failed to update profile");
         } finally {
             setIsSaving(false);
         }
