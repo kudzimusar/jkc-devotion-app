@@ -23,13 +23,13 @@ export default function SpiritualPage() {
         if (!orgId) return;
         Promise.all([
             supabase.from('member_stats')
-                .select('*, profiles!inner(org_id)')
-                .eq('profiles.org_id', orgId)
+                .select('*')
+                .eq('org_id', orgId)
                 .order('engagement_score', { ascending: false })
                 .limit(20),
             supabase.from('soap_entries')
-                .select('*, profiles!inner(org_id)')
-                .eq('profiles.org_id', orgId)
+                .select('*')
+                .eq('org_id', orgId)
                 .order('created_at', { ascending: false })
                 .limit(50),
         ]).then(([s, e]) => {

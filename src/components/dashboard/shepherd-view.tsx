@@ -263,7 +263,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 db.from('prophetic_insights').select('*').eq('org_id', orgId).eq('is_acknowledged', false).order('generated_at', { ascending: false }).limit(10),
                 db.from('pastoral_notes').select('*, profiles!member_user_id(name)').eq('org_id', orgId).eq('category', 'counseling').eq('is_resolved', false).order('follow_up_date', { ascending: true }),
                 db.from('vw_growth_intelligence').select('*').eq('org_id', orgId),
-                db.from('member_skills').select('*, profiles!inner(org_id)').eq('profiles.org_id', orgId),
+                db.from('member_skills').select('*').eq('org_id', orgId),
                 db.from('vw_attendance_reconciliation_new').select('*').eq('org_id', orgId).order('event_date', { ascending: false }).limit(1),
                 db.from('soap_entries').select('*').eq('org_id', orgId),
                 db.from('soap_sentiment_metrics').select('*').eq('org_id', orgId),
