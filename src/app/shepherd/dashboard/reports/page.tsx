@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { exportToExcel, exportToPDF } from "@/lib/export-utils";
+import { useAdminCtx } from "../layout";
 
 const STATIC_REPORTS = [
     { name: 'Congregational Health Report', desc: 'Devotion streaks, engagement scores, SOAP analytics', icon: Heart, color: 'text-violet-400', bg: 'bg-violet-500/10' },
@@ -17,17 +18,21 @@ export default function ReportsPage() {
     const [dbReports, setDbReports] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const { orgId } = useAdminCtx();
+
     useEffect(() => {
+        if (!orgId) return;
         async function loadReports() {
             const { data } = await supabase
                 .from('reports')
                 .select('*')
+                .eq('org_id', orgId)
                 .order('created_at', { ascending: false });
             if (data) setDbReports(data);
             setLoading(false);
         }
         loadReports();
-    }, []);
+    }, [orgId]);
 
     const handleExport = async (name: string) => {
         const timestamp = new Date().toISOString().split('T')[0];
@@ -35,7 +40,11 @@ export default function ReportsPage() {
 
         try {
             if (name === 'Member Directory Export') {
-                const { data } = await supabaseAdmin.from('profiles').select('*').order('name');
+                const { data } = await supabaseAdmin
+                    .from('profiles')
+                    .select('*')
+                    .eq('org_id', orgId)
+                    .order('name');
                 if (!data) return;
                 const exportData = data.map((m: any) => ({
                     Name: m.name,
@@ -50,6 +59,7 @@ export default function ReportsPage() {
                 const { data } = await supabaseAdmin
                     .from('attendance_records')
                     .select('*')
+                    .eq('org_id', orgId)
                     .order('event_date', { ascending: false });
 
                 if (!data) return;
@@ -63,7 +73,10 @@ export default function ReportsPage() {
             }
             else if (name === 'Congregational Health Report') {
                 toast.info("Analyzing spiritual health metrics...");
-                const { data: profiles } = await supabaseAdmin.from('profiles').select('name, email, membership_status, growth_stage');
+                const { data: profiles } = await supabaseAdmin
+                    .from('profiles')
+                    .select('name, email, membership_status, growth_stage')
+                    .eq('org_id', orgId);
                 if (!profiles) return;
 
                 const exportData = profiles.map((p: any) => ({

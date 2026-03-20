@@ -50,32 +50,39 @@ export interface CorrespondenceSummary {
  * Consumes synthesized SQL views for the Pastor HQ.
  * Uses public client (RLS enforced).
  */
-export async function getPastorDashboardData() {
+export async function getPastorDashboardData(orgId?: string) {
   // 1. Check Auth & Org context
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error("Unauthorized");
+
+  const effectiveOrgId = orgId;
+  if (!effectiveOrgId) return null;
 
   // Pulse & Attendance
   const { data: attendanceTrends } = await supabase
     .from('vw_church_attendance_trends')
     .select('*')
+    .eq('org_id', effectiveOrgId)
     .order('week_start', { ascending: false })
     .limit(1);
 
   const { count: totalMembers } = await supabase
     .from('profiles')
     .select('*', { count: 'exact', head: true })
+    .eq('org_id', effectiveOrgId)
     .eq('membership_status', 'member');
 
   const { count: newSeekers } = await supabase
     .from('profiles')
     .select('*', { count: 'exact', head: true })
+    .eq('org_id', effectiveOrgId)
     .eq('membership_status', 'visitor');
 
   // Ministry Health
   const { data: ministryHealthData } = await supabase
     .from('vw_ministry_health')
     .select('*')
+    .eq('org_id', effectiveOrgId)
     .limit(5);
 
   const ministries: MinistryHealth[] = (ministryHealthData || []).map(m => ({
@@ -89,6 +96,7 @@ export async function getPastorDashboardData() {
   const { data: financeData } = await supabase
     .from('vw_financial_momentum')
     .select('*')
+    .eq('org_id', effectiveOrgId)
     .order('month_start', { ascending: false })
     .limit(2);
 
@@ -98,8 +106,9 @@ export async function getPastorDashboardData() {
   // Care Alerts
   const { data: alerts } = await supabase
     .from('member_alerts')
-    .select('id, alert_type, severity, profiles(name)')
+    .select('id, alert_type, severity, profiles(name, org_id)')
     .eq('is_resolved', false)
+    .eq('profiles.org_id', effectiveOrgId)
     .limit(5);
 
   const careAlerts: CareAlert[] = (alerts || []).map(alert => ({
@@ -114,6 +123,7 @@ export async function getPastorDashboardData() {
   const { data: climate } = await supabase
     .from('vw_spiritual_climate')
     .select('*')
+    .eq('org_id', effectiveOrgId)
     .order('week_start', { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -121,7 +131,8 @@ export async function getPastorDashboardData() {
   // Correspondence
   const { count: websiteInquiries } = await supabase
     .from('public_inquiries')
-    .select('*', { count: 'exact', head: true });
+    .select('*', { count: 'exact', head: true })
+    .eq('org_id', effectiveOrgId);
 
   return {
     pulse: {

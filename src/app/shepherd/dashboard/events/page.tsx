@@ -3,15 +3,25 @@ import { useEffect, useState } from "react";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { motion } from "framer-motion";
 import { Calendar, MapPin, Users, CheckCircle2, Clock } from "lucide-react";
+import { useAdminCtx } from "../layout";
 
 export default function EventsPage() {
     const [events, setEvents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const { orgId } = useAdminCtx();
+
     useEffect(() => {
-        supabaseAdmin.from('events').select('*').order('event_date', { ascending: false })
-            .then(({ data }) => { setEvents(data || []); setLoading(false); });
-    }, []);
+        if (!orgId) return;
+        supabaseAdmin.from('events')
+            .select('*')
+            .eq('org_id', orgId)
+            .order('event_date', { ascending: false })
+            .then(({ data }) => { 
+                setEvents(data || []); 
+                setLoading(false); 
+            });
+    }, [orgId]);
 
     const upcoming = events.filter(e => new Date(e.event_date) >= new Date());
     const past = events.filter(e => new Date(e.event_date) < new Date());

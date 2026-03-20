@@ -10,6 +10,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { toast } from "sonner";
 import { exportToCSV, exportToExcel, exportToPDF } from "@/lib/export-utils";
 import { Download, ChevronDown } from "lucide-react";
+import { useAdminCtx } from "../layout";
 
 interface Member {
     id: string; name: string; email: string;
@@ -48,22 +49,26 @@ export default function MembersPage() {
     const [showExport, setShowExport] = useState(false);
     const [membershipRequests, setMembershipRequests] = useState<any[]>([]);
 
+    const { orgId } = useAdminCtx();
+
     useEffect(() => {
-        fetchMembers();
-    }, []);
+        if (orgId) fetchMembers();
+    }, [orgId]);
 
     async function fetchMembers() {
+        if (!orgId) return;
         setLoading(true);
         // Using supabaseAdmin to ensure access to all member data regardless of RLS
         const { data, error } = await supabaseAdmin
             .from('profiles')
             .select(`
                 *,
-                milestones:member_milestones(*),
+                milestones:spiritual_milestones(*),
                 ministry_members(*),
                 member_skills(*),
                 org_members(role, stage, discipleship_score, joined_at)
             `)
+            .eq('org_id', orgId)
             .order('name');
 
         if (error) {
@@ -84,6 +89,7 @@ export default function MembersPage() {
             const { data: requests } = await supabaseAdmin
                 .from('membership_requests')
                 .select('*, profiles(name, email)')
+                .eq('org_id', orgId)
                 .eq('status', 'pending');
             setMembershipRequests(requests || []);
         }

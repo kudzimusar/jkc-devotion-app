@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Music, Users, CheckCircle2, AlertTriangle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { useAdminCtx } from "../layout";
 
 const MINISTRY_COLORS: Record<string, string> = {
     worship: '#8b5cf6', youth: '#06b6d4', childrens: '#f87171',
@@ -24,18 +25,25 @@ export default function MinistriesPage() {
     const [candidates, setCandidates] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const { orgId } = useAdminCtx();
+
     useEffect(() => {
+        if (!orgId) return;
         const load = async () => {
             const [rolesRes, skillsRes] = await Promise.all([
-                supabaseAdmin.from('ministry_members').select('*').eq('is_active', true),
-                supabaseAdmin.from('member_skills').select('*, profiles(name, avatar_url)')
+                supabaseAdmin.from('ministry_members').select('*').eq('org_id', orgId).eq('is_active', true),
+                supabaseAdmin.from('member_skills').select('*, profiles(name, avatar_url, org_id)')
             ]);
+            
+            // Filter skills/candidates by org_id (since profiles join might not filter outer query)
+            const filteredCandidates = (skillsRes.data || []).filter((s: any) => s.profiles?.org_id === orgId);
+            
             setMembers(rolesRes.data || []);
-            setCandidates(skillsRes.data || []);
+            setCandidates(filteredCandidates);
             setLoading(false);
         };
         load();
-    }, []);
+    }, [orgId]);
 
     // Group by ministry
     const byMinistry = members.reduce((acc: Record<string, any[]>, m) => {
@@ -52,6 +60,7 @@ export default function MinistriesPage() {
         try {
             const { error } = await supabaseAdmin.from('ministry_members').insert({
                 user_id: candidate.user_id,
+                org_id: orgId,
                 ministry_name: ministryName,
                 ministry_role: 'member',
                 is_active: true

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { HeartPulse, Flame, TrendingUp, BookOpen, BarChart2 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from "recharts";
 import { supabase } from "@/lib/supabase";
+import { useAdminCtx } from "../layout";
 
 const TOOLTIP_STYLE = {
     contentStyle: { background: '#1a2236', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 },
@@ -16,17 +17,27 @@ export default function SpiritualPage() {
     const [stats, setStats] = useState<any[]>([]);
     const [soap, setSoap] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const { orgId } = useAdminCtx();
 
     useEffect(() => {
+        if (!orgId) return;
         Promise.all([
-            supabase.from('member_stats').select('*').order('engagement_score', { ascending: false }).limit(20),
-            supabase.from('soap_entries').select('*').order('created_at', { ascending: false }).limit(50),
+            supabase.from('member_stats')
+                .select('*, profiles!inner(org_id)')
+                .eq('profiles.org_id', orgId)
+                .order('engagement_score', { ascending: false })
+                .limit(20),
+            supabase.from('soap_entries')
+                .select('*, profiles!inner(org_id)')
+                .eq('profiles.org_id', orgId)
+                .order('created_at', { ascending: false })
+                .limit(50),
         ]).then(([s, e]) => {
             setStats(s.data || []);
             setSoap(e.data || []);
             setLoading(false);
         });
-    }, []);
+    }, [orgId]);
 
     const avgStreak = stats.length ? Math.round(stats.reduce((a, s) => a + (s.current_streak || 0), 0) / stats.length) : 0;
     const totalDevotions = stats.reduce((a, s) => a + (s.completed_devotions || 0), 0);

@@ -15,11 +15,13 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAdminCtx } from '../layout';
 
 export default function NewsletterManager() {
     const [newsletters, setNewsletters] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isCreating, setIsCreating] = useState(false);
+    const { orgId } = useAdminCtx();
 
     const [formData, setFormData] = useState({
         title: '',
@@ -41,11 +43,13 @@ export default function NewsletterManager() {
     const [isPostingFeed, setIsPostingFeed] = useState(false);
 
     const fetchNewsletters = async () => {
+        if (!orgId) return;
         setLoading(true);
         try {
             const { data } = await supabase
                 .from('newsletters')
                 .select('*')
+                .eq('org_id', orgId)
                 .order('published_at', { ascending: false });
             setNewsletters(data || []);
         } finally {
@@ -54,8 +58,8 @@ export default function NewsletterManager() {
     };
 
     useEffect(() => {
-        fetchNewsletters();
-    }, []);
+        if (orgId) fetchNewsletters();
+    }, [orgId]);
 
     const handleCreate = async () => {
         if (!formData.title || !formData.message) {
@@ -68,6 +72,7 @@ export default function NewsletterManager() {
             if (!user) return;
 
             const { error } = await supabase.from('newsletters').insert({
+                org_id: orgId,
                 title: formData.title,
                 content: {
                     message: formData.message,
@@ -109,21 +114,18 @@ export default function NewsletterManager() {
                 .eq('id', user.id)
                 .single();
             
-            if (!profile?.org_id) throw new Error("No organization found for user");
+            if (!orgId) throw new Error("No organization ID found");
 
-            const { error } = await supabaseAdmin
-                .from('member_feed_items')
-                .insert({
-                    org_id: profile.org_id,
-                    created_by: user.id,
-                    feed_type: feedData.feed_type,
-                    title: feedData.title,
-                    body: feedData.body,
-                    cta_text: feedData.cta_text || null,
-                    cta_url: feedData.cta_url || null,
-                    expires_at: feedData.expires_at || null,
-                    published_at: new Date().toISOString()
-                });
+            const { error } = await supabase.from('news_feed').insert({
+                org_id: orgId,
+                feed_type: feedData.feed_type,
+                title: feedData.title,
+                body: feedData.body,
+                cta_text: feedData.cta_text || null,
+                cta_url: feedData.cta_url || null,
+                expires_at: feedData.expires_at || null,
+                published_at: new Date().toISOString()
+            });
 
             if (error) throw error;
             toast.success("Posted to member feed.");

@@ -11,48 +11,46 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
+import { useAdminCtx } from "../layout";
 
 export default function MinistryHub() {
     const [loading, setLoading] = useState(true);
     const [ministriesHealth, setMinistriesHealth] = useState<any[]>([]);
     const [equipmentReports, setEquipmentReports] = useState<any[]>([]);
     const [stats, setStats] = useState({ active: 0, critical: 0, volunteers: 0, reports: 0 });
+    const { orgId } = useAdminCtx();
 
     const loadData = async () => {
+        if (!orgId) return;
         setLoading(true);
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-            const { data: profile } = await supabase.from('profiles').select('org_id').eq('id', user.id).single();
+            const { data, error } = await supabaseAdmin
+                .from('vw_ministry_hub')
+                .select('*')
+                .eq('org_id', orgId)
+                .order('name');
+            
+            if (error) throw error;
+            setMinistriesHealth(data || []);
 
-            if (profile?.org_id) {
-                const { data, error } = await supabaseAdmin
-                    .from('vw_ministry_hub')
-                    .select('*')
-                    .eq('org_id', profile.org_id)
-                    .order('name');
-                
-                if (error) throw error;
-                setMinistriesHealth(data || []);
+            const v = data?.reduce((acc, current) => {
+                return {
+                    active: acc.active + 1,
+                    critical: acc.critical + (current.reporting_overdue ? 1 : 0),
+                    volunteers: acc.volunteers + (current.volunteer_count || 0),
+                    reports: acc.reports + (current.total_reports || 0)
+                };
+            }, { active: 0, critical: 0, volunteers: 0, reports: 0 });
 
-                const v = data?.reduce((acc, current) => {
-                    return {
-                        active: acc.active + 1,
-                        critical: acc.critical + (current.reporting_overdue ? 1 : 0),
-                        volunteers: acc.volunteers + (current.volunteer_count || 0),
-                        reports: acc.reports + (current.total_reports || 0)
-                    };
-                }, { active: 0, critical: 0, volunteers: 0, reports: 0 });
+            if (v) setStats(v);
 
-                if (v) setStats(v);
-
-                // Load equipment reports
-                const { data: equipData } = await supabaseAdmin
-                    .from('vw_equipment_reports')
-                    .select('*')
-                    .limit(10);
-                setEquipmentReports(equipData || []);
-            }
+            // Load equipment reports
+            const { data: equipData } = await supabaseAdmin
+                .from('vw_equipment_reports')
+                .select('*')
+                .eq('org_id', orgId)
+                .limit(10);
+            setEquipmentReports(equipData || []);
         } catch (err: any) {
             console.error(err);
             toast.error("Failed to load Ministry Health Intelligence");
@@ -63,7 +61,7 @@ export default function MinistryHub() {
 
     useEffect(() => {
         loadData();
-    }, []);
+    }, [orgId]);
 
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-[#0f172a]">

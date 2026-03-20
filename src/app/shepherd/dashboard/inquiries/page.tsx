@@ -4,18 +4,22 @@ import { useState, useEffect } from 'react';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { format } from 'date-fns';
 import { Mail, ChevronDown, ChevronUp, User, AtSign, Clock } from 'lucide-react';
+import { useAdminCtx } from '../layout';
 
 export default function InquiriesPage() {
   const [inquiries, setInquiries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { orgId } = useAdminCtx();
 
   useEffect(() => {
     async function fetchInquiries() {
+      if (!orgId) return;
       try {
         const { data, error } = await supabaseAdmin
           .from('public_inquiries')
           .select('*')
+          .eq('org_id', orgId)
           .order('created_at', { ascending: false })
           .limit(50);
 

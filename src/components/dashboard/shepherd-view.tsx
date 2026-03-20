@@ -24,6 +24,7 @@ import { AttendanceReconciliationCard } from "./AttendanceReconciliationCard";
 import { MinistryOnboarding } from "./MinistryOnboarding";
 import { toast } from "sonner";
 import { CRITICAL_MINISTRIES, MINISTRY_OPTIONS } from "@/lib/constants";
+import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
 
 /* ─── Types ─── */
 interface DashboardData {
@@ -179,6 +180,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
     const [runningAI, setRunningAI] = useState(false);
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [membershipRequests, setMembershipRequests] = useState<any[]>([]);
+    const { orgId } = useAdminCtx();
 
     const runIntelligence = async () => {
         setRunningAI(true);
@@ -226,6 +228,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
     };
 
     const loadData = useCallback(async () => {
+        if (!orgId) return;
         setLoading(true);
         try {
             const db = supabaseAdmin;
@@ -251,22 +254,22 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 ministryAnalyticsRes,
                 decCountRes
             ] = await Promise.all([
-                db.from('profiles').select('*'),
-                db.from('member_stats').select('*'),
-                db.from('prayer_requests').select('*'),
-                db.from('ministry_members').select('*'),
-                db.from('vw_spiritual_pulse').select('*').maybeSingle(),
-                db.from('church_health_metrics').select('*').order('created_at', { ascending: false }).limit(1),
-                db.from('prophetic_insights').select('*').eq('is_acknowledged', false).order('generated_at', { ascending: false }).limit(10),
-                db.from('pastoral_notes').select('*, profiles!member_user_id(name)').eq('category', 'counseling').eq('is_resolved', false).order('follow_up_date', { ascending: true }),
-                db.from('vw_growth_intelligence').select('*'),
-                db.from('member_skills').select('*'),
-                db.from('vw_attendance_reconciliation_new').select('*').order('event_date', { ascending: false }).limit(1),
-                db.from('soap_entries').select('*'),
-                db.from('soap_sentiment_metrics').select('*'),
-                db.from('evangelism_pipeline').select('*'),
-                db.from('ministry_analytics').select('ministry_id, health_score, avg_attendance, total_reports, salvations').eq('period_type', 'monthly'),
-                db.from('user_declarations').select('*', { count: 'exact', head: true }).gte('confirmed_at', startOfToday.toISOString())
+                db.from('profiles').select('*').eq('org_id', orgId),
+                db.from('member_stats').select('*').eq('org_id', orgId),
+                db.from('prayer_requests').select('*').eq('org_id', orgId),
+                db.from('ministry_members').select('*').eq('org_id', orgId),
+                db.from('vw_spiritual_pulse').select('*').eq('org_id', orgId).maybeSingle(),
+                db.from('church_health_metrics').select('*').eq('org_id', orgId).order('created_at', { ascending: false }).limit(1),
+                db.from('prophetic_insights').select('*').eq('org_id', orgId).eq('is_acknowledged', false).order('generated_at', { ascending: false }).limit(10),
+                db.from('pastoral_notes').select('*, profiles!member_user_id(name)').eq('org_id', orgId).eq('category', 'counseling').eq('is_resolved', false).order('follow_up_date', { ascending: true }),
+                db.from('vw_growth_intelligence').select('*').eq('org_id', orgId),
+                db.from('member_skills').select('*, profiles!inner(org_id)').eq('profiles.org_id', orgId),
+                db.from('vw_attendance_reconciliation_new').select('*').eq('org_id', orgId).order('event_date', { ascending: false }).limit(1),
+                db.from('soap_entries').select('*').eq('org_id', orgId),
+                db.from('soap_sentiment_metrics').select('*').eq('org_id', orgId),
+                db.from('evangelism_pipeline').select('*').eq('org_id', orgId),
+                db.from('ministry_analytics').select('ministry_id, health_score, avg_attendance, total_reports, salvations').eq('org_id', orgId).eq('period_type', 'monthly'),
+                db.from('user_declarations').select('*', { count: 'exact', head: true }).eq('org_id', orgId).gte('confirmed_at', startOfToday.toISOString())
             ]);
 
             const profiles = profilesRes.data || [];
@@ -445,9 +448,11 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [orgId]);
 
-    useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => {
+        loadData();
+    }, [orgId, loadData]);
 
     const engagementRing = 2 * Math.PI * 40;
 

@@ -4,15 +4,25 @@ import { useEffect, useState } from "react";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { motion } from "framer-motion";
 import { MessagesSquare, Users, MapPin, Calendar } from "lucide-react";
+import { useAdminCtx } from "../layout";
 
 export default function FellowshipPage() {
     const [groups, setGroups] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const { orgId } = useAdminCtx();
+
     useEffect(() => {
-        supabaseAdmin.from('fellowship_groups').select('*').order('member_count', { ascending: false })
-            .then(({ data }) => { setGroups(data || []); setLoading(false); });
-    }, []);
+        if (!orgId) return;
+        supabaseAdmin.from('fellowship_groups')
+            .select('*')
+            .eq('org_id', orgId)
+            .order('member_count', { ascending: false })
+            .then(({ data }) => { 
+                setGroups(data || []); 
+                setLoading(false); 
+            });
+    }, [orgId]);
 
     const totalMembers = groups.reduce((a, g) => a + (g.member_count || 0), 0);
 

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { PILEngine } from "@/lib/pil-engine";
+import { useAdminCtx } from "../layout";
 
 const PRIORITY_CONFIG = {
     critical: { color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20', dot: 'bg-red-400', badge: 'bg-red-500/20 text-red-400' },
@@ -31,6 +32,7 @@ const URGENCY_CONFIG: Record<string, string> = {
 };
 
 export default function AICommandCenterPage() {
+    const { orgId } = useAdminCtx();
     const [insights, setInsights] = useState<any[]>([]);
     const [aiInsights, setAiInsights] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -46,20 +48,24 @@ export default function AICommandCenterPage() {
     const [broadcasting, setBroadcasting] = useState(false);
 
     const loadInsights = async () => {
+        if (!orgId) return;
         setLoading(true);
         const { data } = await supabase
             .from('prophetic_insights')
             .select('*')
+            .eq('org_id', orgId)
             .order('generated_at', { ascending: false });
         setInsights(data || []);
         setLoading(false);
     };
 
     const loadAiInsights = async () => {
+        if (!orgId) return;
         setAiLoading(true);
         const { data } = await supabaseAdmin
             .from('ai_ministry_insights')
             .select('*')
+            .eq('org_id', orgId)
             .eq('is_approved', false)
             .order('created_at', { ascending: false })
             .limit(50);
@@ -68,9 +74,10 @@ export default function AICommandCenterPage() {
     };
 
     const runSweep = async () => {
+        if (!orgId) return;
         setRunningSweep(true);
         try {
-            await PILEngine.runIntelligenceSweep('fa547adf-f820-412f-9458-d6bade11517d');
+            await PILEngine.runIntelligenceSweep(orgId);
             await loadInsights();
             await loadAiInsights();
         } finally {
@@ -79,9 +86,11 @@ export default function AICommandCenterPage() {
     };
 
     useEffect(() => {
-        loadInsights();
-        loadAiInsights();
-    }, []);
+        if (orgId) {
+            loadInsights();
+            loadAiInsights();
+        }
+    }, [orgId]);
 
     const acknowledge = async (id: string) => {
         setAcknowledging(id);

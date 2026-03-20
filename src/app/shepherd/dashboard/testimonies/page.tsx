@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { Play, Trash2, Plus, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAdminCtx } from '../layout';
 
 export default function TestimoniesManagement() {
   const [testimonies, setTestimonies] = useState<any[]>([]);
@@ -15,15 +16,18 @@ export default function TestimoniesManagement() {
     youtube_url: '',
     description: ''
   });
+  const { orgId } = useAdminCtx();
 
   useEffect(() => {
-    fetchTestimonies();
-  }, []);
+    if (orgId) fetchTestimonies();
+  }, [orgId]);
 
   async function fetchTestimonies() {
+    if (!orgId) return;
     const { data } = await supabaseAdmin
       .from('public_testimonies')
       .select('*')
+      .eq('org_id', orgId)
       .order('created_at', { ascending: false });
     setTestimonies(data || []);
     setLoading(false);
@@ -31,11 +35,12 @@ export default function TestimoniesManagement() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!orgId) return;
     setSubmitting(true);
 
     const { error } = await supabaseAdmin
       .from('public_testimonies')
-      .insert([formData]);
+      .insert([{ ...formData, org_id: orgId }]);
 
     if (error) {
       toast.error('Failed to add testimony');

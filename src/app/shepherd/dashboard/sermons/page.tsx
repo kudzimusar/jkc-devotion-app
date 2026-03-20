@@ -17,10 +17,13 @@ type Sermon = {
   featured: boolean;
 };
 
+import { useAdminCtx } from '../layout';
+
 export default function SermonManagementPage() {
   const [sermons, setSermons] = useState<Sermon[]>([]);
   const [loading, setLoading] = useState(true);
-  
+  const { orgId } = useAdminCtx();
+
   // Form state
   const [title, setTitle] = useState('');
   const [speaker, setSpeaker] = useState('');
@@ -32,10 +35,12 @@ export default function SermonManagementPage() {
   const [issubmitting, setIsSubmitting] = useState(false);
 
   const fetchSermons = async () => {
+    if (!orgId) return;
     try {
       const { data, error } = await supabaseAdmin
         .from('public_sermons')
         .select('*')
+        .eq('org_id', orgId)
         .order('date', { ascending: false })
         .limit(10);
 
@@ -50,8 +55,8 @@ export default function SermonManagementPage() {
   };
 
   useEffect(() => {
-    fetchSermons();
-  }, []);
+    if (orgId) fetchSermons();
+  }, [orgId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +70,7 @@ export default function SermonManagementPage() {
       const { error } = await supabaseAdmin
         .from('public_sermons')
         .insert({
+          org_id: orgId,
           title,
           speaker,
           youtube_url: youtubeUrl,

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { DollarSign, TrendingUp, Users, PieChart as PieIcon, Plus, Save } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { useAdminCtx } from "../layout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,25 +25,29 @@ export default function FinancePage() {
     const [isTrackerOpen, setIsTrackerOpen] = useState(false);
     const [formData, setFormData] = useState({ amount: '', record_type: 'offering', notes: '' });
     const [submitting, setSubmitting] = useState(false);
+    const { orgId } = useAdminCtx();
 
     const loadRecords = () => {
-        supabase.from('financial_records').select('*').order('given_date', { ascending: false })
+        if (!orgId) return;
+        supabase.from('financial_records')
+            .select('*')
+            .eq('org_id', orgId)
+            .order('given_date', { ascending: false })
             .then(({ data }) => {
                 setRecords(data || []);
                 setLoading(false);
             });
     };
 
-    useEffect(() => { loadRecords(); }, []);
+    useEffect(() => { loadRecords(); }, [orgId]);
 
     const handleAddRecord = async () => {
         if (!formData.amount) return toast.error("Amount is required");
+        if (!orgId) return toast.error("Organization context missing");
         setSubmitting(true);
         try {
             const { data: { user } } = await supabase.auth.getUser();
-            const { data: profile } = await supabase.from('profiles').select('org_id').eq('id', user?.id).single();
-            const org_id = profile?.org_id;
-
+            
             const res = await fetch('/api/finance/donate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -51,7 +56,7 @@ export default function FinancePage() {
                     record_type: formData.record_type,
                     notes: formData.notes,
                     user_id: user?.id,
-                    org_id
+                    org_id: orgId
                 })
             });
             

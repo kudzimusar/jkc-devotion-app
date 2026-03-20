@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { useAdminCtx } from "../layout";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -20,12 +21,14 @@ export default function MembershipRequestsPage() {
     const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState("pending");
+    const { orgId } = useAdminCtx();
 
     useEffect(() => {
-        fetchRequests();
-    }, []);
+        if (orgId) fetchRequests();
+    }, [orgId]);
 
     async function fetchRequests() {
+        if (!orgId) return;
         setLoading(true);
         try {
             const { data, error } = await supabaseAdmin
@@ -36,9 +39,10 @@ export default function MembershipRequestsPage() {
                         name, email, city, ward, 
                         phone, growth_stage, 
                         referral_source, church_background,
-                        created_at
+                        created_at, org_id
                     )
                 `)
+                .eq('profiles.org_id', orgId)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;

@@ -17,6 +17,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { useAdminCtx } from "../layout";
 import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 
@@ -26,7 +27,6 @@ export default function MerchandiseAdminPage() {
     const [products, setProducts] = useState<Merchandise[]>([]);
     const [orders, setOrders] = useState<MerchandiseOrder[]>([]);
     const [categories, setCategories] = useState<MerchandiseCategory[]>([]);
-    const [orgId, setOrgId] = useState<string | null>(null);
 
     // Form States
     const [isAddProductOpen, setIsAddProductOpen] = useState(false);
@@ -69,35 +69,21 @@ export default function MerchandiseAdminPage() {
         slug: ""
     });
 
+    const { orgId } = useAdminCtx();
+
     useEffect(() => {
-        loadData();
-    }, []);
+        if (orgId) loadData();
+    }, [orgId]);
 
     async function loadData() {
+        if (!orgId) return;
         try {
             setLoading(true);
-            const { data: userData } = await supabase.auth.getUser();
-            if (!userData.user) return;
-
-            const { data: memberData } = await supabase
-                .from("org_members")
-                .select("org_id")
-                .eq("user_id", userData.user.id)
-                .single();
-
-            if (!memberData) {
-                // Fallback to JKC if testing as admin
-                setOrgId("fa547adf-f820-412f-9458-d6bade11517d");
-            } else {
-                setOrgId(memberData.org_id);
-            }
-
-            const currentOrgId = memberData?.org_id || "fa547adf-f820-412f-9458-d6bade11517d";
 
             const [productsData, categoriesData, ordersData] = await Promise.all([
-                ShopService.getProducts(currentOrgId),
-                ShopService.getCategories(currentOrgId),
-                ShopService.getOrgOrders(currentOrgId)
+                ShopService.getProducts(orgId),
+                ShopService.getCategories(orgId),
+                ShopService.getOrgOrders(orgId)
             ]);
 
             setProducts(productsData);

@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { supabase } from "@/lib/supabase";
 import { useAdminCtx } from "../layout";
 import { AdminAuth, ADMIN_ROLES, ROLE_HIERARCHY, AdminRole } from "@/lib/admin-auth";
 import { motion, AnimatePresence } from "framer-motion";
-import { Settings, Users, Shield, Mail, Plus, Trash2, CheckCircle2, AlertCircle, Crown, User, Loader2, Copy, Share2, ExternalLink } from "lucide-react";
+import { Settings, Users, Shield, Mail, Plus, Trash2, CheckCircle2, AlertCircle, Crown, User, Loader2, Copy, Share2, ExternalLink, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { basePath as BP } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +34,8 @@ export default function SettingsPage() {
     const [inviting, setInviting] = useState(false);
     const [myRoles, setMyRoles] = useState<any[]>([]);
     const [tab, setTab] = useState<'profile' | 'team' | 'invitations'>('profile');
+    const searchParams = useSearchParams();
+    const mfaRequired = searchParams.get('mfa_required') === 'true';
 
     const isSuperAdmin = AdminAuth.can(myRole, 'owner');
 
@@ -159,6 +162,26 @@ export default function SettingsPage() {
                 <AnimatePresence mode="wait">
                     {tab === 'profile' && (
                         <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8 max-w-4xl">
+                            {/* MFA Alert Block */}
+                            {mfaRequired && (
+                                <div className="bg-violet-600/10 border border-violet-500/30 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl shadow-violet-500/5">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-2xl bg-violet-600 flex items-center justify-center shrink-0">
+                                            <ShieldCheck className="w-6 h-6 text-white" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-black text-white uppercase tracking-tight">Multi-Factor Authentication Required</h3>
+                                            <p className="text-[10px] text-white/50 mt-0.5 font-medium leading-relaxed">
+                                                Your role requires an extra layer of security. Please enroll in MFA to access Pastor HQ.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <Button className="bg-violet-600 hover:bg-violet-500 text-white font-black uppercase text-[10px] tracking-widest px-8 h-12 rounded-xl">
+                                        Enroll Now
+                                    </Button>
+                                </div>
+                            )}
+
                             {/* 1. Identity Overview */}
                             <div className="bg-[#111] border border-white/5 rounded-[2.5rem] p-8">
                                 <div className="flex flex-col md:flex-row items-center gap-8 mb-8">

@@ -67,7 +67,7 @@ export function withRoleGuard<T extends object>(
                         if (!currentPath.startsWith('/')) currentPath = '/' + currentPath;
 
                         if (!currentPath.includes('/settings')) {
-                           router.replace("/pastor-hq/settings?mfa_required=true");
+                           router.replace("/shepherd/dashboard/settings?mfa_required=true");
                            return;
                         }
                     }

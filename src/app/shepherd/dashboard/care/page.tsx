@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { motion } from "framer-motion";
 import { Heart, AlertTriangle, CheckCircle2, Clock, MessageSquare, Plus, Filter } from "lucide-react";
+import { useAdminCtx } from "../layout";
 
 interface Prayer { id: string; category: string; urgency: string; request_text: string; status: string; is_anonymous: boolean; created_at: string; }
 
@@ -26,18 +27,25 @@ export default function CareAndPrayerPage() {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<string>('all');
 
+    const { orgId } = useAdminCtx();
+
     useEffect(() => {
+        if (!orgId) return;
         const load = async () => {
             const [prayersRes, alertsRes] = await Promise.all([
-                supabaseAdmin.from('prayer_requests').select('*').order('created_at', { ascending: false }),
-                supabaseAdmin.from('member_alerts').select('*, member:profiles(name)').eq('is_resolved', false).order('created_at', { ascending: false })
+                supabaseAdmin.from('prayer_requests').select('*').eq('org_id', orgId).order('created_at', { ascending: false }),
+                supabaseAdmin.from('member_alerts').select('*, member:profiles(name, org_id)').eq('is_resolved', false).order('created_at', { ascending: false })
             ]);
+            
+            // Filter alerts where member is in the same org (if join doesn't filter enough)
+            const filteredAlerts = (alertsRes.data || []).filter((a: any) => a.member?.org_id === orgId);
+            
             setPrayers(prayersRes.data || []);
-            setAlerts(alertsRes.data || []);
+            setAlerts(filteredAlerts);
             setLoading(false);
         };
         load();
-    }, []);
+    }, [orgId]);
 
     const active = prayers.filter(p => p.status === 'active' || p.status === 'in_prayer');
     const answered = prayers.filter(p => p.status === 'answered');

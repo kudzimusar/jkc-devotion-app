@@ -133,32 +133,14 @@ export class ShopService {
     return data as MerchandiseCategory[];
   }
 
-  /**
-   * Create a new order
-   */
   static async createOrder(orderData: Partial<MerchandiseOrder>, items: OrderItem[]) {
-    // 1. Create the order
-    const { data: order, error: orderError } = await supabase
-      .from('merchandise_orders')
-      .insert([orderData])
-      .select()
-      .single();
+    const { data, error } = await supabase.rpc('place_merchandise_order', {
+      p_order_data: orderData,
+      p_items: items
+    });
 
-    if (orderError) throw orderError;
-
-    // 2. Add order items
-    const orderItems = items.map(item => ({
-      ...item,
-      order_id: order.id
-    }));
-
-    const { error: itemsError } = await supabase
-      .from('merchandise_order_items')
-      .insert(orderItems);
-
-    if (itemsError) throw itemsError;
-
-    return order;
+    if (error) throw error;
+    return { id: data };
   }
 
   /**
@@ -224,32 +206,14 @@ export class ShopService {
     return data as Merchandise;
   }
 
-  /**
-   * Admin: Update inventory
-   */
   static async logInventoryChange(productId: string, amount: number, reason: string) {
-    // 1. Log the change
-    const { error: logError } = await supabase
-      .from('merchandise_inventory_logs')
-      .insert([{ product_id: productId, change_amount: amount, reason }]);
+    const { error } = await supabase.rpc('log_inventory_adjustment', {
+      p_product_id: productId,
+      p_amount: amount,
+      p_reason: reason
+    });
 
-    if (logError) throw logError;
-
-    // 2. Update the product stock (in a real app, use a RPC or trigger for concurrency)
-    const { data: product, error: fetchError } = await supabase
-      .from('merchandise')
-      .select('stock_quantity')
-      .eq('id', productId)
-      .single();
-
-    if (fetchError) throw fetchError;
-
-    const { error: updateError } = await supabase
-      .from('merchandise')
-      .update({ stock_quantity: product.stock_quantity + amount })
-      .eq('id', productId);
-
-    if (updateError) throw updateError;
+    if (error) throw error;
   }
 
   /**

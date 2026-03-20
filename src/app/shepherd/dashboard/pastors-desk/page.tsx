@@ -16,6 +16,7 @@ import {
 } from 'recharts';
 import { toast } from 'sonner';
 import { SocialAnalytics } from '@/components/dashboard/SocialAnalytics';
+import { useAdminCtx } from '../layout';
 
 const COLORS = ['#8b5cf6', '#3b82f6', '#94a3b8'];
 
@@ -38,11 +39,16 @@ export default function PastorsDesk() {
         declarationsToday: 0
     });
 
+    const { orgId } = useAdminCtx();
+
     const fetchStats = async () => {
+        if (!orgId) return;
         setLoading(true);
         try {
             // 1. Total Members & Growth
-            const { count: total } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
+            const { count: total } = await supabase.from('profiles')
+                .select('*', { count: 'exact', head: true })
+                .eq('org_id', orgId);
 
             // Simplified growth calculation: members joined in last 30 days
             const thirtyDaysAgo = new Date();
@@ -50,23 +56,26 @@ export default function PastorsDesk() {
             const { count: recent } = await supabase
                 .from('profiles')
                 .select('*', { count: 'exact', head: true })
+                .eq('org_id', orgId)
                 .gt('created_at', thirtyDaysAgo.toISOString());
 
             // 2. Attendance Intent (Latest service)
             const today = new Date().toISOString().split('T')[0];
             const { data: attendance } = await supabase
-                .from('attendance_logs')
-                .select('status')
-                .eq('service_date', today);
+                .from('attendance_records')
+                .select('attendance_status')
+                .eq('org_id', orgId)
+                .eq('event_date', today);
 
             const attendanceCounts = {
-                'in-person': 0,
-                'online': 0,
-                'not-attending': 0
+                'Present': 0,
+                'Online': 0,
+                'Excused': 0
             };
             attendance?.forEach(a => {
-                if (a.status in attendanceCounts) {
-                    attendanceCounts[a.status as keyof typeof attendanceCounts]++;
+                const status = a.attendance_status as keyof typeof attendanceCounts;
+                if (status in attendanceCounts) {
+                    attendanceCounts[status]++;
                 }
             });
 
@@ -74,6 +83,7 @@ export default function PastorsDesk() {
             const { data: social } = await supabase
                 .from('social_media_metrics')
                 .select('*')
+                .eq('org_id', orgId)
                 .order('date', { ascending: false })
                 .limit(1);
 
@@ -81,6 +91,7 @@ export default function PastorsDesk() {
             const { data: alerts } = await supabase
                 .from('ai_insights')
                 .select('*')
+                .eq('org_id', orgId)
                 .eq('priority', 'critical')
                 .eq('is_acknowledged', false)
                 .limit(3);
@@ -91,15 +102,16 @@ export default function PastorsDesk() {
             const { count: decCount } = await supabase
                 .from('user_declarations')
                 .select('*', { count: 'exact', head: true })
+                .eq('org_id', orgId)
                 .gte('confirmed_at', startOfToday.toISOString());
 
             setStats({
                 totalMembers: total || 0,
                 memberGrowth: recent || 0,
                 attendanceIntent: [
-                    { name: 'In-Person', value: attendanceCounts['in-person'] },
-                    { name: 'Online', value: attendanceCounts['online'] },
-                    { name: 'Not Attending', value: attendanceCounts['not-attending'] }
+                    { name: 'In-Person', value: attendanceCounts['Present'] },
+                    { name: 'Online', value: attendanceCounts['Online'] },
+                    { name: 'Excused', value: attendanceCounts['Excused'] }
                 ],
                 socialMetrics: {
                     reach: social?.[0]?.reach || 0,
@@ -121,8 +133,8 @@ export default function PastorsDesk() {
     };
 
     useEffect(() => {
-        fetchStats();
-    }, []);
+        if (orgId) fetchStats();
+    }, [orgId]);
 
     if (loading) {
         return (

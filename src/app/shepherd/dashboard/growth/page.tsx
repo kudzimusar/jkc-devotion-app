@@ -4,30 +4,27 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { motion } from "framer-motion";
 import { TrendingUp, Users, UserCheck, Globe, Plus, Save } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAdminCtx } from "../layout";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
 export default function GrowthPage() {
     const [trendData, setTrendData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const { orgId } = useAdminCtx();
 
     const loadGrowthData = async () => {
+        if (!orgId) return;
         setLoading(true);
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            const { data: profile } = await supabase.from('profiles').select('org_id').eq('id', user?.id).single();
-            const org_id = profile?.org_id;
+            const { data, error } = await supabaseAdmin
+                .from('vw_growth_intelligence')
+                .select('*')
+                .eq('org_id', orgId)
+                .order('month', { ascending: false });
 
-            if (org_id) {
-                const { data, error } = await supabaseAdmin
-                    .from('vw_growth_intelligence')
-                    .select('*')
-                    .eq('org_id', org_id)
-                    .order('month', { ascending: false });
-
-                if (error) throw error;
-                setTrendData(data || []);
-            }
+            if (error) throw error;
+            setTrendData(data || []);
         } catch (error: any) {
             toast.error("Failed to load growth data");
         } finally {
@@ -37,7 +34,7 @@ export default function GrowthPage() {
 
     useEffect(() => {
         loadGrowthData();
-    }, []);
+    }, [orgId]);
 
     // Aggregate totals
     const totals = trendData.reduce((acc, row) => ({

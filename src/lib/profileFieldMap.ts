@@ -21,13 +21,16 @@ export const PROFILE_FIELD_MAP = {
         education_level: 'education_level',
         years_in_japan: 'years_in_japan',
         preferred_language: 'preferred_language',
+        nationality: 'nationality',
+        industry: 'industry',
+        preferred_communication: 'preferred_communication',
     },
     // Spiritual Section
     spiritual: {
         salvation_date: 'salvation_date',
         baptism_status: 'baptism_status',
         baptism_date: 'baptism_date',
-        // Missing in live DB: church_background
+        church_background: 'church_background',
     },
     // Referral Section
     referral: {
@@ -36,7 +39,7 @@ export const PROFILE_FIELD_MAP = {
     // Household Section
     household: {
         household_type: 'household_type',
-        // Missing in live DB: head_id
+        head_id: 'head_id'
     }
 } as const;
 
@@ -48,6 +51,7 @@ export function mapProfileFromDB(dbData: any) {
     
     return {
         // Identity
+        id: dbData.id,
         name: dbData.name || "",
         phone_number: dbData.phone_number || "",
         gender: dbData.gender || "",
@@ -56,15 +60,16 @@ export function mapProfileFromDB(dbData: any) {
         city: dbData.city || "",
         ward: dbData.ward || "",
         postal_code: dbData.postal_code || "",
-        nationality: "", // Missing in DB
+        nationality: dbData.nationality || "",
         preferred_language: dbData.preferred_language || "EN",
+        preferred_communication: dbData.preferred_communication || "email",
         years_in_japan: dbData.years_in_japan || 0,
         occupation: dbData.occupation || "",
-        industry: "", // Missing in DB
+        industry: dbData.industry || "",
         education_level: dbData.education_level || "",
         
         // Spiritual
-        church_background: "", // Missing in DB
+        church_background: dbData.church_background || "",
         salvation_date: dbData.salvation_date || "",
         baptism_status: dbData.baptism_status || "not_baptized",
         baptism_date: dbData.baptism_date || "",
@@ -72,6 +77,9 @@ export function mapProfileFromDB(dbData: any) {
         // Referral
         invited_by_name: dbData.invited_by || "",
         invite_method: dbData.invited_by || "",
+        
+        // Household
+        head_id: dbData.head_id || null,
         
         // Context
         org_id: dbData.org_id,
@@ -96,16 +104,21 @@ export function mapProfileToDB(formData: any) {
         city: formData.city || null,
         ward: formData.ward || null,
         postal_code: formData.postal_code || null,
+        nationality: formData.nationality || null,
+        preferred_communication: formData.preferred_communication || 'email',
         preferred_language: formData.preferred_language || null,
         years_in_japan: formData.years_in_japan || 0,
         occupation: formData.occupation || null,
+        industry: formData.industry || null,
         education_level: formData.education_level || null,
         
+        church_background: formData.church_background || null,
         salvation_date: formData.salvation_date || null,
         baptism_status: formData.baptism_status || null,
         baptism_date: formData.baptism_date || null,
         
         invited_by: formData.invite_method || formData.invited_by_name || null,
+        head_id: formData.head_id || null,
         
         updated_at: new Date().toISOString()
     };
