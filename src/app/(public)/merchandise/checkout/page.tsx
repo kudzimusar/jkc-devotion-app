@@ -21,7 +21,10 @@ import { ShopService, getCurrencySymbol } from "@/lib/shop-service";
 export default function CheckoutPage() {
     const router = useRouter();
     const [cart, setCart] = useState<any[]>([]);
+    const [savedItems, setSavedItems] = useState<any[]>([]); // New state
     const [submitting, setSubmitting] = useState(false);
+    
+    const ORG_ID = "fa547adf-f820-412f-9458-d6bade11517d";
     const [isSuccess, setIsSuccess] = useState(false);
     const [formData, setFormData] = useState({
         email: "",
@@ -40,6 +43,7 @@ export default function CheckoutPage() {
             // Check Supabase first for logged-in users
             if (currentUser) {
                 try {
+                    const dbCart = await ShopService.getCart(currentUser.id);
                     const mapped = dbCart.map((item: any) => ({
                         ...item.product,
                         quantity: item.quantity,
@@ -201,7 +205,7 @@ export default function CheckoutPage() {
                                         {submitting ? (
                                             <><Loader2 className="mr-3 animate-spin" size={16} /> PROCESSING...</>
                                         ) : (
-                                            <><Lock className="mr-3" size={16} /> COMPLETE TRANSACTION • {getCurrencySymbol("fa547adf-f820-412f-9458-d6bade11517d")}{total.toLocaleString()}</>
+                                            <><Lock className="mr-3" size={16} /> COMPLETE TRANSACTION • {getCurrencySymbol(ORG_ID)}{total.toLocaleString()}</>
                                         )}
                                     </Button>
                                 </div>
@@ -219,9 +223,9 @@ export default function CheckoutPage() {
                                             </div>
                                             <div className="flex-1 min-w-0 flex flex-col justify-center">
                                                 <h4 className="text-sm font-black uppercase tracking-tight truncate">{item.name}</h4>
-                                                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest">Qty: {item.quantity} • {getCurrencySymbol("fa547adf-f820-412f-9458-d6bade11517d")}{item.price.toLocaleString()}</p>
+                                                <p className="text-[10px] font-bold text-muted-foreground uppercase mt-2 tracking-widest">Qty: {item.quantity} • {getCurrencySymbol(ORG_ID)}{item.price.toLocaleString()}</p>
                                             </div>
-                                            <div className="text-sm font-black flex items-center">{getCurrencySymbol("fa547adf-f820-412f-9458-d6bade11517d")}{(item.price * item.quantity).toLocaleString()}</div>
+                                            <div className="text-sm font-black flex items-center">{getCurrencySymbol(ORG_ID)}{(item.price * item.quantity).toLocaleString()}</div>
                                         </div>
                                     ))}
                                 </div>
@@ -229,19 +233,19 @@ export default function CheckoutPage() {
                                 <div className="space-y-3 pt-6 border-t border-border/50 font-bold uppercase tracking-widest text-[9px]">
                                     <div className="flex justify-between text-muted-foreground">
                                         <span>Subtotal</span>
-                                        <span className="text-foreground">{getCurrencySymbol("fa547adf-f820-412f-9458-d6bade11517d")}{subtotal.toLocaleString()}</span>
+                                        <span className="text-foreground">{getCurrencySymbol(ORG_ID)}{subtotal.toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-muted-foreground">
                                         <span>Tax (10% JCT)</span>
-                                        <span className="text-foreground">{getCurrencySymbol("fa547adf-f820-412f-9458-d6bade11517d")}{Math.round(taxAmount).toLocaleString()}</span>
+                                        <span className="text-foreground">{getCurrencySymbol(ORG_ID)}{Math.round(taxAmount).toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-muted-foreground">
                                         <span>Global Logistics</span>
-                                        <span className={shipping === 0 ? "text-emerald-500" : "text-foreground"}>{shipping === 0 ? "FREE" : `${getCurrencySymbol("fa547adf-f820-412f-9458-d6bade11517d")}${shipping.toLocaleString()}`}</span>
+                                        <span className={shipping === 0 ? "text-emerald-500" : "text-foreground"}>{shipping === 0 ? "FREE" : `${getCurrencySymbol(ORG_ID)}${shipping.toLocaleString()}`}</span>
                                     </div>
                                     <div className="pt-6 flex justify-between text-xl font-black text-foreground">
                                         <span className="tracking-tight">TOTAL</span>
-                                        <span className="text-primary">{getCurrencySymbol("fa547adf-f820-412f-9458-d6bade11517d")}{total.toLocaleString()}</span>
+                                        <span className="text-primary">{getCurrencySymbol(ORG_ID)}{total.toLocaleString()}</span>
                                     </div>
                                 </div>
                                 

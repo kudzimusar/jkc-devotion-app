@@ -268,9 +268,8 @@ export default function CartPage() {
                                 </div>
                                     
                                     <div className="text-right pt-4 text-base md:text-lg">
-                                        Subtotal ({cart.length} items): <span className="font-bold">{getCurrencySymbol("ORG_ID")}{subtotal.toLocaleString()}</span>
+                                        Subtotal ({cart.length} items): <span className="font-bold">{getCurrencySymbol(ORG_ID)}{subtotal.toLocaleString()}</span>
                                     </div>
-                                </div>
 
                                 {/* Saved for Later */}
                                 {savedItems.length > 0 && (
