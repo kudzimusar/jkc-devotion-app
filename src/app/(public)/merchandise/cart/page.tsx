@@ -140,9 +140,9 @@ export default function CartPage() {
                 <div className="container mx-auto max-w-7xl">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
                         <div>
-                            <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight">Your Kingdom Cart</h1>
-                            <p className="text-muted-foreground font-medium uppercase tracking-widest text-[10px] flex items-center gap-2 mt-2">
-                                <ShieldCheck size={14} className="text-primary" /> 100% Secure Checkout Guaranteed
+                            <h1 className="text-3xl font-black uppercase tracking-tight">Your Kingdom Cart</h1>
+                            <p className="text-muted-foreground font-bold uppercase tracking-widest text-[9px] flex items-center gap-2 mt-1">
+                                <ShieldCheck size={12} className="text-primary" /> 100% Secure Checkout Guaranteed
                             </p>
                         </div>
                         <Link href="/merchandise">
@@ -153,12 +153,12 @@ export default function CartPage() {
                     </div>
 
                     {cart.length === 0 ? (
-                        <div className="text-center py-40 border-2 border-dashed border-border rounded-[3rem] bg-card/30">
-                            <ShoppingBag size={80} className="mx-auto mb-8 text-muted-foreground opacity-10" />
-                            <h3 className="text-3xl font-black uppercase tracking-tight mb-4 text-foreground">Cart is currently empty</h3>
-                            <p className="text-muted-foreground max-w-sm mx-auto mb-10 font-medium">Your harvest is empty. Head back to our collection to find something special.</p>
+                        <div className="text-center py-20 border border-dashed border-border rounded-3xl bg-card/30">
+                            <ShoppingBag size={48} className="mx-auto mb-6 text-muted-foreground opacity-10" />
+                            <h3 className="text-xl font-black uppercase tracking-tight mb-2 text-foreground">Cart is currently empty</h3>
+                            <p className="text-muted-foreground text-xs max-w-sm mx-auto mb-8 font-medium">Your harvest is empty. Head back to our collection to find something special.</p>
                             <Link href="/merchandise">
-                                <Button className="rounded-[2rem] font-black uppercase tracking-widest text-xs h-16 w-64 bg-primary shadow-xl shadow-primary/20">Start Exploring</Button>
+                                <Button className="rounded-xl font-black uppercase tracking-widest text-[10px] h-12 w-48 bg-primary shadow-lg shadow-primary/20">Start Exploring</Button>
                             </Link>
                         </div>
                     ) : (
@@ -173,15 +173,15 @@ export default function CartPage() {
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0, x: -100 }}
-                                            className="group relative overflow-hidden bg-card border border-border rounded-[2.5rem] p-6 pr-10 hover:border-primary/30 transition-all shadow-sm"
+                                            className="group relative overflow-hidden bg-card border border-border rounded-2xl p-4 pr-8 hover:border-primary/30 transition-all shadow-sm"
                                         >
-                                            <div className="flex flex-col sm:flex-row gap-8">
-                                                <div className="w-32 h-32 bg-muted rounded-3xl overflow-hidden flex-shrink-0 relative group-hover:scale-105 transition-transform duration-500">
+                                            <div className="flex flex-col sm:flex-row gap-4">
+                                                <div className="w-24 h-24 bg-muted rounded-xl overflow-hidden flex-shrink-0 relative group-hover:scale-105 transition-transform duration-500">
                                                     {item.images?.[0] ? (
                                                         <img src={item.images[0]} alt={item.name} className="w-full h-full object-cover" />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center">
-                                                            <Package size={32} className="text-muted-foreground opacity-20" />
+                                                            <Package size={24} className="text-muted-foreground opacity-20" />
                                                         </div>
                                                     )}
                                                 </div>
@@ -190,26 +190,26 @@ export default function CartPage() {
                                                     <div className="space-y-2">
                                                         <div className="flex items-start justify-between">
                                                             <div>
-                                                                <h3 className="text-2xl font-black uppercase tracking-tight group-hover:text-primary transition-colors">{item.name}</h3>
-                                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic mt-1">Global Kingdom Shipping Eligible</p>
+                                                                <h3 className="text-lg font-black uppercase tracking-tight group-hover:text-primary transition-colors">{item.name}</h3>
+                                                                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground italic mt-0.5">Global Kingdom Shipping Eligible</p>
                                                             </div>
-                                                            <button onClick={() => removeItem(item.id)} className="p-2 text-muted-foreground hover:text-destructive transition-colors rounded-full hover:bg-destructive/5">
-                                                                <Trash2 size={18} />
+                                                            <button onClick={() => removeItem(item.id)} className="p-1.5 text-muted-foreground hover:text-destructive transition-colors rounded-full hover:bg-destructive/5">
+                                                                <Trash2 size={16} />
                                                             </button>
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pt-6">
-                                                        <div className="flex items-center gap-2 bg-muted/50 rounded-2xl p-1 w-fit border border-border/50">
-                                                            <button onClick={() => updateQuantity(item.id, -1)} className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-white transiton-colors text-foreground">
-                                                                <Minus size={16} />
+                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4">
+                                                        <div className="flex items-center gap-1.5 bg-muted/50 rounded-xl p-0.5 w-fit border border-border/50">
+                                                            <button onClick={() => updateQuantity(item.id, -1)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white transiton-colors text-foreground">
+                                                                <Minus size={14} />
                                                             </button>
-                                                            <span className="w-12 text-center font-black text-sm">{item.quantity}</span>
-                                                            <button onClick={() => updateQuantity(item.id, 1)} className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-white transiton-colors text-foreground">
-                                                                <Plus size={16} />
+                                                            <span className="w-10 text-center font-black text-xs">{item.quantity}</span>
+                                                            <button onClick={() => updateQuantity(item.id, 1)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white transiton-colors text-foreground">
+                                                                <Plus size={14} />
                                                             </button>
                                                         </div>
-                                                        <div className="text-2xl font-black text-primary group-hover:scale-110 transition-transform origin-right">
+                                                        <div className="text-xl font-black text-primary group-hover:scale-105 transition-transform origin-right">
                                                             {getCurrencySymbol("fa547adf-f820-412f-9458-d6bade11517d")}{(item.price * item.quantity).toLocaleString()}
                                                         </div>
                                                     </div>
@@ -221,33 +221,37 @@ export default function CartPage() {
                             </div>
 
                             {/* Order Summary */}
-                            <div className="space-y-8 lg:sticky lg:top-36">
-                                <Card className="rounded-[3rem] border-none bg-card p-10 shadow-sm border border-border/50">
-                                    <h3 className="text-2xl font-black uppercase tracking-tight mb-8">Order Summary</h3>
+                            <div className="space-y-6 lg:sticky lg:top-36">
+                                <Card className="rounded-3xl border-none bg-card p-6 shadow-sm border border-border/50">
+                                    <h3 className="text-lg font-black uppercase tracking-tight mb-6">Order Summary</h3>
                                     
-                                    <div className="space-y-6 mb-8 text-sm font-bold uppercase tracking-widest">
+                                    <div className="space-y-4 mb-6 text-[10px] font-bold uppercase tracking-widest">
                                         <div className="flex justify-between text-muted-foreground">
                                             <span>Subtotal</span>
                                             <span className="text-foreground">{getCurrencySymbol("fa547adf-f820-412f-9458-d6bade11517d")}{subtotal.toLocaleString()}</span>
                                         </div>
                                         <div className="flex justify-between text-muted-foreground">
+                                            <span>Tax (10% JCT)</span>
+                                            <span className="text-foreground">{getCurrencySymbol("fa547adf-f820-412f-9458-d6bade11517d")}{Math.round(subtotal * 0.1).toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex justify-between text-muted-foreground">
                                             <span>Shipping</span>
                                             <span className="text-foreground">{shipping === 0 ? "FREE" : `${getCurrencySymbol("fa547adf-f820-412f-9458-d6bade11517d")}${shipping.toLocaleString()}`}</span>
                                         </div>
-                                        <div className="pt-6 border-t border-border/50 flex justify-between text-2xl font-black">
+                                        <div className="pt-4 border-t border-border/50 flex justify-between text-xl font-black">
                                             <span className="tracking-tight text-foreground">Grand Total</span>
                                             <span className="text-primary">{getCurrencySymbol("fa547adf-f820-412f-9458-d6bade11517d")}{total.toLocaleString()}</span>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-4">
+                                    <div className="space-y-3">
                                         <Link href="/merchandise/checkout">
-                                            <Button className="w-full h-18 rounded-[2.5rem] bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-primary/20 h-16 transition-all active:scale-95">
-                                                Proceed to Checkout <ArrowRight size={18} className="ml-3" />
+                                            <Button className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-primary/20 transition-all active:scale-95">
+                                                Proceed to Checkout <ArrowRight size={14} className="ml-2" />
                                             </Button>
                                         </Link>
-                                        <div className="flex items-center justify-center gap-3 p-4 bg-muted/30 rounded-2xl text-[9px] font-black uppercase tracking-widest text-muted-foreground italic">
-                                            <CreditCard size={14} className="text-primary" /> Supported by Stripe & PayPal
+                                        <div className="flex items-center justify-center gap-2 p-3 bg-muted/30 rounded-xl text-[8px] font-black uppercase tracking-widest text-muted-foreground italic">
+                                            <CreditCard size={12} className="text-primary" /> Supported by Stripe & PayPal
                                         </div>
                                     </div>
 

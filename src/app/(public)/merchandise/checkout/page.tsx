@@ -15,7 +15,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getCurrencySymbol } from "@/lib/shop-service";
+import { Auth } from "@/lib/auth";
+import { ShopService, getCurrencySymbol } from "@/lib/shop-service";
 
 export default function CheckoutPage() {
     const router = useRouter();
@@ -33,15 +34,43 @@ export default function CheckoutPage() {
     });
 
     useEffect(() => {
-        const savedCart = localStorage.getItem("merchandise_cart");
-        if (savedCart) {
-            setCart(JSON.parse(savedCart));
-        } else {
-            router.push("/merchandise");
-        }
+        const initCheckout = async () => {
+            const currentUser = await Auth.getCurrentUser();
+            
+            // Check Supabase first for logged-in users
+            if (currentUser) {
+                try {
+                    const dbCart = await ShopService.getCart(currentUser.id);
+                    if (dbCart.length > 0) {
+                        setCart(dbCart.map((item: any) => ({
+                            ...item.product,
+                            quantity: item.quantity,
+                            db_id: item.id
+                        })));
+                    } else {
+                        router.push("/merchandise");
+                    }
+                } catch (e) {
+                    console.error("Checkout cart fetch error:", e);
+                    router.push("/merchandise");
+                }
+            } else {
+                // Fallback to localStorage for guests
+                const savedCart = localStorage.getItem("merchandise_cart");
+                if (savedCart) {
+                    setCart(JSON.parse(savedCart));
+                } else {
+                    router.push("/merchandise");
+                }
+            }
+        };
+
+        initCheckout();
     }, [router]);
 
     const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    const taxRate = 0.1; // 10% JCT
+    const taxAmount = subtotal * taxRate;
     const shipping = subtotal > 10000 ? 0 : 500;
     const total = subtotal + shipping;
 
@@ -106,9 +135,9 @@ export default function CheckoutPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
                         {/* 左: Checkout Form */}
                         <div className="lg:col-span-7 space-y-12">
-                            <div className="space-y-4">
-                                <h1 className="text-5xl font-black uppercase tracking-tight">Checkout</h1>
-                                <p className="text-muted-foreground font-medium uppercase tracking-widest text-xs">Phase 3: Finalizing Divine Exchange</p>
+                            <div className="space-y-2">
+                                <h1 className="text-3xl font-black uppercase tracking-tight">Checkout</h1>
+                                <p className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">Phase 3: Finalizing Divine Exchange</p>
                             </div>
 
                             <form onSubmit={handleCheckout} className="space-y-12">
@@ -165,22 +194,21 @@ export default function CheckoutPage() {
                                     <Button 
                                         type="submit" 
                                         disabled={submitting}
-                                        className="w-full h-20 rounded-[2.5rem] bg-foreground hover:bg-black text-background font-black text-sm uppercase tracking-[0.2em] shadow-2xl active:scale-[0.98] transition-all"
+                                        className="w-full h-14 rounded-2xl bg-foreground hover:bg-black text-background font-black text-xs uppercase tracking-[0.2em] shadow-lg active:scale-[0.98] transition-all"
                                     >
                                         {submitting ? (
-                                            <><Loader2 className="mr-3 animate-spin" size={20} /> PROCESSING HARVEST...</>
+                                            <><Loader2 className="mr-3 animate-spin" size={16} /> PROCESSING...</>
                                         ) : (
-                                            <><Lock className="mr-3" size={18} /> COMPLETE TRANSACTION • {getCurrencySymbol("fa547adf-f820-412f-9458-d6bade11517d")}{total.toLocaleString()}</>
+                                            <><Lock className="mr-3" size={16} /> COMPLETE TRANSACTION • {getCurrencySymbol("fa547adf-f820-412f-9458-d6bade11517d")}{total.toLocaleString()}</>
                                         )}
                                     </Button>
                                 </div>
                             </form>
                         </div>
 
-                        {/* 右: Order Summary */}
                         <div className="lg:col-span-5 lg:sticky lg:top-36">
-                            <Card className="bg-card border-none rounded-[3.5rem] p-10 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08)]">
-                                <h3 className="text-2xl font-black uppercase tracking-tight mb-10">Order Summary</h3>
+                            <Card className="bg-card border-none rounded-3xl p-6 shadow-sm border border-border/50">
+                                <h3 className="text-lg font-black uppercase tracking-tight mb-6">Order Summary</h3>
                                 <div className="space-y-8 mb-12">
                                     {cart.map((item) => (
                                         <div key={item.id} className="flex gap-6">
@@ -196,16 +224,20 @@ export default function CheckoutPage() {
                                     ))}
                                 </div>
 
-                                <div className="space-y-4 pt-10 border-t border-border/50 font-bold uppercase tracking-widest text-[10px]">
+                                <div className="space-y-3 pt-6 border-t border-border/50 font-bold uppercase tracking-widest text-[9px]">
                                     <div className="flex justify-between text-muted-foreground">
                                         <span>Subtotal</span>
-                                        <span>{getCurrencySymbol("fa547adf-f820-412f-9458-d6bade11517d")}{subtotal.toLocaleString()}</span>
+                                        <span className="text-foreground">{getCurrencySymbol("fa547adf-f820-412f-9458-d6bade11517d")}{subtotal.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between text-muted-foreground">
+                                        <span>Tax (10% JCT)</span>
+                                        <span className="text-foreground">{getCurrencySymbol("fa547adf-f820-412f-9458-d6bade11517d")}{Math.round(taxAmount).toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-muted-foreground">
                                         <span>Global Logistics</span>
-                                        <span className={shipping === 0 ? "text-emerald-500" : ""}>{shipping === 0 ? "COMPLIMENTARY" : `${getCurrencySymbol("fa547adf-f820-412f-9458-d6bade11517d")}${shipping.toLocaleString()}`}</span>
+                                        <span className={shipping === 0 ? "text-emerald-500" : "text-foreground"}>{shipping === 0 ? "FREE" : `${getCurrencySymbol("fa547adf-f820-412f-9458-d6bade11517d")}${shipping.toLocaleString()}`}</span>
                                     </div>
-                                    <div className="pt-8 flex justify-between text-3xl font-black text-foreground">
+                                    <div className="pt-6 flex justify-between text-xl font-black text-foreground">
                                         <span className="tracking-tight">TOTAL</span>
                                         <span className="text-primary">{getCurrencySymbol("fa547adf-f820-412f-9458-d6bade11517d")}{total.toLocaleString()}</span>
                                     </div>
