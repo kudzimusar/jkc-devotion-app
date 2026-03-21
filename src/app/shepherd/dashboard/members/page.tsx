@@ -76,10 +76,12 @@ export default function MembersPage() {
             const processed = (data || []).map((m: any) => ({
                 ...m,
                 milestones: {
-                    ...(m.milestones?.[0] || {}),
-                    // Use profile columns as fallback for salvation/baptism if milestone row is empty
-                    salvation_date: m.milestones?.[0]?.salvation_date || m.salvation_date,
-                    baptism_date: m.milestones?.[0]?.baptism_date || m.baptism_date,
+                    // Unified: Prioritize profile columns as the single source of truth
+                    salvation_date: m.salvation_date || m.milestones?.[0]?.salvation_date,
+                    baptism_date: m.baptism_date || m.milestones?.[0]?.baptism_date,
+                    membership_date: m.membership_date || m.milestones?.[0]?.membership_date,
+                    foundation_class_date: m.foundation_class_date || m.milestones?.[0]?.foundation_class_date,
+                    foundations_completed: m.foundations_completed ?? m.milestones?.[0]?.foundations_completed
                 },
                 org_members: m.org_members?.[0] || {},
                 discipleship_score: m.org_members?.[0]?.discipleship_score || 0,
@@ -102,11 +104,13 @@ export default function MembersPage() {
     async function handlePromoteToMember(targetId: string) {
         setLoading(true);
         try {
+            const today = new Date().toISOString().split('T')[0];
             const { error } = await supabase
                 .from('profiles')
                 .update({
                     membership_status: 'member',
-                    growth_stage: 'disciple'
+                    growth_stage: 'disciple',
+                    membership_date: today
                 })
                 .eq('id', targetId);
 
@@ -119,12 +123,12 @@ export default function MembersPage() {
                 .eq('user_id', targetId)
                 .eq('status', 'pending');
 
-            // NEW: Automatically record membership milestone
+            // Automatic record membership milestone sync for backward compatibility
             await supabase
                 .from('member_milestones')
                 .upsert({
                     user_id: targetId,
-                    membership_date: new Date().toISOString().split('T')[0],
+                    membership_date: today,
                     org_id: orgId,
                     updated_at: new Date().toISOString()
                 }, { onConflict: 'user_id' });

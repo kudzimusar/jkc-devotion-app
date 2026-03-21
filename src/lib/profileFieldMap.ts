@@ -33,6 +33,8 @@ export const PROFILE_FIELD_MAP = {
         baptism_status: 'baptism_status',
         baptism_date: 'baptism_date',
         church_background: 'church_background',
+        membership_date: 'membership_date',
+        foundation_class_date: 'foundation_class_date',
     },
     // Referral Section
     referral: {
@@ -82,6 +84,9 @@ export function mapProfileFromDB(dbData: any) {
         salvation_date: dbData.salvation_date || "",
         baptism_status: dbData.baptism_status || "not_baptized",
         baptism_date: dbData.baptism_date || "",
+        membership_date: dbData.membership_date || "",
+        foundation_class_date: dbData.foundation_class_date || "",
+        foundations_completed: dbData.foundations_completed ?? false,
         
         // Referral
         invited_by_name: dbData.invited_by_name || "",
@@ -132,6 +137,9 @@ export function mapProfileToDB(formData: any) {
         salvation_date: formData.salvation_date || null,
         baptism_status: formData.baptism_status || null,
         baptism_date: formData.baptism_date || null,
+        membership_date: formData.membership_date || null,
+        foundation_class_date: formData.foundation_class_date || null,
+        foundations_completed: formData.foundations_completed ?? null,
         
         invite_method: formData.invite_method || null,
         invited_by_name: formData.invited_by_name || null,

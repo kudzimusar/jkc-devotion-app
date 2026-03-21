@@ -203,8 +203,9 @@ export default function ProfileHub() {
                 const stickyDraft = JSON.parse(localStorage.getItem('sticky_form:profile-identity') || '{}');
                 idForm.reset({ ...mappedData, ...stickyDraft });
                 
+                // Unified: Load milestones from the mapped profile data
                 const stickyMilestones = JSON.parse(localStorage.getItem('sticky_form:profile-milestones') || '{}');
-                setMilestones(stickyMilestones);
+                setMilestones({ ...mappedData, ...stickyMilestones });
 
                 setGivingData({
                     tithe_status: mappedData.tithe_status,
@@ -220,9 +221,9 @@ export default function ProfileHub() {
                         setHousehold(members || []);
                     }
 
-                    // Milestones
-                    supabase.from('member_milestones').select('*').eq('user_id', userId).maybeSingle()
-                        .then(({ data }) => data && setMilestones(data));
+                    // Milestones (Redundant fetch removed for unification, data now comes from profiles)
+                    // supabase.from('member_milestones').select('*').eq('user_id', userId).maybeSingle()
+                    //     .then(({ data }) => data && setMilestones(data));
 
                     // Ministries
                     supabase.from('ministry_members').select('*').eq('user_id', userId)
@@ -412,18 +413,32 @@ export default function ProfileHub() {
         if (!user || !profile?.org_id) return;
         setIsSaving(true);
         try {
-            const { error } = await supabase.from('member_milestones').upsert({
+            // Unify: Save milestones directly to the profiles table
+            const { error } = await supabase.from('profiles').update({
+                salvation_date: milestones.salvation_date || null,
+                baptism_date: milestones.baptism_date || null,
+                baptism_status: milestones.baptism_status || null,
+                membership_date: milestones.membership_date || null,
+                foundation_class_date: milestones.foundation_class_date || null,
+                foundations_completed: milestones.foundations_completed || false,
+                updated_at: new Date().toISOString()
+            }).eq('id', user.id);
+            
+            if (error) throw error;
+            
+            // Sync legacy table for backward compatibility during transition
+            await supabase.from('member_milestones').upsert({
                 user_id: user.id,
                 org_id: profile.org_id,
                 ...milestones,
                 updated_at: new Date().toISOString()
             }, { onConflict: 'user_id' });
-            if (error) throw error;
+
             toast.success("Spiritual journey sync complete.");
+            loadData(user.id);
         } catch (e: any) {
             toast.error("Failed to sync milestones.");
         } finally {
-            clearMilestones();
             setIsSaving(false);
         }
     };
