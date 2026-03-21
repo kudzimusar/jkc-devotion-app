@@ -6,8 +6,10 @@ import { Auth } from "@/lib/auth";
 import { User, MessageCircle, Heart, Users, ShieldCheck, Mail } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { use } from "react";
 
-export default function GroupInvitePage({ params }: { params: { token: string } }) {
+export default function GroupInvitePage({ params }: { params: Promise<{ token: string }> }) {
+    const { token } = use(params);
     const [group, setGroup] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState<any>(null);
@@ -20,7 +22,7 @@ export default function GroupInvitePage({ params }: { params: { token: string } 
             const { data, error } = await supabase
                 .from('bible_study_groups')
                 .select('*, profiles!bible_study_groups_leader_id_fkey(name, email)')
-                .eq('share_token', params.token)
+                .eq('share_token', token)
                 .single();
             
             if (error) {
@@ -32,7 +34,7 @@ export default function GroupInvitePage({ params }: { params: { token: string } 
             setLoading(false);
         };
         load();
-    }, [params.token]);
+    }, [token]);
 
     if (loading) return (
         <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8 space-y-4">
@@ -86,7 +88,7 @@ export default function GroupInvitePage({ params }: { params: { token: string } 
                     <JoinGroupForm 
                         group={group} 
                         user={currentUser} 
-                        shareToken={params.token} 
+                        shareToken={token} 
                         onSuccess={() => {
                             toast.success("Welcome aboard!");
                             setTimeout(() => {

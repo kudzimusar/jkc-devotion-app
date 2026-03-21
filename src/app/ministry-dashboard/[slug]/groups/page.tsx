@@ -9,8 +9,10 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { QuickActionModal } from '@/components/dashboard/QuickActionModal';
 import { toast } from 'sonner';
+import { use } from 'react';
 
-export default function MinistryGroupsPage({ params }: { params: { slug: string } }) {
+export default function MinistryGroupsPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = use(params);
     const [session, setSession] = useState<MinistrySession | null>(null);
     const [groups, setGroups] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -34,11 +36,11 @@ export default function MinistryGroupsPage({ params }: { params: { slug: string 
     };
 
     useEffect(() => {
-        MinistryAuth.requireAccess(params.slug).then(sess => {
+        MinistryAuth.requireAccess(slug).then(sess => {
             setSession(sess);
             loadGroups(sess);
         });
-    }, [params.slug]);
+    }, [slug]);
 
     if (!session) return null;
 
@@ -56,7 +58,7 @@ export default function MinistryGroupsPage({ params }: { params: { slug: string 
             <div className="sticky top-0 z-50 bg-[#080c14]/80 backdrop-blur-xl border-b border-white/10">
                 <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Link href={`/ministry-dashboard/${params.slug}`} className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all">
+                        <Link href={`/ministry-dashboard/${slug}`} className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all">
                             <ChevronLeft className="w-4 h-4" />
                         </Link>
                         <div>

@@ -11,8 +11,10 @@ import {
 import Link from "next/link";
 import { toast } from "sonner";
 import { Auth } from "@/lib/auth";
+import { use } from "react";
 
-export default function GroupDetailPage({ params }: { params: { id: string } }) {
+export default function GroupDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const [group, setGroup] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [showJoinForm, setShowJoinForm] = useState(false);
@@ -26,7 +28,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
             const { data, error } = await supabase
                 .from('bible_study_groups')
                 .select('*, profiles!bible_study_groups_leader_id_fkey(name, email)')
-                .eq('id', params.id)
+                .eq('id', id)
                 .single();
             
             if (error) {
@@ -37,7 +39,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
             setLoading(false);
         };
         load();
-    }, [params.id]);
+    }, [id]);
 
     if (loading) return (
         <div className="min-h-screen bg-background flex items-center justify-center">
