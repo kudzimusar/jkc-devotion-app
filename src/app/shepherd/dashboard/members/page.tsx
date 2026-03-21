@@ -490,9 +490,11 @@ export default function MembersPage() {
                                             </div>
                                         </div>
                                     </div>
-                                </>
-                            )}
-                        </div>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </div>
 
                         <div className="p-8 border-t border-border bg-muted/30 flex flex-wrap gap-3">
                             {selectedMember.membership_status !== 'member' && (
