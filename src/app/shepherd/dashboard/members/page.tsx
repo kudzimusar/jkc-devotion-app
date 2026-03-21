@@ -7,9 +7,10 @@ import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { exportToCSV, exportToExcel, exportToPDF } from "@/lib/export-utils";
-import { Download, ChevronDown, UserPlus } from "lucide-react";
+import { Download, ChevronDown, UserPlus, Send, MessageSquareText } from "lucide-react";
 import { useAdminCtx } from "../Context";
 import { MinistryForm } from "@/components/dashboard/forms/MinistryForm";
+import { sendPastoralMessageAction } from "@/app/actions/admin";
 
 interface Member {
     id: string; name: string; email: string;
@@ -48,6 +49,9 @@ export default function MembersPage() {
     const [showExport, setShowExport] = useState(false);
     const [membershipRequests, setMembershipRequests] = useState<any[]>([]);
     const [showMinistryAssign, setShowMinistryAssign] = useState(false);
+    const [showMessenger, setShowMessenger] = useState(false);
+    const [messageDraft, setMessageDraft] = useState("");
+    const [sendingMsg, setSendingMsg] = useState(false);
 
     const { orgId } = useAdminCtx();
 
@@ -151,6 +155,32 @@ export default function MembersPage() {
             toast.error("Failed to approve membership.");
         } finally {
             setLoading(false);
+        }
+    }
+
+    async function handleSendMessage() {
+        if (!messageDraft || !selectedMember || !orgId) return;
+        setSendingMsg(true);
+        try {
+            const { userId: adminId } = await supabase.auth.getUser().then(res => ({ userId: res.data.user?.id }));
+            if (!adminId) throw new Error("Auth required");
+
+            const res = await sendPastoralMessageAction({
+                receiverId: selectedMember.id,
+                senderId: adminId,
+                orgId,
+                body: messageDraft
+            });
+
+            if (res.success) {
+                toast.success("Pastoral guidance sent successfully!");
+                setMessageDraft("");
+                setShowMessenger(false);
+            } else throw new Error(res.error);
+        } catch (err: any) {
+            toast.error(err.message || "Failed to deliver message");
+        } finally {
+            setSendingMsg(false);
         }
     }
     const filtered = members.filter((m: Member) => {
@@ -367,10 +397,11 @@ export default function MembersPage() {
                                     </div>
                                 </div>
                             </div>
-                             <button 
+                            <button 
                                 onClick={() => {
                                     setSelectedMember(null);
                                     setShowMinistryAssign(false);
+                                    setShowMessenger(false);
                                 }} 
                                 className="p-2 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground transition-colors"
                             >
@@ -379,7 +410,45 @@ export default function MembersPage() {
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-8 space-y-8">
-                            {showMinistryAssign ? (
+                            {showMessenger ? (
+                                <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <MessageSquareText className="w-4 h-4 text-primary" />
+                                            <h4 className="text-sm font-black text-foreground uppercase tracking-widest">Pastoral Messenger</h4>
+                                        </div>
+                                        <Button variant="ghost" size="sm" onClick={() => setShowMessenger(false)} className="text-[10px] font-black uppercase">Close</Button>
+                                    </div>
+
+                                    <div className="bg-primary/5 border border-primary/10 rounded-3xl p-6">
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-black">{selectedMember.name?.[0]}</div>
+                                            <p className="text-[10px] font-black text-muted-foreground uppercase">Recipient: {selectedMember.name}</p>
+                                        </div>
+                                        <textarea 
+                                            value={messageDraft}
+                                            onChange={(e) => setMessageDraft(e.target.value)}
+                                            placeholder="Write your pastoral guidance here..."
+                                            className="w-full h-40 bg-muted/50 border border-border rounded-2xl p-4 text-xs text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/40 resize-none transition-all"
+                                        />
+                                        <div className="flex items-center justify-between mt-4">
+                                            <p className="text-[9px] text-muted-foreground italic">Powered by AI Shepherd Intelligence</p>
+                                            <Button 
+                                                onClick={handleSendMessage}
+                                                disabled={sendingMsg}
+                                                className="bg-primary text-white rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform"
+                                            >
+                                                {sendingMsg ? 'Sending...' : 'Deliver Message'}
+                                                <Send className="w-3 h-3 ml-2" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    <div className="p-4 bg-muted/30 border border-dashed border-border rounded-2xl">
+                                        <p className="text-[9px] text-muted-foreground font-bold uppercase mb-2">Secure Channel Log</p>
+                                        <p className="text-[10px] text-muted-foreground/60 leading-relaxed">This message will be encrypted and delivered to the member's profile. You can view your sent duplicates in the 'Communication Logs' section of your dashboard.</p>
+                                    </div>
+                                </div>
+                            ) : showMinistryAssign ? (
                                 <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
                                     <div className="flex items-center justify-between">
                                         <h4 className="text-sm font-black text-foreground uppercase tracking-widest">Assign to Ministry</h4>
@@ -512,7 +581,7 @@ export default function MembersPage() {
                                 Print Profile
                             </Button>
                              <Button 
-                                onClick={() => toast.success(`Preparing secure channel for messenger to ${selectedMember.name}...`)}
+                                onClick={() => setShowMessenger(true)}
                                 className="flex-1 h-14 bg-primary text-white hover:bg-primary/90 font-black rounded-2xl border-0 shadow-lg shadow-primary/20 transition-all"
                             >
                                 Send Message

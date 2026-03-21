@@ -111,6 +111,37 @@ export async function assignMinistryRoleAction(memberId: string, role: string, m
     }
 }
 
+export async function sendPastoralMessageAction(params: {
+    receiverId: string,
+    senderId: string,
+    orgId: string,
+    body: string,
+    subject?: string
+}) {
+    try {
+        const { receiverId, senderId, orgId, body, subject = "Pastoral Guidance" } = params;
+
+        const { data, error } = await supabase
+            .from('pastoral_messages')
+            .insert([{
+                receiver_id: receiverId,
+                sender_id: senderId,
+                org_id: orgId,
+                body,
+                subject
+            }])
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        return { success: true, data };
+    } catch (error: any) {
+        console.error("Send Message Error:", error);
+        return { success: false, error: error.message || "Failed to send message" };
+    }
+}
+
 export async function generateReportAction(reportType: string, orgId: string, userId: string) {
     try {
         const title = `${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Intelligence Briefing`;
