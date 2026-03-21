@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 
 import { PILEngine } from "@/lib/pil-engine";
-import { useAdminCtx } from "../layout";
+import { useAdminCtx } from "../Context";
 
 const PRIORITY_CONFIG = {
     critical: { color: 'text-red-700 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20', dot: 'bg-red-600 dark:bg-red-400', badge: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400' },

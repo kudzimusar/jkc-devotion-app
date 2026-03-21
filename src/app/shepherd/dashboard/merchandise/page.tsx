@@ -16,7 +16,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { useAdminCtx } from "../layout";
+import { useAdminCtx } from "../Context";
 import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 

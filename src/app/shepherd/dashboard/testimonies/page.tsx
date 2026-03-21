@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 
 import { Play, Trash2, Plus, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useAdminCtx } from '../layout';
+import { useAdminCtx } from '../Context';
 
 export default function TestimoniesManagement() {
   const [testimonies, setTestimonies] = useState<any[]>([]);

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { ShepherdView } from "@/components/dashboard/shepherd-view";
-import { useAdminCtx } from "./layout";
+import { useAdminCtx } from "./Context";
 import { supabase } from "@/lib/supabase";
 import { withRoleGuard } from "@/components/auth/withRoleGuard";
 

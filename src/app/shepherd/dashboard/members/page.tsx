@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { exportToCSV, exportToExcel, exportToPDF } from "@/lib/export-utils";
 import { Download, ChevronDown } from "lucide-react";
-import { useAdminCtx } from "../layout";
+import { useAdminCtx } from "../Context";
 
 interface Member {
     id: string; name: string; email: string;

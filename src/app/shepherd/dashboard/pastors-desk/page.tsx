@@ -15,7 +15,7 @@ import {
 } from 'recharts';
 import { toast } from 'sonner';
 import { SocialAnalytics } from '@/components/dashboard/SocialAnalytics';
-import { useAdminCtx } from '../layout';
+import { useAdminCtx } from '../Context';
 
 const COLORS = ['#8b5cf6', '#3b82f6', '#94a3b8'];
 

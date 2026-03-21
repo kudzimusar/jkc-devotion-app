@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAdminCtx } from '../layout';
+import { useAdminCtx } from '../Context';
 
 export default function NewsletterManager() {
     const [newsletters, setNewsletters] = useState<any[]>([]);

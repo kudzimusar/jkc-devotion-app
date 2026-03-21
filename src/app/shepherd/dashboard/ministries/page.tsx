@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Music, Users, CheckCircle2, AlertTriangle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { useAdminCtx } from "../layout";
+import { useAdminCtx } from "../Context";
 
 const MINISTRY_COLORS: Record<string, string> = {
     worship: '#8b5cf6', youth: '#06b6d4', childrens: '#f87171',

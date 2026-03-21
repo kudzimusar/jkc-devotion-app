@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { motion } from "framer-motion";
 import { Calendar, MapPin, Users, CheckCircle2, Clock } from "lucide-react";
-import { useAdminCtx } from "../layout";
+import { useAdminCtx } from "../Context";
 
 export default function EventsPage() {
     const [events, setEvents] = useState<any[]>([]);

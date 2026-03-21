@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { HeartPulse, Flame, TrendingUp, BookOpen, BarChart2 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from "recharts";
 import { supabase } from "@/lib/supabase";
-import { useAdminCtx } from "../layout";
+import { useAdminCtx } from "../Context";
 
 const TOOLTIP_STYLE = {
     contentStyle: { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10 },

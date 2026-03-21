@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { exportToExcel, exportToPDF } from "@/lib/export-utils";
-import { useAdminCtx } from "../layout";
+import { useAdminCtx } from "../Context";
 
 const STATIC_REPORTS = [
     { name: 'Congregational Health Report', desc: 'Devotion streaks, engagement scores, SOAP analytics', icon: Heart, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-500/10' },

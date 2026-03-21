@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-import { useAdminCtx } from "../layout";
+import { useAdminCtx } from "../Context";
 import { AdminAuth, ADMIN_ROLES, ROLE_HIERARCHY, AdminRole } from "@/lib/admin-auth";
 import { motion, AnimatePresence } from "framer-motion";
 import { Settings, Users, Shield, Mail, Plus, Trash2, CheckCircle2, AlertCircle, Crown, User, Loader2, Copy, Share2, ExternalLink, ShieldCheck } from "lucide-react";

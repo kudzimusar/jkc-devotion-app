@@ -1,3 +1,4 @@
+"use server";
 import { supabase } from "@/lib/supabase";
 
 export async function addMemberAction(formData: any) {
@@ -22,7 +23,7 @@ export async function addMemberAction(formData: any) {
         return { success: true, data: profile };
     } catch (error: any) {
         console.error("Add Member Error:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: error.message || "Failed to add member" };
     }
 }
 
@@ -49,7 +50,7 @@ export async function createEventAction(eventData: any) {
         return { success: true, data };
     } catch (error: any) {
         console.error("Create Event Error:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: error.message || "Failed to create event" };
     }
 }
 
@@ -82,7 +83,7 @@ export async function addPrayerRequestAction(requestData: any) {
         return { success: true, data, aiInsight: `Automatically tagged as ${category} (${urgency})` };
     } catch (error: any) {
         console.error("Add Prayer Request Error:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: error.message || "Failed to add prayer request" };
     }
 }
 
@@ -105,7 +106,7 @@ export async function assignMinistryRoleAction(memberId: string, role: string, m
         return { success: true, data };
     } catch (error: any) {
         console.error("Assign Role Error:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: error.message || "Failed to assign role" };
     }
 }
 
@@ -137,7 +138,7 @@ export async function generateReportAction(reportType: string, orgId: string, us
         return { success: true, data };
     } catch (error: any) {
         console.error("Generate Report Error:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: error.message || "Failed to generate report" };
     }
 }
 
@@ -150,8 +151,7 @@ export async function createBibleStudyGroupAction(groupData: any) {
             max_members = 50, location
         } = groupData;
 
-        const shareToken = Math.random().toString(36).substring(2, 14);
-
+        // Note: share_token is handled by DB default (uuid_generate_v4)
         const { data, error } = await supabase
             .from('bible_study_groups')
             .insert([{
@@ -164,22 +164,24 @@ export async function createBibleStudyGroupAction(groupData: any) {
                 curriculum,
                 org_id: orgId,
                 leader_id,
-                assistant_leader_id,
+                assistant_leader_id: assistant_leader_id || null,
                 is_private,
                 requires_approval,
                 max_members,
                 location,
-                share_token: shareToken,
                 is_active: true
             }])
             .select()
             .single();
 
-        if (error) throw error;
+        if (error) {
+            console.error("Supabase Error details:", error);
+            throw error;
+        }
         return { success: true, data };
     } catch (error: any) {
         console.error("Create Bible Study Group Error:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: error.message || "Failed to create group" };
     }
 }
 
@@ -203,7 +205,7 @@ export async function updateBibleStudyGroupAction(groupId: string, groupData: an
                 meeting_type,
                 curriculum,
                 leader_id,
-                assistant_leader_id,
+                assistant_leader_id: assistant_leader_id || null,
                 is_private,
                 requires_approval,
                 max_members,
@@ -214,10 +216,13 @@ export async function updateBibleStudyGroupAction(groupId: string, groupData: an
             .select()
             .single();
 
-        if (error) throw error;
+        if (error) {
+            console.error("Supabase Update Error:", error);
+            throw error;
+        }
         return { success: true, data };
     } catch (error: any) {
         console.error("Update Bible Study Group Error:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: error.message || "Failed to update group" };
     }
 }

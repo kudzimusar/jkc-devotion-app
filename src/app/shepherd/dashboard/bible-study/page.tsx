@@ -9,7 +9,7 @@ import {
     BookOpen, Sparkles, Plus, Search, Filter, 
     ChevronRight, Calendar, User, Heart, MapPin, Globe, Link as LinkIcon
 } from "lucide-react";
-import { useAdminCtx } from "../layout";
+import { useAdminCtx } from "../Context";
 import { QuickActionModal } from "@/components/dashboard/QuickActionModal";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";

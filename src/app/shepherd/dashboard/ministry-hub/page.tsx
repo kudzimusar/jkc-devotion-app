@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
-import { useAdminCtx } from "../layout";
+import { useAdminCtx } from "../Context";
 
 export default function MinistryHub() {
     const [loading, setLoading] = useState(true);

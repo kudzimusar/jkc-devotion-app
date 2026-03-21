@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { useAdminCtx } from "../layout";
+import { useAdminCtx } from "../Context";
 import { toast } from "sonner";
 import { format } from "date-fns";
 

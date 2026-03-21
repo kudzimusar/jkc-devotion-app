@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 import { motion } from "framer-motion";
 import { Heart, AlertTriangle, CheckCircle2, Clock, MessageSquare, Plus, Filter } from "lucide-react";
-import { useAdminCtx } from "../layout";
+import { useAdminCtx } from "../Context";
 
 interface Prayer { id: string; category: string; urgency: string; request_text: string; status: string; is_anonymous: boolean; created_at: string; }
 

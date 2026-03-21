@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 
 import { format } from 'date-fns';
 import { Mail, ChevronDown, ChevronUp, User, AtSign, Clock } from 'lucide-react';
-import { useAdminCtx } from '../layout';
+import { useAdminCtx } from '../Context';
 
 export default function InquiriesPage() {
   const [inquiries, setInquiries] = useState<any[]>([]);

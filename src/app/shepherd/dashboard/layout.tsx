@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback, createContext, useContext } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { AdminAuth, AdminRole } from "@/lib/admin-auth";
@@ -10,20 +10,7 @@ import { supabase } from "@/lib/supabase";
 import { basePath as BP } from "@/lib/utils";
 import { toast } from "sonner";
 
-// ─── Auth Context (shared across all sub-pages) ───
-interface AdminCtx {
-    role: AdminRole;
-    userName: string;
-    userId: string;
-    orgId: string;
-    alertCount: number;
-    refreshDashboard: () => void;
-}
-const AdminContext = createContext<AdminCtx>({
-    role: 'admin', userName: 'Admin', userId: '', orgId: '', alertCount: 0,
-    refreshDashboard: () => { }
-});
-export const useAdminCtx = () => useContext(AdminContext);
+import { AdminCtx, AdminContext, useAdminCtx } from "./Context";
 
 export default function ShepherdDashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();

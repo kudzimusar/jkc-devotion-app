@@ -18,7 +18,7 @@ type Sermon = {
   featured: boolean;
 };
 
-import { useAdminCtx } from '../layout';
+import { useAdminCtx } from '../Context';
 
 export default function SermonManagementPage() {
   const [sermons, setSermons] = useState<Sermon[]>([]);

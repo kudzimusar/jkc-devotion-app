@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { TrendingUp, Users, UserCheck, Globe, Plus, Save } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { useAdminCtx } from "../layout";
+import { useAdminCtx } from "../Context";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
