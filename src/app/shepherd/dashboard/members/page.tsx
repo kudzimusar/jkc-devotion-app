@@ -13,7 +13,7 @@ import { useAdminCtx } from "../Context";
 interface Member {
     id: string; name: string; email: string;
     membership_status?: string; city?: string;
-    gender?: string; phone?: string;
+    gender?: string; phone_number?: string;
     date_joined_church?: string; baptism_status?: string;
     avatar_url?: string;
     skills_talents?: string[];
@@ -75,7 +75,12 @@ export default function MembersPage() {
         } else {
             const processed = (data || []).map((m: any) => ({
                 ...m,
-                milestones: m.milestones?.[0] || {},
+                milestones: {
+                    ...(m.milestones?.[0] || {}),
+                    // Use profile columns as fallback for salvation/baptism if milestone row is empty
+                    salvation_date: m.milestones?.[0]?.salvation_date || m.salvation_date,
+                    baptism_date: m.milestones?.[0]?.baptism_date || m.baptism_date,
+                },
                 org_members: m.org_members?.[0] || {},
                 discipleship_score: m.org_members?.[0]?.discipleship_score || 0,
                 growth_stage: m.growth_stage || m.org_members?.[0]?.stage || 'visitor',
@@ -114,6 +119,16 @@ export default function MembersPage() {
                 .eq('user_id', targetId)
                 .eq('status', 'pending');
 
+            // NEW: Automatically record membership milestone
+            await supabase
+                .from('member_milestones')
+                .upsert({
+                    user_id: targetId,
+                    membership_date: new Date().toISOString().split('T')[0],
+                    org_id: orgId,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id' });
+
             toast.success("Membership approved!");
             await fetchMembers(); // Refresh list
 
@@ -151,7 +166,7 @@ export default function MembersPage() {
             Email: m.email,
             Status: m.membership_status || 'visitor',
             City: m.city || '-',
-            Phone: m.phone || '-',
+            Phone: m.phone_number || '-',
             'Join Date': m.created_at || '-',
             'Membership Status': m.membership_status || 'visitor',
             'Growth Stage': m.growth_stage || 'visitor',
@@ -359,7 +374,7 @@ export default function MembersPage() {
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-black text-muted-foreground/50 uppercase tracking-widest flex items-center gap-1.5"><Phone className="w-3 h-3" /> Phone Number</p>
-                                    <p className="text-sm font-bold text-foreground/80">{selectedMember.phone || 'Not provided'}</p>
+                                    <p className="text-sm font-bold text-foreground/80">{selectedMember.phone_number || 'Not provided'}</p>
                                 </div>
                             </div>
 
