@@ -7,8 +7,9 @@ import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { exportToCSV, exportToExcel, exportToPDF } from "@/lib/export-utils";
-import { Download, ChevronDown } from "lucide-react";
+import { Download, ChevronDown, UserPlus } from "lucide-react";
 import { useAdminCtx } from "../Context";
+import { MinistryForm } from "@/components/dashboard/forms/MinistryForm";
 
 interface Member {
     id: string; name: string; email: string;
@@ -46,6 +47,7 @@ export default function MembersPage() {
     const [selectedMember, setSelectedMember] = useState<Member | null>(null);
     const [showExport, setShowExport] = useState(false);
     const [membershipRequests, setMembershipRequests] = useState<any[]>([]);
+    const [showMinistryAssign, setShowMinistryAssign] = useState(false);
 
     const { orgId } = useAdminCtx();
 
@@ -365,13 +367,42 @@ export default function MembersPage() {
                                     </div>
                                 </div>
                             </div>
-                            <button onClick={() => setSelectedMember(null)} className="p-2 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground transition-colors">
+                             <button 
+                                onClick={() => {
+                                    setSelectedMember(null);
+                                    setShowMinistryAssign(false);
+                                }} 
+                                className="p-2 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground transition-colors"
+                            >
                                 <UserX className="w-6 h-6" />
                             </button>
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-8 space-y-8">
-                            <div className="grid grid-cols-2 gap-8">
+                            {showMinistryAssign ? (
+                                <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="text-sm font-black text-foreground uppercase tracking-widest">Assign to Ministry</h4>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            onClick={() => setShowMinistryAssign(false)}
+                                            className="text-[10px] font-black uppercase"
+                                        >
+                                            Cancel
+                                        </Button>
+                                    </div>
+                                    <MinistryForm 
+                                        initialMemberId={selectedMember.id} 
+                                        onSuccess={() => {
+                                            setShowMinistryAssign(false);
+                                            fetchMembers();
+                                        }} 
+                                    />
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="grid grid-cols-2 gap-8">
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-black text-muted-foreground/50 uppercase tracking-widest flex items-center gap-1.5"><Mail className="w-3 h-3" /> Email Address</p>
                                     <p className="text-sm font-bold text-foreground/80">{selectedMember.email}</p>
@@ -459,8 +490,8 @@ export default function MembersPage() {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
+                                </>
+                            )}
                         </div>
 
                         <div className="p-8 border-t border-border bg-muted/30 flex flex-wrap gap-3">
@@ -481,9 +512,15 @@ export default function MembersPage() {
                             <Button className="flex-1 h-14 bg-primary text-white hover:bg-primary/90 font-black rounded-2xl border-0 shadow-lg shadow-primary/20 transition-all">
                                 Send Message
                             </Button>
-                            <Button variant="outline" className="flex-1 h-14 border-border bg-background hover:bg-muted text-foreground font-black rounded-2xl shadow-sm transition-all">
-                                Assign to Ministry
-                            </Button>
+                            {!showMinistryAssign && (
+                                <Button 
+                                    variant="outline" 
+                                    onClick={() => setShowMinistryAssign(true)}
+                                    className="flex-1 h-14 border-border bg-background hover:bg-muted text-foreground font-black rounded-2xl shadow-sm transition-all"
+                                >
+                                    Assign to Ministry
+                                </Button>
+                            )}
                         </div>
                     </motion.div>
                 </div>
