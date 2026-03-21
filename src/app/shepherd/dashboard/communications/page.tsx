@@ -14,7 +14,8 @@ import {
     ChevronRight,
     SearchX,
     ShieldCheck,
-    Send
+    Send,
+    Sparkles
 } from "lucide-react";
 import { useAdminCtx } from "../Context";
 import { Badge } from "@/components/ui/badge";
