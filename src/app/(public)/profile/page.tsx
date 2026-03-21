@@ -410,11 +410,11 @@ export default function ProfileHub() {
     };
 
     const saveMilestones = async () => {
-        if (!user || !profile?.org_id) return;
+        if (!user) return;
         setIsSaving(true);
         try {
-            // Unify: Save milestones directly to the profiles table
-            const { error } = await supabase.from('profiles').update({
+            // Priority: Save unified journey data to the main master record (profiles)
+            const profilePayload = {
                 salvation_date: milestones.salvation_date || null,
                 baptism_date: milestones.baptism_date || null,
                 baptism_status: milestones.baptism_status || null,
@@ -422,22 +422,34 @@ export default function ProfileHub() {
                 foundation_class_date: milestones.foundation_class_date || null,
                 foundations_completed: milestones.foundations_completed || false,
                 updated_at: new Date().toISOString()
-            }).eq('id', user.id);
+            };
+
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .update(profilePayload)
+                .eq('id', user.id);
             
-            if (error) throw error;
+            if (profileError) throw profileError;
             
-            // Sync legacy table for backward compatibility during transition
-            await supabase.from('member_milestones').upsert({
-                user_id: user.id,
-                org_id: profile.org_id,
-                ...milestones,
-                updated_at: new Date().toISOString()
-            }, { onConflict: 'user_id' });
+            // Secondary: Non-blocking sync to the legacy table if org_id matches
+            if (profile?.org_id) {
+                try {
+                    await supabase.from('member_milestones').upsert({
+                        user_id: user.id,
+                        org_id: profile.org_id,
+                        ...milestones,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id' });
+                } catch (legacyErr) {
+                    console.warn("Legacy milestone sync failed (ignoring):", legacyErr);
+                }
+            }
 
             toast.success("Spiritual journey sync complete.");
-            loadData(user.id);
+            await loadData(user.id);
         } catch (e: any) {
-            toast.error("Failed to sync milestones.");
+            console.error("Critical save failure:", e);
+            toast.error("Failed to sync milestones: " + (e.message || "Unknown error"));
         } finally {
             setIsSaving(false);
         }
@@ -1060,7 +1072,13 @@ export default function ProfileHub() {
                                                     <Input type="date" value={milestones.ordained_date || ''} onChange={e => handleMilestoneChange('ordained_date', e.target.value)} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
                                                 </div>
                                                 <div className="col-span-full pt-4">
-                                                    <Button onClick={saveMilestones} className="px-8 h-12 rounded-xl bg-emerald-500 text-white font-black shadow-lg">Save Milestones</Button>
+                                                    <Button 
+                                                        onClick={saveMilestones} 
+                                                        disabled={isSaving}
+                                                        className="px-8 h-12 rounded-xl bg-emerald-500 text-white font-black shadow-lg disabled:opacity-50"
+                                                    >
+                                                        {isSaving ? "Syncing..." : "Save Milestones"}
+                                                    </Button>
                                                 </div>
                                             </div>
                                         </div>
