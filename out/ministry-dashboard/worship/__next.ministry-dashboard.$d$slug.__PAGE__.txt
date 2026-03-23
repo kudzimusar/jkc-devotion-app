@@ -1,6 +1,6 @@
 1:"$Sreact.fragment"
-2:I[50528,["6228","static/chunks/6228-42b6a92cfc783b04.js","8409","static/chunks/8409-de5726a4a278d28f.js","8500","static/chunks/8500-98e13bcce54aa7a0.js","3013","static/chunks/app/ministry-dashboard/%5Bslug%5D/page-7680737da4a1fb8d.js"],"default"]
+2:I[50528,["6228","static/chunks/6228-42b6a92cfc783b04.js","8409","static/chunks/8409-de5726a4a278d28f.js","8500","static/chunks/8500-98e13bcce54aa7a0.js","3013","static/chunks/app/ministry-dashboard/%5Bslug%5D/page-7e461077e6d0ec98.js"],"default"]
 3:I[90484,[],"OutletBoundary"]
 4:"$Sreact.suspense"
-0:{"buildId":"wfHK9HzmIOhyvsBJ9fxE0","rsc":["$","$1","c",{"children":[["$","$L2",null,{"slug":"worship"}],null,["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"loading":null,"isPartial":false}
+0:{"buildId":"FC-0efrxDgr3KPTaMg794","rsc":["$","$1","c",{"children":[["$","$L2",null,{"slug":"worship"}],null,["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"loading":null,"isPartial":false}
 5:null

@@ -6,6 +6,11 @@ import { use } from 'react';
  */
 export async function generateStaticParams() {
   const slugs = [
+    'media',
+    'ushers',
+    'evangelism',
+    'prayer',
+    'hospitality',
     'fellowship',
     'finance',
     'missions',

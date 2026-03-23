@@ -3,5 +3,5 @@
 3:I[18196,["6228","static/chunks/6228-42b6a92cfc783b04.js","8409","static/chunks/8409-de5726a4a278d28f.js","6721","static/chunks/app/pastor-hq/layout-cf6d251f1d7771d1.js"],"default"]
 4:I[57121,[],""]
 5:I[74581,[],""]
-0:{"buildId":"wfHK9HzmIOhyvsBJ9fxE0","rsc":["$","$1","c",{"children":[null,["$","$L2",null,{"Component":"$3","slots":{"children":["$","$L4",null,{"parallelRouterKey":"children","template":["$","$L5",null,{}]}]},"serverProvidedParams":{"params":{},"promises":["$@6"]}}]]}],"loading":null,"isPartial":false}
+0:{"buildId":"FC-0efrxDgr3KPTaMg794","rsc":["$","$1","c",{"children":[null,["$","$L2",null,{"Component":"$3","slots":{"children":["$","$L4",null,{"parallelRouterKey":"children","template":["$","$L5",null,{}]}]},"serverProvidedParams":{"params":{},"promises":["$@6"]}}]]}],"loading":null,"isPartial":false}
 6:"$0:rsc:props:children:1:props:serverProvidedParams:params"

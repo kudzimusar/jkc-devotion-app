@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { MinistryAuth, MinistrySession } from '@/lib/ministry-auth';
 import Link from 'next/link';
-import { ChevronLeft, BarChart3, Users, CalendarDays, FileText, Bell, ClipboardList, TrendingUp, AlertCircle, Sparkles, CheckCircle2, MessagesSquare } from 'lucide-react';
+import { ChevronLeft, BarChart3, Users, CalendarDays, FileText, Bell, ClipboardList, TrendingUp, AlertCircle, Sparkles, CheckCircle2, MessagesSquare, BookOpen } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export default function MinistryOverviewClient({ slug }: { slug: string }) {
@@ -89,6 +89,15 @@ export default function MinistryOverviewClient({ slug }: { slug: string }) {
                     <span className="text-[9px] font-black uppercase tracking-widest text-violet-400 bg-violet-500/10 border border-violet-500/20 px-3 py-1.5 rounded-full">
                         {session.ministryRole}
                     </span>
+                    {slug === 'media' && (
+                        <Link 
+                            href="/manual/media-ministry" 
+                            className="text-[9px] font-black uppercase tracking-widest text-white/50 hover:text-white bg-white/5 border border-white/10 px-3 py-1.5 rounded-full transition-all flex items-center gap-1.5"
+                        >
+                            <BookOpen size={10} />
+                            Operations Manual
+                        </Link>
+                    )}
                 </div>
             </div>
 
@@ -159,6 +168,15 @@ export default function MinistryOverviewClient({ slug }: { slug: string }) {
                                 </div>
                                 <h3 className="font-bold text-white group-hover:text-amber-400 transition-colors">Manage Groups</h3>
                                 <p className="text-white/40 text-xs mt-1.5 font-medium">Coordinate your Bible Study groups</p>
+                            </Link>
+                        )}
+                        {slug === 'media' && (
+                            <Link href="/shepherd/dashboard/sermons" className="bg-[#0d1421] border border-white/10 p-6 rounded-3xl hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all shadow-xl group">
+                                <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4 group-hover:bg-emerald-500/20 transition-colors">
+                                    <Sparkles className="w-5 h-5 text-emerald-400" />
+                                </div>
+                                <h3 className="font-bold text-white group-hover:text-emerald-400 transition-colors">Sermon Hub</h3>
+                                <p className="text-white/40 text-xs mt-1.5 font-medium">Manage uploads, AI automations & library</p>
                             </Link>
                         )}
                         <Link href={`/ministry-dashboard/${slug}/announcements`} className="bg-[#0d1421] border border-white/10 p-6 rounded-3xl hover:border-pink-500/50 hover:bg-pink-500/5 transition-all shadow-xl group">
