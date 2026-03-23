@@ -33,6 +33,7 @@ export default function WatchClient() {
   const [search, setSearch] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [liveStream, setLiveStream] = useState<any>(null);
+  const [showTranscript, setShowTranscript] = useState(false);
   const playerRef = useRef<any>(null);
   const watchTimerRef = useRef<any>(null);
 
@@ -141,6 +142,9 @@ export default function WatchClient() {
     });
   };
 
+  const featured = sermons.find(s => s.is_featured);
+  const uniqueSeries = Array.from(new Set(sermons.map(s => s.series).filter(Boolean)));
+
   // Re-init player when featured changes
   useEffect(() => {
     if (featured && !loading && !liveStream) {
@@ -156,9 +160,6 @@ export default function WatchClient() {
         }
     }
   }, [featured, loading, liveStream]);
-
-  const featured = sermons.find(s => s.is_featured);
-  const uniqueSeries = Array.from(new Set(sermons.map(s => s.series).filter(Boolean)));
   const filteredSermons = sermons
     .filter(s => s.id !== featured?.id)
     .filter(s => filter === 'all' || s.series === filter)
@@ -236,17 +237,61 @@ export default function WatchClient() {
               {featured.assets && featured.assets.length > 0 && (
                 <div className="flex flex-wrap gap-3 justify-center">
                   {featured.assets.map((asset: any) => (
-                    <a 
+                    <button 
                       key={asset.id} 
-                      href={asset.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="bg-white/5 border border-white/10 px-6 py-2.5 rounded-2xl text-[10px] font-black tracking-widest uppercase text-white/40 hover:text-white hover:bg-white/10 transition-all flex items-center gap-2"
+                      onClick={() => (asset.type === 'transcript' || asset.type === 'notes') ? setShowTranscript(!showTranscript) : window.open(asset.url, '_blank')}
+                      className={`
+                        px-6 py-2.5 rounded-2xl text-[10px] font-black tracking-widest uppercase transition-all flex items-center gap-2
+                        ${asset.status === 'active' ? 'bg-white/5 border-white/10 text-white/40 hover:text-white hover:bg-white/10' : 'bg-white/2 border-dashed border-white/5 text-white/10 cursor-not-allowed'}
+                      `}
                     >
-                      {asset.type === 'audio' && <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
-                      {asset.type}
-                    </a>
+                      {asset.type === 'audio' && <Download size={14} />}
+                      {asset.type === 'transcript' && <FileText size={14} />}
+                      {asset.type === 'notes' && <BookOpen size={14} />}
+                      {asset.type} {asset.status !== 'active' && '(PROCESSING...)'}
+                    </button>
                   ))}
+                </div>
+              )}
+
+              {/* AI Intelligence Panel */}
+              {showTranscript && featured.assets?.some(a => (a.type === 'transcript' || a.type === 'notes') && a.status === 'active') && (
+                <div className="glass rounded-[2rem] border border-white/10 p-8 md:p-12 animate-in fade-in slide-in-from-top-4 duration-500 overflow-hidden relative group">
+                  <div className="absolute top-0 right-0 p-8 opacity-[0.02] scale-150 pointer-events-none group-hover:scale-110 transition-transform duration-1000">
+                    <Activity size={320} />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                    <div className="md:col-span-2 space-y-6">
+                      <h3 className="text-2xl font-black italic tracking-tighter uppercase flex items-center gap-3">
+                        <FileText className="text-primary" /> Full Transcript
+                      </h3>
+                      <div className="max-h-[400px] overflow-y-auto pr-6 font-medium leading-relaxed text-white/60 text-sm space-y-8 font-serif">
+                        {(featured.assets.find(a => a.type === 'transcript')?.metadata as any)?.full_text}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-8">
+                       <div className="space-y-4">
+                        <h3 className="text-xs font-black tracking-widest uppercase text-primary">Summary</h3>
+                        <p className="text-sm font-medium leading-relaxed italic text-white/80">
+                           {(featured.assets.find(a => a.type === 'notes')?.metadata as any)?.summary}
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <h3 className="text-xs font-black tracking-widest uppercase text-primary">Key Points</h3>
+                        <div className="space-y-2">
+                          {(featured.assets.find(a => a.type === 'notes')?.metadata as any)?.key_points?.map((point: string, idx: number) => (
+                            <div key={idx} className="flex items-center gap-2 group/item">
+                              <div className="w-1 h-1 rounded-full bg-primary" />
+                              <span className="text-[11px] font-black uppercase text-white/40 group-hover/item:text-primary transition-colors">{point}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </section>
