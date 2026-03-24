@@ -200,29 +200,18 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
         }
     };
 
-    const handleMembershipAction = async (userId: string, status: string) => {
+    const handleMinistryAction = async (requestId: string, action: 'active' | 'rejected') => {
         try {
-            // First, find the pending request for this user
-            const { data: req } = await supabase
-                .from('membership_requests')
-                .select('id')
-                .eq('user_id', userId)
-                .eq('status', 'pending')
-                .maybeSingle();
-
-            if (req) {
-                const { error } = await supabase
-                    .from('membership_requests')
-                    .update({ status: status === 'member' ? 'approved' : 'rejected' })
-                    .eq('id', req.id);
-                if (error) throw error;
-            } else {
-                // Fallback direct update if no request record found (legacy)
-                const { error } = await supabase.from('profiles').update({ membership_status: status }).eq('id', userId);
-                if (error) throw error;
-            }
-
-            toast.success(`User set to ${status}`);
+            const { error } = await supabase
+                .from('ministry_members')
+                .update({ 
+                    status: action, 
+                    is_active: action === 'active',
+                    joined_at: action === 'active' ? new Date().toISOString() : null
+                })
+                .eq('id', requestId);
+            if (error) throw error;
+            toast.success(action === 'active' ? "Enrolled in Ministry!" : "Application Rejected");
             loadData();
         } catch (e) {
             toast.error("Action failed");
@@ -255,7 +244,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 evangelismRes,
                 ministryAnalyticsRes,
                 pendingAppsRes,
-                aiBriefingRes
+                aiBriefingRes,
+                decCountRes
             ] = await Promise.all([
                 db.from('profiles').select('*').eq('org_id', orgId),
                 db.from('member_stats').select('*').eq('org_id', orgId),
@@ -273,7 +263,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 db.from('evangelism_pipeline').select('*').eq('org_id', orgId),
                 db.from('ministry_analytics').select('ministry_id, health_score, avg_attendance, total_reports, salvations').eq('org_id', orgId).eq('period_type', 'monthly'),
                 db.from('ministry_members').select('*, profiles(name, avatar_url, org_id), ministries(name)').eq('org_id', orgId).eq('status', 'pending'),
-                db.from('ai_insights').select('*').eq('org_id', orgId).eq('status', 'active').limit(3)
+                db.from('ai_insights').select('*').eq('org_id', orgId).eq('status', 'active').limit(3),
+                db.from('user_declarations').select('*', { count: 'exact', head: true }).eq('org_id', orgId).gte('confirmed_at', startOfToday.toISOString())
             ]);
 
             const profiles = profilesRes.data || [];
@@ -507,16 +498,16 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 </div>
 
                 <div className="flex flex-col xl:flex-row gap-4 mb-10">
-                    {membershipRequests.length > 0 && (
+                    {(membershipRequests.length > 0 || data.pendingApplications.length > 0) && (
                         <Card className="bg-card border-border dark:border-primary/30 flex-1 overflow-hidden shadow-sm">
-                            <CardHeader className="bg-muted dark:bg-primary/10 border-b border-border py-3">
+                            <CardHeader className="bg-muted dark:bg-primary/10 border-b border-border py-4">
                                 <CardTitle className="text-xs font-black uppercase tracking-widest text-foreground dark:text-primary flex items-center justify-between">
-                                    <span>New Membership Pipeline</span>
-                                    <Badge className="bg-primary text-primary-foreground border-0">{membershipRequests.length} PENDING</Badge>
+                                    <span>Leadership & Membership Pipeline</span>
+                                    <Badge className="bg-primary text-primary-foreground border-0">{membershipRequests.length + data.pendingApplications.length} PENDING</Badge>
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="p-0">
-                                <div className="divide-y divide-border">
+                                <div className="divide-y divide-border max-h-[400px] overflow-y-auto">
                                     {membershipRequests.map(req => (
                                         <div key={req.id} className="p-4 flex items-center justify-between hover:bg-muted transition-colors">
                                             <div className="flex items-center gap-3">
@@ -524,26 +515,30 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                                                     {req.name?.[0] || '?'}
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-bold text-foreground">{req.name}</p>
-                                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{req.email}</p>
+                                                    <p className="text-sm font-bold text-foreground">Membership: {req.name}</p>
+                                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest">New Member Request</p>
                                                 </div>
                                             </div>
                                             <div className="flex gap-2">
-                                                <Button
-                                                    size="sm"
-                                                    onClick={() => handleMembershipAction(req.id, 'member')}
-                                                    className="h-8 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[10px]"
-                                                >
-                                                    APPROVE
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="ghost"
-                                                    onClick={() => handleMembershipAction(req.id, 'visitor')}
-                                                    className="h-8 rounded-lg text-muted-foreground hover:text-red-500 font-black text-[10px]"
-                                                >
-                                                    REJECT
-                                                </Button>
+                                                <Button size="sm" onClick={() => handleMembershipAction(req.id, 'member')} className="h-8 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[10px]">APPROVE</Button>
+                                                <Button size="sm" variant="ghost" onClick={() => handleMembershipAction(req.id, 'visitor')} className="h-8 rounded-lg text-muted-foreground hover:text-red-500 font-black text-[10px]">REJECT</Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {data.pendingApplications.map(app => (
+                                        <div key={app.id} className="p-4 flex items-center justify-between hover:bg-muted transition-colors border-t border-border">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center font-black border border-violet-500/20">
+                                                    {app.profiles?.name?.[0] || '?'}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold text-foreground">{app.profiles?.name}</p>
+                                                    <p className="text-[10px] text-violet-400 font-black uppercase tracking-widest">Wants to Join: {app.ministries?.name || app.ministry_name}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Button size="sm" onClick={() => handleMinistryAction(app.id, 'active')} className="h-8 rounded-lg bg-violet-500 hover:bg-violet-600 text-white font-black text-[10px]">ENROLL</Button>
+                                                <Button size="sm" variant="ghost" onClick={() => handleMinistryAction(app.id, 'rejected')} className="h-8 rounded-lg text-muted-foreground hover:text-red-500 font-black text-[10px]">NAY</Button>
                                             </div>
                                         </div>
                                     ))}
@@ -1067,16 +1062,19 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 <div className="bg-card border border-border rounded-2xl p-6">
                     <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4">Morning Pastor Briefing</p>
                     <div className="space-y-3">
-                        {[
-                            { q: "Who needs care now?", a: data.alertMembers.length > 0 ? `${data.alertMembers.length} members flagged for inactivity. ${data.prayerActive} crisis prayers unresolved.` : "All active members are engaged. No critical risks detected.", color: "text-red-400" },
-                            { q: "Where is God moving?", a: `Youth attendance surged 24%. ${data.newMembersThisMonth} new arrivals this month.`, color: "text-emerald-400" },
-                            { q: "Where must church go?", a: "Shinagawa area showing high density—consider new Circle. Media Ministry needs 2 volunteers.", color: "text-violet-400" },
-                        ].map(b => (
-                            <div key={b.q} className="p-3 bg-muted rounded-xl border border-border">
-                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-wider mb-1">{b.q}</p>
-                                <p className={`text-xs font-semibold ${b.color}`}>{b.a}</p>
+                        {data.aiBriefing && data.aiBriefing.length > 0 ? data.aiBriefing.map((ins, i) => (
+                             <div key={i} className="p-3 bg-muted rounded-xl border border-border group hover:bg-primary/5 transition-colors">
+                                <div className="flex items-center justify-between mb-1">
+                                    <p className="text-[9px] font-black text-muted-foreground uppercase tracking-wider">{ins.title}</p>
+                                    <Badge className={`${ins.priority === 'high' ? 'bg-red-500/10 text-red-500' : 'bg-primary/10 text-primary'} border-0 text-[7px] font-black`}>{ins.type.toUpperCase()}</Badge>
+                                </div>
+                                <p className="text-xs font-semibold text-foreground leading-snug">{ins.insight}</p>
+                             </div>
+                        )) : (
+                            <div className="p-10 text-center border-2 border-dashed border-border rounded-2xl text-muted-foreground/20 font-black uppercase text-[10px] tracking-widest">
+                                Processing Prophetic Insights...
                             </div>
-                        ))}
+                        )}
                     </div>
                     <div className="mt-4 pt-3 border-t border-border flex justify-between text-[9px] text-muted-foreground/30">
                         <span>AI Analysis · {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</span>

@@ -2,6 +2,7 @@
 CREATE TABLE IF NOT EXISTS public.user_declarations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES auth.users(id),
+    org_id UUID REFERENCES public.organizations(id),
     devotion_id TEXT NOT NULL,
     declaration_text TEXT NOT NULL,
     confirmed_at TIMESTAMPTZ DEFAULT now(),

@@ -537,7 +537,14 @@ export default function ProfileHub() {
     };
 
     const handleAddSkill = async () => {
-        if (!user || !profile?.org_id) return;
+        if (!newSkill) {
+            toast.error("Please enter a specific talent or skill name");
+            return;
+        }
+        if (!user || !profile?.org_id) {
+            toast.error("Profile context incomplete. Please refresh.");
+            return;
+        }
         setIsSaving(true);
         try {
             const { data, error } = await supabase.from('member_skills').insert([{
@@ -550,10 +557,10 @@ export default function ProfileHub() {
             }]).select().single();
             if (error) throw error;
             setSkills([...skills, data]);
-            setNewSkill(""); // Clear for inexhaustive addition
-            toast.success("Skill added!");
+            setNewSkill(""); 
+            toast.success(`${newSkill} linked to your profile!`);
         } catch (e: any) {
-            toast.error("Error adding skill");
+            toast.error(e.message || "Error adding skill");
         } finally {
             setIsSaving(false);
         }
@@ -1425,7 +1432,7 @@ export default function ProfileHub() {
                                                     <div className="space-y-1">
                                                         <label className="text-[10px] font-black text-muted-foreground uppercase pl-1 tracking-widest">Industry Category</label>
                                                         <select value={newSkillCat} onChange={e => setNewSkillCat(e.target.value)} className="h-14 w-full rounded-2xl bg-muted border border-border px-4 text-sm font-black outline-none text-foreground appearance-none hover:bg-muted/80 transition-all cursor-pointer">
-                                                            {['Technology', 'Music', 'Media', 'Business', 'Education', 'Health', 'Construction', 'Arts'].map(o => <option key={o} value={o}>{o}</option>)}
+                                                            {['Technology', 'Music', 'Media', 'Business', 'Education', 'Health', 'Finance', 'Admin', 'Hospitality', 'Creative', 'Legal', 'Construction', 'Arts', 'Handicrafts', 'Service', 'Other'].map(o => <option key={o} value={o}>{o}</option>)}
                                                         </select>
                                                     </div>
                                                     <div className="space-y-1">

@@ -60,12 +60,21 @@ const PRIORITY_CONFIG = {
     info: { color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/10 dark:border-emerald-500/20', icon: Zap, dot: 'bg-emerald-500', label: 'INSIGHT' },
 };
 
-export function AIPanel() {
+export function AIPanel({ insights: externalInsights }: { insights?: AiInsight[] }) {
     const [insights, setInsights] = useState<AiInsight[]>([]);
     const [loading, setLoading] = useState(true);
     const [expanded, setExpanded] = useState<string | null>(null);
     const [churchScore, setChurchScore] = useState<number | null>(null);
     const [collapsed, setCollapsed] = useState(false);
+
+    useEffect(() => {
+        if (externalInsights && externalInsights.length > 0) {
+            setInsights(externalInsights);
+            setLoading(false);
+        } else {
+            loadInsights();
+        }
+    }, [externalInsights]);
 
     async function loadInsights() {
         setLoading(true);
@@ -100,7 +109,6 @@ export function AIPanel() {
         }
     }
 
-    useEffect(() => { loadInsights(); }, []);
 
     const criticalCount = insights.filter(i => i.priority === 'critical').length;
 
