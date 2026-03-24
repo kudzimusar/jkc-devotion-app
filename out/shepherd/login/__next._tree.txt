@@ -1,5 +1,5 @@
 :HL["/jkc-devotion-app/_next/static/media/4cf2300e9c8272f7-s.p.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/jkc-devotion-app/_next/static/media/93f479601ee12b01-s.p.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/jkc-devotion-app/_next/static/css/d2e2a5a216999c49.css","style"]
-:HL["/jkc-devotion-app/_next/static/css/90775a2d5bc03a9c.css","style"]
-0:{"buildId":"-GQlmbks3jkQfp8FKbZw6","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"shepherd","paramType":null,"paramKey":"shepherd","hasRuntimePrefetch":false,"slots":{"children":{"name":"login","paramType":null,"paramKey":"login","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":true},"staleTime":300}
+:HL["/jkc-devotion-app/_next/static/css/832b143ae7836b8b.css","style"]
+0:{"buildId":"byzQZcGAVZonXx6B11cGB","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"shepherd","paramType":null,"paramKey":"shepherd","hasRuntimePrefetch":false,"slots":{"children":{"name":"login","paramType":null,"paramKey":"login","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":true},"staleTime":300}

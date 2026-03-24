@@ -70,7 +70,7 @@ export default function NewHereSection() {
                 📱
               </div>
               <h2 className="text-3xl font-black text-white">
-                Connect <span className="text-[var(--jkc-gold)] italic">Now</span>
+                New <span className="text-[var(--jkc-gold)] italic">Here?</span>
               </h2>
               <p className="text-sm leading-relaxed text-white/60">
                 Scanning from your chair? Fill out our Digital Connect Card to stay updated on church news and events.

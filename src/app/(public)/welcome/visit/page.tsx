@@ -1,6 +1,7 @@
 'use client';
 
 import NewHereSection from '@/components/public/NewHereSection';
+import ConnectSection from '@/components/public/ConnectSection';
 import ServiceSchedule from '@/components/public/ServiceSchedule';
 import DirectionsSection from '@/components/public/DirectionsSection';
 
@@ -51,9 +52,10 @@ export default function VisitPage() {
       </section>
 
       <div className="space-y-32 mb-16">
-        {/* Digital Connect Card (Visitor Connector) */}
+        {/* Digital Connect Card (Visitor Connector Interface) */}
         <section className="bg-[var(--background)]">
           <NewHereSection />
+          <ConnectSection />
         </section>
 
         {/* Service Times (Reused Component) */}

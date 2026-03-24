@@ -27,9 +27,9 @@ export default function PublicNav() {
     const checkLive = async () => {
       try {
         const { data } = await supabase
-          .from('events')
+          .from('live_streams')
           .select('id')
-          .eq('is_live', true)
+          .eq('status', 'live')
           .limit(1);
         setIsLive(!!(data && data.length > 0));
       } catch {

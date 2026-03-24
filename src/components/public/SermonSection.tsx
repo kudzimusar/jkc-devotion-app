@@ -9,17 +9,20 @@ export default function SermonSection() {
       .from('public_sermons')
       .select('*')
       .eq('is_featured', true)
+      .eq('status', 'published')
       .order('date', { ascending: false })
       .limit(1)
-      .single()
-      .then(({ data }) => {
-        if (data) setSermon(data);
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (data) Object.keys(data).length > 0 && setSermon(data);
       });
   }, []);
 
-  const title    = sermon?.title    || "LET'S TUNE IN! / チューニングを合わせよう";
-  const speaker  = sermon?.speaker  || "Yutaka Nakamura";
-  const watchUrl = sermon?.youtube_url || "https://www.youtube.com/watch?v=l3aOmvsaLRU";
+  if (!sermon) return null;
+
+  const title    = sermon.title;
+  const speaker  = sermon.speaker || "Guest Speaker";
+  const watchUrl = sermon.youtube_url;
 
   return (
     <section id="watch" data-section="sermon" className="py-32 px-6 scroll-mt-20"

@@ -18,6 +18,7 @@ import { FeedSection } from '@/components/feed/FeedSection';
 import MinistriesSection from '@/components/public/MinistriesSection';
 import TestimoniesSection from '@/components/public/TestimoniesSection';
 import { GlobalAIAssistant } from '@/components/layout/GlobalAIAssistant';
+import InitialConnectModal from '@/components/public/InitialConnectModal';
 
 import { motion } from 'framer-motion';
 import { usePublicTheme } from '@/components/public/PublicThemeWrapper';
@@ -60,6 +61,7 @@ export default function WelcomeClient() {
 
   return (
     <div className="overflow-x-hidden pt-16" style={{ background: 'var(--background)' }}>
+      <InitialConnectModal />
       <HeroSection />
 
       {/* Impact stats bar — directly below hero */}
