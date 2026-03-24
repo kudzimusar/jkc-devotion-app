@@ -331,7 +331,7 @@ export default function WatchClient() {
                         </span>
                     )}
                   </div>
-                  <h2 className="text-4xl md:text-8xl font-black text-white italic tracking-tighter uppercase leading-[0.85]">
+                  <h2 className="text-3xl md:text-5xl font-black text-white italic tracking-tight uppercase leading-tight mt-4">
                     {currentSermon.title}
                   </h2>
                 </div>
@@ -404,7 +404,7 @@ export default function WatchClient() {
                   {currentSermon.assets.map((asset: any) => (
                     <button 
                       key={asset.id} 
-                      onClick={() => (asset.type === 'transcript' || asset.type === 'notes') ? setShowTranscript(!showTranscript) : window.open(asset.url, '_blank')}
+                      onClick={() => asset.type === 'transcript' ? setShowTranscript(!showTranscript) : window.open(asset.url, '_blank')}
                       className={`
                         px-6 py-2.5 rounded-2xl text-[10px] font-black tracking-widest uppercase transition-all flex items-center gap-2
                         ${asset.status === 'active' ? 'bg-white/5 border-white/10 text-white/40 hover:text-white hover:bg-white/10' : 'bg-white/2 border-dashed border-white/5 text-white/10 cursor-not-allowed'}

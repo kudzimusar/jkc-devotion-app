@@ -57,7 +57,7 @@ export default function SermonSection() {
                style={{ color: 'var(--jkc-gold)' }}>
               LATEST SERMON
             </p>
-            <h2 className="text-4xl md:text-5xl font-serif italic font-black leading-tight"
+            <h2 className="text-3xl md:text-4xl font-serif italic font-black leading-snug"
                 style={{ color: 'var(--foreground)' }}>
               {title}
             </h2>

@@ -47,6 +47,7 @@ export default function SermonManagementPage() {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [notesFile, setNotesFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [jobQueue, setJobQueue] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
@@ -264,6 +265,7 @@ export default function SermonManagementPage() {
       if (videoFile) await uploadFile(videoFile, 'video');
       if (audioFile) await uploadFile(audioFile, 'audio');
       if (thumbnailFile) await uploadFile(thumbnailFile, 'thumbnail');
+      if (notesFile) await uploadFile(notesFile, 'notes');
 
       // 3. Trigger System Event (Outbox Pattern)
       await supabase.from('system_event_outbox').insert({
@@ -617,7 +619,7 @@ export default function SermonManagementPage() {
             {/* Media Uploads */}
             <div className="space-y-4 pt-4 border-t border-border/40">
                 <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Media Assets (Storage)</h3>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-4 gap-3">
                     <div className="relative group">
                         <input type="file" onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
                         <div className={`p-4 rounded-2xl border border-dashed text-center transition-all ${thumbnailFile ? 'bg-primary/5 border-primary/50' : 'bg-muted border-border hover:border-primary/30'}`}>
@@ -635,8 +637,15 @@ export default function SermonManagementPage() {
                     <div className="relative group">
                         <input type="file" onChange={(e) => setVideoFile(e.target.files?.[0] || null)} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
                         <div className={`p-4 rounded-2xl border border-dashed text-center transition-all ${videoFile ? 'bg-emerald-500/5 border-emerald-500/50' : 'bg-muted border-border hover:border-emerald-500/30'}`}>
-                            <Upload size={12} className={`mx-auto mb-2 ${videoFile ? 'text-emerald-500' : 'text-muted-foreground/30'}`} />
-                            <p className="text-[8px] font-black uppercase truncate">{videoFile ? videoFile.name : 'Video'}</p>
+                            <Youtube size={12} className={`mx-auto mb-2 ${videoFile ? 'text-emerald-500' : 'text-muted-foreground/30'}`} />
+                            <p className="text-[8px] font-black uppercase truncate">{videoFile ? videoFile.name : 'MP4'}</p>
+                        </div>
+                    </div>
+                    <div className="relative group">
+                        <input type="file" accept=".pdf,.doc,.docx" onChange={(e) => setNotesFile(e.target.files?.[0] || null)} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                        <div className={`p-4 rounded-2xl border border-dashed text-center transition-all ${notesFile ? 'bg-orange-500/5 border-orange-500/50' : 'bg-muted border-border hover:border-orange-500/30'}`}>
+                            <BookOpen size={12} className={`mx-auto mb-2 ${notesFile ? 'text-orange-500' : 'text-muted-foreground/30'}`} />
+                            <p className="text-[8px] font-black uppercase truncate">{notesFile ? notesFile.name : 'Notes (PDF)'}</p>
                         </div>
                     </div>
                 </div>
