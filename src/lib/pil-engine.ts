@@ -23,6 +23,9 @@ export const PILEngine = {
             spiritual_climate: 0,
             pastoral_load: 0,
             stewardship: 0,
+            evangelism: 0,
+            sermon_impact: 0,
+            burnout: 0,
             ai_insights: 0,
         };
 
@@ -215,7 +218,80 @@ export const PILEngine = {
                 }
             }
 
-            // 9. PHASE 3: MINISTRY CONTEXT COLLECTION
+            // 9. MODEL: Evangelism ROI MVP Detection
+            const { data: mvpReferrers } = await supabase
+                .from('vw_evangelism_roi')
+                .select('*')
+                .eq('org_id', orgId)
+                .order('conversions', { ascending: false })
+                .limit(3);
+
+            if (mvpReferrers && mvpReferrers.length > 0) {
+                for (const referrer of mvpReferrers) {
+                    await supabase.from('prophetic_insights').upsert({
+                        org_id: orgId,
+                        category: 'growth',
+                        subject_id: referrer.referrer_id,
+                        probability_score: referrer.conversion_rate,
+                        risk_level: 'none',
+                        insight_title: `Growth Catalyst: ${referrer.referrer_name}`,
+                        insight_description: `${referrer.referrer_name} is an MVP referrer with ${referrer.conversions} conversions (${referrer.conversion_rate}% rate).`,
+                        recommended_action: `Publicly acknowledge their contribution or invite to leadership training.`,
+                        metadata: referrer
+                    }, { onConflict: 'org_id,category,subject_id' });
+                    results.evangelism++;
+                }
+            }
+
+            // 10. MODEL: Sermon Impact Analysis
+            const { data: topSermons } = await supabase
+                .from('vw_sermon_impact_analytics')
+                .select('*')
+                .eq('org_id', orgId)
+                .order('journals_in_followed_week', { ascending: false })
+                .limit(1);
+
+            if (topSermons && topSermons[0]) {
+                const top = topSermons[0];
+                await supabase.from('prophetic_insights').upsert({
+                    org_id: orgId,
+                    category: 'content',
+                    subject_id: top.sermon_id,
+                    probability_score: 100,
+                    risk_level: 'none',
+                    insight_title: `High Impact Content: ${top.title}`,
+                    insight_description: `The sermon "${top.title}" drove ${top.journals_in_followed_week} SOAP journals in the week following its broadcast.`,
+                    recommended_action: `Consider creating more content on this theme.`,
+                    metadata: top
+                }, { onConflict: 'org_id,category,subject_id' });
+                results.sermon_impact++;
+            }
+
+            // 11. MODEL: Volunteer Burnout Risk
+            const { data: burnoutRisks } = await supabase
+                .from('vw_volunteer_burnout_risk')
+                .select('*')
+                .eq('org_id', orgId)
+                .neq('burnout_status', 'Healthy');
+
+            if (burnoutRisks) {
+                for (const risk of burnoutRisks) {
+                    await supabase.from('prophetic_insights').upsert({
+                        org_id: orgId,
+                        category: 'burnout',
+                        subject_id: risk.user_id,
+                        probability_score: 95,
+                        risk_level: risk.burnout_status === 'Critical Burnout' ? 'critical' : 'high',
+                        insight_title: `Volunteer Burnout: ${risk.name}`,
+                        insight_description: `${risk.name} is serving in ${risk.ministry_count} ministries but has dropped to ${risk.recent_attendance} attendances.`,
+                        recommended_action: `Enforce a mandatory rest period from one ministry.`,
+                        metadata: risk
+                    }, { onConflict: 'org_id,category,subject_id' });
+                    results.burnout++;
+                }
+            }
+
+            // 12. PHASE 3: MINISTRY CONTEXT COLLECTION
             console.log("🏛️ PIL Engine: Collecting ministry context...");
 
             const { data: ministryData } = await supabase
@@ -276,6 +352,17 @@ export const PILEngine = {
             const stewardContext = givingHealth ?
                 `STEWARDSHIP: Active: ${givingHealth.active_givers} | Lapsed: ${givingHealth.lapsed_givers_30d}` : 'N/A';
 
+            const growthContext = (mvpReferrers || []).map(m => 
+                `GROWTH MVP: ${m.referrer_name} | Rate: ${m.conversion_rate}% | Converts: ${m.conversions}`
+            ).join('\n');
+
+            const contentContext = topSermons && topSermons[0] ? 
+                `TOP CONTENT: "${topSermons[0].title}" | Impact: ${topSermons[0].journals_in_followed_week} journals` : 'N/A';
+            
+            const burnoutContext = (burnoutRisks || []).map(b => 
+                `BURNOUT: ${b.name} (Status: ${b.burnout_status}) | Load: ${b.ministry_count} ministries`
+            ).join('\n');
+
             const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
             if (!GEMINI_API_KEY) {
                 console.warn("⚠️ No GEMINI_API_KEY — skipping AI sweep");
@@ -307,6 +394,15 @@ ${careContext}
 
 Financial Stewardship Consistency:
 ${stewardContext}
+
+Evangelism ROI & Growth MVPs:
+${growthContext}
+
+Sermon Engagement & Impact:
+${contentContext}
+
+Volunteer Burnout Risks:
+${burnoutContext}
 
 Output JSON: { "insights": [{ "subject": "e.g., Media Ministry", "summary": "Short title", "detail": "Description", "recommended_action": "Action to take", "insight_type": "opportunity", "urgency": "this_week" }] }`;
 
