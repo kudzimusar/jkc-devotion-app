@@ -3,7 +3,7 @@
 3:I[695119,["/jkc-devotion-app/_next/static/chunks/b2c1a3b6f5378acb.js","/jkc-devotion-app/_next/static/chunks/b5941521288932cb.js","/jkc-devotion-app/_next/static/chunks/ffdb88dadaa2b2a1.js","/jkc-devotion-app/_next/static/chunks/3c614ef6ec64d4d6.js","/jkc-devotion-app/_next/static/chunks/8f6ea57cb121d52b.js"],"default"]
 6:I[897367,["/jkc-devotion-app/_next/static/chunks/d96012bcfc98706a.js","/jkc-devotion-app/_next/static/chunks/73e3194f06db260e.js"],"OutletBoundary"]
 7:"$Sreact.suspense"
-0:{"buildId":"MJSpqtkMcdDSs9JygXTHl","rsc":["$","$1","c",{"children":[["$","$L2",null,{"Component":"$3","serverProvidedParams":{"searchParams":{},"params":{"slug":"finance"},"promises":["$@4","$@5"]}}],[["$","script","script-0",{"src":"/jkc-devotion-app/_next/static/chunks/8f6ea57cb121d52b.js","async":true}]],["$","$L6",null,{"children":["$","$7",null,{"name":"Next.MetadataOutlet","children":"$@8"}]}]]}],"loading":null,"isPartial":false}
+0:{"buildId":"WMPs-ksx8ZgiQahUGYUd3","rsc":["$","$1","c",{"children":[["$","$L2",null,{"Component":"$3","serverProvidedParams":{"searchParams":{},"params":{"slug":"finance"},"promises":["$@4","$@5"]}}],[["$","script","script-0",{"src":"/jkc-devotion-app/_next/static/chunks/8f6ea57cb121d52b.js","async":true}]],["$","$L6",null,{"children":["$","$7",null,{"name":"Next.MetadataOutlet","children":"$@8"}]}]]}],"loading":null,"isPartial":false}
 4:{}
 5:"$0:rsc:props:children:0:props:serverProvidedParams:params"
 8:null

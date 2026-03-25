@@ -20,7 +20,10 @@ import {
     Milestone,
     Sparkles,
     Baby,
-    Trash2
+    Trash2,
+    BookOpen,
+    ShoppingBag,
+    LogOut
 } from "lucide-react";
 import { supabase, AnalyticsService } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -84,6 +87,13 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
     const [newChildName, setNewChildName] = useState("");
     const [newChildBirthdate, setNewChildBirthdate] = useState("");
     const [newChildMedical, setNewChildMedical] = useState("");
+
+    // Bible Study Groups
+    const [myGroups, setMyGroups] = useState<any[]>([]);
+    const [availableGroups, setAvailableGroups] = useState<any[]>([]);
+
+    // Merchandise Orders
+    const [merchOrders, setMerchOrders] = useState<any[]>([]);
 
     useEffect(() => {
         loadProfile();
@@ -156,6 +166,19 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
             // Load children (guardian_links) from DB
             const { data: kidData } = await supabase.from('guardian_links').select('*').eq('guardian_id', targetId);
             setChildren(kidData || []);
+
+            // Load Bible Study Group memberships
+            const { data: bgData } = await supabase.from('bible_study_group_members').select('*, bible_study_groups(*)').eq('user_id', targetId);
+            setMyGroups((bgData || []).map((r: any) => ({ ...r.bible_study_groups, membership_id: r.id })));
+
+            // Load available groups for self-enrollment
+            const { data: allGroups } = await supabase.from('bible_study_groups').select('id, name, location, meeting_day, meeting_time');
+            const myGroupIds = (bgData || []).map((r: any) => r.group_id);
+            setAvailableGroups((allGroups || []).filter((g: any) => !myGroupIds.includes(g.id)));
+
+            // Load merchandise orders
+            const { data: moData } = await supabase.from('merchandise_orders').select('*').eq('user_id', targetId).order('created_at', { ascending: false }).limit(10);
+            setMerchOrders(moData || []);
 
             // Load Stats
             let journalStats = { completed: 0, streak: 0 };
@@ -294,6 +317,31 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
         const { error } = await supabase.from('guardian_links').delete().eq('id', childId);
         if (error) { toast.error('Failed to remove child'); return; }
         setChildren(children.filter(c => c.id !== childId));
+    }
+
+    const handleJoinBibleGroup = async (groupId: string) => {
+        if (!profile) return;
+        const payload = { user_id: profile.id, group_id: groupId };
+        const { data, error } = await supabase.from('bible_study_group_members').insert(payload).select().single();
+        if (error) { toast.error('Failed to join group'); console.error(error); return; }
+        // Move from available to my groups
+        const joined = availableGroups.find(g => g.id === groupId);
+        if (joined) {
+            setMyGroups([...myGroups, { ...joined, membership_id: data?.id }]);
+            setAvailableGroups(availableGroups.filter(g => g.id !== groupId));
+        }
+        AnalyticsService.logEvent(profile.id, 'bible_group_joined', { groupId });
+        toast.success('Joined Bible Study Group!');
+    }
+
+    const handleLeaveBibleGroup = async (membershipId: string, groupId: string) => {
+        const { error } = await supabase.from('bible_study_group_members').delete().eq('id', membershipId);
+        if (error) { toast.error('Failed to leave group'); return; }
+        const left = myGroups.find(g => g.id === groupId);
+        if (left) {
+            setAvailableGroups([...availableGroups, left]);
+            setMyGroups(myGroups.filter(g => g.id !== groupId));
+        }
     }
 
     async function handleSavePastoralNotes() {
@@ -666,12 +714,12 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         <Card className="glass border-foreground/10 bg-foreground/5 rounded-2xl p-4">
-                                            <div className="text-[10px] font-black uppercase opacity-40">Total Tithing 2026</div>
-                                            <div className="text-xl font-black">¥450,000</div>
+                                            <div className="text-[10px] font-black uppercase opacity-40">Total Giving 2026</div>
+                                            <div className="text-xl font-black">¥{stewardship.reduce((sum: number, s: any) => sum + (s.amount || 0), 0).toLocaleString()}</div>
                                         </Card>
                                         <Card className="glass border-foreground/10 bg-foreground/5 rounded-2xl p-4">
-                                            <div className="text-[10px] font-black uppercase opacity-40">Building Fund</div>
-                                            <div className="text-xl font-black">¥10,000</div>
+                                            <div className="text-[10px] font-black uppercase opacity-40">Records</div>
+                                            <div className="text-xl font-black">{stewardship.length}</div>
                                         </Card>
                                     </div>
 
@@ -770,6 +818,107 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                         </div>
                                     )}
                                 </div>
+                            </div>
+
+                            {/* BIBLE STUDY GROUPS SECTION */}
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between border-b border-foreground/10 pb-4">
+                                    <h3 className="text-xl font-bold flex items-center gap-2">
+                                        <BookOpen className="w-5 h-5 text-orange-500" />
+                                        Bible Study Groups
+                                    </h3>
+                                </div>
+
+                                {myGroups.length > 0 && (
+                                    <div className="space-y-3">
+                                        <h4 className="text-xs font-black uppercase tracking-widest opacity-40">My Groups</h4>
+                                        {myGroups.map((g: any) => (
+                                            <div key={g.id} className="glass border-foreground/10 rounded-2xl p-4 flex items-center justify-between">
+                                                <div>
+                                                    <p className="font-bold text-orange-400">{g.name}</p>
+                                                    <div className="flex gap-3 mt-1">
+                                                        {g.location && <Badge variant="outline" className="text-[8px] h-4 border-orange-500/30 text-orange-400">{g.location}</Badge>}
+                                                        {g.meeting_day && <p className="text-[10px] opacity-40">{g.meeting_day} {g.meeting_time || ''}</p>}
+                                                    </div>
+                                                </div>
+                                                <Button onClick={() => handleLeaveBibleGroup(g.membership_id, g.id)} variant="ghost" size="sm" className="text-red-400 hover:text-red-300">
+                                                    <LogOut className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {availableGroups.length > 0 && (
+                                    <div className="space-y-3">
+                                        <h4 className="text-xs font-black uppercase tracking-widest opacity-40">Available Groups</h4>
+                                        {availableGroups.map((g: any) => (
+                                            <div key={g.id} className="glass border-foreground/10 rounded-2xl p-4 flex items-center justify-between">
+                                                <div>
+                                                    <p className="font-bold">{g.name}</p>
+                                                    <div className="flex gap-3 mt-1">
+                                                        {g.location && <p className="text-[10px] opacity-40">{g.location}</p>}
+                                                        {g.meeting_day && <p className="text-[10px] opacity-40">{g.meeting_day} {g.meeting_time || ''}</p>}
+                                                    </div>
+                                                </div>
+                                                <Button onClick={() => handleJoinBibleGroup(g.id)} size="sm" className="rounded-2xl bg-orange-600 hover:bg-orange-500 font-bold px-4 text-white">
+                                                    <Plus className="w-4 h-4 mr-1" /> JOIN
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {myGroups.length === 0 && availableGroups.length === 0 && (
+                                    <div className="py-12 border-2 border-dashed border-foreground/10 rounded-3xl flex flex-col items-center justify-center opacity-40 text-center">
+                                        <BookOpen className="w-12 h-12 mb-3" />
+                                        <p className="max-w-[200px] text-xs font-bold">No Bible Study Groups available yet. Check back soon!</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* MERCHANDISE ORDERS SECTION */}
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between border-b border-foreground/10 pb-4">
+                                    <h3 className="text-xl font-bold flex items-center gap-2">
+                                        <ShoppingBag className="w-5 h-5 text-violet-500" />
+                                        Merchandise Orders
+                                    </h3>
+                                </div>
+
+                                {merchOrders.length === 0 ? (
+                                    <div className="py-12 border-2 border-dashed border-foreground/10 rounded-3xl flex flex-col items-center justify-center opacity-40 text-center">
+                                        <ShoppingBag className="w-12 h-12 mb-3" />
+                                        <p className="max-w-[200px] text-xs font-bold">No orders yet. Visit the JKC Store to browse.</p>
+                                    </div>
+                                ) : (
+                                    <div className="glass border-foreground/10 rounded-3xl overflow-hidden">
+                                        <table className="w-full text-left text-xs">
+                                            <thead className="bg-foreground/5 font-black uppercase tracking-widest opacity-40">
+                                                <tr>
+                                                    <th className="p-4">Date</th>
+                                                    <th className="p-4">Status</th>
+                                                    <th className="p-4 text-right">Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-white/5">
+                                                {merchOrders.map((o: any) => (
+                                                    <tr key={o.id}>
+                                                        <td className="p-4 opacity-60">{o.created_at?.slice(0, 10)}</td>
+                                                        <td className="p-4">
+                                                            <Badge variant="outline" className={`text-[8px] h-4 ${
+                                                                o.payment_status === 'paid' ? 'border-green-500/30 text-green-400' :
+                                                                o.payment_status === 'pending' ? 'border-amber-500/30 text-amber-400' :
+                                                                'border-foreground/20'
+                                                            }`}>{o.payment_status || o.status}</Badge>
+                                                        </td>
+                                                        <td className="p-4 text-right font-black">¥{(o.total_amount || 0).toLocaleString()}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
                             </div>
 
                         </div>

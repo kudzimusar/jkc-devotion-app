@@ -1,4 +1,4 @@
 1:"$Sreact.fragment"
 2:I[339756,["/jkc-devotion-app/_next/static/chunks/d96012bcfc98706a.js","/jkc-devotion-app/_next/static/chunks/73e3194f06db260e.js"],"default"]
 3:I[837457,["/jkc-devotion-app/_next/static/chunks/d96012bcfc98706a.js","/jkc-devotion-app/_next/static/chunks/73e3194f06db260e.js"],"default"]
-0:{"buildId":"MJSpqtkMcdDSs9JygXTHl","rsc":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"loading":null,"isPartial":false}
+0:{"buildId":"WMPs-ksx8ZgiQahUGYUd3","rsc":["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","template":["$","$L3",null,{}]}]]}],"loading":null,"isPartial":false}
