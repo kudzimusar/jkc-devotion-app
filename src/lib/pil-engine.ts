@@ -20,6 +20,9 @@ export const PILEngine = {
             crisis: 0,
             retention: 0,
             isolation: 0,
+            spiritual_climate: 0,
+            pastoral_load: 0,
+            stewardship: 0,
             ai_insights: 0,
         };
 
@@ -140,7 +143,79 @@ export const PILEngine = {
                 }
             }
 
-            // 6. PHASE 3: MINISTRY CONTEXT COLLECTION
+            // 6. MODEL: Spiritual Climate Forecast
+            const { data: climateData } = await supabase
+                .from('vw_spiritual_climate_forecast')
+                .select('*')
+                .eq('org_id', orgId)
+                .single();
+
+            if (climateData) {
+                if (climateData.critical_sentiment_count > 0) {
+                    await supabase.from('prophetic_insights').upsert({
+                        org_id: orgId,
+                        category: 'spiritual_climate',
+                        subject_id: orgId, // Org-level insight
+                        probability_score: Math.min(100, (climateData.critical_sentiment_count / climateData.total_entries) * 200),
+                        risk_level: climateData.critical_sentiment_count > 5 ? 'high' : 'medium',
+                        insight_title: `Spiritual Climate: Shift Detected`,
+                        insight_description: `Congregational sentiment shows ${climateData.critical_sentiment_count} negative entries (anxiety/despair) this week out of ${climateData.total_entries} journals.`,
+                        recommended_action: `Speak on peace/provision in upcoming teaching.`,
+                        metadata: { distribution: climateData.sentiment_distribution, totals: climateData.total_entries }
+                    }, { onConflict: 'org_id,category,subject_id' });
+                    results.spiritual_climate++;
+                }
+            }
+
+            // 7. MODEL: Pastoral Care Load
+            const { data: careLoad } = await supabase
+                .from('vw_pastoral_care_load')
+                .select('*')
+                .eq('org_id', orgId)
+                .single();
+
+            if (careLoad) {
+                if (careLoad.overdue_follow_ups > 0 || careLoad.total_active_cases > 10) {
+                    await supabase.from('prophetic_insights').upsert({
+                        org_id: orgId,
+                        category: 'pastoral_load',
+                        subject_id: orgId,
+                        probability_score: 90,
+                        risk_level: careLoad.overdue_follow_ups > 5 ? 'critical' : 'high',
+                        insight_title: `Pastoral Load: Burnout Risk`,
+                        insight_description: `There are ${careLoad.total_active_cases} active counseling cases and ${careLoad.overdue_follow_ups} overdue follow-ups. System capacity is reaching limits.`,
+                        recommended_action: `Delegate ${Math.ceil(careLoad.total_active_cases * 0.3)} cases to ministry leads.`,
+                        metadata: careLoad
+                    }, { onConflict: 'org_id,category,subject_id' });
+                    results.pastoral_load++;
+                }
+            }
+
+            // 8. MODEL: Stewardship Health
+            const { data: givingHealth } = await supabase
+                .from('vw_giving_health_index')
+                .select('*')
+                .eq('org_id', orgId)
+                .single();
+
+            if (givingHealth) {
+                if (givingHealth.lapsed_givers_30d > 0) {
+                    await supabase.from('prophetic_insights').upsert({
+                        org_id: orgId,
+                        category: 'stewardship',
+                        subject_id: orgId,
+                        probability_score: Math.min(100, (givingHealth.lapsed_givers_30d / (givingHealth.active_givers || 1)) * 100),
+                        risk_level: 'medium',
+                        insight_title: `Stewardship: Giving Consistency Drop`,
+                        insight_description: `${givingHealth.lapsed_givers_30d} regular givers have not given in the last 30 days.`,
+                        recommended_action: `Send a "Thinking of You" message to regular donors who missed a month.`,
+                        metadata: givingHealth
+                    }, { onConflict: 'org_id,category,subject_id' });
+                    results.stewardship++;
+                }
+            }
+
+            // 9. PHASE 3: MINISTRY CONTEXT COLLECTION
             console.log("🏛️ PIL Engine: Collecting ministry context...");
 
             const { data: ministryData } = await supabase
@@ -192,6 +267,15 @@ export const PILEngine = {
                 `RETENTION: ${r.name} (Status: ${r.health_status}) | Joined: ${r.joined_at}`
             ).join('\n');
 
+            const climateContext = climateData ? 
+                `CLIMATE: ${JSON.stringify(climateData.sentiment_distribution)} | Critical: ${climateData.critical_sentiment_count}` : 'N/A';
+            
+            const careContext = careLoad ? 
+                `LOAD: Active: ${careLoad.total_active_cases} | Overdue: ${careLoad.overdue_follow_ups} | Prayers: ${careLoad.active_crisis_prayers}` : 'N/A';
+            
+            const stewardContext = givingHealth ?
+                `STEWARDSHIP: Active: ${givingHealth.active_givers} | Lapsed: ${givingHealth.lapsed_givers_30d}` : 'N/A';
+
             const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
             if (!GEMINI_API_KEY) {
                 console.warn("⚠️ No GEMINI_API_KEY — skipping AI sweep");
@@ -214,6 +298,15 @@ ${crisisContext}
 
 New Member Onboarding Risks:
 ${onboardingContext}
+
+Spiritual Climate & Sentiment:
+${climateContext}
+
+Pastoral Care Burden:
+${careContext}
+
+Financial Stewardship Consistency:
+${stewardContext}
 
 Output JSON: { "insights": [{ "subject": "e.g., Media Ministry", "summary": "Short title", "detail": "Description", "recommended_action": "Action to take", "insight_type": "opportunity", "urgency": "this_week" }] }`;
 
