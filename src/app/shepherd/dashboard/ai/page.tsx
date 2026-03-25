@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 
 import { PILEngine } from "@/lib/pil-engine";
 import { useAdminCtx } from "../Context";
+import { IntelligenceManualPanel } from "@/components/dashboard/IntelligenceManualPanel";
 
 const PRIORITY_CONFIG = {
     critical: { color: 'text-red-700 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20', dot: 'bg-red-600 dark:bg-red-400', badge: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400' },
@@ -201,6 +202,7 @@ export default function AICommandCenterPage() {
                     <p className="text-[11px] text-muted-foreground mt-0.5">{unacknowledged.length} rule-based forecasts · {pendingAi.length} AI insights pending review</p>
                 </div>
                 <div className="flex gap-2">
+                    <IntelligenceManualPanel />
                     <button onClick={runSweep} disabled={runningSweep}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-xs text-primary hover:bg-primary/20 transition-all font-bold">
                         <Zap className={`w-3.5 h-3.5 ${runningSweep ? 'animate-pulse' : ''}`} />
