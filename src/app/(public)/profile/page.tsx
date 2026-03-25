@@ -741,6 +741,19 @@ export default function ProfileHub() {
                                 <nav.icon className="w-4 h-4 shrink-0" /> {nav.label}
                             </button>
                         ))}
+
+                        <div className="pt-8 pb-4 px-4 text-xs font-black uppercase tracking-widest text-[var(--jkc-gold)] opacity-80 border-t border-border mt-6">
+                            shortcuts
+                        </div>
+                        <Link href="/welcome/devotion" className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground hover:bg-muted font-black text-sm transition-all">
+                            <BookOpen className="w-4 h-4 text-[var(--jkc-gold)]" /> Daily Devotion
+                        </Link>
+                        
+                        {(userRole === 'shepherd' || userRole === 'pastor' || userRole === 'admin' || userRole === 'leader') && (
+                            <Link href="/shepherd/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-xl text-primary hover:bg-primary/5 font-black text-sm transition-all">
+                                <LayoutDashboard className="w-4 h-4" /> Church OS Console
+                            </Link>
+                        )}
                         <div className="pt-8 w-full border-t border-border mt-4">
                             <button
                                 onClick={handleLogout}
@@ -783,35 +796,48 @@ export default function ProfileHub() {
                                             <span className="text-amber-500 font-black">{stats.streak}</span>
                                         </div>
                                     </div>
-                                    <Button
-                                        variant="outline"
-                                        disabled={!!membershipRequest && membershipRequest.status === 'pending'}
-                                        onClick={() => {
-                                            if (profile?.membership_status === 'member') {
-                                                toast.info("You are an approved member.");
-                                            } else if (membershipRequest?.status === 'pending') {
-                                                toast.info("Your membership request is under review.");
-                                            } else {
-                                                handleRequestMembership();
-                                            }
-                                        }}
-                                        className={`w-full py-6 rounded-xl font-bold border-border hover:bg-muted capitalize ${profile?.membership_status === 'member' ? 'text-emerald-500 border-emerald-500/20 bg-emerald-500/5' :
-                                            membershipRequest?.status === 'pending' ? 'text-amber-500 border-amber-500/20 bg-amber-500/5' :
-                                                'text-primary border-primary/20 shadow-lg shadow-primary/5 hover:scale-[1.02] active:scale-95 transition-all'
-                                            }`}
-                                    >
-                                        <div className="flex flex-col items-center">
-                                            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                                                {profile?.membership_status === 'member' ? 'Approved' :
-                                                    membershipRequest?.status === 'pending' ? 'Pending Approval' :
-                                                        'Request Membership'}
-                                            </span>
-                                            <span>
-                                                {profile?.membership_status === 'member' ? (profile?.growth_stage?.replace('_', ' ') || 'Member') :
-                                                    membershipRequest?.status === 'pending' ? 'Reviewing' : 'Submit Join Request'}
-                                            </span>
-                                        </div>
-                                    </Button>
+                                    <div className="w-full space-y-3">
+                                        <Button
+                                            variant="outline"
+                                            disabled={!!membershipRequest && membershipRequest.status === 'pending'}
+                                            onClick={() => {
+                                                if (profile?.membership_status === 'member') {
+                                                    toast.info("You are an approved member.");
+                                                } else if (membershipRequest?.status === 'pending') {
+                                                    toast.info("Your membership request is under review.");
+                                                } else {
+                                                    handleRequestMembership();
+                                                }
+                                            }}
+                                            className={`w-full h-auto py-5 rounded-xl font-bold border-border hover:bg-muted capitalize ${profile?.membership_status === 'member' ? 'text-emerald-500 border-emerald-500/20 bg-emerald-500/5' :
+                                                membershipRequest?.status === 'pending' ? 'text-amber-500 border-amber-500/20 bg-amber-500/5' :
+                                                    'text-primary border-primary/20 shadow-lg shadow-primary/5 hover:scale-[1.02] active:scale-95 transition-all'
+                                                }`}
+                                        >
+                                            <div className="flex flex-col items-center">
+                                                <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                                                    {profile?.membership_status === 'member' ? 'Approved' :
+                                                        membershipRequest?.status === 'pending' ? 'Pending Approval' :
+                                                            'Request Membership'}
+                                                </span>
+                                                <span>
+                                                    {profile?.membership_status === 'member' ? (profile?.growth_stage?.replace('_', ' ') || 'Member') :
+                                                        membershipRequest?.status === 'pending' ? 'Reviewing' : 'Submit Join Request'}
+                                                </span>
+                                            </div>
+                                        </Button>
+                                        
+                                        <Button
+                                            asChild
+                                            variant="ghost"
+                                            className="w-full h-12 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted"
+                                        >
+                                            <Link href="/welcome/devotion">
+                                                <BookOpen className="w-4 h-4 mr-2" />
+                                                Return to Devotion
+                                            </Link>
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
 

@@ -38,32 +38,41 @@ export class BibleApi {
         if (!bookId) throw new Error(`Invalid book name: ${ref.book}`);
 
         if (ref.startChapter === ref.endChapter) {
-            const res = await fetch(`${this.BASE_URL}/get-chapter/${translation}/${bookId}/${ref.startChapter}/`);
-            const data = await res.json() as BibleVerse[];
-            let filtered = data;
-            const endV = ref.endVerse;
-            if (endV) {
-                filtered = data.filter(v => v.verse >= ref.startVerse && v.verse <= endV);
-            } else {
-                filtered = data.filter(v => v.verse === ref.startVerse);
+            try {
+                const res = await fetch(`${this.BASE_URL}/get-chapter/${translation}/${bookId}/${ref.startChapter}/`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json() as BibleVerse[];
+                const endV = ref.endVerse;
+                const filtered = endV 
+                    ? data.filter(v => v.verse >= ref.startVerse && v.verse <= endV)
+                    : data.filter(v => v.verse === ref.startVerse);
+                return filtered.map(v => ({ ...v, chapter: ref.startChapter, bookName: ref.book }));
+            } catch (err) {
+                console.warn(`Failed to fetch Bible chapter ${ref.startChapter}:`, err);
+                return [];
             }
-            return filtered.map(v => ({ ...v, chapter: ref.startChapter, bookName: ref.book }));
         }
 
         // Multiple chapters
         const allVerses: BibleVerse[] = [];
         for (let c = ref.startChapter; c <= ref.endChapter; c++) {
-            const res = await fetch(`${this.BASE_URL}/get-chapter/${translation}/${bookId}/${c}/`);
-            let data = await res.json() as BibleVerse[];
+            try {
+                const res = await fetch(`${this.BASE_URL}/get-chapter/${translation}/${bookId}/${c}/`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                let data = await res.json() as BibleVerse[];
 
-            const endV = ref.endVerse;
-            if (c === ref.startChapter) {
-                data = data.filter(v => v.verse >= ref.startVerse);
-            } else if (c === ref.endChapter && endV) {
-                data = data.filter(v => v.verse <= endV);
+                const endV = ref.endVerse;
+                if (c === ref.startChapter) {
+                    data = data.filter(v => v.verse >= ref.startVerse);
+                } else if (c === ref.endChapter && endV) {
+                    data = data.filter(v => v.verse <= endV);
+                }
+
+                allVerses.push(...data.map(v => ({ ...v, chapter: c, bookName: ref.book })));
+            } catch (err) {
+                console.warn(`Failed to fetch Bible chapter ${c}:`, err);
+                // Continue to next chapter or return what we have so far
             }
-
-            allVerses.push(...data.map(v => ({ ...v, chapter: c, bookName: ref.book })));
         }
         return allVerses;
     }

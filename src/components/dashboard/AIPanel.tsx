@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { PILEngine } from "@/lib/pil-engine";
 import { useAdminCtx } from "@/app/shepherd/dashboard/Context";
+import { IntelligenceManualPanel } from "./IntelligenceManualPanel";
 
 interface AiInsight {
     id: string;
@@ -225,7 +226,8 @@ export function AIPanel({ insights: externalInsights }: { insights?: AiInsight[]
                     </div>
 
                     {/* Footer */}
-                    <div className="px-4 py-3 border-t border-border flex-shrink-0">
+                    <div className="px-4 py-3 border-t border-border flex-shrink-0 space-y-3">
+                        <IntelligenceManualPanel />
                         <p className="text-[9px] text-muted-foreground text-center font-medium tracking-wider">
                             PIL-Layer Engine · Stable {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                         </p>
