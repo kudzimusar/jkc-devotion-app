@@ -17,7 +17,10 @@ import {
     Clock,
     MapPin,
     Globe,
-    Milestone
+    Milestone,
+    Sparkles,
+    Baby,
+    Trash2
 } from "lucide-react";
 import { supabase, AnalyticsService } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -69,6 +72,18 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
     const [stewardship, setStewardship] = useState<any[]>([]);
 
     const [attendanceData, setAttendanceData] = useState<number[]>([]);
+
+    // Skills & Talents
+    const [skills, setSkills] = useState<any[]>([]);
+    const [newSkillName, setNewSkillName] = useState("");
+    const [newSkillCategory, setNewSkillCategory] = useState("Technical");
+    const [newSkillLevel, setNewSkillLevel] = useState("Beginner");
+
+    // Junior Church (Children)
+    const [children, setChildren] = useState<any[]>([]);
+    const [newChildName, setNewChildName] = useState("");
+    const [newChildBirthdate, setNewChildBirthdate] = useState("");
+    const [newChildMedical, setNewChildMedical] = useState("");
 
     useEffect(() => {
         loadProfile();
@@ -133,6 +148,14 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
             // Load attendance records for the chart
             const { data: atData } = await supabase.from('attendance_records').select('attended').eq('user_id', targetId).order('event_date', { ascending: false }).limit(7);
             setAttendanceData((atData || []).map((a: any) => a.attended ? 100 : 20).reverse());
+
+            // Load skills & talents from DB
+            const { data: skData } = await supabase.from('member_skills').select('*').eq('user_id', targetId);
+            setSkills(skData || []);
+
+            // Load children (guardian_links) from DB
+            const { data: kidData } = await supabase.from('guardian_links').select('*').eq('guardian_id', targetId);
+            setChildren(kidData || []);
 
             // Load Stats
             let journalStats = { completed: 0, streak: 0 };
@@ -235,6 +258,42 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
         AnalyticsService.logEvent(profile.id, 'ministry_role_updated', { ministry: newMinistry });
         setNewMinistry("");
         toast.success('Ministry role added!');
+    }
+
+    const handleAddSkill = async () => {
+        if (!newSkillName || !profile) return;
+        const payload = { user_id: profile.id, skill_name: newSkillName, skill_category: newSkillCategory, skill_level: newSkillLevel, years_experience: 0 };
+        const { data, error } = await supabase.from('member_skills').insert(payload).select().single();
+        if (error) { toast.error('Failed to add skill'); console.error(error); return; }
+        setSkills([...skills, data || { id: Date.now(), ...payload }]);
+        AnalyticsService.logEvent(profile.id, 'skill_added', { skill: newSkillName });
+        setNewSkillName("");
+        toast.success('Skill added!');
+    }
+
+    const handleRemoveSkill = async (skillId: string) => {
+        const { error } = await supabase.from('member_skills').delete().eq('id', skillId);
+        if (error) { toast.error('Failed to remove skill'); return; }
+        setSkills(skills.filter(s => s.id !== skillId));
+    }
+
+    const handleAddChild = async () => {
+        if (!newChildName || !profile) return;
+        const payload = { guardian_id: profile.id, child_name: newChildName, child_birthdate: newChildBirthdate || null, medical_notes: newChildMedical || null, relationship: 'Parent' };
+        const { data, error } = await supabase.from('guardian_links').insert(payload).select().single();
+        if (error) { toast.error('Failed to add child'); console.error(error); return; }
+        setChildren([...children, data || { id: Date.now(), ...payload }]);
+        AnalyticsService.logEvent(profile.id, 'child_added', { name: newChildName });
+        setNewChildName("");
+        setNewChildBirthdate("");
+        setNewChildMedical("");
+        toast.success('Child registered!');
+    }
+
+    const handleRemoveChild = async (childId: string) => {
+        const { error } = await supabase.from('guardian_links').delete().eq('id', childId);
+        if (error) { toast.error('Failed to remove child'); return; }
+        setChildren(children.filter(c => c.id !== childId));
     }
 
     async function handleSavePastoralNotes() {
@@ -453,6 +512,106 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                         </Button>
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* JUNIOR CHURCH SECTION */}
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between border-b border-foreground/10 pb-4">
+                                    <h3 className="text-xl font-bold flex items-center gap-2">
+                                        <Baby className="w-5 h-5 text-pink-500" />
+                                        Junior Church (Children)
+                                    </h3>
+                                </div>
+
+                                <div className="grid md:grid-cols-3 gap-3">
+                                    <Input placeholder="Child's name..." value={newChildName} onChange={e => setNewChildName(e.target.value)} className="glass border-foreground/10 rounded-2xl h-12" />
+                                    <Input type="date" placeholder="Birthdate" value={newChildBirthdate} onChange={e => setNewChildBirthdate(e.target.value)} className="glass border-foreground/10 rounded-2xl h-12 text-foreground/60" />
+                                    <Input placeholder="Medical / allergy notes" value={newChildMedical} onChange={e => setNewChildMedical(e.target.value)} className="glass border-foreground/10 rounded-2xl h-12" />
+                                </div>
+                                <Button onClick={handleAddChild} className="rounded-2xl bg-pink-600 hover:bg-pink-500 h-12 px-6 font-bold gap-2 shadow-lg shadow-pink-500/20 text-white">
+                                    <Plus className="w-4 h-4" /> REGISTER CHILD
+                                </Button>
+
+                                {children.length === 0 ? (
+                                    <div className="py-12 border-2 border-dashed border-foreground/10 rounded-3xl flex flex-col items-center justify-center opacity-40 text-center">
+                                        <Baby className="w-12 h-12 mb-3" />
+                                        <p className="max-w-[200px] text-xs font-bold">No children registered. Add your children for Junior Church check-in.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {children.map((c: any) => (
+                                            <div key={c.id} className="glass border-foreground/10 rounded-2xl p-4 flex items-center justify-between">
+                                                <div>
+                                                    <p className="font-bold">{c.child_name}</p>
+                                                    <div className="flex gap-3 mt-1">
+                                                        {c.child_birthdate && <p className="text-[10px] opacity-40 uppercase tracking-widest">Born: {c.child_birthdate}</p>}
+                                                        {c.medical_notes && <Badge variant="outline" className="text-[8px] h-4 border-red-500/30 text-red-400">{c.medical_notes}</Badge>}
+                                                    </div>
+                                                </div>
+                                                <Button onClick={() => handleRemoveChild(c.id)} variant="ghost" size="sm" className="text-red-400 hover:text-red-300">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* SKILLS & TALENTS SECTION */}
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between border-b border-foreground/10 pb-4">
+                                    <h3 className="text-xl font-bold flex items-center gap-2">
+                                        <Sparkles className="w-5 h-5 text-teal-500" />
+                                        Skills & Talents
+                                    </h3>
+                                </div>
+
+                                <div className="grid md:grid-cols-3 gap-3">
+                                    <Input placeholder="Skill (e.g. Video Editing)" value={newSkillName} onChange={e => setNewSkillName(e.target.value)} className="glass border-foreground/10 rounded-2xl h-12" />
+                                    <select value={newSkillCategory} onChange={e => setNewSkillCategory(e.target.value)} className="w-full h-12 rounded-2xl bg-foreground/5 border border-foreground/10 px-4 focus:ring-2 ring-teal-500/20 outline-none">
+                                        <option value="Technical">Technical</option>
+                                        <option value="Creative">Creative</option>
+                                        <option value="Teaching">Teaching</option>
+                                        <option value="Music">Music</option>
+                                        <option value="Service">Service</option>
+                                        <option value="Leadership">Leadership</option>
+                                        <option value="Administration">Administration</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                    <select value={newSkillLevel} onChange={e => setNewSkillLevel(e.target.value)} className="w-full h-12 rounded-2xl bg-foreground/5 border border-foreground/10 px-4 focus:ring-2 ring-teal-500/20 outline-none">
+                                        <option value="Beginner">Beginner</option>
+                                        <option value="Intermediate">Intermediate</option>
+                                        <option value="Advanced">Advanced</option>
+                                        <option value="Expert">Expert</option>
+                                    </select>
+                                </div>
+                                <Button onClick={handleAddSkill} className="rounded-2xl bg-teal-600 hover:bg-teal-500 h-12 px-6 font-bold gap-2 shadow-lg shadow-teal-500/20 text-white">
+                                    <Plus className="w-4 h-4" /> ADD SKILL
+                                </Button>
+
+                                {skills.length === 0 ? (
+                                    <div className="py-12 border-2 border-dashed border-foreground/10 rounded-3xl flex flex-col items-center justify-center opacity-40 text-center">
+                                        <Sparkles className="w-12 h-12 mb-3" />
+                                        <p className="max-w-[200px] text-xs font-bold">No skills added yet. Your talents help us match you to the right ministry.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {skills.map((s: any) => (
+                                            <div key={s.id} className="glass border-foreground/10 rounded-2xl p-4 flex items-center justify-between">
+                                                <div>
+                                                    <p className="font-bold text-teal-400">{s.skill_name}</p>
+                                                    <div className="flex gap-3 mt-1">
+                                                        <Badge variant="outline" className="text-[8px] h-4 border-teal-500/30 text-teal-400">{s.skill_category}</Badge>
+                                                        <Badge variant="outline" className="text-[8px] h-4 border-foreground/20">{s.skill_level}</Badge>
+                                                    </div>
+                                                </div>
+                                                <Button onClick={() => handleRemoveSkill(s.id)} variant="ghost" size="sm" className="text-red-400 hover:text-red-300">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             {/* CHURCH SECTION */}
