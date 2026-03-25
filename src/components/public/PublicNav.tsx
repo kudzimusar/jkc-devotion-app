@@ -147,13 +147,16 @@ export default function PublicNav() {
   const LIVE_URL = 'https://www.youtube.com/@JapanKingdomChurch/streams';
 
   const mobileNavLinks = [
-    ...navLinks.filter(l => l.label !== 'ABOUT'),
+    { label: 'WATCH', href: '/welcome/watch' },
+    { label: 'VISIT', href: '/welcome/visit' },
+    { label: 'GIVE', href: '/welcome/give' },
+    { label: 'SHOP', href: '/merchandise' },
+    { label: 'ACADEMY', href: '/welcome/ministries/language-school' },
+    { label: 'DEVOTION', href: '/welcome/devotion' },
     { label: 'ABOUT', href: '/welcome/about' },
     { label: 'OUR PASTOR', href: '/welcome/our-pastor' },
     { label: 'STAFF', href: '/welcome/staff' },
-    { label: 'ACADEMY', href: '/welcome/ministries/language-school' },
     { label: 'MINISTRIES', href: '/welcome/ministries' },
-    { label: 'GIVE', href: '/welcome/give' },
   ];
 
   return (
@@ -376,7 +379,7 @@ export default function PublicNav() {
 
       {/* Mobile Drawer */}
       {isMenuOpen && (
-        <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center space-y-6 animate-in fade-in zoom-in duration-300"
+        <div className="fixed inset-0 z-[60] flex flex-col items-center justify-start overflow-y-auto py-12 px-6 space-y-4 animate-in fade-in zoom-in duration-300 hide-scrollbar"
              style={{ background: 'var(--footer-bg)' }}>
           <button className="absolute top-6 right-6"
             style={{ color: 'var(--footer-muted)' }}
@@ -387,13 +390,13 @@ export default function PublicNav() {
           <img
             src="/jkc-devotion-app/images/logo-horizontal.png"
             alt="Japan Kingdom Church"
-            className="h-10 w-auto mb-12"
+            className="h-10 w-auto mb-6 shrink-0"
             style={{ filter: 'brightness(10)' }}
           />
 
           {mobileNavLinks.map(link => (
             <Link key={link.label} href={link.href}
-              className="text-2xl font-black tracking-[0.2em] transition-colors uppercase"
+              className="text-base sm:text-lg font-black tracking-[0.2em] transition-colors uppercase shrink-0"
               style={{ color: link.label === 'DEVOTION' ? 'var(--jkc-gold)' : 'var(--footer-fg)' }}
               onClick={() => setIsMenuOpen(false)}>
               {link.label}
