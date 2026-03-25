@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { supabaseAdmin as supabase } from "./supabase-admin";
 
 /**
  * PIL (Prophetic Intelligence Layer) Engine
@@ -12,8 +12,6 @@ export const PILEngine = {
     runIntelligenceSweep: async (orgId: string) => {
         console.log("🌌 PIL Engine: Starting Intelligence Sweep...");
 
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error("Unauthorized: Identity required for intelligence sweep.");
 
         const results = {
             disengagement: 0,
@@ -112,7 +110,7 @@ export const PILEngine = {
 
             const memberDataSummary = `Total Members: ${memberSummary?.length || 0} | Avg Discipleship: ${avgDiscipleship}/100`;
 
-            const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+            const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
             if (!GEMINI_API_KEY) {
                 console.warn("⚠️ No GEMINI_API_KEY — skipping AI sweep");
                 return results;
@@ -131,7 +129,7 @@ ${talentContext}
 
 Output JSON: { "insights": [{ "subject": "e.g., Media Ministry", "summary": "Short title", "detail": "Description", "recommended_action": "Action to take", "insight_type": "opportunity", "urgency": "this_week" }] }`;
 
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -149,15 +147,20 @@ Output JSON: { "insights": [{ "subject": "e.g., Media Ministry", "summary": "Sho
                         const parsed = JSON.parse(cleaned);
                         
                         for (const insight of parsed.insights) {
-                            const { error: insertErr } = await supabase.from('ai_ministry_insights').insert({
+                            const { error: insertErr } = await supabase.from('prophetic_insights').insert({
                                 org_id: orgId,
-                                insight_type: insight.insight_type || 'growth',
-                                subject: insight.subject || 'Church Wide',
-                                summary: insight.summary || 'General Insight',
-                                detail: insight.detail || '',
+                                category: insight.insight_type || 'growth',
+                                insight_title: `${insight.subject}: ${insight.summary}`,
+                                insight_description: insight.detail || '',
                                 recommended_action: insight.recommended_action || '',
-                                urgency: insight.urgency || 'this_week',
-                                is_approved: false
+                                risk_level: insight.urgency === 'this_week' || insight.urgency === 'immediate' ? 'critical' : 'medium',
+                                is_acknowledged: false,
+                                metadata: { 
+                                    is_ai_generated: true, 
+                                    subject: insight.subject, 
+                                    summary: insight.summary,
+                                    urgency: insight.urgency
+                                }
                             });
                             if (insertErr) {
                                 console.error("❌ PI Engine: Insert failure on insight:", insertErr);

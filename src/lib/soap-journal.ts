@@ -87,6 +87,7 @@ export const SoapJournal = {
         const stats = await this.getStats();
         await supabase.from('member_stats').upsert({
             user_id: userId,
+            org_id: 'fa547adf-f820-412f-9458-d6bade11517d',
             current_streak: stats.streak,
             total_completed: stats.completed,
             last_devotion_date: stats.lastCompletedJST,

@@ -13,14 +13,26 @@ export async function POST(req: Request) {
         // For now, we'll allow it but in production this should be protected by a CRON_SECRET
 
         console.log('🔍 Starting Intelligence Engine Execution...');
+        const body = await req.json().catch(() => ({}));
+        const orgId = body.org_id || 'fa547adf-f820-412f-9458-d6bade11517d';
+        const eventId = crypto.randomUUID();
+
+        // Log initiation of the sweep
+        await supabaseAdmin.from('system_activity_logs').insert({
+            id: eventId,
+            org_id: orgId,
+            action: 'INTELLIGENCE_SWEEP',
+            details: 'Started Intelligence Engine Sweep',
+            metadata: { status: 'started', timestamp: new Date().toISOString() }
+        });
 
         // 1. Fetch Core Data
         const [statsRes, prayersRes, attendanceRes, profilesRes, rolesRes] = await Promise.all([
-            supabaseAdmin.from('member_stats').select('user_id, last_devotion_date, current_streak'),
-            supabaseAdmin.from('prayer_requests').select('user_id, urgency, status').eq('status', 'active'),
-            supabaseAdmin.from('attendance_records').select('id, event_date').gt('event_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]),
-            supabaseAdmin.from('profiles').select('id'),
-            supabaseAdmin.from('ministry_members').select('id').eq('is_active', true)
+            supabaseAdmin.from('member_stats').select('user_id, last_devotion_date, current_streak').eq('org_id', orgId),
+            supabaseAdmin.from('prayer_requests').select('user_id, urgency, status').eq('status', 'active').eq('org_id', orgId),
+            supabaseAdmin.from('attendance_records').select('id, event_date').gt('event_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]).eq('org_id', orgId),
+            supabaseAdmin.from('profiles').select('id').eq('org_id', orgId),
+            supabaseAdmin.from('ministry_members').select('id').eq('is_active', true).eq('org_id', orgId)
         ]);
 
         const stats = statsRes.data || [];
@@ -41,6 +53,7 @@ export async function POST(req: Request) {
 
                 if (diffDays > 7) {
                     alerts.push({
+                        org_id: orgId,
                         member_id: s.user_id,
                         alert_type: 'Inactivity',
                         severity: diffDays > 14 ? 'critical' : 'medium'
@@ -52,6 +65,7 @@ export async function POST(req: Request) {
             const userPrayers = prayers.filter(p => p.user_id === s.user_id && p.urgency === 'crisis');
             if (userPrayers.length >= 1) {
                 alerts.push({
+                    org_id: orgId,
                     member_id: s.user_id,
                     alert_type: 'Crisis Detection',
                     severity: 'critical'
@@ -60,7 +74,7 @@ export async function POST(req: Request) {
         }
 
         if (alerts.length > 0) {
-            await supabaseAdmin.from('member_alerts').upsert(alerts, { onConflict: 'member_id, alert_type' });
+            await supabaseAdmin.from('member_alerts').upsert(alerts, { onConflict: 'org_id,member_id,alert_type' });
         }
 
         // --- ENGINE 2: CHURCH HEALTH SCORING ---
@@ -75,7 +89,9 @@ export async function POST(req: Request) {
             (serviceIndex * 0.3)
         );
 
+        // 4. Save to dashboard history table
         await supabaseAdmin.from('church_health_metrics').insert([{
+            org_id: orgId,
             score: totalScore,
             attendance_index: attendanceIndex,
             engagement_index: engagementIndex,
@@ -86,10 +102,28 @@ export async function POST(req: Request) {
 
         // 3. Run PIL Engine Sweep (Predictive Models)
         const { PILEngine } = await import('@/lib/pil-engine');
-        const sweepResults = await PILEngine.runIntelligenceSweep('jkc-main');
+        // 5. Trigger PIL specific rule generators
+        const sweepResults = await PILEngine.runIntelligenceSweep(orgId);
+
+        // Map successful run summary
+        const summary = {
+            processed_members: stats.length,
+            alerts_generated: alerts.length,
+            new_health_score: totalScore,
+            pil_status: 'Completed'
+        };
+
+        // Complete the audit log
+        await supabaseAdmin.from('system_activity_logs').insert({
+            id: crypto.randomUUID(),
+            org_id: orgId,
+            action: 'INTELLIGENCE_SWEEP',
+            details: 'Completed Intelligence Engine Sweep',
+            metadata: { status: 'completed', timestamp: new Date().toISOString(), ...summary }
+        });
 
         return NextResponse.json({
-            success: true,
+            status: "success",
             execution_time: new Date().toISOString(),
             processed_members: stats.length,
             alerts_generated: alerts.length,

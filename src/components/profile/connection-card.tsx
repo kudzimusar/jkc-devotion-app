@@ -143,10 +143,8 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
             });
 
             if (isAdmin && targetId) {
-                const { data: notesData } = await supabase.from('pastoral_notes').select('note').eq('member_user_id', targetId).maybeSingle();
-                if (notesData) {
-                    setPastoralNotes(notesData.note || '');
-                }
+                // To prevent 400 errors from strict RLS on client fetches, this query is currently disabled.
+                // Replace with a Server Action proxy.
             }
 
         } catch (err) {

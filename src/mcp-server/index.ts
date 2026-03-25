@@ -37,7 +37,8 @@ async function validateApiKey(apiKey: string): Promise<boolean> {
         .from("api_keys")
         .select("id, is_active")
         .eq("key_hash", keyHash)
-        .single();
+        .eq("org_id", "fa547adf-f820-412f-9458-d6bade11517d")
+        .maybeSingle();
 
     if (error || !data) return false;
     return data.is_active;
@@ -86,6 +87,7 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
         .from("devotions")
         .select("title, scripture, declaration, theme, week_theme")
         .eq("date", today)
+        .eq("org_id", "fa547adf-f820-412f-9458-d6bade11517d")
         .single();
 
     if (error || !data) {
@@ -152,6 +154,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         let dbQuery = supabase
             .from("devotions")
             .select("date, title, theme, scripture, declaration")
+            .eq("org_id", "fa547adf-f820-412f-9458-d6bade11517d")
             .or(`title.ilike.%${query}%,scripture.ilike.%${query}%,declaration.ilike.%${query}%,theme.ilike.%${query}%`)
             .limit(5);
 
@@ -195,6 +198,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const { data, error } = await supabase
             .from("devotions")
             .select("title, theme, week_theme")
+            .eq("org_id", "fa547adf-f820-412f-9458-d6bade11517d")
             .eq("week", week_number);
 
         if (error || !data || data.length === 0) {

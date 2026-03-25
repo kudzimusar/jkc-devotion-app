@@ -55,23 +55,20 @@ export default function AICommandCenterPage() {
             .select('*')
             .eq('org_id', orgId)
             .order('generated_at', { ascending: false });
-        setInsights(data || []);
+        
+        const all = data || [];
+        setInsights(all.filter(i => !i.metadata?.is_ai_generated));
+        setAiInsights(all.filter(i => i.metadata?.is_ai_generated && !i.is_acknowledged));
+
         setLoading(false);
+        setAiLoading(false);
     };
 
     const loadAiInsights = async () => {
-        if (!orgId) return;
-        setAiLoading(true);
-        const { data } = await supabase
-            .from('ai_ministry_insights')
-            .select('*')
-            .eq('org_id', orgId)
-            .eq('is_approved', false)
-            .order('created_at', { ascending: false })
-            .limit(50);
-        setAiInsights(data || []);
-        setAiLoading(false);
+        // Now unified into loadInsights
     };
+
+
 
     const runSweep = async () => {
         if (!orgId) return;
@@ -103,14 +100,12 @@ export default function AICommandCenterPage() {
         setProcessing(insight.id);
         const { data: { user } } = await supabase.auth.getUser();
 
-        // 1. Approve in ai_ministry_insights
+        // 1. Approve in prophetic_insights
         await supabase
-            .from('ai_ministry_insights')
+            .from('prophetic_insights')
             .update({
-                is_approved: true,
-                approved_by: user?.id || null,
-                approved_at: new Date().toISOString(),
-                visible_to_ministry_leaders: true,
+                is_acknowledged: true,
+                metadata: { ...insight.metadata, approved_by: user?.id, is_approved: true }
             })
             .eq('id', insight.id);
 
@@ -129,7 +124,7 @@ export default function AICommandCenterPage() {
                 title: ministry
                     ? `You've been recommended for ${ministry.name}`
                     : 'You have a ministry opportunity',
-                body: insight.detail || insight.summary,
+                body: insight.insight_description || insight.insight_title,
                 cta_text: 'View Ministry',
                 cta_url: ministry ? `/ministry-dashboard/${ministry.slug}/` : '/ministry-dashboard/',
                 is_visible: true,
@@ -147,13 +142,10 @@ export default function AICommandCenterPage() {
         const { data: { user } } = await supabase.auth.getUser();
 
         await supabase
-            .from('ai_ministry_insights')
+            .from('prophetic_insights')
             .update({
-                is_approved: true,
-                approved_by: user?.id || null,
-                approved_at: new Date().toISOString(),
-                visible_to_members: false,
-                visible_to_ministry_leaders: false,
+                is_acknowledged: true,
+                metadata: { ...insight.metadata, dismissed_by: user?.id, is_approved: false }
             })
             .eq('id', insight.id);
 
@@ -185,7 +177,7 @@ export default function AICommandCenterPage() {
 
     const unacknowledged = insights.filter(i => !i.is_acknowledged);
     const acknowledged = insights.filter(i => i.is_acknowledged);
-    const pendingAi = aiInsights.filter(i => !i.is_approved);
+    const pendingAi = aiInsights.filter(i => !i.is_acknowledged);
 
     return (
         <div className="p-6 xl:p-8 space-y-8">
@@ -231,9 +223,13 @@ export default function AICommandCenterPage() {
                 ) : (
                     <div className="space-y-3">
                         {pendingAi.map(insight => {
-                            const cfg = INSIGHT_TYPE_CONFIG[insight.insight_type] || INSIGHT_TYPE_CONFIG.correlation;
+                            const typeMeta = insight.category || 'correlation';
+                            const cfg = INSIGHT_TYPE_CONFIG[typeMeta] || INSIGHT_TYPE_CONFIG.correlation;
                             const Icon = cfg.icon;
-                            const urgencyCfg = URGENCY_CONFIG[insight.urgency] || URGENCY_CONFIG.monitor;
+                            
+                            const urgencyMeta = insight.metadata?.urgency || 'monitor';
+                            const urgencyCfg = URGENCY_CONFIG[urgencyMeta] || URGENCY_CONFIG.monitor;
+                            
                             const isOpen = expanded === insight.id;
                             const isProcessing = processing === insight.id;
 
@@ -245,10 +241,10 @@ export default function AICommandCenterPage() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap">
-                                                <p className="text-xs font-bold text-foreground">{insight.summary}</p>
-                                                <span className={`text-[8px] font-black px-2 py-0.5 rounded-full border ${urgencyCfg} uppercase tracking-widest`}>{insight.urgency?.replace('_', ' ')}</span>
+                                                <p className="text-xs font-bold text-foreground">{insight.metadata?.summary || insight.insight_title}</p>
+                                                <span className={`text-[8px] font-black px-2 py-0.5 rounded-full border ${urgencyCfg} uppercase tracking-widest`}>{urgencyMeta?.replace('_', ' ')}</span>
                                             </div>
-                                            <p className="text-[9px] text-muted-foreground mt-0.5 capitalize">{cfg.label} · {insight.subject} · {new Date(insight.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                                            <p className="text-[9px] text-muted-foreground mt-0.5 capitalize">{cfg.label} · {insight.metadata?.subject || 'Church Wide'} · {new Date(insight.generated_at || insight.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
                                         </div>
                                         <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground/30 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                                     </button>
@@ -256,8 +252,8 @@ export default function AICommandCenterPage() {
                                         {isOpen && (
                                             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
                                                 className="px-4 pb-4 space-y-3">
-                                                {insight.detail && (
-                                                    <p className="text-xs text-muted-foreground leading-relaxed">{insight.detail}</p>
+                                                {insight.insight_description && (
+                                                    <p className="text-xs text-muted-foreground leading-relaxed">{insight.insight_description}</p>
                                                 )}
                                                 {insight.recommended_action && (
                                                     <div className={`p-3 ${cfg.bg} rounded-xl border ${cfg.border}`}>
