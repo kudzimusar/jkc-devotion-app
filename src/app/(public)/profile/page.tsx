@@ -5,7 +5,7 @@ import { supabase, ExtendedProfileService, AnalyticsService } from "@/lib/supaba
 import { SoapJournal } from "@/lib/soap-journal";
 import {
     User as UserIcon, Users, Heart, Trophy, Shield,
-    MessageCircle, AlertCircle, Plus, Save, Clock,
+    MessageCircle, AlertCircle, Plus, Save, Clock, BookOpen,
     Camera, MapPin, Globe, Milestone, Copy, LayoutDashboard, Settings, CheckCircle2, LogOut,
     Briefcase, Music, Calendar, CalendarCheck, Coins, Activity, ChevronRight, Sparkles, XCircle,
     TrendingUp, Newspaper, ArrowUpRight, Landmark, Smartphone, ShoppingBag, Package, Loader2
