@@ -34,189 +34,127 @@
   --color-chart-5: var(--chart-5);
 }
 
-/* 
-  shadcn component compatibility for Tailwind v4 
-  These are used in shadcn components but not standard in v4
-*/
 @layer base {
   :root {
-    /* ─── JKC Brand Tokens ─────────────────────────────────────── */
-    --jkc-navy:  #1b3a6b;
-    --jkc-gold:  #f5a623;
-    --jkc-navy-dark: #122a52;   /* deeper navy for hovers */
-    --jkc-gold-light: #f7b84b;  /* lighter gold for hover states */
-
-    /* ─── Light Theme (True Light Refinement) ───────────────────── */
-    /* Page Background (off-white) → Card (pure white) → Nested (#f3f4f6) */
-    --background:      #f9fafb;   /* Gray-50 — clean base */
-    --foreground:      #111827;   /* Gray-900 — high contrast */
-    --section-alt:     #f4f7fa;   /* Subtle blue-tinted gray */
+    --background:      #f9fafb;
+    --foreground:      #111827;
+    --section-alt:     #f4f7fa;
     --section-deep:    #eff3f7;
-
     --card:            #ffffff;
     --card-foreground: #111827;
     --popover:         #ffffff;
     --popover-foreground: #111827;
-
     --primary:           #1b3a6b;
-    --primary-rgb:       27, 58, 107;
     --primary-foreground: #ffffff;
     --secondary:          #f5a623;
     --secondary-foreground: #1b3a6b;
-
     --muted:            #f1f5f9;
-    --muted-foreground: #64748b;   /* Slate-500 — clear but secondary */
-
+    --muted-foreground: #64748b;
     --accent:           #f5a623;
     --accent-foreground: #1b3a6b;
-
     --destructive:           #ef4444;
     --destructive-foreground: #ffffff;
-
-    --border: #e5e7eb;   /* Gray-200 — visible edges */
+    --border: #e5e7eb;
     --input:  #ffffff;
     --ring:   #1b3a6b;
-
     --radius: 0.75rem;
 
-    /* ─── Shadow System ─────────────────────────────────────────── */
-    /* Cards need shadow to lift off the page in light mode          */
-    /* ─── Shadow System (Surface Elevation) ─────────────────────── */
-    --shadow-subtle: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-
-    /* ─── Footer / Dark Island (always dark) ───────────────────── */
-    --footer-bg:    #0f172a;
-    --footer-fg:    #ffffff;
-    --footer-muted: #94a3b8;
-
-    /* ─── Navigation ────────────────────────────────────────────── */
-    --nav-bg:     rgba(255, 255, 255, 0.97);
-    --nav-border: #e2e8f0;
-    --nav-link:   #334155;
-    --nav-link-active: #1b3a6b;
-    --nav-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
-
-    /* ─── Week Devotion Themes ──────────────────────────────────── */
-    --week-1-primary: oklch(0.75 0.15 170);
-    --week-1-accent:  oklch(0.95 0.05 170);
-    --week-2-primary: oklch(0.75 0.2  60);
-    --week-2-accent:  oklch(0.95 0.05 60);
-    --week-3-primary: oklch(0.4  0.1  190);
-    --week-3-accent:  oklch(0.2  0.05 190);
-    --week-4-primary: oklch(0.6  0.2  280);
-    --week-4-accent:  oklch(0.9  0.05 280);
-    --week-5-primary: oklch(0.4  0.2  25);
-    --week-5-accent:  oklch(0.2  0.1  25);
+    --jkc-navy:  #1b3a6b;
+    --jkc-gold:  #f5a623;
   }
 
-  /* ─── Dark Theme (Legacy) ─────────────────────────────────────── */
   .dark {
-    --background:   #080c14;   /* Deep Legacy Blue-Black */
+    --background:   #080c14;
     --foreground:   #ffffff;
     --section-alt:  #0d1421;
     --section-deep: #0a1120;
-
     --card:            #0d1421;
     --card-foreground: #ffffff;
-    --popover:            #080c14;
-    --popover-foreground: #ffffff;
-
     --primary:           #f5a623;
-    --primary-rgb:       245, 166, 35;
     --primary-foreground: #080c14;
     --secondary:           #1b3a6b;
     --secondary-foreground: #ffffff;
-
     --muted:            #1a2333;
     --muted-foreground: #94a3b8;
-
     --accent:           #f5a623;
     --accent-foreground: #080c14;
-
     --border: #1e293b;
     --input:  #1e293b;
     --ring:   #f5a623;
-
-    --card-shadow: 0 2px 8px 0 rgb(0 0 0 / 0.5), 0 0 0 1px rgb(255 255 255 / 0.04);
-
-    /* Footer */
-    --footer-bg:    #020617;
-    --footer-fg:    #ffffff;
-    --footer-muted: #64748b;
-
-    /* Nav */
-    --nav-bg:     rgba(2, 6, 23, 0.97);
-    --nav-border: #1e293b;
-    --nav-link:   #94a3b8;
-    --nav-link-active: #ffffff;
-    --nav-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
   }
 
-  *,
-  ::before,
-  ::after {
-    border-color: var(--border);
-  }
-
-  html,
-  body {
-    @apply bg-background text-foreground transition-colors duration-500 min-h-screen;
+  html, body {
+    background-color: var(--background);
+    color: var(--foreground);
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 500ms;
+    min-height: 100vh;
     scrollbar-gutter: stable;
   }
-
-  /* Smooth focus rings */
-  :focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
-  }
 }
 
-/* ─── Week Theme Classes ──────────────────────────────────────── */
-.theme-week-1 { --primary: var(--week-1-primary); --accent: var(--week-1-accent); }
-.theme-week-2 { --primary: var(--week-2-primary); --accent: var(--week-2-accent); }
-.theme-week-3 { --primary: var(--week-3-primary); --accent: var(--week-1-accent); }
-.theme-week-4 { --primary: var(--week-4-primary); --accent: var(--week-4-accent); }
-.theme-week-5 { --primary: var(--week-5-primary); --accent: var(--week-5-accent); }
+/* ─── Premium onboarding design system ───────────────────────── */
+.onboarding-theme {
+  --font-headline: var(--font-manrope);
+  --font-body: var(--font-inter);
+  --font-label: var(--font-inter);
 
-/* ─── Glassmorphism utility ───────────────────────────────────── */
+  --color-onboarding-primary: #72eff5;
+  --color-onboarding-primary-dim: #63e1e7;
+  --color-onboarding-primary-fixed: #72eff5;
+  --color-onboarding-primary-fixed-dim: #63e1e7;
+  --color-onboarding-secondary: #ffd709;
+  --color-onboarding-secondary-dim: #efc900;
+  --color-onboarding-tertiary: #c37fff;
+  --color-onboarding-tertiary-dim: #c37fff;
+  --color-onboarding-surface: #0c0e12;
+  --color-onboarding-surface-variant: #23262c;
+  --color-onboarding-surface-container: #171a1f;
+  --color-onboarding-surface-container-highest: #23262c;
+  --color-onboarding-on-surface: #f6f6fc;
+  --color-onboarding-on-surface-variant: #aaabb0;
+}
+
+.onboarding-theme .glass-card {
+  background: rgba(23, 26, 31, 0.6);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.onboarding-theme .ambient-aura {
+  box-shadow: 0 0 60px -10px rgba(114, 239, 245, 0.1);
+}
+
+.onboarding-theme .ghost-border {
+  border: 1px solid rgba(70, 72, 77, 0.2);
+}
+
+.onboarding-theme .ghost-border:focus-within {
+  border-color: rgba(114, 239, 245, 0.6);
+  box-shadow: 0 0 4px rgba(114, 239, 245, 0.3);
+}
+
+.onboarding-theme h1, .onboarding-theme h2, .onboarding-theme h3 {
+  font-family: var(--font-headline);
+}
+
+.onboarding-theme p, .onboarding-theme label, .onboarding-theme select, .onboarding-theme input, .onboarding-theme button {
+  font-family: var(--font-body);
+}
+
+/* ─── Shared Utilities ────────────────────────────────────────── */
 .glass {
-  @apply bg-white/10 dark:bg-black/20 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-lg;
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
-/* ─── Premium card surface ────────────────────────────────────── */
-/* Apply to any white card that needs to be visible in light mode  */
-.card-surface {
-  background:    var(--card);
-  border:        1px solid var(--border);
-  box-shadow:    var(--card-shadow);
-  border-radius: 1.5rem;
+.dark .glass {
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* ─── Section alternation helpers ────────────────────────────── */
-.section-primary   { background: var(--background); }
-.section-secondary { background: var(--section-alt); }
-.section-dark      { background: var(--footer-bg); }
-
-/* ─── Scrollbar hide utility ─────────────────────────────────── */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-/* ─── Premium button base ────────────────────────────────────── */
-.btn-navy {
-  background: var(--jkc-navy);
-  color: #ffffff;
-  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
-}
-.btn-navy:hover  { background: var(--jkc-navy-dark); box-shadow: var(--shadow-md); transform: translateY(-1px); }
-.btn-navy:active { transform: scale(0.97); }
-
-.btn-gold {
-  background: var(--jkc-gold);
-  color: var(--jkc-navy);
-  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
-}
-.btn-gold:hover  { background: var(--jkc-gold-light); box-shadow: var(--shadow-md); transform: translateY(-1px); }
-.btn-gold:active { transform: scale(0.97); }

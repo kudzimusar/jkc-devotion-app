@@ -36,6 +36,7 @@ export const MinistryAuth = {
                 .select(`
                     ministry_role,
                     ministry_id,
+                    org_id,
                     ministries!inner(name, slug, color, icon, description, is_active, org_id)
                 `)
                 .eq('user_id', session.user.id)

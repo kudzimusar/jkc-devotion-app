@@ -10,7 +10,19 @@ export async function POST(request: Request) {
     }
     const userId = session.user.id;
 
-    const { churchName, contactEmail, domain, tier } = await request.json();
+    const { 
+        churchName, 
+        contactEmail, 
+        domain, 
+        logoUrl,
+        theologicalTradition,
+        ministryEmphasis,
+        worshipStyle,
+        congregationSize,
+        primaryLanguage,
+        tier 
+    } = await request.json();
+
     if (!churchName || !contactEmail || !domain || !tier) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
@@ -18,12 +30,36 @@ export async function POST(request: Request) {
     // Create organization
     const { data: org, error: orgErr } = await supabase
         .from('organizations')
-        .insert({ name: churchName, domain, subscription_status: tier })
+        .insert({ 
+            name: churchName, 
+            domain, 
+            subscription_status: tier,
+            logo_url: logoUrl
+        })
         .select('*')
         .single();
 
     if (orgErr || !org) {
         return NextResponse.json({ error: orgErr?.message || 'Failed to create organization' }, { status: 500 });
+    }
+
+    // Provision Intelligence DNA
+    const { error: intelErr } = await supabase
+        .from('organization_intelligence')
+        .insert({
+            org_id: org.id,
+            theological_tradition: theologicalTradition || 'Non-Denominational',
+            ministry_emphasis: ministryEmphasis || 'Discipleship-focused',
+            worship_style: worshipStyle || 'Blended',
+            congregation_size: congregationSize || '100-500',
+            primary_language: primaryLanguage || 'Bilingual',
+            ai_provisioning_status: 'pending'
+        });
+
+    if (intelErr) {
+        console.error('Failed to provision intelligence DNA:', intelErr);
+        // Note: We continue even if this fails to avoid blocking the main registration, 
+        // but it will need to be fixed in the database manually if it occurs.
     }
 
     // Link user as owner in org_members
@@ -47,6 +83,31 @@ export async function POST(request: Request) {
 
     if (keyErr) {
         return NextResponse.json({ error: keyErr.message }, { status: 500 });
+    }
+
+    // Trigger AI Provisioning asynchronously
+    try {
+        const intelligenceData = {
+            org_id: org.id,
+            theological_tradition: theologicalTradition,
+            ministry_emphasis: ministryEmphasis,
+            worship_style: worshipStyle,
+            congregation_size: congregationSize,
+            primary_language: primaryLanguage
+        };
+
+        // Note: Using dynamic fetch to trigger the Edge Function
+        fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/provision-church-intelligence`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+            },
+            body: JSON.stringify({ record: intelligenceData })
+        }).catch(err => console.error('Background AI Provisioning Trigger Failed:', err));
+
+    } catch (triggerErr) {
+        console.error('AI Provisioning trigger error:', triggerErr);
     }
 
     // Return plain key for one-time display

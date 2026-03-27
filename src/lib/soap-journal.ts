@@ -15,14 +15,16 @@ export interface SoapEntry {
 }
 
 export const SoapJournal = {
-    // Get all SOAP entries for current user
-    async getAllEntries(): Promise<SoapEntry[]> {
+    // Get all SOAP entries for current user and org
+    async getAllEntries(orgId: string): Promise<SoapEntry[]> {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return [];
 
         const { data, error } = await supabase
             .from('soap_entries')
             .select('*')
+            .eq('user_id', user.id)
+            .eq('org_id', orgId)
             .order('day_number', { ascending: true });
 
         if (error) {
@@ -33,14 +35,16 @@ export const SoapJournal = {
         return data || [];
     },
 
-    // Get SOAP entry for a specific day
-    async getEntry(dayNumber: number): Promise<SoapEntry> {
+    // Get SOAP entry for a specific day and org
+    async getEntry(dayNumber: number, orgId: string): Promise<SoapEntry> {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return this.getDefaultEntry(dayNumber);
 
         const { data, error } = await supabase
             .from('soap_entries')
             .select('*')
+            .eq('user_id', user.id)
+            .eq('org_id', orgId)
             .eq('day_number', dayNumber)
             .single();
 
@@ -51,13 +55,14 @@ export const SoapJournal = {
         return data || this.getDefaultEntry(dayNumber);
     },
 
-    // Save SOAP entry for a specific day
-    async saveEntry(dayNumber: number, entry: Partial<SoapEntry>) {
+    // Save SOAP entry for a specific day and org
+    async saveEntry(dayNumber: number, entry: Partial<SoapEntry>, orgId: string) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Authentication required');
 
         const entryToSave = {
             user_id: user.id,
+            org_id: orgId,
             day_number: dayNumber,
             ...entry,
             updated_at: new Date().toISOString()
@@ -75,7 +80,7 @@ export const SoapJournal = {
 
         // Update aggregate stats for the admin pipeline
         try {
-            await this.updateMemberStats(user.id);
+            await this.updateMemberStats(user.id, orgId);
         } catch (e) {
             console.warn("Failed to update aggregate stats", e);
         }
@@ -83,11 +88,11 @@ export const SoapJournal = {
         return data;
     },
 
-    async updateMemberStats(userId: string) {
-        const stats = await this.getStats();
+    async updateMemberStats(userId: string, orgId: string) {
+        const stats = await this.getStats(orgId);
         await supabase.from('member_stats').upsert({
             user_id: userId,
-            org_id: 'fa547adf-f820-412f-9458-d6bade11517d',
+            org_id: orgId,
             current_streak: stats.streak,
             total_completed: stats.completed,
             last_devotion_date: stats.lastCompletedJST,
@@ -96,26 +101,30 @@ export const SoapJournal = {
     },
 
     // Delete SOAP entry
-    async deleteEntry(dayNumber: number) {
+    async deleteEntry(dayNumber: number, orgId: string) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
         const { error } = await supabase
             .from('soap_entries')
             .delete()
+            .eq('user_id', user.id)
+            .eq('org_id', orgId)
             .eq('day_number', dayNumber);
 
         if (error) throw error;
     },
 
     // Calculate stats: completion total and current streak
-    async getStats(): Promise<{ completed: number; total: number; streak: number; lastCompletedJST: string | null; completedDays: number[] }> {
+    async getStats(orgId: string): Promise<{ completed: number; total: number; streak: number; lastCompletedJST: string | null; completedDays: number[] }> {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { completed: 0, total: 90, streak: 0, lastCompletedJST: null, completedDays: [] };
 
         const { data, error } = await supabase
             .from('soap_entries')
             .select('day_number, updated_at')
+            .eq('user_id', user.id)
+            .eq('org_id', orgId)
             .order('day_number', { ascending: false });
 
         if (error || !data) return { completed: 0, total: 90, streak: 0, lastCompletedJST: null, completedDays: [] };
