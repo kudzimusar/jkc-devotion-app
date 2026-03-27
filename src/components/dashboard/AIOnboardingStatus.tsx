@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
     Binary, CheckCircle2, Loader2, Sparkles, 
-    ArrowRight, Info, Mail, Zap 
+    ArrowRight, Info, Mail, Zap, XCircle 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
