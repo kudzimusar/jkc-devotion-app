@@ -179,12 +179,13 @@ export default function ProfileHub() {
     }, [idForm.watch]);
 
     async function loadData(userId: string) {
+        let currentOrgId: string | null = null;
         try {
             // Profiles and Organization Context
             const { data: pData } = await supabase.from('profiles').select('*').eq('id', userId).single();
             if (pData) {
                 // Stabilize Org ID for all queries
-                let currentOrgId = pData.org_id;
+                currentOrgId = pData.org_id;
                 if (!currentOrgId) {
                     const { data: globalOrg } = await supabase.from('organizations').select('id').limit(1).maybeSingle();
                     currentOrgId = globalOrg?.id;
@@ -298,8 +299,10 @@ export default function ProfileHub() {
             setMembershipRequest(mrData);
 
             // Load Member Stats (Streak/Completed)
-            const s = await SoapJournal.getStats(currentOrgId);
-            setStats(s);
+            if (currentOrgId) {
+                const s = await SoapJournal.getStats(currentOrgId);
+                setStats(s);
+            }
 
         } catch (e) {
             console.error("Profile Load Error:", e);
