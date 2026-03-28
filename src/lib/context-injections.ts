@@ -105,18 +105,19 @@ export async function getContextForPersona(
           .from('profiles')
           .select('id', { count: 'exact', head: true });
         
-        context.strategist = {
+        const strategistData = {
           engagement_trends: {
             score: health?.score || 0,
             active_devoters: health?.active_devoters || 0,
             total_members: totalUserCount?.count || 0
           },
           growth_metrics: {
-            new_last_30_days: 0, // Placeholder
-            churn_last_30_days: 0 // Placeholder
+            new_last_30_days: 0,
+            churn_last_30_days: 0
           },
           ministry_performance: []
         };
+        context.strategist = strategistData;
         break;
         
       case 'disciple':
