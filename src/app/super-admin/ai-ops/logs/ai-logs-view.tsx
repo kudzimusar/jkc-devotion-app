@@ -37,6 +37,7 @@ interface AILog {
   escalated: boolean;
   model_used: string;
   created_at: string;
+  error_message?: string;
   // Join for user profiles
   profiles?: {
     full_name: string;
@@ -146,7 +147,7 @@ export default function AILogsView() {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-400">
                       {log.profiles?.avatar_url ? (
-                        <img src={log.profiles.avatar_url} className="rounded-full" />
+                        <img src={log.profiles.avatar_url} className="rounded-full" alt="avatar" />
                       ) : (
                         log.profiles?.full_name?.charAt(0) || '?'
                       )}
