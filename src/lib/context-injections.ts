@@ -52,8 +52,12 @@ export async function getContextForPersona(
 ): Promise<Partial<PersonaContext>> {
   
   const context: Partial<PersonaContext> = {};
+  const sanitizedUserId = userId && userId.trim() !== "" ? userId : null;
   
-  if (!userId) {
+  console.log(`[RAG CONTEXT] Fetching for ${persona} (User: ${sanitizedUserId || 'GUEST'}, Role: ${userRole})`);
+  
+  if (!sanitizedUserId) {
+    console.log(`[RAG CONTEXT] Returning basic concierge context for Guest`);
     // Basic concierge info for guests
     return { 
       concierge: { 

@@ -187,22 +187,25 @@ export const AIService = {
 
         let pilContext = "";
         try {
-            const { supabase } = await import("./supabase");
-            const insightsRes = await supabase.from('prophetic_insights').select('*').eq('is_acknowledged', false).limit(5);
-            const feedRes = await supabase.from('vw_ministry_intelligence_feed').select('*').limit(10);
+            // Only try to fetch PIL context if it's an admin/leader to avoid unauthorized RLS errors for guests
+            if (isAdmin) {
+                const { supabase: supabaseClient } = await import("./supabase");
+                const insightsRes = await supabaseClient.from('prophetic_insights').select('*').eq('is_acknowledged', false).limit(5);
+                const feedRes = await supabaseClient.from('vw_ministry_intelligence_feed').select('*').limit(10);
 
-            const insights = insightsRes.data || [];
-            const feed = feedRes.data || [];
+                const insights = insightsRes.data || [];
+                const feed = feedRes.data || [];
 
-            if (insights.length > 0 || feed.length > 0) {
-                pilContext = "\n--- PROPHETIC INTELLIGENCE (PIL) FORECASTS ---\n" +
-                    insights.map((i: any) => `- [${i.category.toUpperCase()}] ${i.insight_title}: ${i.insight_description} (Prob: ${i.probability_score}%)`).join("\n") +
-                    "\n\n--- OPERATIONAL INTELLIGENCE (MIL) FEED ---\n" +
-                    feed.map((f: any) => `- ${f.metric_type}: ${f.detail} on ${f.event_date} (Val: ${f.value}) - ${f.context}`).join("\n") +
-                    "\n--- END PIL ---";
+                if (insights.length > 0 || feed.length > 0) {
+                    pilContext = "\n--- PROPHETIC INTELLIGENCE (PIL) FORECASTS ---\n" +
+                        insights.map((i: any) => `- [${i.category.toUpperCase()}] ${i.insight_title}: ${i.insight_description} (Prob: ${i.probability_score}%)`).join("\n") +
+                        "\n\n--- OPERATIONAL INTELLIGENCE (MIL) FEED ---\n" +
+                        feed.map((f: any) => `- ${f.metric_type}: ${f.detail} on ${f.event_date} (Val: ${f.value}) - ${f.context}`).join("\n") +
+                        "\n--- END PIL ---";
+                }
             }
         } catch (e) {
-            // Silently fail PIL context if schema is not fully applied
+            console.warn("[AI SERVICE] PIL Context fetch failed", e);
         }
 
         // Format RAG Context for Persona Grounding
@@ -257,12 +260,13 @@ export const AIService = {
         const historyStr = chatHistory?.map(m => `${m.role.toUpperCase()}: ${m.content}`).join("\n") || "";
         const fullPrompt = `${SYSTEM_PROMPT}\n\n${contextStr}\n\nIMPORTANT: Ground your responses in the [GROUNDED DATA] provided above. If data is missing or N/A, guide the user on how to populate it.\n\nCONVERSATION HISTORY:\n${historyStr}\n\nUSER QUESTION: ${query}\n\nRESPONSE:`;
 
+        console.log(`[AI SERVICE] Prompt size: ${fullPrompt.length} chars. Initializing model...`);
         const aiModel = getAIModel(aiTools);
-        console.log(`[AI SERVICE] Initializing with: ${aiModel ? 'GEMINI_3_1_PRO_WITH_TOOLS' : 'INTELLIGENT_FALLBACK'}`);
+        console.log(`[AI SERVICE] Model state: ${aiModel ? 'ACTIVE' : 'FALLBACK'}`);
 
         if (aiModel) {
             try {
-                // Initialize chat with tools
+                console.log(`[AI SERVICE] Starting main loop...`);
                 const chat = aiModel.startChat({
                     history: chatHistory?.map(m => ({
                         role: m.role === 'ai' ? 'model' : 'user',
@@ -277,19 +281,13 @@ export const AIService = {
                 const result = await chat.sendMessage(fullPrompt);
                 const response = result.response;
                 
-                // Handle possible tool calls (Function Calling)
                 const functionCalls = response.functionCalls();
                 if (functionCalls && functionCalls.length > 0) {
                     const call = functionCalls[0];
-                    console.log(`[AI SERVICE] Gemini requested tool call: ${call.name}`);
                     toolsCalled.push({ name: call.name, args: call.args });
-                    
-                    // Execute the tool locally
                     const toolResult = await executeToolCall(call.name, call.args, userId, userRole);
                     toolResults.push(toolResult);
-                    console.log(`[AI SERVICE] Tool result:`, toolResult);
                     
-                    // Respond back to Gemini with tool outcome
                     const finalResult = await chat.sendMessage([{
                         functionResponse: {
                             name: call.name,
@@ -301,38 +299,34 @@ export const AIService = {
                 } else {
                     finalResponse = response.text();
                 }
+                console.log(`[AI SERVICE] Finishing generation.`);
 
             } catch (err: any) {
-                console.warn("[AI SERVICE] Real AI Failed, Using Fallback. Reason:", err.message);
+                console.error("[AI SERVICE] Real AI Failed, Using Fallback. Reason:", err.message);
                 errorMsg = err.message;
                 finalResponse = intelligentFallback(userRole, userName, query, contextPayload, chatHistory);
             }
         } else {
-            // Diagnostic Fallback for lack of API Key
             console.log("[AI SERVICE] No API Key Found, Executing Contextual Fallback");
             finalResponse = intelligentFallback(userRole, userName, query, contextPayload, chatHistory);
         }
 
-        // Final Logging Pass (Phase 5)
-        try {
-            logId = await logAIConversation({
-                userId: userId || null,
-                organizationId: contextPayload?.ragContext?.user_profile?.org_id || null,
-                persona: contextPayload.activePersona,
-                path: contextPayload.currentPage,
-                userQuery: query,
-                aiResponse: finalResponse,
-                responseTimeMs: Date.now() - startTime,
-                toolsCalled,
-                toolResults,
-                errorMessage: errorMsg,
-                modelUsed: 'gemini-3.1-pro'
-            });
-        } catch (logErr) {
-            console.error("[AI SERVICE] Logging failed", logErr);
-        }
+        // Final Logging Pass (Non-blocking)
+        logAIConversation({
+            userId: userId || null,
+            organizationId: contextPayload?.ragContext?.user_profile?.org_id || null,
+            persona: contextPayload.activePersona,
+            path: contextPayload.currentPage,
+            userQuery: query,
+            aiResponse: finalResponse,
+            responseTimeMs: Date.now() - startTime,
+            toolsCalled,
+            toolResults,
+            errorMessage: errorMsg,
+            modelUsed: 'gemini-3.1-pro'
+        }).catch(logErr => console.error("[AI SERVICE] Logging failed", logErr));
 
-        return { text: finalResponse, logId };
+        return { text: finalResponse, logId: null };
     },
 
     generateNewsletterDraft: async (topics: string[], activePrayersCount: number, recentMilestonesCount: number) => {

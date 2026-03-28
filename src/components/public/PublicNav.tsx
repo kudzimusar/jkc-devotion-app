@@ -191,8 +191,8 @@ export default function PublicNav() {
                 onMouseLeave={link.subLinks ? handleMouseLeave : undefined}
               >
                 <Link href={link.href}
-                  className="text-[10px] font-black tracking-[0.3em] hover:text-[var(--jkc-navy)] transition-all flex items-center gap-1.5 py-2"
-                  style={{ color: link.label === 'DEVOTION' ? 'var(--jkc-gold)' : 'var(--foreground)' }}>
+                  className="text-[10px] font-black tracking-[0.3em] transition-all flex items-center gap-1.5 py-2"
+                  style={{ color: link.label === 'DEVOTION' ? 'var(--jkc-gold)' : 'var(--nav-link)' }}>
                   {link.label === 'DEVOTION' && <BookOpen className="w-3.5 h-3.5" />}
                   {link.label}
                   {link.subLinks && (
@@ -387,12 +387,11 @@ export default function PublicNav() {
             <X size={32} />
           </button>
 
-          <img
-            src="/jkc-devotion-app/images/logo-horizontal.png"
-            alt="Japan Kingdom Church"
-            className="h-10 w-auto mb-6 shrink-0"
-            style={{ filter: 'brightness(10)' }}
-          />
+              <img
+                src="/jkc-devotion-app/images/logo-horizontal.png"
+                alt="Japan Kingdom Church"
+                className="h-8 w-auto block brightness-110"
+              />
 
           {mobileNavLinks.map(link => (
             <Link key={link.label} href={link.href}

@@ -103,12 +103,14 @@ export function GlobalAIAssistant({
         setLoading(true);
 
         try {
+            console.log(`[UI] Starting generation for ${currentPersona}...`);
             // Phase 3: RAG Context Injection
             const contextData = await getContextForPersona(
                 currentPersona.toLowerCase(),
-                user?.id || null,
+                user?.id || null, 
                 userRole || 'visitor'
             );
+            console.log(`[UI] Context retrieved:`, Object.keys(contextData));
 
             const isCompletedToday = propDevotion && propStats?.completedDays?.includes(propDevotion.id);
 
@@ -127,18 +129,26 @@ export function GlobalAIAssistant({
                 ragContext: contextData // Pass new context to AI Service
             };
 
-            const { text, logId } = await AIService.chatWithGlobalAssistant(
+            console.log(`[UI] Calling AIService...`);
+            const aiResponse = await AIService.chatWithGlobalAssistant(
                 currentPersona, 
                 user?.name || 'Guest', 
-                user?.id || '', // Pass the actual Supabase user ID for tool execution
+                user?.id || '', 
                 query, 
                 contextPayload, 
                 chatHistory
             );
-            setChatHistory([...newChat, { role: 'ai', content: text, logId }]);
-        } catch (e) {
+            
+            const responseText = aiResponse?.text || "I'm sorry, I'm having trouble thinking of a response right now.";
+            const logId = aiResponse?.logId || null;
+            
+            console.log(`[UI] Received response (${responseText.length} chars)`);
+            setChatHistory([...newChat, { role: 'ai', content: responseText, logId }]);
+        } catch (e: any) {
+            console.error(`[UI] Generation error:`, e);
             setChatHistory([...newChat, { role: 'ai', content: "I'm sorry, I'm having trouble connecting right now." }]);
         } finally {
+            console.log(`[UI] Resetting loading state.`);
             setLoading(false);
         }
     };

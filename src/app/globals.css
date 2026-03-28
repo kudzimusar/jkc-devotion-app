@@ -59,14 +59,13 @@
     --ring:   #1b3a6b;
     --radius: 0.75rem;
 
-    /* Public Website Nav & Footer (Restored) */
     --nav-bg: rgba(255, 255, 255, 0.85);
     --nav-border: rgba(0, 0, 0, 0.05);
     --nav-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
     --nav-link: #475569;
     --nav-link-active: #1b3a6b;
     
-    --footer-bg: #1b3a6b;
+    --footer-bg: #111827;
     --footer-fg: #ffffff;
     --footer-muted: rgba(255, 255, 255, 0.6);
 
@@ -92,6 +91,15 @@
     --border: #1e293b;
     --input:  #1e293b;
     --ring:   #f5a623;
+
+    /* Public Website Nav & Footer Dark Overrides */
+    --nav-bg: rgba(8, 12, 20, 0.85);
+    --nav-border: rgba(255, 255, 255, 0.05);
+    --nav-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    --nav-link: #94a3b8;
+    --nav-link-active: #f5a623;
+    
+    --footer-bg: #05080f;
   }
 
   html, body {
