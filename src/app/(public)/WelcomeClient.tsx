@@ -17,7 +17,6 @@ import ConnectSection from '@/components/public/ConnectSection';
 import { FeedSection } from '@/components/feed/FeedSection';
 import MinistriesSection from '@/components/public/MinistriesSection';
 import TestimoniesSection from '@/components/public/TestimoniesSection';
-import { GlobalAIAssistant } from '@/components/layout/GlobalAIAssistant';
 import InitialConnectModal from '@/components/public/InitialConnectModal';
 
 import { motion } from 'framer-motion';
@@ -122,13 +121,6 @@ export default function WelcomeClient() {
         <ConnectSection />
       </FadeInSection>
 
-      <GlobalAIAssistant
-        user={user}
-        userRole={null}
-        currentPage="welcome"
-        stats={null}
-        devotion={null}
-      />
     </div>
   );
 }

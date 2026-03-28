@@ -59,6 +59,17 @@
     --ring:   #1b3a6b;
     --radius: 0.75rem;
 
+    /* Public Website Nav & Footer (Restored) */
+    --nav-bg: rgba(255, 255, 255, 0.85);
+    --nav-border: rgba(0, 0, 0, 0.05);
+    --nav-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --nav-link: #475569;
+    --nav-link-active: #1b3a6b;
+    
+    --footer-bg: #1b3a6b;
+    --footer-fg: #ffffff;
+    --footer-muted: rgba(255, 255, 255, 0.6);
+
     --jkc-navy:  #1b3a6b;
     --jkc-gold:  #f5a623;
   }

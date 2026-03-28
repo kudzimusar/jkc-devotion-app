@@ -11,6 +11,8 @@ import { Download, ChevronDown, UserPlus, Send, MessageSquareText } from "lucide
 import { useAdminCtx } from "../Context";
 import { MinistryForm } from "@/components/dashboard/forms/MinistryForm";
 import { sendPastoralMessageAction } from "@/app/actions/admin";
+import * as XLSX from "xlsx";
+import { FilePlus } from "lucide-react";
 
 interface Member {
     id: string; name: string; email: string;
@@ -52,6 +54,7 @@ export default function MembersPage() {
     const [showMessenger, setShowMessenger] = useState(false);
     const [messageDraft, setMessageDraft] = useState("");
     const [sendingMsg, setSendingMsg] = useState(false);
+    const [isImporting, setIsImporting] = useState(false);
 
     const { orgId } = useAdminCtx();
 
@@ -178,6 +181,79 @@ export default function MembersPage() {
         }
     }
 
+        }
+    }
+
+    const handleImportClick = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.csv,.xlsx,.xls';
+        input.onchange = (e: any) => {
+            const file = e.target.files[0];
+            if (file) processImportFile(file);
+        };
+        input.click();
+    };
+
+    const processImportFile = async (file: File) => {
+        setIsImporting(true);
+        const reader = new FileReader();
+        reader.onload = async (e: any) => {
+            try {
+                const data = e.target.result;
+                const workbook = XLSX.read(data, { type: 'binary' });
+                const sheetName = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[sheetName];
+                const json: any[] = XLSX.utils.sheet_to_json(sheet);
+
+                if (json.length === 0) {
+                    toast.error("The file appears to be empty.");
+                    return;
+                }
+
+                // Map standard fields
+                const profilesToInsert = json.map(row => ({
+                    id: crypto.randomUUID(), // Generate a UUID for these skeleton profiles
+                    org_id: orgId,
+                    name: row.Name || row.name || row.Fullname || row['Full Name'],
+                    email: row.Email || row.email || `user_${Math.random().toString(36).substr(2, 9)}@placeholder.com`,
+                    phone_number: row.Phone || row.phone || row['Phone Number'] || null,
+                    city: row.City || row.city || row.Location || null,
+                    membership_status: (row.Status || row.status || 'visitor').toLowerCase(),
+                    growth_stage: (row['Growth Stage'] || row.stage || 'visitor').toLowerCase(),
+                    church_background: row['Background'] || row.church_background || null,
+                    referral_source: row['Referral'] || row.referral_source || 'Bulk Import',
+                    gender: row.Gender || row.gender || null
+                }));
+
+                const { error: insertError } = await supabase
+                    .from('profiles')
+                    .insert(profilesToInsert);
+
+                if (insertError) throw insertError;
+
+                // Also need to create entries in org_members for each
+                const orgMembersToInsert = profilesToInsert.map(p => ({
+                    user_id: p.id,
+                    org_id: orgId,
+                    role: 'member',
+                    stage: p.growth_stage
+                }));
+
+                await supabase.from('org_members').insert(orgMembersToInsert);
+
+                toast.success(`Successfully imported ${profilesToInsert.length} members!`);
+                fetchMembers();
+            } catch (err: any) {
+                console.error("Import error:", err);
+                toast.error("Failed to parse or import file. Ensure headers match Name, Email, etc.");
+            } finally {
+                setIsImporting(false);
+            }
+        };
+        reader.readAsBinaryString(file);
+    };
+
     async function handleSendMessage() {
         if (!messageDraft || !selectedMember || !orgId) return;
         setSendingMsg(true);
@@ -300,6 +376,14 @@ export default function MembersPage() {
                             </div>
                         )}
                     </div>
+                    <Button
+                        onClick={handleImportClick}
+                        disabled={isImporting}
+                        className="h-9 px-4 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-2"
+                    >
+                        <FilePlus className="w-3.5 h-3.5" />
+                        {isImporting ? 'IMPORTING...' : 'IMPORT'}
+                    </Button>
                 </div>
             </div>
 

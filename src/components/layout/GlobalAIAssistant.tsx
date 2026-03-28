@@ -1,27 +1,75 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Send, Bot, BarChart } from "lucide-react";
 import { AIService } from "@/lib/ai-service";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { Auth } from "@/lib/auth";
 
-export function GlobalAIAssistant({ user, userRole, stats, devotion, currentDate, currentPage }: {
-    user: any;
-    userRole: string | null;
+export function GlobalAIAssistant({ 
+    user: propUser, 
+    userRole: propUserRole, 
+    stats: propStats, 
+    devotion: propDevotion, 
+    currentDate: propCurrentDate, 
+    currentPage: propCurrentPage 
+}: {
+    user?: any;
+    userRole?: string | null;
     stats?: any;
     devotion?: any;
     currentDate?: Date;
     currentPage?: string;
 }) {
+    const pathname = usePathname();
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
     const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai', content: string }[]>([]);
     const [loading, setLoading] = useState(false);
+    
+    // Internal state for self-sufficiency
+    const [internalUser, setInternalUser] = useState<any>(propUser || null);
+    const [internalRole, setInternalRole] = useState<string | null>(propUserRole || null);
+
+    const user = propUser || internalUser;
+    const userRole = propUserRole || internalRole;
+
+    useEffect(() => {
+        if (!propUser || !propUserRole) {
+            const fetchUser = async () => {
+                const u = await Auth.getCurrentUser();
+                setInternalUser(u);
+                
+                if (u) {
+                    const { data: member } = await supabase
+                        .from("org_members")
+                        .select("role")
+                        .eq("user_id", u.id)
+                        .single();
+                    setInternalRole(member?.role || 'member');
+                }
+            };
+            fetchUser();
+        }
+    }, [propUser, propUserRole, pathname]);
 
     const isAdmin = userRole === 'admin' || userRole === 'leader' || userRole === 'pastor';
+
+    const detectPersona = () => {
+        const path = pathname || '';
+        if (userRole === 'pastor' || userRole === 'admin') return 'Strategist';
+        if (userRole === 'shepherd') return 'Shepherd';
+        if (path.includes('/shepherd')) return 'Shepherd';
+        if (path.includes('/pastor-hq')) return 'Strategist';
+        if (path.includes('/devotion')) return 'Disciple';
+        if (path.includes('/onboarding')) return 'Steward'; // Use Steward for onboarding
+        return 'Concierge';
+    };
 
     const handleSend = async () => {
         if (!query.trim()) return;
@@ -30,23 +78,26 @@ export function GlobalAIAssistant({ user, userRole, stats, devotion, currentDate
         setQuery("");
         setLoading(true);
 
+        const currentPersona = detectPersona();
+
         try {
-            const isCompletedToday = devotion && stats?.completedDays?.includes(devotion.id);
+            const isCompletedToday = propDevotion && propStats?.completedDays?.includes(propDevotion.id);
 
             const contextPayload = {
-                stats: stats ? { currentStreak: stats.streak, completedToday: isCompletedToday } : null,
-                devotion: devotion ? { 
-                    ...devotion, 
-                    weekTheme: `Week ${devotion.week}: ${devotion.week_theme}`,
-                    dailyFocus: devotion.declaration, 
-                    text: devotion.fullScriptureText || devotion.scripture
+                stats: propStats ? { currentStreak: propStats.streak, completedToday: isCompletedToday } : null,
+                devotion: propDevotion ? { 
+                    ...propDevotion, 
+                    weekTheme: `Week ${propDevotion.week}: ${propDevotion.week_theme}`,
+                    dailyFocus: propDevotion.declaration, 
+                    text: propDevotion.fullScriptureText || propDevotion.scripture
                 } : null,
-                currentDate: currentDate?.toISOString(),
-                currentPage: currentPage || window.location.pathname,
-                membershipStatus: userRole || ' visitor'
+                currentDate: (propCurrentDate || new Date()).toISOString(),
+                currentPage: propCurrentPage || pathname,
+                membershipStatus: userRole || ' visitor',
+                activePersona: currentPersona
             };
 
-            const response = await AIService.chatWithGlobalAssistant(userRole || 'member', user?.name || 'Guest', query, contextPayload, chatHistory);
+            const response = await AIService.chatWithGlobalAssistant(currentPersona, user?.name || 'Guest', query, contextPayload, chatHistory);
             setChatHistory([...newChat, { role: 'ai', content: response }]);
         } catch (e) {
             setChatHistory([...newChat, { role: 'ai', content: "I'm sorry, I'm having trouble connecting right now." }]);
@@ -55,24 +106,44 @@ export function GlobalAIAssistant({ user, userRole, stats, devotion, currentDate
         }
     };
 
+    // Determine initial message based on persona path
+    const getInitialMessage = () => {
+        if (pathname.includes('/shepherd') || pathname.includes('/mission-control')) {
+            return "I am the Church OS Shepherd. I am monitoring your assigned members and prophetic alerts. How can I assist your pastoral care today?";
+        }
+        if (pathname.includes('/pastor-hq') || pathname.includes('/leadership')) {
+            return "I am the Church OS Strategist. I have analyzed church growth and ministry trends. What strategic insights do you need?";
+        }
+        if (pathname.includes('/super-admin') || pathname.includes('/console')) {
+            return "Systems are nominal. I am the Sentinel. How can I help you manage the platform architecture today?";
+        }
+        if (pathname.includes('/onboarding') || pathname.includes('/welcome') || pathname === '/' || pathname === '') {
+            return "Welcome! I'm your Concierge. I'll help you get your church set up correctly. Where shall we start?";
+        }
+        if (user?.name) {
+            return `Hello ${user.name}. I am here to guide your daily devotion, answer context about scriptures, and encourage your personal growth.`;
+        }
+        return "Hello Friend. I am here to guide your daily devotion, answer context about scriptures, and encourage your personal growth.";
+    };
+
     return (
         <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-                <Button className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-2xl bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-110 active:scale-95 transition-all z-[9999] flex items-center justify-center p-0 group border-4 border-background">
+                <Button className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-2xl bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-110 active:scale-95 transition-all z-[9999] flex items-center justify-center p-0 group border-4 border-background focus:ring-0">
                     <Sparkles className="w-7 h-7 group-hover:animate-pulse" />
                     <span className="sr-only">Ask AI Assistant</span>
                 </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-full sm:max-w-md border-l border-foreground/10 bg-background/95 backdrop-blur-3xl p-6 flex flex-col z-[300]">
+            <SheetContent side="right" className="w-full sm:max-w-md border-l border-foreground/10 bg-background/95 backdrop-blur-3xl p-6 flex flex-col z-[10000]">
                 <SheetHeader className="pb-6 border-b border-foreground/10 mb-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
                             <Bot className="w-5 h-5" />
                         </div>
                         <div className="flex flex-col text-left">
-                            <SheetTitle className="text-xl font-serif text-primary">Spiritual Assistant</SheetTitle>
+                            <SheetTitle className="text-xl font-serif text-primary">Church OS Assistant</SheetTitle>
                             <span className="text-[10px] font-black uppercase tracking-widest opacity-50">
-                                {isAdmin ? "Church Leadership Analytics Mode" : "Personal Devotion Mode"}
+                                {isAdmin ? "Leadership Analytics Mode" : "Personal Devotion Mode"}
                             </span>
                         </div>
                     </div>
@@ -83,30 +154,25 @@ export function GlobalAIAssistant({ user, userRole, stats, devotion, currentDate
                         <div className="flex items-center gap-2 text-amber-500 font-bold uppercase tracking-widest">
                             <BarChart className="w-4 h-4" /> Admin Data Active
                         </div>
-                        <p className="leading-relaxed">I am monitoring real-time church analytics. You can ask me to analyze church growth, identify dwindling attendance, review prayer requests, or suggest discrepancies based on member data.</p>
+                        <p className="leading-relaxed">Accessing real-time church intelligence. You can ask for growth analysis, care alerts, or strategic forecasts.</p>
                         <div className="flex gap-2 mt-2 overflow-x-auto pb-2 custom-scrollbar">
-                            <Button variant="outline" size="sm" className="whitespace-nowrap text-[10px] h-7 rounded-full border-foreground/20" onClick={() => setQuery("Summarize this week's church growth and attendance.")}>Weekly Growth</Button>
-                            <Button variant="outline" size="sm" className="whitespace-nowrap text-[10px] h-7 rounded-full border-foreground/20" onClick={() => setQuery("Are there any unhandled prayer requests or pastoral care alerts?")}>Care Alerts</Button>
+                            <Button variant="outline" size="sm" className="whitespace-nowrap text-[10px] h-7 rounded-full border-foreground/20" onClick={() => setQuery("Analyze church health and recent alerts.")}>Analyze Health</Button>
+                            <Button variant="outline" size="sm" className="whitespace-nowrap text-[10px] h-7 rounded-full border-foreground/20" onClick={() => setQuery("Any pastoral care alerts for me?")}>Care Alerts</Button>
                         </div>
                     </motion.div>
                 )}
 
                 <div className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar pb-6">
-                    {chatHistory.length === 0 && (!isAdmin) && (
+                    {chatHistory.length === 0 && (
                         <div className="flex flex-col items-center justify-center h-full opacity-40 text-center space-y-4 px-8">
                             <Sparkles className="w-12 h-12 text-primary" />
-                            <p className="text-sm font-medium">
-                                {user?.name
-                                    ? `Hello ${user.name}. I am here to guide your daily devotion, answer context about scriptures, and encourage your personal growth.`
-                                    : currentPage === 'welcome' 
-                                        ? `Welcome to Japan Kingdom Church! I can help you with directions, service times, church history, giving options, or anything else about our community. What would you like to know?`
-                                        : `Hello Friend. I am here to guide your daily devotion, answer context about scriptures, and encourage your personal growth.`
-                                }
+                            <p className="text-sm font-medium leading-relaxed">
+                                {getInitialMessage()}
                             </p>
                         </div>
                     )}
 
-                    <AnimatePresence>
+                    <AnimatePresence initial={false}>
                         {chatHistory.map((chat, idx) => (
                             <motion.div
                                 key={idx}
@@ -137,10 +203,15 @@ export function GlobalAIAssistant({ user, userRole, stats, devotion, currentDate
                 <div className="pt-4 border-t border-foreground/10 pb-4 shrink-0">
                     <div className="relative flex items-center">
                         <Textarea
-                            placeholder="Ask the Spirit..."
+                            placeholder="Message Assistant..."
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                            onKeyDown={(e) => { 
+                                if (e.key === 'Enter' && !e.shiftKey) { 
+                                    e.preventDefault(); 
+                                    handleSend(); 
+                                } 
+                            }}
                             className="w-full min-h-[52px] max-h-[120px] rounded-3xl bg-foreground/5 border-foreground/10 pr-14 py-4 text-sm resize-none focus:ring-1 focus:ring-primary/50 custom-scrollbar"
                             rows={1}
                         />

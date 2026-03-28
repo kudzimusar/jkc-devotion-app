@@ -86,6 +86,14 @@ Beyond devotions and profiles, the system handles:
 
 ---
 
+---
+
+## 🏗️ 8. Organization & Testing Resources
+For detailed step-by-step instructions on setting up new churches, logging in as staff, and performing full system tests, please refer to the:
+*   [Full Organization & Testing Manual](file:///Users/shadreckmusarurwa/Project AI/jkc-devotion-app/docs/organization_manual.md)
+
+---
+
 > [!TIP]
 > **Pro Tip for Leaders**: Use the "Geographic Clusters" tool before launching new home groups to ensure you are placing the community where the people already are.
 

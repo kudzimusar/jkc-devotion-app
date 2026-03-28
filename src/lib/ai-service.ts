@@ -1,5 +1,13 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+/**
+ * AI SERVICE - Core Intelligence Hub for Church OS
+ * 
+ * @see knowledge/README.md for the Knowledge Architecture
+ * @see knowledge/personas/index.md for Persona Specifications
+ * @see knowledge/domain/index.md for Data Grounding Rules
+ */
+
 // Lazy Initialization helper to ensure environment variables are ready
 let genAI: any = null;
 let model: any = null;

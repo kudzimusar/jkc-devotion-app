@@ -39,6 +39,23 @@ Church OS is a **multi-tenant platform** where each denomination is a separate t
 | **Member** | `profiles` table with `org_id` | Individual person belonging to a denomination | John Doe (member of JKC) |
 | **Pastor/Admin** | `profiles` with role = pastor/owner | Leader who oversees a denomination | Pastor Smith (oversees JKC) |
 
+## SaaS Evolution: Infrastructure vs. Tenant
+
+Church OS is evolving from a single-tenant pilot (JKC) into a scalable **SaaS Infrastructure**. This requires a strict separation between the **Platform Layer** (Church OS) and the **Tenant Layer** (The Church).
+
+### 1. The Platform Layer (Infrastructure)
+The "Glue" of the ecosystem. It is brand-neutral and provides the tools:
+- **Platform Gateway**: The `/login` and `/onboarding` routes. These are neutral entry points for all pastors and members of any church.
+- **Mission Control (Shepherd)**: The administrative backend for church staff.
+- **Pastor HQ**: High-level prophetic intelligence for church leadership.
+- **Member Profile Card**: The digital identity for individual believers.
+
+### 2. The Tenant Layer (The Church Website)
+The "Face" of the church. This is the `(public)` route group.
+- **Dynamic Skeleton**: The public website is a "Template" (Skeleton). It pulls its Name, Logo, Mission Statement, and Colors from the `organizations` table.
+- **Data Seeding**: New churches can bulk-upload their existing congregation data via **CSV/Excel Importers** in Mission Control to "pre-populate" their church ecosystem without waiting for individual member sign-ups.
+- **Tenant Isolation**: All public data (Sermons, Events, Testimonies) is strictly scoped to the `org_id` derived from the subdomain or church selection.
+
 ### Two Distinct Sign-Up Flows
 
 **Flow 1: Church Sign-Up (SaaS Onboarding)**
@@ -183,6 +200,14 @@ Church OS is built on a **data analytics engine** that powers every feature. All
 - **Tracks church health** (engagement, growth, spiritual maturity)
 - **Drives AI insights** (Prophetic Intelligence, churn prediction, strategic recommendations)
 - **Enables business intelligence** for the Church OS team (MRR, adoption, trends)
+
+### AI Governance & Knowledge Architecture
+The AI system is governed by a dedicated **Knowledge Architecture** located in the `/knowledge` directory. This ensures consistency, security, and context-aware behavior across all personas.
+
+- **[Persona Specifications](knowledge/personas/index.md)**: The 7 core identities (Concierge, Shepherd, etc.).
+- **[Domain Knowledge Base](knowledge/domain/index.md)**: Data grounding rules and RAG taxonomy.
+- **[Prompt Library](knowledge/prompts/index.md)**: Standardized system instructions and templates.
+- **[Evaluation Matrix](knowledge/evaluation/index.md)**: Success metrics and quality benchmarks.
 
 ### Analytics Data Flow
 
