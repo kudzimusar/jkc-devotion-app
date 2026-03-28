@@ -38,7 +38,7 @@ export default function SettingsHub() {
     const handlePasswordReset = async () => {
         if (!user?.email) return;
         const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-            redirectTo: window.location.origin + BP + '/settings',
+            redirectTo: window.location.origin + BP + '/profile/settings',
         });
         if (error) {
             toast.error(error.message);

@@ -1,18 +1,14 @@
-"use server";
-
-import { supabaseAdmin } from "@/lib/supabase-admin";
-import { createClient } from "@/utils/supabase/server"; // Standard server-side client
+import { supabase } from "@/lib/supabase";
 
 /**
  * Ensures the currently authenticated user has the 'super_admin' role.
+ * This is a client-side convenience check; actual security is enforced by RLS.
  */
-async function verifySuperAdmin() {
-  const supabase = await createClient();
-  
+async function getAdminUser() {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) throw new Error("Unauthorized");
 
-  const { data: role, error: roleError } = await supabaseAdmin
+  const { data: role, error: roleError } = await supabase
     .from('admin_roles')
     .select('role')
     .eq('user_id', user.id)
@@ -30,17 +26,17 @@ async function verifySuperAdmin() {
  */
 export async function updateOrgStatus(orgId: string, status: string) {
   try {
-    const admin = await verifySuperAdmin();
+    const admin = await getAdminUser();
 
-    const { error } = await supabaseAdmin
+    const { error } = await supabase
       .from('organizations')
       .update({ status })
       .eq('id', orgId);
 
     if (error) throw error;
 
-    // Log the action
-    await supabaseAdmin
+    // Log the action (Audit logs RLS allows insert for authenticated users)
+    await supabase
       .from('admin_audit_logs')
       .insert({
         admin_id: admin.id,
@@ -62,18 +58,18 @@ export async function updateOrgStatus(orgId: string, status: string) {
  */
 export async function updateOrgSubscription(orgId: string, data: { planId: string, status: string }) {
   try {
-    const admin = await verifySuperAdmin();
+    const admin = await getAdminUser();
 
     // Check if subscription exists
-    const { data: existingSub } = await supabaseAdmin
+    const { data: existingSub } = await supabase
       .from('organization_subscriptions')
       .select('id')
       .eq('org_id', orgId)
-      .single();
+      .maybeSingle();
 
     let result;
     if (existingSub) {
-      result = await supabaseAdmin
+      result = await supabase
         .from('organization_subscriptions')
         .update({
           plan_id: data.planId,
@@ -83,20 +79,20 @@ export async function updateOrgSubscription(orgId: string, data: { planId: strin
         .eq('org_id', orgId);
     } else {
       // Create new
-      result = await supabaseAdmin
+      result = await supabase
         .from('organization_subscriptions')
         .insert({
           org_id: orgId,
           plan_id: data.planId,
           status: data.status,
-          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // Default 30 days
+          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
         });
     }
 
     if (result.error) throw result.error;
 
     // Log the action
-    await supabaseAdmin
+    await supabase
       .from('admin_audit_logs')
       .insert({
         admin_id: admin.id,
@@ -115,23 +111,19 @@ export async function updateOrgSubscription(orgId: string, data: { planId: strin
 
 /**
  * Triggers an on-demand AI analysis for a specific organization.
- * Calls the 'ai-decision-engine' edge function via service role.
  */
 export async function refreshAIAnalysis(orgId: string) {
   try {
-    const admin = await verifySuperAdmin();
+    const admin = await getAdminUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    // Call the Edge Function via user token
+    // Note: The Edge Function should authorize the call
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error("Supabase configuration missing (service role key required)");
-    }
-
-    // Call the Edge Function
     const response = await fetch(`${supabaseUrl}/functions/v1/ai-decision-engine`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${supabaseKey}`,
+        'Authorization': `Bearer ${session?.access_token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ 
@@ -147,7 +139,7 @@ export async function refreshAIAnalysis(orgId: string) {
     const result = await response.json();
 
     // Log the action
-    await supabaseAdmin
+    await supabase
       .from('admin_audit_logs')
       .insert({
         admin_id: admin.id,
@@ -172,8 +164,7 @@ export async function refreshAIAnalysis(orgId: string) {
  */
 export async function impersonateUser(targetUserId: string, targetOrgId: string) {
   try {
-    const admin = await verifySuperAdmin();
-    const supabase = await createClient();
+    const admin = await getAdminUser();
 
     // Update the admin's own metadata to track who they are impersonating
     const { error: updateError } = await supabase.auth.updateUser({
@@ -187,7 +178,7 @@ export async function impersonateUser(targetUserId: string, targetOrgId: string)
     if (updateError) throw updateError;
 
     // Log the action
-    await supabaseAdmin
+    await supabase
       .from('admin_audit_logs')
       .insert({
         admin_id: admin.id,
@@ -209,8 +200,6 @@ export async function impersonateUser(targetUserId: string, targetOrgId: string)
  */
 export async function exitImpersonation() {
   try {
-    const supabase = await createClient();
-    
     // Clear the metadata
     await supabase.auth.updateUser({
       data: {

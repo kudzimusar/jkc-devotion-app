@@ -5,13 +5,13 @@ import TenantDetailsClient from "./tenant-details-client";
 export const dynamic = "force-dynamic";
 
 interface Props {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function TenantDetailsPage({ params }: Props) {
-  const { id } = params;
+  const { id } = await params;
 
   // Fetch organization details
   const { data: org, error: orgError } = await supabaseAdmin

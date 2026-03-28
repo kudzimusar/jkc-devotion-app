@@ -41,13 +41,15 @@ export default async function TenantsPage() {
     
     // Determine priority
     const priorities = insights.map(i => i.priority);
-    const topPriority = priorities.includes('critical') 
+    const rawTopPriority = priorities.includes('critical') 
       ? 'critical' 
       : priorities.includes('high') 
         ? 'high' 
         : priorities.includes('medium') 
           ? 'medium' 
           : 'low';
+    
+    const topPriority = (insights.length > 0 ? rawTopPriority : null) as 'critical' | 'high' | 'medium' | 'low' | null;
 
     return {
       id: org.id,
@@ -59,7 +61,7 @@ export default async function TenantsPage() {
       createdAt: org.created_at,
       lastActive: null,
       aiInsights: insights,
-      topPriority: insights.length > 0 ? topPriority : null,
+      topPriority,
     };
   }) || [];
 

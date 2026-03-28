@@ -321,7 +321,7 @@ export default function PublicNav() {
                       <User className="w-4 h-4" style={{ color: 'var(--jkc-gold)' }} />
                       My Profile
                     </Link>
-                    <Link href="/settings"
+                    <Link href="/profile/settings"
                       onClick={() => setIsDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 text-xs font-bold hover:bg-[var(--muted)] transition-all"
                       style={{ color: 'var(--foreground)' }}>
