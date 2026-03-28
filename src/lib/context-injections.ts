@@ -101,7 +101,7 @@ export async function getContextForPersona(
       case 'strategist':
         // Aggregated metrics
         const { data: health } = await supabase.rpc('get_church_health_score');
-        const { data: totalUserCount } = await supabase
+        const { count: totalUserCount } = await supabase
           .from('profiles')
           .select('id', { count: 'exact', head: true });
         
@@ -109,7 +109,7 @@ export async function getContextForPersona(
           engagement_trends: {
             score: health?.score || 0,
             active_devoters: health?.active_devoters || 0,
-            total_members: totalUserCount?.count || 0
+            total_members: totalUserCount || 0
           },
           growth_metrics: {
             new_last_30_days: 0,
