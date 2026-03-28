@@ -60,14 +60,28 @@ export function GlobalAIAssistant({
 
     const isAdmin = userRole === 'admin' || userRole === 'leader' || userRole === 'pastor';
 
+    /**
+     * @see knowledge/personas/index.md
+     * @see knowledge/prompts/index.md
+     */
     const detectPersona = () => {
         const path = pathname || '';
-        if (userRole === 'pastor' || userRole === 'admin') return 'Strategist';
-        if (userRole === 'shepherd') return 'Shepherd';
-        if (path.includes('/shepherd')) return 'Shepherd';
-        if (path.includes('/pastor-hq')) return 'Strategist';
-        if (path.includes('/devotion')) return 'Disciple';
-        if (path.includes('/onboarding')) return 'Steward'; // Use Steward for onboarding
+        
+        // Priority 1: Super Admin / Console
+        if (path.includes('/super-admin') || path.includes('/console')) return 'Sentinel';
+        
+        // Priority 2: Staff Roles
+        if (userRole === 'pastor' || userRole === 'admin' || path.includes('/pastor-hq')) return 'Strategist';
+        if (userRole === 'shepherd' || path.includes('/shepherd')) return 'Shepherd';
+        
+        // Priority 3: Specialized Features
+        if (path.includes('/bible-study') || path.includes('/groups')) return 'Facilitator';
+        if (path.includes('/devotion') || path.includes('/soap')) return 'Disciple';
+        if (path.includes('/profile')) return 'Steward';
+        
+        // Priority 4: Entry / Public
+        if (path.includes('/onboarding') || path.includes('/welcome') || path === '/' || path === '') return 'Concierge';
+        
         return 'Concierge';
     };
 
@@ -108,22 +122,25 @@ export function GlobalAIAssistant({
 
     // Determine initial message based on persona path
     const getInitialMessage = () => {
-        if (pathname.includes('/shepherd') || pathname.includes('/mission-control')) {
-            return "I am the Church OS Shepherd. I am monitoring your assigned members and prophetic alerts. How can I assist your pastoral care today?";
+        const persona = detectPersona();
+        
+        switch(persona) {
+            case 'Shepherd':
+                return "I am the Church OS Shepherd. I am monitoring your assigned members and prophetic alerts. How can I assist your pastoral care today?";
+            case 'Strategist':
+                return "I am the Church OS Strategist. I have analyzed church growth and ministry trends. What strategic insights do you need?";
+            case 'Sentinel':
+                return "Systems are nominal. I am the Sentinel. How can I help you manage the platform architecture today?";
+            case 'Steward':
+                return "I am the Steward. I am here to help you manage your profile, ministry gifts, and engagement records.";
+            case 'Disciple':
+                return "I am here to guide your daily devotion, answer context about scriptures, and encourage your personal growth.";
+            case 'Facilitator':
+                return "I am the Facilitator. I'm here to help manage your Bible study groups and curriculum engagement.";
+            case 'Concierge':
+            default:
+                return "Welcome! I'm your Concierge. I'll help you navigate the Church OS ecosystem. Where shall we start?";
         }
-        if (pathname.includes('/pastor-hq') || pathname.includes('/leadership')) {
-            return "I am the Church OS Strategist. I have analyzed church growth and ministry trends. What strategic insights do you need?";
-        }
-        if (pathname.includes('/super-admin') || pathname.includes('/console')) {
-            return "Systems are nominal. I am the Sentinel. How can I help you manage the platform architecture today?";
-        }
-        if (pathname.includes('/onboarding') || pathname.includes('/welcome') || pathname === '/' || pathname === '') {
-            return "Welcome! I'm your Concierge. I'll help you get your church set up correctly. Where shall we start?";
-        }
-        if (user?.name) {
-            return `Hello ${user.name}. I am here to guide your daily devotion, answer context about scriptures, and encourage your personal growth.`;
-        }
-        return "Hello Friend. I am here to guide your daily devotion, answer context about scriptures, and encourage your personal growth.";
     };
 
     return (

@@ -6,6 +6,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
  * @see knowledge/README.md for the Knowledge Architecture
  * @see knowledge/personas/index.md for Persona Specifications
  * @see knowledge/domain/index.md for Data Grounding Rules
+ * @see knowledge/prompts/index.md for Prompt Engineering Standards
  */
 
 // Lazy Initialization helper to ensure environment variables are ready

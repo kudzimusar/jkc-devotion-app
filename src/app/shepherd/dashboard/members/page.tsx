@@ -181,9 +181,6 @@ export default function MembersPage() {
         }
     }
 
-        }
-    }
-
     const handleImportClick = () => {
         const input = document.createElement('input');
         input.type = 'file';
