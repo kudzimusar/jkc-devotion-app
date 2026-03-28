@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
 
     results.push({
       reminder_id: reminder.id,
-      user_id: attendee.user_id,
+      user_id: reminder.user_id,
       delivered,
       method,
       error: updateError?.message || (delivered ? null : 'All delivery methods failed')
