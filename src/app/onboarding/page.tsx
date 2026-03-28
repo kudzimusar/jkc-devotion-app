@@ -157,9 +157,15 @@ export default function OnboardingPage() {
                 logoUrl = publicUrl;
             }
 
-            const res = await fetch('/api/onboarding/register', {
+            // POINT TO SUPABASE EDGE FUNCTION INSTEAD OF NEXT.JS API
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const res = await fetch(`${supabaseUrl}/functions/v1/onboarding-register`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                    'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+                },
                 body: JSON.stringify({
                     churchName,
                     contactEmail,
@@ -178,7 +184,6 @@ export default function OnboardingPage() {
             if (res.ok) {
                 clearSaved();
                 toast.success('Sanctuary Provisioned Successfully!');
-                // Store the API Key if needed or just redirect
                 router.push('/admin');
             } else {
                 toast.error(result.error || 'Registration failed');

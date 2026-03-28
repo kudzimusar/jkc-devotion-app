@@ -80,7 +80,7 @@ serve(async (req) => {
       }`
 
       try {
-        const response = await fetch(\`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=\${geminiKey}\`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -91,7 +91,7 @@ serve(async (req) => {
         const data = await response.json()
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text
         if (text) {
-          const cleanJson = text.replace(/\\\`\\\`\\\`json|\\\`\\\`\\\`|\\\`/g, '').trim()
+          const cleanJson = text.replace(/```json|```|`/g, '').trim()
           const aiResult = JSON.parse(cleanJson)
           growthBlueprint = {
             title: aiResult.insight_title,
@@ -145,22 +145,22 @@ serve(async (req) => {
             sender: { name: "Church OS Support", email: "onboarding@churchos.com" },
             to: [{ email: targetEmail }],
             subject: `Welcome to Church OS, ${churchName}!`,
-            htmlContent: \`
+            htmlContent: `
               <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee;">
                 <h1 style="color: #4f46e5;">Welcome to the Future of Church growth</h1>
                 <p>Hello Pastor,</p>
-                <p>We are excited to partner with <strong>\${churchName}</strong>. Our AI has analyzed your theological DNA and generated your first <strong>Prophetic Insight</strong>:</p>
+                <p>We are excited to partner with <strong>${churchName}</strong>. Our AI has analyzed your theological DNA and generated your first <strong>Prophetic Insight</strong>:</p>
                 
                 <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                  <h3 style="margin-top: 0;">🔮 \${growthBlueprint.title}</h3>
-                  <p>\${growthBlueprint.description}</p>
-                  <p><strong>Recommended Action:</strong> \${growthBlueprint.action}</p>
+                  <h3 style="margin-top: 0;">🔮 ${growthBlueprint.title}</h3>
+                  <p>${growthBlueprint.description}</p>
+                  <p><strong>Recommended Action:</strong> ${growthBlueprint.action}</p>
                 </div>
 
                 <p>You can access your full Strategic Dashboard here: <a href="https://jkc.church-os.com/admin">Pastor HQ</a></p>
                 <p>Blessings,<br>The Church OS Team</p>
               </div>
-            \`
+            `
           })
         })
       }
@@ -175,6 +175,11 @@ serve(async (req) => {
         ai_provisioned_at: new Date().toISOString()
       })
       .eq('org_id', orgId)
+
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    })
 
     } catch (error: any) {
     console.error("AI Provisioning Error:", error.message)

@@ -20,20 +20,20 @@ Ensure the `organization_intelligence` table has the required fields for the org
 ### 2. Trigger Provisioning
 Call the `provision-church-intelligence` Edge Function via the API or a secure client-side handler.
 
-**Example Fetch Call:**
+**Example Fetch Call (Client-Side for Onboarding):**
 ```typescript
-const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/provision-church-intelligence`, {
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const res = await fetch(`${supabaseUrl}/functions/v1/onboarding-register`, {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+        'Authorization': `Bearer ${session.access_token}`,
+        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     },
     body: JSON.stringify({ 
-        record: { 
-            org_id: 'ORG_UUID',
-            theological_tradition: '...',
-            // ... (other DNA fields)
-        } 
+        churchName: '...',
+        contactEmail: '...',
+        // ... (other DNA fields)
     })
 });
 ```
@@ -46,7 +46,7 @@ const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/pr
 ## Key Components
 - **Edge Function**: `supabase/functions/provision-church-intelligence/index.ts`
 - **Dashboard Widget**: `src/components/dashboard/AIOnboardingStatus.tsx`
-- **Registration Hook**: `src/app/api/onboarding/register/route.ts`
+- **Registration Hook**: `supabase/functions/onboarding-register/index.ts` (Handles organization setup & linking)
 
 ## Design Notes
 The AI provisioning status should always be visible to the pastor in the **Strategic Center** (Pastor HQ) until the first insight is generated. Use premium animations (via `framer-motion`) to convey the "calibrating" state of the AI engine.
