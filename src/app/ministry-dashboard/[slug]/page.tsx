@@ -1,27 +1,13 @@
 import MinistryOverviewClient from './MinistryDashboardClient';
 import { use } from 'react';
 
+import { MINISTRY_SLUGS } from '@/lib/ministries';
+
 /**
  * Next.js Static Export (SSG) requires pre-defining all dynamic slugs.
  */
 export async function generateStaticParams() {
-  const slugs = [
-    'media',
-    'ushers',
-    'evangelism',
-    'prayer',
-    'hospitality',
-    'fellowship',
-    'finance',
-    'missions',
-    'pastoral',
-    'worship',
-    'youth',
-    'childrens',
-    'akiramenai',
-    'food-pantry'
-  ];
-  return slugs.map(slug => ({ slug }));
+  return MINISTRY_SLUGS.map(slug => ({ slug }));
 }
 
 export default function MinistryOverviewPage({ params }: { params: Promise<{ slug: string }> }) {

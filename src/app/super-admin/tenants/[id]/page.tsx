@@ -7,9 +7,9 @@ export const metadata = {
 
 // Required for static export with dynamic routes
 export async function generateStaticParams() {
-  // We don't pre-render specific tenants at build time; 
-  // they resolve dynamically on the client by ID.
-  return [];
+  // We return a placeholder to ensure the build generates a generic shell.
+  // Real tenant IDs are resolved dynamically on the client at runtime.
+  return [{ id: 'placeholder' }];
 }
 
 export default function TenantDetailsPage() {
