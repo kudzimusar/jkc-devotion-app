@@ -14,15 +14,19 @@ import Link from "next/link";
 import { Auth } from "@/lib/auth";
 import { ShopService, MerchandiseOrder, getCurrencySymbol } from "@/lib/shop-service";
 
+import { resolvePublicOrgId } from '@/lib/org-resolver';
+
 export default function OrdersPage() {
     const [orders, setOrders] = useState<MerchandiseOrder[]>([]);
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
-
-    const ORG_ID = "fa547adf-f820-412f-9458-d6bade11517d";
+    const [orgId, setOrgId] = useState<string>("");
 
     useEffect(() => {
         const initOrders = async () => {
+            const resolvedOrgId = await resolvePublicOrgId();
+            if (resolvedOrgId) setOrgId(resolvedOrgId);
+
             const currentUser = await Auth.getCurrentUser();
             setUser(currentUser);
 
@@ -120,7 +124,7 @@ export default function OrdersPage() {
                                         <div className="space-y-1">
                                             <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Total Amount</p>
                                             <p className="text-xs font-black text-primary uppercase tracking-tight">
-                                                {getCurrencySymbol(ORG_ID)}{order.total_amount.toLocaleString()}
+                                                {getCurrencySymbol(orgId)}{order.total_amount.toLocaleString()}
                                             </p>
                                         </div>
                                     </div>
@@ -137,7 +141,7 @@ export default function OrdersPage() {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <h4 className="text-[11px] font-black uppercase tracking-tight truncate group-hover:text-primary transition-colors">{item.product?.name}</h4>
-                                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">Qty: {item.quantity} • {getCurrencySymbol(ORG_ID)}{item.unit_price.toLocaleString()}</p>
+                                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">Qty: {item.quantity} • {getCurrencySymbol(orgId)}{item.unit_price.toLocaleString()}</p>
                                             </div>
                                             <Link href={`/merchandise/${item.product?.slug}`}>
                                                 <button className="p-2 text-muted-foreground hover:text-primary transition-colors rounded-lg hover:bg-primary/5">

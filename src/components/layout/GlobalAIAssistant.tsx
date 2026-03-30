@@ -13,6 +13,7 @@ import { supabase } from "@/lib/supabase";
 import { Auth } from "@/lib/auth";
 
 import { getContextForPersona } from "@/lib/context-injections";
+import { resolvePublicOrgId, resolveAdminOrgId } from "@/lib/org-resolver";
 
 export function GlobalAIAssistant({ 
     user: propUser, 
@@ -104,9 +105,20 @@ export function GlobalAIAssistant({
 
         try {
             console.log(`[UI] Starting generation for ${currentPersona}...`);
+            
+            // Resolve Org Context
+            let orgId = '';
+            if (isAdmin) {
+              const res = await resolveAdminOrgId();
+              orgId = res?.orgId || '';
+            } else {
+              orgId = (await resolvePublicOrgId()) || '';
+            }
+
             // Phase 3: RAG Context Injection
             const contextData = await getContextForPersona(
                 currentPersona.toLowerCase(),
+                orgId,
                 user?.id || null, 
                 userRole || 'visitor'
             );

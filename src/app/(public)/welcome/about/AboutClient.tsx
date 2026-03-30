@@ -111,8 +111,8 @@ export default function AboutClient() {
         </div>
       </section>
 
-      {/* SECTION 3: VISION & MISSION */}
-      <section id="vision" className="py-24 px-6 bg-white dark:bg-slate-900 overflow-hidden relative">
+        {/* Vision & Mission Section */}
+        <section id="vision" className="py-32 px-6 overflow-hidden relative" style={{ background: 'var(--background)' }}>
         <div className="max-w-screen-xl mx-auto grid md:grid-cols-2 gap-8 relative z-10">
           <div className="group rounded-[4rem] p-16 border-2 transition-all duration-500 hover:-translate-y-2 flex flex-col justify-center space-y-6" 
                style={{ background: 'var(--card)', borderColor: 'var(--jkc-gold)' }}>

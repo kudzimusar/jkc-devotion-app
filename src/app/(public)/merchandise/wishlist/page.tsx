@@ -14,15 +14,19 @@ import { Auth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { ShopService, Merchandise, getCurrencySymbol } from "@/lib/shop-service";
 
+import { resolvePublicOrgId } from '@/lib/org-resolver';
+
 export default function WishlistPage() {
     const [products, setProducts] = useState<Merchandise[]>([]);
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
-
-    const ORG_ID = "fa547adf-f820-412f-9458-d6bade11517d";
+    const [orgId, setOrgId] = useState<string>("");
 
     useEffect(() => {
         const initWishlist = async () => {
+            const resolvedOrgId = await resolvePublicOrgId();
+            if (resolvedOrgId) setOrgId(resolvedOrgId);
+
             const currentUser = await Auth.getCurrentUser();
             setUser(currentUser);
 
@@ -30,7 +34,7 @@ export default function WishlistPage() {
                 try {
                     const wishlistIds = await ShopService.getWishlist(currentUser.id);
                     if (wishlistIds.length > 0) {
-                        const allProducts = await ShopService.getProducts(ORG_ID);
+                        const allProducts = await ShopService.getProducts(resolvedOrgId || "");
                         setProducts(allProducts.filter(p => wishlistIds.includes(p.id)));
                     }
                 } catch (e) {
@@ -39,7 +43,7 @@ export default function WishlistPage() {
             } else {
                 const stored = JSON.parse(localStorage.getItem("merchandise_wishlist") || "[]");
                 if (stored.length > 0) {
-                    const allProducts = await ShopService.getProducts(ORG_ID);
+                    const allProducts = await ShopService.getProducts(resolvedOrgId || "");
                     setProducts(allProducts.filter(p => stored.includes(p.id)));
                 }
             }
@@ -135,7 +139,7 @@ export default function WishlistPage() {
                                         <h4 className="text-sm font-black uppercase tracking-tight truncate">{product.name}</h4>
                                         <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest italic">{product.category?.name || "Uncategorized"}</p>
                                         <div className="text-lg font-black text-primary mt-2">
-                                            {getCurrencySymbol(ORG_ID)}{product.price.toLocaleString()}
+                                            {getCurrencySymbol(orgId)}{product.price.toLocaleString()}
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">

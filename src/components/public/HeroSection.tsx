@@ -167,18 +167,21 @@ function HeroCheckIn({ user }: { user: any }) {
 /* ═══════════════════════════════════════════════════════════════
    Main HeroSection
 ═══════════════════════════════════════════════════════════════ */
-export default function HeroSection() {
-  const [user, setUser] = useState<any>(null);
+export default function HeroSection({ user }: { user?: any }) {
+  // Use user from props or local state if not provided
+  const [localUser, setLocalUser] = useState<any>(null);
+  const activeUser = user || localUser;
 
   useEffect(() => {
+    if (user) return; // Already have user from props
     supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) setUser(data.user);
+      if (data?.user) setLocalUser(data.user);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null);
+      setLocalUser(session?.user ?? null);
     });
     return () => subscription.unsubscribe();
-  }, []);
+  }, [user]);
 
   return (
     <section
@@ -276,7 +279,7 @@ export default function HeroSection() {
 
           {/* ── Sunday Check-In Widget (replaces raw countdown) ── */}
           <div className="flex justify-center mt-6">
-            <HeroCheckIn user={user} />
+            <HeroCheckIn user={activeUser} />
           </div>
         </motion.div>
       </div>

@@ -16,17 +16,21 @@ import { Auth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { ShopService, getCurrencySymbol } from "@/lib/shop-service";
 
+import { resolvePublicOrgId } from '@/lib/org-resolver';
+
 export default function CartPage() {
     const [cart, setCart] = useState<any[]>([]);
     const [savedItems, setSavedItems] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
+    const [orgId, setOrgId] = useState<string>("");
     const router = useRouter();
-
-    const ORG_ID = "fa547adf-f820-412f-9458-d6bade11517d";
 
     useEffect(() => {
         const initCart = async () => {
+            const resolvedOrgId = await resolvePublicOrgId();
+            if (resolvedOrgId) setOrgId(resolvedOrgId);
+
             const currentUser = await Auth.getCurrentUser();
             setUser(currentUser);
 
@@ -227,7 +231,7 @@ export default function CartPage() {
                                                                     {item.name}
                                                                 </Link>
                                                                 <div className="text-2xl font-black text-primary whitespace-nowrap">
-                                                                    {getCurrencySymbol(ORG_ID)}{(item.price * item.quantity).toLocaleString()}
+                                                                    {getCurrencySymbol(orgId)}{(item.price * item.quantity).toLocaleString()}
                                                                 </div>
                                                             </div>
                                                             
@@ -268,7 +272,7 @@ export default function CartPage() {
                                 </div>
                                     
                                     <div className="text-right pt-4 text-base md:text-lg">
-                                        Subtotal ({cart.length} items): <span className="font-bold">{getCurrencySymbol(ORG_ID)}{subtotal.toLocaleString()}</span>
+                                        Subtotal ({cart.length} items): <span className="font-bold">{getCurrencySymbol(orgId)}{subtotal.toLocaleString()}</span>
                                     </div>
 
                                 {/* Saved for Later */}
@@ -290,7 +294,7 @@ export default function CartPage() {
                                                     </div>
                                                     <div className="space-y-1">
                                                         <h4 className="text-sm font-black uppercase tracking-tight line-clamp-1">{item.name}</h4>
-                                                        <p className="text-lg font-black text-primary">{getCurrencySymbol(ORG_ID)}{item.price.toLocaleString()}</p>
+                                                        <p className="text-lg font-black text-primary">{getCurrencySymbol(orgId)}{item.price.toLocaleString()}</p>
                                                     </div>
                                                     <Button 
                                                         variant="outline" 
@@ -323,25 +327,25 @@ export default function CartPage() {
                                     <div className="space-y-4 mb-8">
                                         <div className="flex justify-between items-baseline">
                                             <span className="text-sm font-black uppercase tracking-widest text-muted-foreground">Subtotal</span>
-                                            <span className="text-xl font-black">{getCurrencySymbol(ORG_ID)}{subtotal.toLocaleString()}</span>
+                                            <span className="text-xl font-black">{getCurrencySymbol(orgId)}{subtotal.toLocaleString()}</span>
                                         </div>
                                         
                                         <div className="space-y-2 pt-4 border-t border-border/50">
                                             <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
                                                 <span>Tax (10% JCT)</span>
-                                                <span>+{getCurrencySymbol(ORG_ID)}{tax.toLocaleString()}</span>
+                                                <span>+{getCurrencySymbol(orgId)}{tax.toLocaleString()}</span>
                                             </div>
                                             <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">
                                                 <span>Shipping</span>
                                                 <span className={shipping === 0 ? "text-green-600" : ""}>
-                                                    {shipping === 0 ? "FREE" : `+${getCurrencySymbol(ORG_ID)}${shipping.toLocaleString()}`}
+                                                    {shipping === 0 ? "FREE" : `+${getCurrencySymbol(orgId)}${shipping.toLocaleString()}`}
                                                 </span>
                                             </div>
                                         </div>
  
                                         <div className="pt-6 mt-6 border-t font-black flex justify-between items-center">
                                             <span className="text-sm uppercase tracking-[0.2em]">Grand Total</span>
-                                            <span className="text-3xl tracking-tighter text-primary">{getCurrencySymbol(ORG_ID)}{total.toLocaleString()}</span>
+                                            <span className="text-3xl tracking-tighter text-primary">{getCurrencySymbol(orgId)}{total.toLocaleString()}</span>
                                         </div>
                                     </div>
  

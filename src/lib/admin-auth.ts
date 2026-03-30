@@ -6,6 +6,7 @@
  */
 import { supabase } from './supabase';
 import { basePath as BP } from './utils';
+import { resolveAdminOrgId } from './org-resolver';
 
 export const ADMIN_ROLES = ['super_admin', 'pastor', 'owner', 'shepherd', 'admin', 'ministry_lead', 'ministry_leader', 'member'] as const;
 export type AdminRole = typeof ADMIN_ROLES[number];
@@ -54,16 +55,9 @@ export const AdminAuth = {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session?.user) return null;
 
-            // STRICT ROLE SOURCE: org_members
-            const { data: member } = await supabase
-                .from('org_members')
-                .select('role, org_id')
-                .eq('user_id', session.user.id)
-                .maybeSingle();
-
-            const role = member?.role;
-            const orgId = member?.org_id;
-
+            const res = await resolveAdminOrgId();
+            if (!res) return null;
+            const { orgId, role } = res;
             if (!role || !ADMIN_ROLES.includes(role as AdminRole)) return null;
 
             const { data: profile } = await supabase

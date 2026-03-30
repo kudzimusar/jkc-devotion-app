@@ -27,20 +27,26 @@ if (fs.existsSync(envPath)) {
 // Use singleton from lib/supabase-admin
 
 // Guard Agent 2
+// Guard Agent 2
+let currentOrgId: string | null = null;
+
 async function validateApiKey(apiKey: string): Promise<boolean> {
     if (!apiKey) return false;
-    // Local environment override/bypass for ease-of-use if desired
-    if (apiKey === "dev_bypass_key") return true;
+    // Local environment override/bypass for ease-of-use
+    if (apiKey === "dev_bypass_key") {
+        currentOrgId = "fa547adf-f820-412f-9458-d6bade11517d"; // Default to JKC in dev
+        return true;
+    }
 
     const keyHash = crypto.createHash("sha256").update(apiKey).digest("hex");
     const { data, error } = await supabase
         .from("api_keys")
-        .select("id, is_active")
+        .select("id, is_active, org_id")
         .eq("key_hash", keyHash)
-        .eq("org_id", "fa547adf-f820-412f-9458-d6bade11517d")
         .maybeSingle();
 
     if (error || !data) return false;
+    currentOrgId = data.org_id;
     return data.is_active;
 }
 
@@ -81,13 +87,15 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => {
 server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     const isJapanese = request.params.uri.endsWith("/ja");
 
+    if (!currentOrgId) throw new Error("Organization context not resolved. Please provide a valid API key.");
+
     // Format current date in YYYY-MM-DD
     const today = new Date().toISOString().split("T")[0];
     const { data, error } = await supabase
         .from("devotions")
         .select("title, scripture, declaration, theme, week_theme")
         .eq("date", today)
-        .eq("org_id", "fa547adf-f820-412f-9458-d6bade11517d")
+        .eq("org_id", currentOrgId)
         .single();
 
     if (error || !data) {
@@ -95,10 +103,9 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     }
 
     // NOTE: Assuming there's a localized DB text or just returning standard data
-    // We attach a note if localization isn't perfectly supported in DB yet based on Schema.
     const content = {
         Title: data.title,
-        Scripture: data.scripture,
+        Scripture: data. scripture,
         "Main Text": data.theme,
         "Daily Declaration": data.declaration,
         "Week Theme": data.week_theme,
@@ -148,13 +155,15 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 });
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    if (!currentOrgId) throw new Error("Organization context not resolved. Please provide a valid API key.");
+
     if (request.params.name === "search_devotions") {
         const { query, theme } = request.params.arguments as any;
 
         let dbQuery = supabase
             .from("devotions")
             .select("date, title, theme, scripture, declaration")
-            .eq("org_id", "fa547adf-f820-412f-9458-d6bade11517d")
+            .eq("org_id", currentOrgId)
             .or(`title.ilike.%${query}%,scripture.ilike.%${query}%,declaration.ilike.%${query}%,theme.ilike.%${query}%`)
             .limit(5);
 
@@ -198,7 +207,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const { data, error } = await supabase
             .from("devotions")
             .select("title, theme, week_theme")
-            .eq("org_id", "fa547adf-f820-412f-9458-d6bade11517d")
+            .eq("org_id", currentOrgId)
             .eq("week", week_number);
 
         if (error || !data || data.length === 0) {

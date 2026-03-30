@@ -2,22 +2,29 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { format } from 'date-fns';
 import { Calendar, Tag, Users } from 'lucide-react';
+import { resolvePublicOrgId } from '@/lib/org-resolver';
 
 export default function SermonSection() {
   const [sermon, setSermon] = useState<any>(null);
 
   useEffect(() => {
-    supabase
-      .from('public_sermons')
-      .select('*')
-      .eq('status', 'published')
-      .order('is_featured', { ascending: false })
-      .order('date', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (data) Object.keys(data).length > 0 && setSermon(data);
-      });
+    const fetchSermon = async () => {
+      const orgId = await resolvePublicOrgId();
+      if (!orgId) return;
+
+      const { data } = await supabase
+        .from('public_sermons')
+        .select('*')
+        .eq('org_id', orgId)
+        .eq('status', 'published')
+        .order('is_featured', { ascending: false })
+        .order('date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (data) setSermon(data);
+    };
+    fetchSermon();
   }, []);
 
   if (!sermon) return null;

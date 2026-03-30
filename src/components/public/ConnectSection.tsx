@@ -17,19 +17,26 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePublicTheme } from './PublicThemeWrapper';
 import { Sparkles, Phone, Mail, HelpCircle, Heart, Languages, Share2, QrCode } from 'lucide-react';
-
-const ORG_ID = "fa547adf-f820-412f-9458-d6bade11517d";
+import { resolvePublicOrgId } from '@/lib/org-resolver';
 
 export default function ConnectSection() {
   const { isDark } = usePublicTheme();
   const [loading, setLoading] = useState(false);
   const [isViaQr, setIsViaQr] = useState(false);
+  const [resolvedOrgId, setResolvedOrgId] = useState<string>('');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('via') === 'qr' || params.get('utm_source') === 'qr') {
       setIsViaQr(true);
     }
+    
+    resolvePublicOrgId().then(id => {
+      if (id) {
+        setResolvedOrgId(id);
+        setFormData(prev => ({ ...prev, org_id: id }));
+      }
+    });
   }, []);
 
   const { values: formData, handleChange: handleFormChange, setValues: setFormData, clear: clearForm } = useStickyForm({
@@ -42,7 +49,7 @@ export default function ConnectSection() {
     preferred_language: 'EN',
     prayer_request: '',
     message: '',
-    org_id: ORG_ID
+    org_id: ''
   }, "public-connect-v2");
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -100,3 +100,5 @@ export const CRITICAL_MINISTRIES = [
     "Health & Wellness",
     "Benevolence & Welfare"
 ];
+
+export { JKC_ORG_ID } from "./org-resolver";

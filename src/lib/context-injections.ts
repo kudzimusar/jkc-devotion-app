@@ -47,6 +47,7 @@ export interface PersonaContext {
 
 export async function getContextForPersona(
   persona: string,
+  orgId: string,
   userId: string | null,
   userRole: string
 ): Promise<Partial<PersonaContext>> {
@@ -83,7 +84,7 @@ export async function getContextForPersona(
         const { data: members } = await supabase
           .from('profiles')
           .select('id, name, email, member_stats(current_streak, last_devotion_date)')
-          .eq('org_id', (await supabase.from('profiles').select('org_id').eq('id', userId).single()).data?.org_id)
+          .eq('org_id', orgId)
           .limit(10);
         
         // Fetch members with recent absences (3+ days as per get_at_risk_members logic)

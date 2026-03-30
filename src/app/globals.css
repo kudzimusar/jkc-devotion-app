@@ -34,6 +34,18 @@
   --color-chart-5: var(--chart-5);
 }
 
+@theme {
+  --color-jkc-navy: #1b3a6b;
+  --color-jkc-gold: #f5a623;
+  --color-nav-bg: var(--nav-bg);
+  --color-nav-border: var(--nav-border);
+  --color-nav-link: var(--nav-link);
+  --color-nav-link-active: var(--nav-link-active);
+  --color-footer-bg: var(--footer-bg);
+  --color-footer-fg: var(--footer-fg);
+  --color-footer-muted: var(--footer-muted);
+}
+
 @layer base {
   :root {
     --background:      #f9fafb;
@@ -59,18 +71,20 @@
     --ring:   #1b3a6b;
     --radius: 0.75rem;
 
-    --nav-bg: rgba(255, 255, 255, 0.85);
-    --nav-border: rgba(0, 0, 0, 0.05);
+    --nav-bg: rgba(255, 255, 255, 1);
+    --nav-border: rgba(0, 0, 0, 0.1);
     --nav-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-    --nav-link: #475569;
+    --nav-link: #334155;
     --nav-link-active: #1b3a6b;
     
-    --footer-bg: #111827;
-    --footer-fg: #ffffff;
-    --footer-muted: rgba(255, 255, 255, 0.6);
+    --footer-bg: #0f172a;
+    --footer-fg: #f1f5f9;
+    --footer-muted: rgba(241, 245, 249, 0.6);
 
     --jkc-navy:  #1b3a6b;
     --jkc-gold:  #f5a623;
+    --background: #ffffff;
+    --foreground: #020617;
   }
 
   .dark {
@@ -92,10 +106,9 @@
     --input:  #1e293b;
     --ring:   #f5a623;
 
-    /* Public Website Nav & Footer Dark Overrides */
-    --nav-bg: rgba(8, 12, 20, 0.85);
-    --nav-border: rgba(255, 255, 255, 0.05);
-    --nav-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    --nav-bg: rgba(13, 19, 31, 1);
+    --nav-border: rgba(255, 255, 255, 0.1);
+    --nav-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
     --nav-link: #94a3b8;
     --nav-link-active: #f5a623;
     

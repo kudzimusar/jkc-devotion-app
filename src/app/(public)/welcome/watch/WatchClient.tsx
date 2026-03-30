@@ -6,6 +6,7 @@ import { Youtube, Search, LucideIcon, FileText, Download, PlayCircle, Star, Book
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import TestimoniesSection from '@/components/public/TestimoniesSection';
+import { resolvePublicOrgId } from '@/lib/org-resolver';
 
 declare global {
   interface Window {
@@ -44,6 +45,7 @@ export default function WatchClient() {
   const [responseType, setResponseType] = useState<'salvation_decision' | 'prayer_request' | 'testimony' | 'membership_interest' | null>(null);
   const [responseMessage, setResponseMessage] = useState('');
   const [isSubmittingResponse, setIsSubmittingResponse] = useState(false);
+  const [orgId, setOrgId] = useState<string | null>(null);
   const playerRef = useRef<any>(null);
   const watchTimerRef = useRef<any>(null);
 
@@ -56,11 +58,21 @@ export default function WatchClient() {
       firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
     }
 
-    const fetchSermons = async () => {
-      const { data: orgData } = await supabase.from('organizations').select('id').limit(1);
-      const orgId = orgData?.[0]?.id;
-      if (!orgId) return;
+    const init = async () => {
+      const id = await resolvePublicOrgId();
+      if (!id) {
+        setLoading(false);
+        return;
+      }
+      setOrgId(id);
+    };
+    init();
+  }, []);
 
+  useEffect(() => {
+    if (!orgId) return;
+
+    const fetchSermons = async () => {
       const { data } = await supabase
         .from('public_sermons')
         .select('*, assets:media_assets(*)')
@@ -75,10 +87,6 @@ export default function WatchClient() {
     };
 
     const checkLive = async () => {
-      const { data: orgData } = await supabase.from('organizations').select('id').limit(1);
-      const orgId = orgData?.[0]?.id;
-      if (!orgId) return;
-
       const { data } = await supabase
         .from('live_streams')
         .select('*')
@@ -96,7 +104,7 @@ export default function WatchClient() {
         clearInterval(interval);
         if (watchTimerRef.current) clearInterval(watchTimerRef.current);
     };
-  }, []);
+  }, [orgId]);
 
   const initPlayer = (videoId: string, sermonId: string) => {
     if (!window.YT || !window.YT.Player) return;
@@ -140,9 +148,6 @@ export default function WatchClient() {
   };
 
   const trackEvent = async (sermonId: string, event: string, watchTime: number = 0) => {
-    // Phase 4.1: Track event
-    const { data: orgData } = await supabase.from('organizations').select('id').limit(1);
-    const orgId = orgData?.[0]?.id;
     if (!orgId) return;
 
     await supabase.from('member_analytics').insert({
@@ -168,8 +173,6 @@ export default function WatchClient() {
         return;
     }
 
-    const { data: orgData } = await supabase.from('organizations').select('id').limit(1);
-    const orgId = orgData?.[0]?.id;
     if (!orgId) return;
 
     if (type === 'like' ? isLiked : isBookmarked) {
@@ -196,8 +199,7 @@ export default function WatchClient() {
     }
 
     setIsSubmittingResponse(true);
-    const { data: orgData } = await supabase.from('organizations').select('id').limit(1);
-    const orgId = orgData?.[0]?.id;
+    if (!orgId) return;
 
     const { error } = await supabase.from('spiritual_responses').insert({
         org_id: orgId,
@@ -266,7 +268,18 @@ export default function WatchClient() {
       (s.transcript_text?.toLowerCase() || '').includes(search.toLowerCase())
     );
 
-  return (
+   if (!loading && !orgId) {
+     return (
+       <div className="pt-32 min-h-screen flex items-center justify-center text-center px-6">
+         <div className="space-y-6">
+           <h1 className="text-4xl font-black uppercase text-white/20 italic">No Organization Found</h1>
+           <p className="text-white/40 font-medium max-w-md mx-auto">We couldn't resolve the church context for this domain. Please check the URL or contact your administrator.</p>
+         </div>
+       </div>
+     );
+   }
+
+   return (
     <div className="pt-16 min-h-screen">
       <section className="relative py-32 px-6 flex items-center justify-center overflow-hidden bg-black/40">
         <div className="absolute inset-0 pointer-events-none">

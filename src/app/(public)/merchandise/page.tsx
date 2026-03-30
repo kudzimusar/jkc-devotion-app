@@ -18,6 +18,8 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { Auth } from "@/lib/auth";
 
+import { resolvePublicOrgId } from '@/lib/org-resolver';
+
 export default function MerchandisePage() {
     const [products, setProducts] = useState<Merchandise[]>([]);
     const [loading, setLoading] = useState(true);
@@ -26,17 +28,19 @@ export default function MerchandisePage() {
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [wishlist, setWishlist] = useState<string[]>([]);
     const [user, setUser] = useState<any>(null);
-
-    // Japan Kingdom Church ORG_ID
-    const ORG_ID = "fa547adf-f820-412f-9458-d6bade11517d"; 
+    const [orgId, setOrgId] = useState<string>("");
 
     useEffect(() => {
         const initData = async () => {
+            const resolvedOrgId = await resolvePublicOrgId();
+            if (resolvedOrgId) {
+                setOrgId(resolvedOrgId);
+                await loadProducts(resolvedOrgId);
+            }
+            
             const currentUser = await Auth.getCurrentUser();
             setUser(currentUser);
             
-            await loadProducts();
-
             if (currentUser) {
                 // 1. Sync local cart if any
                 const localCart = JSON.parse(localStorage.getItem("merchandise_cart") || "[]");
@@ -126,10 +130,13 @@ export default function MerchandisePage() {
         }
     };
 
-    async function loadProducts() {
+    async function loadProducts(targetOrgId?: string) {
+        const fetchId = targetOrgId || orgId;
+        if (!fetchId) return;
+        
         try {
             setLoading(true);
-            const productsData = await ShopService.getProducts(ORG_ID);
+            const productsData = await ShopService.getProducts(fetchId);
             setProducts(productsData);
         } catch (err) {
             console.error(err);
@@ -263,7 +270,7 @@ export default function MerchandisePage() {
                                     <>
                                         <Link href={`/merchandise/${featuredProduct.slug}`}>
                                             <Button className="h-12 px-8 rounded-full bg-white text-black font-black text-[10px] uppercase tracking-widest hover:bg-white/90 shadow-2xl w-full sm:w-auto">
-                                                Order Now - {getCurrencySymbol(ORG_ID)}{featuredProduct.price.toLocaleString()}
+                                                Order Now - {getCurrencySymbol(orgId)}{featuredProduct.price.toLocaleString()}
                                             </Button>
                                         </Link>
                                         <Link href={`/merchandise/${featuredProduct.slug}`}>
@@ -389,7 +396,7 @@ export default function MerchandisePage() {
                         <Package size={80} className="mx-auto mb-8 text-muted-foreground opacity-20" />
                         <h3 className="text-4xl font-black uppercase tracking-tight mb-4">Stock In Transit</h3>
                         <p className="text-muted-foreground max-w-sm mx-auto font-medium">Our collection is currently being restocked for the new season. Check back soon for the Kingdom exclusive drop.</p>
-                        <Button variant="outline" onClick={loadProducts} className="mt-10 rounded-full h-14 px-10 font-black uppercase text-xs tracking-widest border-2">Refresh Store</Button>
+                        <Button variant="outline" onClick={() => loadProducts()} className="mt-10 rounded-full h-14 px-10 font-black uppercase text-xs tracking-widest border-2">Refresh Store</Button>
                     </div>
                 ) : (
                     <div className={viewMode === "grid" 
@@ -446,7 +453,7 @@ export default function MerchandisePage() {
                                                 </Link>
                                                 
                                                 <div className="flex items-center justify-between gap-2">
-                                                    <div className="text-sm md:text-base font-black text-foreground">{getCurrencySymbol(ORG_ID, "Japan")}{product.price.toLocaleString()}</div>
+                                                    <div className="text-sm md:text-base font-black text-foreground">{getCurrencySymbol(orgId, "Japan")}{product.price.toLocaleString()}</div>
                                                     <div className="flex items-center gap-0.5 text-amber-500">
                                                         <Star size={8} fill="currentColor" />
                                                         <span className="text-[7px] font-black tracking-widest mt-0.5">4.9</span>

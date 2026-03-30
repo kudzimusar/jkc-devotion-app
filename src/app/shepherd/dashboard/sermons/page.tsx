@@ -27,7 +27,8 @@ import { supabase } from '@/lib/supabase';
 export default function SermonManagementPage() {
   const [sermons, setSermons] = useState<Sermon[]>([]);
   const [loading, setLoading] = useState(true);
-  const { orgId, role } = useAdminCtx();
+  const { orgId: contextOrgId, role } = useAdminCtx();
+  const orgId = contextOrgId;
   const router = useRouter();
   const [editingSermon, setEditingSermon] = useState<Sermon | null>(null);
   const [editTranscript, setEditTranscript] = useState('');
@@ -126,7 +127,8 @@ export default function SermonManagementPage() {
   }, [orgId]);
 
   useEffect(() => {
-    if (orgId) {
+    const effectiveOrgId = orgId;
+    if (effectiveOrgId) {
       fetchSermons();
       fetchLiveStatus();
       fetchHealthData();

@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useStickyForm } from "@/hooks/useStickyForm";
+import { resolveAdminOrgId } from "@/lib/org-resolver";
 
 interface UsherReportModalProps {
     registeredCount: number;
@@ -40,11 +41,11 @@ export function UsherReportModal({ registeredCount, onReportSubmitted }: UsherRe
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Authentication required");
 
-            const { data: profile } = await supabase.from('profiles').select('org_id').eq('id', user.id).single();
-            const org_id = profile?.org_id;
+            const orgContext = await resolveAdminOrgId();
+            if (!orgContext) throw new Error("Could not resolve organization context");
 
             const { error } = await supabase.from('ministry_reports').insert([{
-                org_id: org_id || 'fa547adf-f820-412f-9458-d6bade11517d',
+                org_id: orgContext.orgId,
                 ministry_id: '03361b54-1169-4ad5-8119-84b8712ba0a6', // Ushering Ministry
                 submitted_by: user.id,
                 report_type: 'attendance',

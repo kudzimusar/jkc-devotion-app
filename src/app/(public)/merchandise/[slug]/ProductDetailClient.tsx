@@ -26,6 +26,8 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Auth } from "@/lib/auth";
 
+import { resolvePublicOrgId } from '@/lib/org-resolver';
+
 export default function ProductDetailClient({ slug }: { slug: string }) {
     const router = useRouter();
     
@@ -37,16 +39,19 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
     const [isLiked, setIsLiked] = useState(false);
     const [wishlist, setWishlist] = useState<string[]>([]);
     const [user, setUser] = useState<any>(null);
-
-    const ORG_ID = "fa547adf-f820-412f-9458-d6bade11517d";
+    const [orgId, setOrgId] = useState<string>("");
 
     useEffect(() => {
         const initData = async () => {
+             const resolvedOrgId = await resolvePublicOrgId();
+             if (resolvedOrgId) {
+                setOrgId(resolvedOrgId);
+                if (slug) await loadProduct(resolvedOrgId);
+             }
+             
              const currentUser = await Auth.getCurrentUser();
              setUser(currentUser);
              
-             if (slug) await loadProduct();
-
              if (currentUser) {
                  const dbWishlist = await ShopService.getWishlist(currentUser.id);
                  setWishlist(dbWishlist);
@@ -123,10 +128,13 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
         }
     };
 
-    async function loadProduct() {
+    async function loadProduct(targetOrgId?: string) {
+        const fetchId = targetOrgId || orgId;
+        if (!fetchId) return;
+
         try {
             setLoading(true);
-            const data = await ShopService.getProductBySlug(ORG_ID, slug);
+            const data = await ShopService.getProductBySlug(fetchId, slug);
             if (data) {
                 // Ensure data is rich for our UI
                 const enriched: Merchandise = {
@@ -292,7 +300,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                             <div className="bg-[#fcfcff] border border-border/50 rounded-[2.5rem] p-8 md:p-10 space-y-8 shadow-sm">
                                 <div className="flex items-baseline gap-4">
                                     <div className="text-4xl font-black text-foreground">
-                                        {getCurrencySymbol(ORG_ID)}{product.price.toLocaleString()}
+                                        {getCurrencySymbol(orgId)}{product.price.toLocaleString()}
                                     </div>
                                     <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">(税込 / TAX INCLUDED)</span>
                                 </div>
@@ -309,7 +317,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                                             <div className="p-2 bg-indigo-500/10 rounded-xl">
                                                 <Truck size={16} className="text-indigo-400" />
                                             </div>
-                                            <span className="text-[10px] font-black uppercase tracking-widest italic">Free Shipping Over {getCurrencySymbol(ORG_ID)}10,000</span>
+                                            <span className="text-[10px] font-black uppercase tracking-widest italic">Free Shipping Over {getCurrencySymbol(orgId)}10,000</span>
                                         </div>
                                     </div>
                                     <div className="space-y-4">
@@ -424,7 +432,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                         <div className="flex items-center gap-6 max-w-lg mx-auto">
                             <div className="flex-1">
                                 <p className="text-[9px] font-black uppercase tracking-widest truncate text-muted-foreground mb-1">{product.name}</p>
-                                <p className="text-xl font-black text-foreground">{getCurrencySymbol(ORG_ID)}{product.price.toLocaleString()}</p>
+                                <p className="text-xl font-black text-foreground">{getCurrencySymbol(orgId)}{product.price.toLocaleString()}</p>
                             </div>
                             <Button 
                                 onClick={addToCart}

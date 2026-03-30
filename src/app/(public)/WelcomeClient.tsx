@@ -61,7 +61,7 @@ export default function WelcomeClient() {
   return (
     <div className="overflow-x-hidden pt-16" style={{ background: 'var(--background)' }}>
       <InitialConnectModal />
-      <HeroSection />
+      <HeroSection user={user} />
 
       {/* Impact stats bar — directly below hero */}
       <ImpactStrip />

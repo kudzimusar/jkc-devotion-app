@@ -42,13 +42,19 @@ export default function MinistriesListPage() {
 
   useEffect(() => {
     async function fetchMinistries() {
-      const { data } = await supabase
-        .from('ministries')
-        .select('*')
-        .order('name');
-      
-      if (data) setMinistries(data);
-      setLoading(false);
+      try {
+        const { data, error } = await supabase
+          .from('ministries')
+          .select('*')
+          .order('name');
+        
+        if (error) throw error;
+        if (data) setMinistries(data);
+      } catch (err) {
+        console.error('Failed to fetch ministries:', err);
+      } finally {
+        setLoading(false);
+      }
     }
     fetchMinistries();
   }, []);

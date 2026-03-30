@@ -164,7 +164,9 @@ export default function PublicNav() {
       <nav
         className="fixed top-0 w-full z-50 h-16 transition-all duration-300"
         style={{
-          background: 'var(--nav-bg)',
+          background: scrolled ? 'var(--nav-bg)' : 'transparent',
+          backdropFilter: scrolled ? 'blur(12px)' : 'none',
+          WebkitBackdropFilter: scrolled ? 'blur(12px)' : 'none',
           borderBottom: scrolled ? '1px solid var(--nav-border)' : '1px solid transparent',
           boxShadow: scrolled ? 'var(--nav-shadow)' : 'none',
         }}
@@ -177,7 +179,7 @@ export default function PublicNav() {
               src="/jkc-devotion-app/images/logo-horizontal.png"
               alt="Japan Kingdom Church"
               className="h-8 w-auto"
-              style={{ filter: isDark ? 'none' : 'brightness(0) saturate(100%) invert(18%) sepia(21%) font-black(33%)' }}
+              style={{ filter: (isDark || !scrolled) ? 'brightness(1.5)' : 'none' }}
             />
           </Link>
 
@@ -192,7 +194,11 @@ export default function PublicNav() {
               >
                 <Link href={link.href}
                   className="text-[10px] font-black tracking-[0.3em] transition-all flex items-center gap-1.5 py-2"
-                  style={{ color: link.label === 'DEVOTION' ? 'var(--jkc-gold)' : 'var(--nav-link)' }}>
+                  style={{ 
+                    color: link.label === 'DEVOTION' 
+                      ? 'var(--jkc-gold)' 
+                      : (scrolled ? 'var(--nav-link)' : 'rgba(255,255,255,0.9)') 
+                  }}>
                   {link.label === 'DEVOTION' && <BookOpen className="w-3.5 h-3.5" />}
                   {link.label}
                   {link.subLinks && (
@@ -260,7 +266,7 @@ export default function PublicNav() {
             )}
 
             <Link href="/merchandise/cart" className="relative p-2 hover:opacity-80 transition-opacity">
-              <ShoppingCart size={18} style={{ color: 'var(--foreground)' }} />
+              <ShoppingCart size={18} style={{ color: scrolled ? 'var(--foreground)' : 'white' }} />
               {cartCount > 0 && (
                 <span className="absolute top-0 right-0 w-4 h-4 bg-[var(--jkc-gold)] text-[var(--jkc-navy)] text-[8px] font-black rounded-full flex items-center justify-center border border-white">
                   {cartCount}
@@ -350,7 +356,7 @@ export default function PublicNav() {
           {/* Mobile hamburger */}
           <div className="flex items-center gap-2 md:hidden">
             <Link href="/merchandise/cart" className="relative p-2">
-              <ShoppingCart size={22} style={{ color: 'var(--foreground)' }} />
+              <ShoppingCart size={22} style={{ color: scrolled ? 'var(--foreground)' : 'white' }} />
               {cartCount > 0 && (
                 <span className="absolute top-1 right-1 w-4 h-4 bg-[var(--jkc-gold)] text-[var(--jkc-navy)] text-[8px] font-black rounded-full flex items-center justify-center">
                   {cartCount}
@@ -358,7 +364,7 @@ export default function PublicNav() {
               )}
             </Link>
             <button className="p-2 transition-colors"
-              style={{ color: 'var(--foreground)' }}
+              style={{ color: scrolled ? 'var(--foreground)' : 'white' }}
               onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>

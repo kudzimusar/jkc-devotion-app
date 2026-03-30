@@ -19,6 +19,8 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
+import { resolvePublicOrgId } from '@/lib/org-resolver';
+
 interface AuthModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -33,7 +35,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: A
     const { values, handleChange: handleStickyChange, clear } = useStickyForm({
         email: "",
         name: "",
-        org_id: "fa547adf-f820-412f-9458-d6bade11517d", // Default to JKC
+        org_id: "", // Dynamic resolution below
         isMemberRequest: false
     }, "auth-modal");
 
@@ -46,9 +48,15 @@ export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: A
                 .select('id, name')
                 .eq('subscription_status', 'active');
             if (data) setOrganizations(data);
+
+            // Resolve current org for default selection
+            const resolvedOrgId = await resolvePublicOrgId();
+            if (resolvedOrgId && !values.org_id) {
+                handleStickyChange("org_id", resolvedOrgId);
+            }
         };
         fetchOrgs();
-    }, []);
+    }, [values.org_id]);
 
     const email = values.email;
     const setEmail = (val: string) => handleStickyChange("email", val);

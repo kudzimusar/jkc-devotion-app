@@ -32,7 +32,7 @@ export default function PublicFooter() {
               <img
                 src="/jkc-devotion-app/images/logo-horizontal.png"
                 alt="Japan Kingdom Church"
-                className="h-8 w-auto block brightness-110"
+                className="h-8 w-auto block"
               />
             </Link>
             <div className="space-y-3">
