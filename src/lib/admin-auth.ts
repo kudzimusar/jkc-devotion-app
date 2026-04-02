@@ -94,6 +94,7 @@ export const AdminAuth = {
         // Clear any existing cache
         if (typeof window !== 'undefined') {
             sessionStorage.removeItem(CACHE_KEY);
+            clearOrgCache();
         }
 
         const { error: authError } = await supabase.auth.signInWithPassword({ email, password });

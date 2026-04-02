@@ -3,6 +3,7 @@
 ## Overview
 - **Purpose**: A comprehensive, AI-driven spiritual infrastructure (Church OS) for Japan Kingdom Church (JKC), designed for tracking daily spiritual maturity, journaling, and providing pastoral leadership with AI-powered "Prophetic Intelligence."
 - **Target users**: Church members (Bilingual congregation), Ministry Leaders, Pastors, and Church Administrators.
+- **SaaS Status**: ~75% SaaS-ready as of commit `b9383430` (March 2026). Multi-tenancy hardening complete. Intelligence pipeline operational. Hosting migration pending.
 
 ## Tech Stack
 | Category | Technology | Version | Detail |
@@ -10,7 +11,7 @@
 | Frontend | Next.js (App Router) | 16.1.6 | Static Export (`output: 'export'`) |
 | Library | React | 19.2.3 | Client-side hydration focus |
 | Database | Supabase (PostgreSQL) | Latest | RLS-enforced multi-tenancy |
-| AI Engine | Vertex AI / Gemini | SDK ^0.24 | GCP Service Account / Client-side fetch |
+| AI Engine | Gemini 2.5 Flash | SDK ^0.24 | via `NEXT_PUBLIC_GEMINI_API_KEY` (client) / `GEMINI_API_KEY` (Edge Functions only) |
 | Comm / Mail | Brevo (Sendinblue) | API v3 | Strategic Newsletters & Victory Briefings |
 | Analytics | Custom (Supabase) | `AnalyticsService` | Behavioral tracking & PIL Feed ingestion |
 | UI Strategy | Stitch / Radix | Latest | Functional "stitching" of design tokens |
@@ -18,298 +19,333 @@
 | Styling | Tailwind CSS 4 | ^4.0.0 | Premium Glassmorphism & Animations |
 | Hosting | GitHub Pages | - | Deployed at `kudzimusar.github.io/jkc-devotion-app/` |
 
+> **AI Model Note**: Confirmed working model is `gemini-2.5-flash`. The string `gemini-1.5-pro` is deprecated in this codebase. Edge Functions use `GEMINI_API_KEY` (server-side). Client-side AI uses `NEXT_PUBLIC_GEMINI_API_KEY`. Never swap these.
+
 ## Architecture
 - **Structure**: 
   - `src/app`: Routing and layout logic using the App Router.
-  - `src/lib`: Core business logic, backend services (PIL Engine, AI Service, Bible API).
+  - `src/lib`: Core business logic, backend services (PIL Engine, AI Service, Bible API, **org-resolver**).
   - `src/components`: Reusable UI components (Feature-based and Common).
   - `src/hooks`: Data fetching and authentication logic hooks.
-  - `supabase/`: Database schema, migrations, and RLS policies.
-- **Data flow**: Client-side data fetching via React Query and Supabase standard clients. Administrative dashboards (Shepherd/Pastor HQ) often bypass RLS via `supabaseAdmin` or secure Server Action patterns (limited by static export) to provide aggregate analytics.
+  - `supabase/`: Database schema, migrations, RLS policies, and Edge Functions.
+- **Data flow**: Client-side data fetching via React Query and Supabase standard clients. Administrative dashboards (Shepherd/Pastor HQ) use `supabaseAdmin` for aggregate analytics. Static export constraint means no Server Actions in production.
 - **Key patterns**: Service-layer pattern in `src/lib`, feature-scoping via `org_id` for multi-tenancy, and "Prophetic Intelligence" aggregation for pastoral care.
 
-## Multi-Tenant SaaS Architecture
+---
 
-Church OS is a **multi-tenant platform** where each denomination is a separate tenant:
+## Multi-Tenant Architecture — HARDENED (March 2026)
 
+Church OS is a **fully multi-tenant platform** as of commit `b9383430`. All hardcoded `org_id` literals have been removed from production logic.
+
+### The Canonical Org Resolution Pattern
+
+**All org_id resolution MUST go through `src/lib/org-resolver.ts`.** This is the single source of truth. Never hardcode org_id literals in any file other than `org-resolver.ts`.
+
+```typescript
+// For public pages (WatchClient, SermonSection, ConnectSection, etc.)
+import { resolvePublicOrgId } from '@/lib/org-resolver';
+const orgId = await resolvePublicOrgId(); // Maps hostname → org_id
+
+// For admin/dashboard pages
+import { resolveAdminOrgId } from '@/lib/org-resolver';
+const { orgId, role } = await resolveAdminOrgId(); // Maps session → org_id
+
+// On logout — MUST be called to prevent session bleeding
+import { clearOrgCache } from '@/lib/org-resolver';
+clearOrgCache();
+```
+
+### org-resolver.ts Behaviour
+- **Layer 1**: In-memory module-level memoization (fastest, resets on page navigation)
+- **Layer 2**: `sessionStorage` cache with 10-minute TTL
+- **Layer 3**: Supabase `organizations` table lookup
+- **Dev/GitHub Pages fallback**: Uses `JKC_ORG_ID` constant when `hostname` is `localhost`, `127.0.0.1`, or contains `github.io`
+- **Production**: Resolves by `eq('domain', hostname)`
+- **`clearOrgCache()`**: Resets all three layers. Called in `AdminAuth.logoutAdmin()`.
+
+### JKC_ORG_ID Constant
+The JKC org UUID is exported from `org-resolver.ts` as `JKC_ORG_ID` and re-exported from `constants.ts`. It must only appear in these two files as a constant definition. Anywhere else is a bug.
+
+```typescript
+import { JKC_ORG_ID } from '@/lib/org-resolver';
+// or
+import { JKC_ORG_ID } from '@/lib/constants';
+```
+
+### Tenant Concepts
 | Concept | Database | Description | Example |
 |---------|----------|-------------|---------|
-| **Denomination (Tenant)** | `organizations` table, unique `org_id` | A church/denomination that subscribes to Church OS | JKC Church, Grace Fellowship, City Harvest |
-| **Branch (Sub-Entity)** | `branch_id` or location field within same org | A campus or location under a denomination | JKC Tokyo, JKC Osaka (same org_id) |
-| **Member** | `profiles` table with `org_id` | Individual person belonging to a denomination | John Doe (member of JKC) |
-| **Pastor/Admin** | `profiles` with role = pastor/owner | Leader who oversees a denomination | Pastor Smith (oversees JKC) |
-
-## SaaS Evolution: Infrastructure vs. Tenant
-
-Church OS is evolving from a single-tenant pilot (JKC) into a scalable **SaaS Infrastructure**. This requires a strict separation between the **Platform Layer** (Church OS) and the **Tenant Layer** (The Church).
-
-### 1. The Platform Layer (Infrastructure)
-The "Glue" of the ecosystem. It is brand-neutral and provides the tools:
-- **Platform Gateway**: The `/login` and `/onboarding` routes. These are neutral entry points for all pastors and members of any church.
-- **Mission Control (Shepherd)**: The administrative backend for church staff.
-- **Pastor HQ**: High-level prophetic intelligence for church leadership.
-- **Member Profile Card**: The digital identity for individual believers.
-
-### 2. The Tenant Layer (The Church Website)
-The "Face" of the church. This is the `(public)` route group.
-- **Dynamic Skeleton**: The public website is a "Template" (Skeleton). It pulls its Name, Logo, Mission Statement, and Colors from the `organizations` table.
-- **Data Seeding**: New churches can bulk-upload their existing congregation data via **CSV/Excel Importers** in Mission Control to "pre-populate" their church ecosystem without waiting for individual member sign-ups.
-- **Tenant Isolation**: All public data (Sermons, Events, Testimonies) is strictly scoped to the `org_id` derived from the subdomain or church selection.
-
-### Two Distinct Sign-Up Flows
-
-**Flow 1: Church Sign-Up (SaaS Onboarding)**
-- **Purpose:** A new denomination registers to use Church OS
-- **Location:** `/onboarding` route
-- **What happens:**
-  - Creates new row in `organizations` table
-  - Creates first user with role = 'owner' or 'pastor'
-  - This denomination becomes a tenant with its own org_id
-- **Example:** "Grace Fellowship" signs up to use Church OS
-- **AI Provisioning (Prophetic Intelligence Layer):**
-  - **Step 1 (DNA Collection):** Church shares "Theological DNA" (Tradition, Emphasis, Worship Style, Size).
-  - **Step 2 (DNA Storage):** Saved to `organization_intelligence` table with status `pending`.
-  - **Step 3 (AI Generation):** `provision-church-intelligence` Edge Function triggered via API.
-  - **Step 4 (Gemini Insight):** AI generates "Growth Blueprint" based on DNA.
-  - **Step 5 (Brevo Delivery):** Pastor receives "First Prophetic Insight" via email.
-  - **Step 6 (Dashboard Activation):** `AIOnboardingStatus` widget updates to `completed`, revealing the blueprint in the Pastor HQ.
-
-**Flow 2: Member Sign-Up**
-- **Purpose:** An individual joins an existing denomination
-- **Location:** `AuthModal` or `/login` with church selection
-- **What happens:**
-  - User selects existing organization
-  - Creates profile with that org_id
-  - Role = 'member' or 'guest'
-- **Example:** New attendee joins JKC Church
+| **Denomination (Tenant)** | `organizations` table, unique `org_id` | A church that subscribes to Church OS | JKC Church, Grace Fellowship |
+| **Branch (Sub-Entity)** | `branch_id` within same org | A campus under a denomination | JKC Tokyo, JKC Osaka |
+| **Member** | `profiles` table with `org_id` | Individual person | John Doe (JKC member) |
+| **Pastor/Admin** | `org_members` with role = pastor/owner | Leader overseeing a denomination | Pastor Smith (JKC) |
 
 ### Isolation Rules
+- Every database query MUST include `.eq('org_id', orgId)` filtering
+- RLS policies enforce tenant isolation at the database level
+- Pastors/admins can only see data within their `org_id`
+- Members can only see their own data within their `org_id`
+- `supabaseAdmin` bypasses RLS — only use in Mission Control / Shepherd routes, never on member-facing pages
 
-- Every database query MUST include `org_id` filtering
-- RLS policies enforce `org_id = auth.jwt()->>'org_id'`
-- Pastors/admins can only see data within their org_id
-- Members can only see their own data within their org_id
-- Branches (sub-entities) share the same org_id and are managed via branch_id
+---
+
+## Intelligence Pipeline Architecture — OPERATIONAL (March 2026)
+
+### Two Separate AI Insight Tables — NEVER Union These
+| Table | Writer | Reader | Purpose |
+|-------|--------|--------|---------|
+| `prophetic_insights` | PIL Engine (`pil-engine.ts`), weekly sweep | Shepherd Dashboard, Pastor HQ, AI Assistant | Global org-level predictive insights |
+| `ai_ministry_insights` | Intelligence route (`/api/intelligence/run/route.ts`) fan-out | Ministry Dashboard (`MinistryDashboardClient.tsx`) | Ministry-scoped insights for leaders |
+
+These tables have different schemas and different audiences. They must never be unioned or confused.
+
+### Intelligence Flow (End-to-End)
+```
+pg_cron: 0 12 * * 0 (Sunday 12:00 UTC = 21:00 JST)
+    → weekly-sweep Edge Function (supabase/functions/weekly-sweep/index.ts)
+        → Step 1: run_weekly_ministry_sweep (SQL RPC) → church_health_metrics
+        → Step 2: /api/intelligence/run (POST)
+            → PIL Engine → prophetic_insights (global, org-scoped)
+            → Fan-out → ai_ministry_insights (per active ministry, is_approved: false)
+```
+
+### Approval Gate
+`ai_ministry_insights` rows are inserted with `is_approved: false`. A pastor must approve them in the **Shepherd Dashboard → Ministry Insight Approvals card** before ministry leaders can see them. Approval stamps `approved_by` (user UUID) and `approved_at` (timestamp).
+
+### Weekly Sweep Edge Function
+- **File**: `supabase/functions/weekly-sweep/index.ts`
+- **Org resolution**: `Deno.env.get('DEFAULT_ORG_ID')` with JKC UUID fallback
+- **Cron job name**: `weekly-ministry-sweep`
+- **Schedule**: `0 12 * * 0` (UTC)
+- **Auth**: Uses real service role key stored in pg_cron command (verified March 2026)
+
+### PIL Engine Rules
+- Uses standard `supabase` client (not `supabaseAdmin`) — respects RLS
+- `orgId` is always passed as a parameter — never resolved internally
+- Writes to `prophetic_insights` only — never to `ai_ministry_insights` directly
+- 12 predictive models: disengagement, geo, crisis, retention, isolation, spiritual_climate, pastoral_load, stewardship, evangelism, sermon_impact, burnout, AI-generated insights
+
+---
+
+## Admin Auth & Session Management
+
+### Role Hierarchy
+```typescript
+export const ROLE_HIERARCHY: Record<AdminRole, number> = {
+    super_admin: 100,
+    pastor: 100,
+    owner: 95,
+    shepherd: 80,
+    admin: 70,
+    ministry_lead: 60,
+    ministry_leader: 60,
+    member: 10,
+};
+```
+
+### Session Rules
+- Admin sessions cached in `sessionStorage` with 60-minute TTL (`church_os_admin_session`)
+- Multi-org users: active org stored in `sessionStorage` as `church_os_active_org`
+- **`clearOrgCache()` must be called on every logout** to prevent session bleeding between users on the same browser tab
+- `resolveAdminOrgId()` handles multi-org users safely — no `.maybeSingle()` on `org_members`
+
+### Mission Control vs Member App
+| Context | Client | RLS |
+|---------|--------|-----|
+| Mission Control / Shepherd routes | `supabaseAdmin` (service role) | Bypassed |
+| Member app / public routes | `supabase` (anon key) | Enforced |
+| PIL Engine | `supabase` (anon key) | Enforced |
+| Edge Functions | `SUPABASE_SERVICE_ROLE_KEY` | Bypassed |
+
+---
+
+## Activity Logging
+
+### Two Loggers — Use the Right One
+| File | Function | Context | org_id Source |
+|------|----------|---------|---------------|
+| `src/lib/activity-logger.ts` | `logActivity()` | Client-side, member app | Resolved from `org_members` table via session |
+| `src/app/actions/log-activity.ts` | `logActivityServer()` | Server actions / admin | Resolved from `org_members` table via `userId` param |
+
+Both loggers dynamically resolve `org_id` — never hardcoded. The `logActivity()` function uses a three-tier fallback: `metadata.org_id` → `user_metadata.org_id` → `profiles` table lookup.
+
+---
+
+## Key Fixed Issues (March 2026 Audit)
+
+### pastoral_notes Query
+The correct foreign key hint for joining `profiles` is `member_user_id`, not `member_id`:
+```typescript
+// CORRECT
+.select('*, profiles!member_user_id(name)')
+
+// WRONG — causes 400 error
+.select('*, profiles!member_id(name)')
+```
+A unique constraint exists on `(member_user_id, category, is_resolved)` to prevent duplicate active counseling notes.
+
+### devotions Table
+All 31 rows backfilled with `org_id = JKC_ORG_ID`. Phase 1 data integrity complete.
+
+---
+
+## Static Export Constraints
+
+The app uses `output: 'export'` (GitHub Pages). This means:
+- **No Server Actions in production** — route through Edge Functions instead
+- **No standard API routes at runtime** — `/api/*` routes only work in dev
+- **`supabaseAdmin` cannot be used in client components** — service role key would be exposed
+- **`generateStaticParams` required** in every dynamic route layout
+- **Edge Functions** are the correct pattern for server-side logic in production
+
+---
+
+## SaaS Evolution: Platform vs Tenant Layer
+
+### Platform Layer (Infrastructure)
+Brand-neutral tools provided to all churches:
+- `/login` and `/onboarding` — neutral entry points
+- Mission Control (Shepherd) — admin backend
+- Pastor HQ — prophetic intelligence
+- Member Profile Card — digital identity
+
+### Tenant Layer (The Church Website)
+The `(public)` route group. Dynamic skeleton pulling Name, Logo, Colors from `organizations` table. All public data (Sermons, Events, Testimonies) scoped to `org_id` derived from domain via `resolvePublicOrgId()`.
+
+### Two Sign-Up Flows
+
+**Flow 1: Church Sign-Up (SaaS Onboarding)**
+- Location: `/onboarding`
+- Creates row in `organizations` + first user as `owner`/`pastor`
+- Triggers `provision-church-intelligence` Edge Function
+- AI generates Growth Blueprint → delivered via Brevo email
+
+**Flow 2: Member Sign-Up**
+- Location: `AuthModal` or `/login`
+- User selects existing organization
+- Creates profile with that `org_id`, role = `member`/`guest`
+
+---
 
 ## AI-First Onboarding & Intelligence Provisioning
 
-### Onboarding Flow Architecture
+### Onboarding Steps
+| Step | Name | Key Fields |
+|------|------|------------|
+| 1 | Church Identity | Name, contact email, subdomain, logo |
+| 2 | Intelligence DNA | Tradition, Emphasis, Worship Style, Size, Language |
+| 3 | Plan & Summary | Plan selection, AI badge |
 
-Church OS features a **standalone, AI-first onboarding wizard** decoupled from the public website:
-
-| Step | Name | Purpose | Key Fields |
-|------|------|---------|------------|
-| 1 | Church Identity | Collect basic church information | Church name, contact email, subdomain, logo upload |
-| 2 | Intelligence DNA | Capture theological profile for AI calibration | Tradition, Ministry Emphasis, Worship Style, Size, Language |
-| 3 | Plan & Summary | Confirm and launch | Plan selection, summary review, AI badge |
-
-### Theological DNA Fields
-
-The following fields are stored in `organization_intelligence` table and used to calibrate the Prophetic Intelligence Layer:
-
-| Field | Options | Purpose |
-|-------|---------|---------|
-| `theological_tradition` | Pentecostal, Reformed, Evangelical, Baptist, Anglican, Non-Denominational, Other | Denominational context for AI insights |
-| `ministry_emphasis` | Evangelism-led, Discipleship-focused, Social-Justice, Scripture-intensive, Worship-led, Other | Strategic focus areas |
-| `worship_style` | Modern/Contemporary, Traditional/Hymnal, Blended, Spontaneous/Spirit-led, Other | Cultural context for recommendations |
-| `congregation_size` | <100, 100-500, 500-2000, 2000+ | Scale-appropriate insights |
-| `primary_language` | English, Japanese, Bilingual, Korean, Portuguese, Spanish, Other | Multilingual support |
-
-### Session Management & Data Persistence
-
-To prevent data loss during onboarding and across all forms, Church OS implements:
-
-| Feature | Purpose | Implementation |
-|---------|---------|----------------|
-| **Auto-Save** | Automatically saves form progress | `useAutoSave` hook with 1-second debounce, 7-day expiry |
-| **Session Heartbeat** | Keeps session alive during activity | Refreshes session every 10 minutes on user activity |
-| **Session Expiry Warning** | Warns users before session expires | Displays warning at 5 minutes remaining |
-| **Magic Link Invitations** | Allows admins to invite new churches | 48-hour expiry links via `/api/onboarding/invite` |
-| **Form Recovery** | Restores saved data after session loss | Restore prompt shows time since last save |
-
-### Storage & Assets
-
-| Bucket | Purpose | RLS Policy |
-|--------|---------|------------|
-| `church-logos` | Church branding images | Users can upload only to their org_id |
+### Theological DNA Fields (stored in `organization_intelligence`)
+| Field | Options |
+|-------|---------|
+| `theological_tradition` | Pentecostal, Reformed, Evangelical, Baptist, Anglican, Non-Denominational, Other |
+| `ministry_emphasis` | Evangelism-led, Discipleship-focused, Social-Justice, Scripture-intensive, Worship-led, Other |
+| `worship_style` | Modern/Contemporary, Traditional/Hymnal, Blended, Spontaneous/Spirit-led, Other |
+| `congregation_size` | <100, 100-500, 500-2000, 2000+ |
+| `primary_language` | English, Japanese, Bilingual, Korean, Portuguese, Spanish, Other |
 
 ### AI Provisioning Pipeline
+1. Organization created in `organizations`
+2. DNA saved to `organization_intelligence`
+3. API key generated for MCP access
+4. `provision-church-intelligence` Edge Function triggered
+5. Gemini generates first Growth Blueprint insight
+6. Welcome email via Brevo
+7. Dashboard widget shows provisioning status
 
-When a new church completes onboarding:
+---
 
-1. **Organization Created**: Row in `organizations` with logo URL
-2. **Intelligence DNA Saved**: Row in `organization_intelligence` with all theological fields
-3. **API Key Generated**: For MCP access
-4. **Edge Function Triggered**: `provision-church-intelligence` called with DNA data
-5. **AI Calibration**: Gemini Pro generates first "Growth Blueprint" insight
-6. **Welcome Email**: Sent via Brevo with AI-generated insight
-7. **Dashboard Widget**: Shows provisioning status in real-time
-
-### Database Schema Additions
-
-```sql
--- Organization intelligence table
-CREATE TABLE organization_intelligence (
-    org_id UUID PRIMARY KEY REFERENCES organizations(id),
-    theological_tradition TEXT NOT NULL DEFAULT 'Non-Denominational',
-    ministry_emphasis TEXT NOT NULL DEFAULT 'Discipleship-focused',
-    worship_style TEXT NOT NULL DEFAULT 'Blended',
-    congregation_size TEXT NOT NULL DEFAULT '100-500',
-    primary_language TEXT NOT NULL DEFAULT 'Bilingual',
-    ai_provisioning_status TEXT DEFAULT 'pending',
-    welcome_insight_generated BOOLEAN DEFAULT false,
-    ai_last_calibrated_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now()
-);
-
--- Onboarding invitations tracking
-CREATE TABLE onboarding_invitations (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    email TEXT NOT NULL,
-    church_name TEXT,
-    invited_by UUID REFERENCES auth.users(id),
-    invited_at TIMESTAMPTZ DEFAULT now(),
-    status TEXT DEFAULT 'pending',
-    completed_at TIMESTAMPTZ
-);
-```
-
-### Design System: Ethereal Sanctuary
-
-The onboarding experience uses a custom design system:
-
-| Token | Value | Usage |
-|-------|-------|-------|
-| Primary Dark | `#0a0a0a` | Background |
-| Glass Card | `bg-white/10 backdrop-blur-xl` | Form containers |
-| Accent Cyan | `#06b6d4` | Primary buttons, focus states |
-| Accent Gold | `#fbbf24` | Secondary accents, AI badge |
-| Ghost Border | `border-white/20` | Subtle card borders |
-| Ambient Aura | `shadow-[0_0_15px_rgba(6,182,212,0.15)]` | Hover effects |
-
-### Fonts
-- **Headlines**: Manrope (variable font, weight 500-700)
-- **Body**: Inter (weight 400-500)
-
-
-## Data Analytics & AI: The Core of Church OS
-
-Church OS is built on a **data analytics engine** that powers every feature. All data (journals, prayer requests, engagement, AI insights) flows through a unified analytics pipeline that:
-
-- **Tracks church health** (engagement, growth, spiritual maturity)
-- **Drives AI insights** (Prophetic Intelligence, churn prediction, strategic recommendations)
-- **Enables business intelligence** for the Church OS team (MRR, adoption, trends)
-
-### AI Governance & Knowledge Architecture
-The AI system is governed by a dedicated **Knowledge Architecture** located in the `/knowledge` directory. This ensures consistency, security, and context-aware behavior across all personas.
-
-- **[Persona Specifications](knowledge/personas/index.md)**: The 7 core identities (Concierge, Shepherd, etc.).
-- **[Domain Knowledge Base](knowledge/domain/index.md)**: Data grounding rules and RAG taxonomy.
-- **[Prompt Library](knowledge/prompts/index.md)**: Standardized system instructions and templates.
-- **[Evaluation Matrix](knowledge/evaluation/index.md)**: Success metrics and quality benchmarks.
-
-### Analytics Data Flow
-
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  User Actions   │ ──► │ AnalyticsService│ ──► │  Data Warehouse │
-│ (journals, etc.)│     │ (Supabase)      │     │ (Supabase)      │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-                                                        │
-                                                        ▼
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  Vertex AI      │ ◄── │  Aggregated     │     │  Admin Console  │
-│  (PIL Engine)   │     │  Metrics        │ ──► │  (Dashboards)   │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-        │                                               │
-        ▼                                               ▼
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  Prophetic      │     │  Cross‑tenant   │     │  Business       │
-│  Insights       │     │  Analytics      │     │  Intelligence   │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-```
-
-### Analytics Tables (Existing & Planned)
-
-| Table | Purpose |
-|-------|---------|
-| `user_events` | All user actions (login, journal, prayer, etc.) with metadata |
-| `daily_org_metrics` | Aggregated metrics per organization (engagement, active users, AI calls) |
-| `prophetic_insights` | AI-generated insights delivered to pastors |
-| `ai_feedback` | Pastor ratings on insight helpfulness |
-| `company_analytics` | Cross-tenant aggregates (MRR, churn, adoption rates) |
-
-### AI Training Pipeline
-
-Anonymized data from churches that opt in is used to:
-- Improve the PIL Engine (better insight accuracy)
-- Train churn prediction models
-- Identify growth patterns across denominations
-
-Churches can opt in/out via `organization_intelligence.ai_training_opt_in` (default: false).
-
-## Super Admin Console (The SaaS Command Center)
-
-The Super Admin Console (`/super-admin`) is the internal operations platform for the Church OS management team. It provides a central hub for managing the entire SaaS multi-tenant ecosystem.
-
-| Module | Purpose | Implementation |
-|--------|---------|----------------|
-| **Tenant Browser** | Directory of all churches/organizations | `/super-admin/tenants` |
-| **Tenant Details** | Individual church management & overrides | `/super-admin/tenants/[id]` |
-| **Audit Logs** | Security & administrative event tracking | `admin_audit_logs` table |
-| **Subscription Overrides** | Manual control of plans & billing status | `/super-admin/tenants/actions.ts` |
-| **AI Decision Intelligence** | Predictive analytics for SaaS operations | `admin_ai_insights` table |
-| **Daily Analytics Aggregator** | Daily snapshots of platform KPIs | `daily-analytics-aggregator` Edge Function |
-
-## Dashboards & Analytics
-
-Church OS features several specialized dashboards for different roles:
+## Dashboards
 
 | Dashboard | Access | Core Purpose | Data Source |
 |-----------|--------|--------------|-------------|
-| **Devotion Dashboard** | Members | Spiritual growth tracking | `journal_entries`, `prayer_requests` |
-| **Pastor HQ / Shepherd** | Pastors/Leaders | Congregation health & care | `prophetic_insights`, `user_events` |
-| **Super Admin Console** | Company Admin | SaaS business metrics & operations | `company_analytics`, `admin_ai_insights` |
+| **Devotion Dashboard** | Members | Spiritual growth tracking | `soap_entries`, `member_stats` |
+| **Shepherd Dashboard** | Pastors/Leaders | Congregation health & care | `prophetic_insights`, `ai_ministry_insights` |
+| **Ministry Dashboard** | Ministry Leaders | Ministry-level insights | `ai_ministry_insights` (approved only) |
+| **Pastor HQ** | Pastors | Strategic intelligence | `vw_*` views, `prophetic_insights` |
+| **Super Admin Console** | Church OS Team | SaaS business metrics | `company_analytics`, `admin_ai_insights` |
 
-### Platform Metrics Tracking
+### Shepherd Dashboard Intelligence Cards
+- **Prophetic Insights**: From `prophetic_insights`, unacknowledged, sorted by risk
+- **Ministry Insight Approvals** *(NEW)*: From `ai_ministry_insights` where `is_approved = false`. One-tap approval stamps `approved_by` and `approved_at`, making insight visible to ministry leaders
 
-The `daily-analytics-aggregator` function runs at midnight to calculate:
-- **MRR (Monthly Recurring Revenue)**: Sum of all active/trialing monthly subscription prices.
-- **Churn Rate**: Percentage of suspended organizations vs. total.
-- **User Growth**: Total registered profiles across the entire platform.
-- **Plan Distribution**: Breakdown of organizations by product tier (Lite, Pro, Enterprise).
-- **AI Health**: Count of unresolved administrative insights.
+---
 
-## AI Decision Intelligence for Admin Console
+## pg_cron Jobs (Active)
 
-The Admin Console includes an **AI co-pilot** for the operations team. Every view includes AI-generated insights that help prioritize administrative actions.
+| Job Name | Schedule | Command |
+|----------|----------|---------|
+| `aggregate-sermons-5min` | `*/5 * * * *` | `SELECT public.aggregate_all_sermon_stats()` |
+| `job-worker-1min` | `* * * * *` | `SELECT public.process_pending_jobs()` |
+| `weekly-ministry-sweep` | `0 12 * * 0` | POST to `weekly-sweep` Edge Function with service role key |
 
-- **Churn Risk**: Identifies churches at risk of leaving based on engagement drops.
-- **Upgrade Opportunities**: Predicts when a church will outgrow its current plan.
-- **Anomalies**: Alerts on unusual platform activity (e.g., failed AI provision, trial expiry).
-- **Automation**: The `ai-decision-engine` Edge Function runs daily sweeps to refresh all admin insights.
+---
 
-All AI insights are stored in `admin_ai_insights` and displayed prominently in the dashboard and tenant views to ensure the platform remains healthy and growing.
+## Edge Functions (Deployed)
 
-## Conventions
-- **File naming**: Components use `PascalCase.tsx`, services/utils use `kebab-case.ts`.
-- **Component structure**: Functional components with arrow functions or standard declarations, typically using `export default`.
-- **Import order**: External libraries followed by internal absolute imports (e.g., `@/components`, `@/lib`).
-- **Styling approach**: Tailwind CSS 4 utility classes for layout, Framer Motion for animations, and CSS variables in `globals.css` for the design system.
-- **State management**: React Query handles server state (cache/fetching), while `useState`/`useEffect` handles local UI interactions.
-- **API calls**: Direct Supabase wrapper calls defined in `src/lib` services.
-- **Error handling**: `Sonner` toast notifications for user-facing errors, try/catch patterns in services.
-- **Admin Security**: Server-side checks via `supabaseAdmin` for all privileged super-admin operations.
+| Function | Trigger | Purpose |
+|----------|---------|---------|
+| `weekly-sweep` | pg_cron Sunday 12:00 UTC | Health score SQL sweep + AI intelligence sweep |
+| `ai-worker` | job-worker-1min | Processes pending AI jobs from `job_queue` |
+| `ai-insight-metrics` | Manual/scheduled | Aggregates insight metrics |
+| `daily-analytics-aggregator` | Midnight daily | Platform KPIs (MRR, churn, user growth) |
+| `ai-decision-engine` | Daily | Admin console AI insights refresh |
+| `onboarding-invite` | Manual | Magic link church invitations |
+| `onboarding-register` | On signup | Church registration completion |
+| `provision-church-intelligence` | Post-onboarding | AI Growth Blueprint generation |
+| `send-system-alert` | On trigger | System notifications |
+| `dispatch-broadcasts` | Scheduled | Newsletter/broadcast delivery |
+| `visitor-connector` | On new visitor | Visitor follow-up automation |
+| `process-escalations` | On escalation | Routes escalations to correct department |
+| `process-reminders` | Scheduled | User reminder delivery |
+
+---
+
+## Known Constraints & Gotchas
+
+- **Static Export**: No Server Actions or standard API routes in production. Use Edge Functions for server-side logic.
+- **`supabaseAdmin` scope**: Only in Mission Control/Shepherd routes. Never in member-facing components.
+- **`org_id` on every query**: Every database query must be scoped by `org_id` — enforced by RLS and by convention.
+- **AI table separation**: `prophetic_insights` and `ai_ministry_insights` must never be unioned. Different schemas, different audiences.
+- **Gemini model string**: Always `gemini-2.5-flash`. The string `gemini-1.5-pro` or `gemini-3.1-pro` are wrong.
+- **Edge Function env vars**: Use `GEMINI_API_KEY` (not `NEXT_PUBLIC_GEMINI_API_KEY`) in Edge Functions.
+- **`generateStaticParams`**: Required in every dynamic route layout for static export.
+- **Hydration & PWA**: `postbuild` copies index to 404 for SPA routing — do not remove.
+- **pastoral_notes FK**: Join hint is `profiles!member_user_id`, not `profiles!member_id`.
+- **Memoized org resolver**: Module-level variables in `org-resolver.ts` reset on page navigation in static export. `clearOrgCache()` must be called on logout.
+
+---
+
+## Project-Specific Rules
+
+- **org_id is mandatory**: Every database query MUST be scoped by `org_id`. Use `org-resolver.ts`. Never hardcode.
+- **Aesthetics First**: Premium glassmorphic/vibrant theme. Navy `#1b3a6b`, Gold `#f5a623`, Amber `#e8940a`, Cream `#fef8ec`.
+- **SOAP Methodology**: Journaling must adhere to Scripture, Observation, Application, Prayer protocol.
+- **Admin Security**: Shepherd and Pastor dashboards must have role-based checks. MFA for strategic layer.
+- **Surgical changes only**: Single-file edits with verification after each change. Multi-file sweeps cause cascading regressions (documented history on public website).
+- **Screenshot verification**: Desktop Chrome at minimum 1280px after any UI change to public routes.
+- **Inline styles for dark components**: Use inline styles on dark-island public components rather than CSS class overrides to prevent light-mode CSS conflicts.
+- **Commit at stable checkpoints**: Always `npx tsc --noEmit` before committing. Zero errors required.
+
+---
 
 ## Common Commands
+
 | Purpose | Command |
 |---------|---------|
 | Dev | `npm run dev` |
-| Build | `npm run build` (Includes widget compilation) |
-| Post-Build | `npm run postbuild` (Copies index to 404 for SPA routing) |
+| Build | `npm run build` |
+| Post-Build | `npm run postbuild` |
 | Lint | `npm run lint` |
+| Type check | `npx tsc --noEmit` |
 | Local MCP | `npx tsx src/mcp-server/index.ts` |
+| Deploy Edge Function | `supabase functions deploy [name] --project-ref dapxrorkcvpzzkggopsa` |
+| Set Supabase secret | `supabase secrets set KEY=value` |
+| Check hardcoded GUIDs | `grep -rn "fa547adf-f820-412f-9458-d6bade11517d" src/ --include="*.ts" --include="*.tsx" \| grep -v "org-resolver.ts"` |
+
+---
+
 ## Skills
 
 | # | Skill | Trigger | Purpose | Status |
@@ -320,21 +356,29 @@ All AI insights are stored in `admin_ai_insights` and displayed prominently in t
 | 4 | `add_rbac` | "Add role check to [component]" | Role-based access control implementation | ✅ Existing |
 | 5 | `create_migration` | "Create migration for [table]" | Database migrations with RLS | ✅ Existing |
 | 6 | `brevo_newsletter` | "Add newsletter signup" or "Send weekly briefing" | Email communications via Brevo | ✅ Existing |
-| 7 | `vertex_ai_pil` | "Generate prophetic insight for [topic]" or "Run PIL analysis" | AI insight generation via Vertex AI | ✅ Existing |
+| 7 | `vertex_ai_pil` | "Generate prophetic insight for [topic]" or "Run PIL analysis" | AI insight generation via Gemini | ✅ Existing |
 | 8 | `analytics_tracking` | "Track user [action]" or "Add analytics to [feature]" | User behavior tracking via AnalyticsService | ✅ Existing |
-| 9 | `provision_ai_intelligence` | "Provision AI for [church]" | Manual or automated AI growth blueprint lifecycle | ✅ New |
-| 10 | `onboarding_insight_dashboard` | "Add AI onboarding widget" | Real-time AI provisioning status | ✅ New |
-| 11 | `magic_link_invitation` | "Send church invitation" | Magic link onboarding for new churches | ✅ New |
-| 12 | `auto_save_form` | "Add auto-save to form" | Persistent form data across ecosystem | ✅ New |
-| 13 | `session_heartbeat` | "Add session keep-alive" | Prevent session expiry during long tasks | ✅ New |
+| 9 | `provision_ai_intelligence` | "Provision AI for [church]" | Manual or automated AI growth blueprint lifecycle | ✅ Existing |
+| 10 | `onboarding_insight_dashboard` | "Add AI onboarding widget" | Real-time AI provisioning status | ✅ Existing |
+| 11 | `magic_link_invitation` | "Send church invitation" | Magic link onboarding for new churches | ✅ Existing |
+| 12 | `auto_save_form` | "Add auto-save to form" | Persistent form data across ecosystem | ✅ Existing |
+| 13 | `session_heartbeat" | "Add session keep-alive" | Prevent session expiry during long tasks | ✅ Existing |
+| 14 | `resolve_org_context` | "Add org context to [component]" | Wire `resolvePublicOrgId()` or `resolveAdminOrgId()` into a component | ✅ New |
+| 15 | `ministry_insight_approval` | "Add insight approval UI" | Shepherd Dashboard approval gate for AI ministry insights | ✅ New |
 
-## Known Constraints & Gotchas
-- **Static Export limitations**: The app uses `output: 'export'`, meaning Server Actions and standard API routes are unavailable in production. Logic typically handled by Server Actions must be routed through Edge Functions or secure client-side handlers with strict RLS.
-- **RLS Complexity**: Managing multi-tenant data isolation while allowing pastors aggregate view of "Prophetic Data" requires complex RLS policies and `org_id` scoping in every query.
-- **Hydration & PWA**: Due to `next-pwa` and static export, hydration timing and 404 handling (handled in `postbuild`) are critical for functionality.
+---
 
-## Project-Specific Rules
-- **Multi-tenancy**: Every database query MUST be scoped by `org_id`.
-- **Aesthetics First**: Designs must be premium, using the established glassmorphic/vibrant theme defined in the operations manual.
-- **SOAP Methodology**: Journaling features must strictly adhere to the Scripture, Observation, Application, Prayer protocol.
-- **Admin Security**: Shepherd and Pastor dashboards must have role-based MFA checks.
+## Phase 2 Roadmap (Next)
+
+These items are approved for planning but not yet implemented:
+
+| Item | Priority | Description |
+|------|----------|-------------|
+| **Hosting migration** | High | Move off GitHub Pages to unlock Server Actions and server-side `supabaseAdmin` on member app. Deferred due to cost. |
+| **JWT claim drift hardening** | High | RLS must validate live `org_members`, not just JWT claims. JWT can drift if membership changes mid-session. |
+| **`queryWithOrgScope` wrapper for MCP** | High | MCP server needs a wrapper that injects `org_id` into every query, replacing the current API key lookup pattern. |
+| **Event idempotency** | Medium | Add `event_id` UUID to `system_event_outbox` to prevent duplicate processing. |
+| **AI pipeline rate limiting** | Medium | Per-org rate limiting on Gemini calls to prevent quota exhaustion by a single tenant. |
+| **Org context switching (server-validated)** | Medium | Multi-org admin switching must be server-validated, not just sessionStorage-based. |
+| **File upload server-side org_id validation** | Medium | Storage uploads need server-side `org_id` check — currently client-validated only. |
+| **Blockchain audit layer** | Low | Ethereum L2 (Base/Arbitrum) for immutable Merkle root audit logs. All timestamps must be UTC. |

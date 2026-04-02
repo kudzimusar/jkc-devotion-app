@@ -71,7 +71,8 @@ export default function NewsletterManager() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            const { error } = await supabase.from('newsletters').insert({
+            // 1. Create the high-level newsletter record (for archive/dashboard)
+            const { data: newsletter, error: newsletterError } = await supabase.from('newsletters').insert({
                 org_id: orgId,
                 title: formData.title,
                 content: {
@@ -84,16 +85,36 @@ export default function NewsletterManager() {
                 },
                 author_id: user.id,
                 is_published: formData.is_published
+            }).select().single();
+
+            if (newsletterError) throw newsletterError;
+
+            // 2. TRIGGER COCE: Create a communication campaign for delivery
+            // This will be picked up by the COCE service for multi-channel dispatch.
+            const { error: campaignError } = await supabase.from('communication_campaigns').insert({
+                org_id: orgId,
+                title: formData.title,
+                campaign_type: 'newsletter',
+                subject_en: formData.title,
+                body_en: formData.message,
+                audience_scope: 'org_wide',
+                channels: ['email', 'line', 'in_app'], // Multi-channel by default
+                status: 'scheduled',
+                scheduled_at: new Date().toISOString(),
+                created_by: user.id,
+                trigger_type: 'manual',
+                trigger_ref_id: newsletter.id
             });
 
-            if (error) throw error;
-            toast.success("Newsletter published and metrics synchronized!");
+            if (campaignError) throw campaignError;
+
+            toast.success("Newsletter published and COCE dispatch scheduled!");
             setIsCreating(false);
             setFormData({ title: '', message: '', salvations: 0, growth: 0, mission_progress: 0, is_published: true });
             fetchNewsletters();
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            toast.error("Failed to publish newsletter");
+            toast.error(e.message || "Failed to publish newsletter");
         }
     };
 
@@ -107,23 +128,18 @@ export default function NewsletterManager() {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Not authenticated");
-
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('org_id')
-                .eq('id', user.id)
-                .single();
             
             if (!orgId) throw new Error("No organization ID found");
 
-            const { error } = await supabase.from('news_feed').insert({
+            // Correct table name: member_feed_items
+            const { error } = await supabase.from('member_feed_items').insert({
                 org_id: orgId,
                 feed_type: feedData.feed_type,
                 title: feedData.title,
                 body: feedData.body,
                 cta_text: feedData.cta_text || null,
                 cta_url: feedData.cta_url || null,
-                expires_at: feedData.expires_at || null,
+                expires_at: feedData.expires_at ? new Date(feedData.expires_at).toISOString() : null,
                 published_at: new Date().toISOString()
             });
 

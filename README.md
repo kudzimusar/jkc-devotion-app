@@ -1,127 +1,133 @@
-# 🕊️ Church OS: The Digital Sanctuary & Intelligence Platform
+# 🕊️ Church OS: The Digital Sanctuary & Intelligence Ecosystem
 
-[![Next.js](https://img.shields.io/badge/Next.js-15+-black?logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15.1-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Supabase](https://img.shields.io/badge/DB-Supabase-3ecf8e?logo=supabase)](https://supabase.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Style-Tailwind_4-06b6d4?logo=tailwind-css)](https://tailwindcss.com/)
-[![License](https://img.shields.io/badge/License-Proprietary-red)](#)
+[![AI Engine](https://img.shields.io/badge/AI-Gemini_2.5_Flash-orange)](https://deepmind.google/technologies/gemini/)
 
-**Church OS** is an enterprise-grade, high-performance spiritual infrastructure designed for **Japan Kingdom Church (JKC)**. Built to facilitate the "90 Days of Transformation" journey, it merges daily devotional habits with high-fidelity pastoral intelligence.
-
----
-
-## 🌌 System Vision
-Traditional church management systems are reactive spreadsheets. **Church OS is a proactive shepherd.** It uses AI and data science to predict when members are drifting, identifies geographic growth opportunities across Tokyo, and bridges language barriers in a truly international congregation.
+**Church OS** is a multi-tenant, enterprise-grade spiritual platform designed for **Japan Kingdom Church (JKC)** and the global church ecosystem. It functions as a "Proactive Shepherd," merging high-engagement spiritual growth tools for members with state-of-the-art administrative and intelligence layers for leadership.
 
 ---
 
-## 📖 1. The Devotion Engine (Member Experience)
-A high-engagement Progressive Web App (PWA) that serves as the daily spiritual hub for the congregation.
+## 🏛️ The Five-Pillar Ecosystem
 
-### **Daily Spiritual Interface**
-*   **Dynamic Transformation Ring**: An SVG-based progress visualization that fills as members complete the 90-day curriculum.
-*   **AI Hero Greetings**: Context-aware messages (via `AIService`) that adapt based on a member's current streak and completion status.
-*   **Bilingual Scripture Delivery**: Integrated with the **Bolls Bible API** providing instant toggles between English (NASB) and Japanese (口語訳 - JBS).
-*   **Ask Bible Chat**: A context-bounded AI assistant that allows members to query the day's specific scripture for cultural, historical, or practical insights.
+Church OS is not a single app; it is a full-stack digital ecosystem covering every layer of church life and SaaS administration.
 
-### **The SOAP Journaling System**
-*   **Structured Reflection**: Fields for **S**cripture, **O**bservation, **A**pplication, and **P**rayer.
-*   **Stealth Sentiment Analysis**: Member "Observations" are analyzed by AI to detect emotional trends (Hope, Anxiety, Joy) without violating privacy.
-*   **Gamified Consistency**: Real-time "Day Streaks" and rewards to encourage consistency in the secret place.
+### 🌐 1. Public Website & Member Hub (`/public`, `/devotion`)
+The visitor-facing storefront and the member's spiritual "secret place."
+- **Tenant Branding**: Dynamically pulls name, logo, and core colors from the `organizations` table via the `org-resolver`.
+- **SOAP Devotion Engine**: A daily journaling system (Scripture, Observation, Application, Prayer) with SVG-based progress tracking.
+- **AI Bible Concierge**: A context-aware chat interface for historical and cultural scripture insights.
+- **Bilingual Scripture**: Instant NASB/Japanese toggle for international congregations.
 
----
+### 🛡️ 2. Mission Control: The Shepherd Dashboard (`/shepherd`)
+The administrative heartbeat for managing spiritual health and engagement.
+- **Engagement Radar**: A 0-100 score for every member based on devotion streaks and service activity.
+- **Care Alerts**: Color-coded triggers (🔴 Critical, 🟡 Warning) for inactive members requiring pastoral follow-up.
+- **Victory Briefings & Newsletters**: Automated, AI-summarized church updates and spiritual briefings dispatched via the Brevo engine.
+- **Counseling Queue**: Managing prayer and guidance requests with prioritized categories.
+- **Operational Pulse**: Real-time stats on church-wide spiritual climate.
 
-## 🛡️ 2. Shepherd Dashboard (Mission Control)
-A sophisticated administrative layer for Pastors, Elders, and Ministry Leaders.
+### 📊 3. Ministry Leadership Dashboard (`/ministry-dashboard`)
+Scoped intelligence for specific ministry leads (Worship, Media, Kids, Evangelism).
+- **Ministry-Specific Insights**: AI-generated growth opportunities tailored to each department.
+- **Insight Approval Gate**: A unique pastoral review bridge where AI insights are vetted before being dispatched to ministry leaders.
+- **Resource Matching**: Analyzing member skills and spiritual gifts against ministry needs.
 
-### **Operational Intelligence**
-*   **Engagement Score (0-100)**: A proprietary index weighting devotion completion, service attendance, and ministry activity.
-*   **Care Alerts Radar**: 
-    *   **🔴 Critical**: Members inactive for >14 days.
-    *   **🟡 Warning**: Members inactive for >7 days.
-*   **Counseling Queue**: Management system for spiritual, marriage, and financial guidance requests with categorized urgency.
+### ⚡ 4. Church Onboarding & SaaS Portal (`/onboarding`)
+The gateway for new churches to register and provision their own "Digital Sanctuary."
+- **SaaS Provisioning**: Multi-tier registration flow (Lite, Pro, Enterprise).
+- **AI Intelligence DNA**: Captures the church's tradition, worship style, and language to ground the AI.
+- **Growth Blueprints**: Automated provisioning of the first AI-generated growth strategy upon account setup.
+- **Magic Link Invitations**: Secure, seamless onboarding for church staff.
 
-### **Ministry & Resource Management**
-*   **Ministry Staffing Analysis**: Compares the technical/spiritual skills members have (from their profile) against current ministry needs.
-*   **Fellowship Circles**: Proximity-based group management helping members connect in their local wards.
-*   **Growth Intelligence**: Funnel visualization tracking the Discipleship Pipeline:
-    *   `Invited Visitor` → `First Service` → `Second Visit` → `Salvation` → `Baptism` → `Membership`.
-
----
-
-## 📊 3. Data Analytics & Spiritual Intelligence
-The "Intelligence Layer" that turns database rows into pastoral wisdom.
-
-### **Collective Pulse Analysis**
-*   **Sentiment Modeling**: Aggregate visualization of the church's emotional health based on anonymized SOAP journals.
-*   **Theme Pulse**: A word cloud of the most mentioned spiritual concepts in the congregation each week.
-
-### **Spatial Strategy**
-*   **Geographic Clustering**: Density mapping of members across **Tokyo Wards (Nerima, Setagaya, Adachi, etc.)**.
-*   **Locality Analysis**: Identifying "Dark Spots" where the church has no presence and "Hot Spots" where a new fellowship group should be planted.
+### 🏢 5. Corporate Console: The Super Admin Layer (`/super-admin`)
+The "God-mode" administration for the platform itself.
+- **Platform Analytics**: High-level metrics on MRR, user churn, and platform growth across all tenants.
+- **Tenant Management**: Overlooking all registered church organizations and their health scores.
+- **System Orchestration**: Monitoring background cron jobs (Weekly Sweeps, AI Workers) and serverless function performance.
 
 ---
 
-## 🤖 4. Model Context Protocol (MCP) Integration
-A cutting-edge AI bridge that allows external agents (like Claude Desktop) to interact with the church's knowledge base.
-
-*   **Secure Retrieval**: Uses the `search_devotions` and `get_weekly_overview` tools to query the 90-day library.
-*   **Pastoral Research**: Supports sermon preparation by analyzing church-wide trends while maintaining strict anonymity for journaling.
-
----
-
-## 🛠️ Technology Stack & Architecture
-
-### **Frontend & Framework**
-- **Next.js 15+**: App Router for modern server-side rendering and routing.
-- **TypeScript**: Radical type safety across the entire data layer.
-- **Tailwind CSS v4**: Ultra-modern styling with custom design tokens for "Weekly Themes."
-- **Framer Motion**: Smooth, high-fidelity micro-interactions for a premium feel.
-
-### **Backend & Security**
-- **Supabase (PostgreSQL)**: The heart of our data processing.
-- **Row Level Security (RLS)**: Enforces that journal entries and private profile data are only accessible by the owner.
-- **Security Middleware**: Custom API-key-based guard with domain whitelisting and usage tracking.
-
-### **External Integrations**
-- **Bolls Bible API**: Real-time passage retrieval.
-- **AI Services**: Custom wrappers for OpenAI/Gemini for sentiment analysis and the Bible Chat.
-- **Stripe Integration**: Mocked architecture ready for financial stewardship (Tithes/Offerings).
+## 🧠 Prophetic Intelligence Layer (PIL)
+The "Prophetic Intelligence" brain powers all insights across the ecosystem using 12 predictive models:
+- **Disengagement Modeling**: Identifying drift before it becomes a departure.
+- **Spatial Strategy**: Mapping member density across city wards to identify locations for new church plants.
+- **Collective Pulse**: Aggregate sentiment modeling from anonymized journal data to gauge the "spiritual temperature" of the house.
+- **Sermon Impact Analysis**: Correlating Sunday messages with the following week's journaling themes.
 
 ---
 
-## ⚙️ SaaS & Scalability
-Church OS is built to scale beyond a single location:
-*   **Multi-Branch Onboarding**: A dedicated wizard for registering new churches, domains, and subscription tiers.
-*   **SaaS Tiers**: Lite, Pro, and Enterprise configurations with varying feature sets.
-*   **Organization Isolation**: Middleware ensures no data leakage between different church organizations.
+## 🏗️ Technical Architecture & Developer Ops
 
----
+```mermaid
+graph TD
+    subgraph Ecosystem_Layers [Ecosystem Interfaces]
+        PUB[Public Website]
+        MAPP[Member Hub]
+        SHEP[Mission Control]
+        MIN[Ministry Dashboard]
+        ONB[Onboarding Portal]
+        COR[Corporate Console]
+    end
 
-## 🏁 Getting Started
+    subgraph Service_Logic [The Brain & Services]
+        PIL[PIL Engine]
+        ORG[Org Resolver: Auto-Scoping]
+        AIS[AI Service: Gemini 2.5 Flash]
+        BRV[Brevo Newsletter Engine]
+    end
 
-### **Environment Setup**
-Create a `.env.local` file:
-```env
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=... # For Shepherd Admin Access
-MCP_API_KEY=... # For AI Tool Integration
+    subgraph Infrastructure [Data & Compute]
+        DB[(Multi-Tenant Postgres)]
+        RLS{Row Level Security}
+        EDGE[Supabase Edge Functions]
+    end
+
+    Ecosystem_Layers --> ORG
+    ORG --> Service_Logic
+    Service_Logic --> RLS
+    RLS --> DB
+    EDGE --> Service_Logic
 ```
 
-### **Deployment**
-```bash
-npm install
-npm run build
-npm run start
+### 🪄 Agent Skills & Acceleration (`.antigravity/skills/`)
+The repository is optimized for **Agentic Development** with over 20+ specialized skills:
+- `create_feature_module`: High-fidelity scaffolding of ecosystem pages.
+- `provision_ai_intelligence`: Automating the SaaS provisioning lifecycle.
+- `multi-tenant-scoping`: Wiring hostname → `org_id` resolution into UI layers.
+- `ministry_insight_approval`: Orchestrating the pastoral review workflow.
+
+---
+
+## 📂 Project Organization
+
+```text
+├── .antigravity/skills/   # Agentic accelerators for ecosystem growth
+├── knowledge/             # Domain personas, prompt libraries, and grounding data
+├── supabase/
+│   ├── functions/         # Edge logic (Weekly sweeps, provisioners, broadcasts)
+│   └── migrations/        # RLS multi-tenant database schema
+├── src/app/
+│   ├── (public)/          # Tenant-branded public presence
+│   ├── shepherd/          # Mission Control (Admin Dashboard)
+│   ├── ministry-dashboard/ # Leadership-scoped intelligence
+│   ├── onboarding/        # Church SaaS registration flow
+│   ├── super-admin/       # Corporate/Platform administration
+│   └── lib/               # Core Services (PIL Engine, Org Resolver, AI)
+├── scripts/               # Migration, maintenance, and RLS audit scripts
+└── docs/                  # Operations Manual, Context, and Journey guides
 ```
 
 ---
 
-## 📜 Full Documentation
-For the minute operational details of every feature, refer to the [Full Operations Manual](file:///Users/shadreckmusarurwa/Project%20AI/jkc-devotion-app/docs/church_os_manual.md).
+## 🏁 Quick Start & Index
+- [**Operations Manual**](./CHURCH_OS_OPERATIONS_MANUAL_v2.md) — Visual testing guide for each layer.
+- [**Technical Context**](./PROJECT_CONTEXT.md) — Internal roadmap and technical specs.
+- [**Customer Journey**](./customer_journey_and_usecase.md) — UX flows from Onboarding to Daily Devotion.
 
 ---
 
 Built with reverence for the ministry of **Japan Kingdom Church**.
-**Version 3.0.0 - Digital Transformation for the Kingdom.**
+**Version 3.0.0 — Digital Transformation for the Kingdom.**
