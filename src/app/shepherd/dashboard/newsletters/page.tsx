@@ -48,7 +48,7 @@ interface Campaign {
   total_failed: number;
   created_at: string;
   sent_at: string | null;
-  author?: { name: string } | null;
+  author?: { name: string }[] | null;
 }
 
 interface Newsletter {
@@ -834,7 +834,7 @@ export default function COCEHub() {
                     <div className="min-w-0 flex flex-col justify-center">
                       <p className="font-black text-foreground truncate text-base">{c.title || c.subject_en || "Untitled Campaign"}</p>
                       <p className="text-xs text-muted-foreground mt-0.5 mb-2 truncate">
-                        Created by <span className="font-bold text-foreground">{c.author?.name || "System Base"}</span>
+                        Created by <span className="font-bold text-foreground">{c.author?.[0]?.name || "System Base"}</span>
                       </p>
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${STATUS_COLORS[c.status] || STATUS_COLORS.draft}`}>
