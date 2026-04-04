@@ -169,8 +169,12 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
       if (!currentConvoId) {
         // Use first 30 chars of content as title
         const title = content.length > 50 ? content.substring(0, 47) + '...' : content
-        currentConvoId = await createConversation(title, activeSessionType)
-        if (currentConvoId) setConversationId(currentConvoId)
+        try {
+          currentConvoId = await createConversation(title, activeSessionType)
+          if (currentConvoId) setConversationId(currentConvoId)
+        } catch (e) {
+          console.warn('[ChurchGPT] Could not create conversation, continuing without persistence', e)
+        }
       }
 
       const userMessage: ChurchGPTMessage = {
