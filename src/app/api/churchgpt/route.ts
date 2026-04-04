@@ -3,7 +3,6 @@ import { buildChurchGPTSystemPrompt } from '@/lib/churchgpt/buildSystemPrompt'
 import { createClient } from '@/utils/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { resolvePublicOrgId } from '@/lib/org-resolver'
-export const dynamic = 'force-dynamic'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
