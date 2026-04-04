@@ -44,10 +44,16 @@ function HeroCheckIn({ user }: { user: any }) {
    * DO NOT switch to sequential await calls as it blocks the user experience.
    */
   const handleCheckIn = async (type: string) => {
+    // GUEST FLOW: If no user, trigger the Digital Connect modal
     if (!user) {
-      toast.error('Please sign in to check in.');
+      window.dispatchEvent(new CustomEvent('open-connect-modal'));
+      toast.info('Please fill in our visitor form to complete your check-in!', {
+        icon: '👋',
+      });
       return;
     }
+
+    if (loading || checkedIn) return;
     
     // OPTIMISTIC UPDATE: Show success immediately for perceived zero-latency
     setLoading(true);
@@ -101,25 +107,6 @@ function HeroCheckIn({ user }: { user: any }) {
     );
   }
 
-  /* ── Guest (not signed in) state ── */
-  if (!user) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center gap-3 px-6 py-3 rounded-2xl"
-        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}
-      >
-        <span className="text-xs font-black tracking-widest uppercase" style={{ color: 'var(--footer-muted)' }}>
-          SUNDAY SERVICE TODAY —
-        </span>
-        <Link href="/" className="text-xs font-black tracking-widest uppercase underline underline-offset-2"
-              style={{ color: 'var(--jkc-gold)' }}>
-          SIGN IN TO CHECK IN
-        </Link>
-      </motion.div>
-    );
-  }
 
   /* ── 3-option picker ── */
   const options = [

@@ -9,12 +9,9 @@ export default function InitialConnectModal({ user }: { user?: any }) {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    // SECURITY/UX: Only show for guests who aren't already logged in
-    if (user) return;
-
-    // Check if the user has already seen the modal in this session/browser
-    const hasSeenModal = localStorage.getItem('has_seen_connect_modal');
-    if (!hasSeenModal) {
+    // SECURITY/UX: Only show automatic pop-up for guests who aren't already logged in
+    const hasSeenModal = sessionStorage.getItem('has_seen_connect_modal');
+    if (!user && !hasSeenModal) {
       // Reduced delay to 2 seconds for immediate impact
       const timer = setTimeout(() => {
         setIsOpen(true);
@@ -23,10 +20,17 @@ export default function InitialConnectModal({ user }: { user?: any }) {
     }
   }, [user]);
 
+  // LISTEN FOR CUSTOM TRIGGER (e.g., from Guest Attendance buttons)
+  useEffect(() => {
+    const triggerModal = () => setIsOpen(true);
+    window.addEventListener('open-connect-modal', triggerModal);
+    return () => window.removeEventListener('open-connect-modal', triggerModal);
+  }, []);
+
   const handleClose = () => {
     setIsOpen(false);
-    // Note: To make it reappear in later sessions, we could use a timestamp here
-    localStorage.setItem('has_seen_connect_modal', 'true');
+    // Use sessionStorage to ensure it doesn't pop up again in this session
+    sessionStorage.setItem('has_seen_connect_modal', 'true');
   };
 
   return (

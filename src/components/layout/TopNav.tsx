@@ -43,7 +43,7 @@ export function TopNav({ user, userRole, stats, devotion, currentDate, onLoginCl
                     )}
                     <div className="flex gap-2 items-center">
                         <Button asChild variant="ghost" className="hidden sm:flex items-center gap-2 glass px-4 h-9 md:h-11 rounded-full border-amber-400/30 bg-amber-400/10 text-amber-600 hover:bg-amber-400/20 shadow-sm transition-all font-black">
-                            <Link href="/churchgpt">
+                            <Link href={user ? "/member-chat" : "/churchgpt"}>
                                 <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
                                 <span className="text-[10px] md:text-xs uppercase tracking-[0.2em]">ChurchGPT</span>
                             </Link>

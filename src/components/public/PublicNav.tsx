@@ -109,8 +109,10 @@ export default function PublicNav() {
         setUser(null);
         setIsDropdownOpen(false);
         toast.success('Signed out successfully');
-        // Force a page refresh/navigation to clean up all auth states
-        window.location.href = '/';
+        // Force a page refresh/navigation to clean up all auth states. 
+        // Use relative path to avoid root-domain 404s on GitHub Pages.
+        const basePath = window.location.pathname.startsWith('/jkc-devotion-app') ? '/jkc-devotion-app/' : '/';
+        window.location.href = basePath;
     } catch (e) {
         toast.error('Error signing out');
     }
