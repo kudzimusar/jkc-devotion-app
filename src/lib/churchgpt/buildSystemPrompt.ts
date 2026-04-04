@@ -7,15 +7,15 @@ export function buildChurchGPTSystemPrompt(context?: ChurchGPTContext): string {
   const parts: string[] = [CHURCHGPT_CORE_IDENTITY, CHURCHGPT_KNOWLEDGE_BASE]
   
   if (context?.orgContext?.name) {
-    parts.push(\`You are deployed within \${context.orgContext.name}. Reference this church warmly when relevant.\`)
+    parts.push(`You are deployed within ${context.orgContext.name}. Reference this church warmly when relevant.`)
   }
   
   if (context?.memberProfile?.full_name) {
-    parts.push(\`The member you are speaking with is \${context.memberProfile.full_name}.\${
+    parts.push(`The member you are speaking with is ${context.memberProfile.full_name}.${
       context.memberProfile.spiritual_notes 
-        ? \` Pastoral context: \${context.memberProfile.spiritual_notes}\` 
+        ? ` Pastoral context: ${context.memberProfile.spiritual_notes}` 
         : ''
-    } Use their name naturally in conversation.\`)
+    } Use their name naturally in conversation.`)
   }
   
   const sessionType = context?.sessionType || 'general'

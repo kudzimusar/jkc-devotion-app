@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { supabase } from '@/lib/supabase'
 
 export interface ChurchGPTMessage {
   id: string
@@ -36,12 +37,14 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
     
     try {
       const CHURCHGPT_ENDPOINT = process.env.NEXT_PUBLIC_CHURCHGPT_USE_EDGE === 'true'
-        ? \`\${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/churchgpt-gateway\`
-        : '/api/churchgpt'
+        ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/churchgpt-gateway`
+        : './api/churchgpt/'
 
       const response = await fetch(CHURCHGPT_ENDPOINT, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           messages: [...messages, userMessage].map(m => ({
             role: m.role,

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useChurchGPT } from "@/hooks/useChurchGPT"
+import { supabase } from "@/lib/supabase"
 import { ChurchGPTMessage } from "./ChurchGPTMessage"
 import { ChurchGPTInput } from "./ChurchGPTInput"
 import { ChurchGPTSuggestions } from "./ChurchGPTSuggestions"
@@ -9,7 +10,20 @@ import { Trash2 } from "lucide-react"
 
 export function ChurchGPTChat({ initialSessionType = 'general' }: { initialSessionType?: string }) {
   const [sessionType, setSessionType] = useState(initialSessionType)
-  const { messages, isLoading, error, sendMessage, clearConversation } = useChurchGPT(sessionType)
+  const [memberProfile, setMemberProfile] = useState<any>(null)
+  
+  useEffect(() => {
+    async function getProfile() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+        setMemberProfile(profile)
+      }
+    }
+    getProfile()
+  }, [])
+
+  const { messages, isLoading, error, sendMessage, clearConversation } = useChurchGPT(sessionType, undefined, memberProfile)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {

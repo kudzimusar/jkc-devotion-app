@@ -1,8 +1,9 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { buildChurchGPTSystemPrompt } from '@/lib/churchgpt/buildSystemPrompt'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@/utils/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { resolvePublicOrgId } from '@/lib/org-resolver'
+export const dynamic = 'force-dynamic'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
@@ -28,20 +29,20 @@ export async function POST(req: NextRequest) {
     // Get org context
     const { data: org } = await supabase
       .from('organizations')
-      .select('name, settings')
+      .select('id, name, settings')
       .eq('id', orgId)
       .single()
 
     // Build system prompt
     const systemPrompt = buildChurchGPTSystemPrompt({
-      orgContext: org,
+      orgContext: org || undefined,
       memberProfile,
       sessionType: sessionType || 'general'
     })
     
     // Initialize model
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash',
       systemInstruction: systemPrompt,
       generationConfig: {
         temperature: 0.7,
