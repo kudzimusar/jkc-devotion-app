@@ -133,12 +133,17 @@ The repository is optimized for **Agentic Development** with over 20+ specialize
 To ensure layout stability and visual consistency, the following components and patterns are **locked**:
 
 1.  **Top Navigation Bar (`PublicNav.tsx`)**
-    *   **Positioning**: Must remain `fixed top-0`. Do not change to `sticky` or `relative`.
-    *   **Height**: Hardcoded to `h-16`. All page content must account for this (typically via Hero sections or `pt-16`).
-    *   **Theme Visibility**: Link colors are dynamically calculated based on `scrolled`, `isDark`, and `isHomePage`. Do not hardcode colors to white or black without consulting these states.
-    *   **Boundary**: No top-padding (`pt-*`) should be added to the main container of the Home page (`WelcomeClient.tsx`) as the Hero must sit directly behind the transparent navbar.
+    *   **Positioning**: Must remain `fixed top-0`.
+    *   **Sign-Out**: Must perform a full state refresh (`window.location.href = '/'`) to ensure session security. Do not replace with simple state-clearing.
+    
+2.  **Home Page Performance & UX (`WelcomeClient.tsx`, `HeroSection.tsx`)**
+    *   **Hero Check-In**: Must use **Optimistic UI** and **Parallel DB Hits**. Do not switch to sequential `await` calls as it compromises the "Premium Speed" feel.
+    *   **Button Design**: Attendance buttons must use high-contrast solid white backgrounds to ensure visibility over video backgrounds.
+    *   **Guest Card**: The `InitialConnectModal` is an onboarding critical component. It must be scoped to guests only (`!user`) and triggered within a 2-second window.
+
+**⚠️ COMMITMENT**: Any developer (human or AI) attempting to alter these locked behaviors **must first seek explicit confirmation (the "nod") from the owner**. 
 
 ---
 
 Built with reverence for the ministry of **Japan Kingdom Church**.
-**Version 3.0.1 — Digital Transformation for the Kingdom.**
+**Version 3.0.2 — Performance & Reliability Lock.**

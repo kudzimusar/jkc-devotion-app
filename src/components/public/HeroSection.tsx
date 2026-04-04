@@ -37,32 +37,47 @@ function HeroCheckIn({ user }: { user: any }) {
 
   if (!isWeekend) return null;
 
+  /**
+   * PERFORMANCE CRITICAL: handleCheckIn
+   * 1. Uses Optimistic UI (setCheckedIn sets immediately)
+   * 2. Uses Promise.all to hit database endpoints in parallel
+   * DO NOT switch to sequential await calls as it blocks the user experience.
+   */
   const handleCheckIn = async (type: string) => {
     if (!user) {
       toast.error('Please sign in to check in.');
       return;
     }
+    
+    // OPTIMISTIC UPDATE: Show success immediately for perceived zero-latency
     setLoading(true);
     setSelected(type);
+    setCheckedIn(true); 
+
     try {
-      await supabase.from('attendance_records').insert([{
-        user_id: user.id,
-        event_date: todayStr,
-        event_type: type === 'absent' ? 'absence' : 'sunday_service',
-        notes: `Checked in via hero: ${type}`
-      }]);
       const statusMap: Record<string, string> = {
         'in-person': 'in-person', 'online': 'online', 'absent': 'not-attending'
       };
-      await supabase.from('attendance_logs').upsert({
-        user_id: user.id,
-        service_date: todayStr,
-        status: statusMap[type]
-      }, { onConflict: 'user_id, service_date' });
 
-      setCheckedIn(true);
+      // Run both database updates in parallel
+      await Promise.all([
+        supabase.from('attendance_records').insert([{
+          user_id: user.id,
+          event_date: todayStr,
+          event_type: type === 'absent' ? 'absence' : 'sunday_service',
+          notes: `Checked in via hero: ${type}`
+        }]),
+        supabase.from('attendance_logs').upsert({
+          user_id: user.id,
+          service_date: todayStr,
+          status: statusMap[type]
+        }, { onConflict: 'user_id, service_date' })
+      ]);
+
       toast.success(type === 'absent' ? 'Noted — leadership has been informed.' : 'Checked in! God bless your service.');
     } catch {
+      // Revert if it fails (rare)
+      setCheckedIn(false);
       toast.error('Check-in failed, please try again.');
     } finally {
       setLoading(false);
@@ -129,31 +144,27 @@ function HeroCheckIn({ user }: { user: any }) {
       {/* 3 cards side by side */}
       <div className="grid grid-cols-3 gap-2">
         {options.map(({ key, label, Icon, desc }) => {
-          const isActive = selected === key && loading;
+          const isActive = selected === key;
           return (
             <button
               key={key}
               disabled={loading}
               onClick={() => handleCheckIn(key)}
-              className="flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-200 active:scale-95 disabled:opacity-60"
+              className="flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-300 active:scale-95 disabled:opacity-60 group grow-1"
               style={{
-                background: isActive
-                  ? key === 'in-person' ? 'var(--jkc-gold)' : 'rgba(255,255,255,0.18)'
-                  : 'rgba(255,255,255,0.08)',
-                border: '1px solid rgba(255,255,255,0.18)',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.16)'; }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.background = isActive
-                  ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.08)';
+                background: isActive ? 'var(--jkc-gold)' : 'white',
+                border: '1.5px solid white',
+                boxShadow: isActive ? '0 10px 25px -5px rgba(245,166,35,0.5)' : '0 10px 20px -10px rgba(0,0,0,0.3)',
               }}
             >
-              <Icon className="w-5 h-5" style={{ color: 'var(--jkc-gold)' }} />
-              <span className="text-[10px] font-black tracking-widest text-center leading-tight"
-                    style={{ color: 'var(--footer-fg)' }}>
+              <Icon className="w-5 h-5 transition-transform group-hover:scale-110" 
+                    style={{ color: isActive ? 'var(--jkc-navy)' : 'var(--jkc-gold)' }} />
+              <span className="text-[10px] font-black tracking-widest text-center leading-tight transition-colors"
+                    style={{ color: 'var(--jkc-navy)' }}>
                 {label}
               </span>
-              <span className="text-[9px] font-medium" style={{ color: 'var(--footer-muted)' }}>
+              <span className="text-[9px] font-bold opacity-60" 
+                    style={{ color: 'var(--jkc-navy)' }}>
                 {desc}
               </span>
             </button>

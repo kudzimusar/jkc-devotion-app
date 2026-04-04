@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
     { label: "Church Overview", icon: LayoutDashboard, path: "" },
-    { label: "ChurchGPT AI", icon: Sparkles, path: "/churchgpt", absolute: true },
+    { label: "ChurchGPT AI", icon: Sparkles, path: "/member-chat", absolute: true },
     { label: "Spiritual Analytics", icon: HeartPulse, path: "/spiritual" },
     { label: "Pastoral Care", icon: Shield, path: "/care" },
     { label: "Members", icon: Users, path: "/members" },

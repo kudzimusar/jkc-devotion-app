@@ -14,7 +14,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         '/', '/welcome', '/about', '/visit', '/our-pastor',
         '/staff', '/give', '/watch', '/contact',
         '/privacy', '/terms', '/login', '/invite',
-        '/merchandise'
+        '/merchandise', '/churchgpt'
     ];
     // Normalize pathname by removing ALL occurrences of base path from the start
     let cleanPath = pathname;

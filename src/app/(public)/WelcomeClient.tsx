@@ -60,7 +60,8 @@ export default function WelcomeClient() {
 
   return (
     <div className="overflow-x-hidden" style={{ background: 'var(--background)' }}>
-      <InitialConnectModal />
+      {/* ONBOARDING CRITICAL: Only shown to guests to encourage sign-ups */}
+      <InitialConnectModal user={user} />
       <HeroSection user={user} />
 
       {/* Impact stats bar — directly below hero */}

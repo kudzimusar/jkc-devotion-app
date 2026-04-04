@@ -5,23 +5,27 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, QrCode, Sparkles } from 'lucide-react';
 import ConnectSection from '@/components/public/ConnectSection';
 
-export default function InitialConnectModal() {
+export default function InitialConnectModal({ user }: { user?: any }) {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
+    // SECURITY/UX: Only show for guests who aren't already logged in
+    if (user) return;
+
     // Check if the user has already seen the modal in this session/browser
     const hasSeenModal = localStorage.getItem('has_seen_connect_modal');
     if (!hasSeenModal) {
-      // Delay it slightly so it doesn't jarringly block the initial paint
+      // Reduced delay to 2 seconds for immediate impact
       const timer = setTimeout(() => {
         setIsOpen(true);
-      }, 5000);
+      }, 2000);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [user]);
 
   const handleClose = () => {
     setIsOpen(false);
+    // Note: To make it reappear in later sessions, we could use a timestamp here
     localStorage.setItem('has_seen_connect_modal', 'true');
   };
 

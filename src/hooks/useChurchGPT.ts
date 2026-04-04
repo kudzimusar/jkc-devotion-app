@@ -17,7 +17,7 @@ export interface ChurchGPTConversation {
   updated_at: string
 }
 
-export function useChurchGPT(sessionType: string = 'general', orgId?: string, memberProfile?: any) {
+export function useChurchGPT(sessionType: string = 'general', orgId?: string, memberProfile?: any, isGuest: boolean = false) {
   const [userId, setUserId] = useState<string | null>(null)
   const [orgIdState, setOrgIdState] = useState<string | null>(null)
   const [profile, setProfile] = useState<any>(null)
@@ -31,8 +31,29 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
   const resolvedOrgId = orgId || orgIdState || memberProfile?.org_id || profile?.org_id
   const resolvedUserId = userId || profile?.id
 
+  // Guest LocalStorage Keys
+  const GUEST_MESSAGES_KEY = 'churchgpt_guest_messages'
+  const GUEST_COUNT_KEY = 'churchgpt_guest_count'
+
   // Initial load of user/profile
   useEffect(() => {
+    if (isGuest) {
+      // Load guest messages from localStorage
+      const saved = localStorage.getItem(GUEST_MESSAGES_KEY)
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved)
+          setMessages(parsed.map((m: any) => ({
+            ...m,
+            timestamp: new Date(m.timestamp)
+          })))
+        } catch (e) {
+          console.error('Error parsing guest messages', e)
+        }
+      }
+      return
+    }
+
     const init = async () => {
       // Get authenticated user
       const { data: { user } } = await supabase.auth.getUser()
@@ -55,10 +76,11 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
       loadConversations()
     }
     init()
-  }, [])
+  }, [isGuest])
 
   // Load conversations list
   const loadConversations = useCallback(async () => {
+    if (isGuest) return
     try {
       if (!resolvedOrgId) return
 
@@ -73,10 +95,11 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
     } catch (err) {
       console.error('Error loading conversations:', err)
     }
-  }, [resolvedOrgId])
+  }, [resolvedOrgId, isGuest])
 
   // Load messages for a conversation
   const loadMessages = useCallback(async (convoId: string) => {
+    if (isGuest) return
     setIsLoading(true)
     setError(null)
     try {
@@ -106,9 +129,10 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
     } finally {
       setIsLoading(false)
     }
-  }, [conversations])
+  }, [conversations, isGuest])
 
   const deleteConversation = useCallback(async (convoId: string) => {
+    if (isGuest) return
     try {
       const { error } = await supabase
         .from('churchgpt_conversations')
@@ -125,9 +149,10 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
     } catch (err) {
       console.error('Error deleting conversation:', err)
     }
-  }, [conversationId])
+  }, [conversationId, isGuest])
 
   const createConversation = async (title: string, sType: string) => {
+    if (isGuest) return null
     if (!resolvedUserId || !resolvedOrgId) {
       console.error('[useChurchGPT] Missing user or orgId', { user: resolvedUserId, orgId: resolvedOrgId })
       return null
@@ -162,11 +187,10 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
 
     let currentConvoId = conversationId
     const activeSessionType = overrideSessionType || sessionType
-    console.log('[useChurchGPT] sendMessage called with:', { content, activeSessionType, overrideSessionType, sessionType })
-
+    
     try {
-      // 1. Create conversation if it doesn't exist
-      if (!currentConvoId) {
+      // 1. Create conversation if it doesn't exist (only for non-guests)
+      if (!isGuest && !currentConvoId) {
         // Use first 30 chars of content as title
         const title = content.length > 50 ? content.substring(0, 47) + '...' : content
         try {
@@ -184,10 +208,18 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
         timestamp: new Date()
       }
       
-      setMessages(prev => [...prev, userMessage])
+      const newMessages = [...messages, userMessage]
+      setMessages(newMessages)
+
+      // Guest Count Tracking
+      if (isGuest) {
+        const count = parseInt(localStorage.getItem(GUEST_COUNT_KEY) || '0')
+        localStorage.setItem(GUEST_COUNT_KEY, (count + 1).toString())
+        localStorage.setItem(GUEST_MESSAGES_KEY, JSON.stringify(newMessages))
+      }
 
       // 2. Save user message to DB
-      if (currentConvoId) {
+      if (!isGuest && currentConvoId) {
         await supabase.from('churchgpt_messages').insert({
           conversation_id: currentConvoId,
           role: 'user',
@@ -219,13 +251,15 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
           'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({
-          messages: [...messages, userMessage].map(m => ({
+          messages: newMessages.map(m => ({
             role: m.role,
             content: m.content
           })),
           sessionType: activeSessionType,
-          orgId: resolvedOrgId,
-          memberProfile: memberProfile || profile
+          orgId: isGuest ? null : resolvedOrgId,
+          userId: isGuest ? null : resolvedUserId,
+          memberProfile: isGuest ? null : (memberProfile || profile),
+          isGuest
         })
       })
       
@@ -248,34 +282,45 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
       }
 
       // 3. Save assistant message to DB
-      if (currentConvoId) {
+      if (!isGuest && currentConvoId) {
         await supabase.from('churchgpt_messages').insert({
           conversation_id: currentConvoId,
           role: 'assistant',
           content: fullContent
         })
       }
+
+      if (isGuest) {
+        // Update localStorage with assistant response too
+        setMessages(prev => {
+          localStorage.setItem(GUEST_MESSAGES_KEY, JSON.stringify(prev))
+          return prev
+        })
+      }
     } catch (err) {
       console.error(err)
       setError('Something went wrong. Please try again.')
-      // Optionally remove the empty assistant message on error
     } finally {
       setIsLoading(false)
     }
-  }, [messages, sessionType, orgId, memberProfile, conversationId, resolvedOrgId, resolvedUserId, profile])
+  }, [messages, sessionType, orgId, memberProfile, conversationId, resolvedOrgId, resolvedUserId, profile, isGuest])
 
   const clearConversation = useCallback(() => {
     setMessages([])
     setConversationId(null)
     setCurrentConversation(null)
     setError(null)
-  }, [])
+    if (isGuest) {
+      localStorage.removeItem(GUEST_MESSAGES_KEY)
+      localStorage.setItem(GUEST_COUNT_KEY, '0')
+    }
+  }, [isGuest])
 
   useEffect(() => {
-    if (resolvedOrgId) {
+    if (resolvedOrgId && !isGuest) {
       loadConversations()
     }
-  }, [resolvedOrgId, loadConversations])
+  }, [resolvedOrgId, loadConversations, isGuest])
   
   return { 
     messages, 
@@ -291,4 +336,3 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
     setConversationId
   }
 }
-

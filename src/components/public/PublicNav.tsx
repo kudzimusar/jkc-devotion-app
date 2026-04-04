@@ -98,11 +98,22 @@ export default function PublicNav() {
     }
   };
 
+  /**
+   * CRITICAL: handleSignOut
+   * Forces a full route refresh and navigation to '/' to ensure all 
+   * Supabase session data and local state are purged immediately.
+   */
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setIsDropdownOpen(false);
-    toast.success('Signed out successfully');
+    try {
+        await supabase.auth.signOut();
+        setUser(null);
+        setIsDropdownOpen(false);
+        toast.success('Signed out successfully');
+        // Force a page refresh/navigation to clean up all auth states
+        window.location.href = '/';
+    } catch (e) {
+        toast.error('Error signing out');
+    }
   };
 
   const getInitials = (name: string) => {
