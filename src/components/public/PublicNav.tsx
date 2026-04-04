@@ -1,9 +1,16 @@
 'use client';
+/**
+ * CRITICAL COMPONENT: Navigation Bar
+ * DO NOT modify the 'fixed' positioning, height (h-16), or the transparency/scrolled logic
+ * without explicit testing in BOTH Dark and Light modes. This component is locked to
+ * ensure layout stability for the Home page hero section.
+ */
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Menu, X, User, Settings, LogOut, BookOpen,
          ChevronDown, ShoppingCart, Heart } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Auth } from '@/lib/auth';
 import { AuthModal } from '@/components/auth/AuthModal';
@@ -14,6 +21,9 @@ import { ShopService } from '@/lib/shop-service';
 
 export default function PublicNav() {
   const { isDark } = usePublicTheme();
+  const pathname = usePathname();
+  const isHomePage = pathname === '/' || pathname === '/jkc-devotion-app/' || pathname === '/jkc-devotion-app';
+  
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -197,7 +207,7 @@ export default function PublicNav() {
                   style={{ 
                     color: link.label === 'DEVOTION' 
                       ? 'var(--jkc-gold)' 
-                      : (scrolled ? 'var(--nav-link)' : 'rgba(255,255,255,0.9)') 
+                      : (scrolled ? 'var(--nav-link)' : (isDark || isHomePage ? 'rgba(255,255,255,0.9)' : 'var(--nav-link)'))
                   }}>
                   {link.label === 'DEVOTION' && <BookOpen className="w-3.5 h-3.5" />}
                   {link.label}
@@ -266,7 +276,7 @@ export default function PublicNav() {
             )}
 
             <Link href="/merchandise/cart" className="relative p-2 hover:opacity-80 transition-opacity">
-              <ShoppingCart size={18} style={{ color: scrolled ? 'var(--foreground)' : 'white' }} />
+              <ShoppingCart size={18} style={{ color: (scrolled || (!isDark && !isHomePage)) ? 'var(--foreground)' : 'white' }} />
               {cartCount > 0 && (
                 <span className="absolute top-0 right-0 w-4 h-4 bg-[var(--jkc-gold)] text-[var(--jkc-navy)] text-[8px] font-black rounded-full flex items-center justify-center border border-white">
                   {cartCount}
@@ -356,7 +366,7 @@ export default function PublicNav() {
           {/* Mobile hamburger */}
           <div className="flex items-center gap-2 md:hidden">
             <Link href="/merchandise/cart" className="relative p-2">
-              <ShoppingCart size={22} style={{ color: scrolled ? 'var(--foreground)' : 'white' }} />
+              <ShoppingCart size={22} style={{ color: (scrolled || (!isDark && !isHomePage)) ? 'var(--foreground)' : 'white' }} />
               {cartCount > 0 && (
                 <span className="absolute top-1 right-1 w-4 h-4 bg-[var(--jkc-gold)] text-[var(--jkc-navy)] text-[8px] font-black rounded-full flex items-center justify-center">
                   {cartCount}
@@ -364,7 +374,7 @@ export default function PublicNav() {
               )}
             </Link>
             <button className="p-2 transition-colors"
-              style={{ color: scrolled ? 'var(--foreground)' : 'white' }}
+              style={{ color: (scrolled || (!isDark && !isHomePage)) ? 'var(--foreground)' : 'white' }}
               onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>

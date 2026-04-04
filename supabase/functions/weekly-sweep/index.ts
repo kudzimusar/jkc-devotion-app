@@ -9,9 +9,9 @@ const CRON_SECRET = Deno.env.get('CRON_SECRET')!;
 Deno.serve(async (req: Request) => {
   try {
     console.log('🌅 Weekly Ministry Sweep — Edge Function starting...');
-    
+
     // Check for authorization header if needed, or rely on Supabase edge function JWT verification
-    
+
     const body = await req.json().catch(() => ({}));
     const orgId = body.org_id || ORG_ID;
 
@@ -54,18 +54,18 @@ Deno.serve(async (req: Request) => {
         health_sweep_status: sweepStatus,
         ai_status: aiStatus,
       }),
-      { 
-        headers: { 
+      {
+        headers: {
           'Content-Type': 'application/json',
           'Connection': 'keep-alive'
-        } 
+        }
       }
     );
   } catch (err: any) {
     console.error('Weekly sweep error:', err);
     return new Response(
-      JSON.stringify({ error: err.message }), 
-      { 
+      JSON.stringify({ error: err.message }),
+      {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       }

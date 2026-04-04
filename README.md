@@ -129,5 +129,16 @@ The repository is optimized for **Agentic Development** with over 20+ specialize
 
 ---
 
+## 🛡️ Project Guardrails (Locked Components)
+To ensure layout stability and visual consistency, the following components and patterns are **locked**:
+
+1.  **Top Navigation Bar (`PublicNav.tsx`)**
+    *   **Positioning**: Must remain `fixed top-0`. Do not change to `sticky` or `relative`.
+    *   **Height**: Hardcoded to `h-16`. All page content must account for this (typically via Hero sections or `pt-16`).
+    *   **Theme Visibility**: Link colors are dynamically calculated based on `scrolled`, `isDark`, and `isHomePage`. Do not hardcode colors to white or black without consulting these states.
+    *   **Boundary**: No top-padding (`pt-*`) should be added to the main container of the Home page (`WelcomeClient.tsx`) as the Hero must sit directly behind the transparent navbar.
+
+---
+
 Built with reverence for the ministry of **Japan Kingdom Church**.
-**Version 3.0.0 — Digital Transformation for the Kingdom.**
+**Version 3.0.1 — Digital Transformation for the Kingdom.**
