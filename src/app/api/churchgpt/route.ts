@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     
     // Initialize model
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       systemInstruction: systemPrompt,
       generationConfig: {
         temperature: 0.7,
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
     })
     
   } catch (error) {
-    console.error('ChurchGPT API error:', error)
+    console.error('ChurchGPT API error DETAIL:', JSON.stringify(error, Object.getOwnPropertyNames(error)))
     return NextResponse.json(
       { error: 'ChurchGPT is momentarily unavailable. Please try again.' },
       { status: 500 }

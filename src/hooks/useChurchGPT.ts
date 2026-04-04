@@ -36,7 +36,7 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
     setMessages(prev => [...prev, assistantMessage])
     
     try {
-      const CHURCHGPT_ENDPOINT = process.env.NEXT_PUBLIC_CHURCHGPT_USE_EDGE === 'true'
+      const CHURCHGPT_ENDPOINT = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/churchgpt-gateway`
         ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/churchgpt-gateway`
         : './api/churchgpt/'
 
