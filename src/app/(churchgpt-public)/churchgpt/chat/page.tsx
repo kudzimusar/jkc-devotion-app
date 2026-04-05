@@ -128,13 +128,13 @@ export default function ChurchGPTAuthenticatedChat() {
         <header className="sticky top-0 z-10 flex items-center justify-between px-6 py-3 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm shrink-0">
           <div className="flex items-center space-x-4 min-w-0">
             <button 
-              onClick={() => setIsSidebarOpen(true)}
-              className={`p-2 hover:bg-gray-100 rounded-lg lg:hidden transition-all ${isSidebarOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-all"
             >
               <Menu className="w-5 h-5 text-gray-500" />
             </button>
             <div className="flex items-center space-x-2 truncate">
-              {isEditingTitle ? (
+              {isEditingTitle && conversationId ? (
                 <input
                   type="text"
                   value={editedTitle}
@@ -146,13 +146,13 @@ export default function ChurchGPTAuthenticatedChat() {
                 />
               ) : (
                 <div 
-                  className="flex items-center space-x-2 cursor-pointer group"
-                  onClick={() => setIsEditingTitle(true)}
+                  className={`flex items-center space-x-2 ${conversationId ? 'cursor-pointer group' : ''}`}
+                  onClick={() => conversationId && setIsEditingTitle(true)}
                 >
                   <h1 className="text-sm font-bold text-[#0f1f3d] leading-tight truncate">
                     {currentConversation?.title || "New Chat"}
                   </h1>
-                  <Edit2 className="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  {conversationId && <Edit2 className="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />}
                 </div>
               )}
               <span className="text-xs font-medium text-gray-300">•</span>
@@ -163,6 +163,21 @@ export default function ChurchGPTAuthenticatedChat() {
           </div>
           
           <div className="flex items-center space-x-2">
+            <button 
+              onClick={() => {
+                clearConversation()
+              }}
+              className="p-2 text-gray-400 hover:text-[#1b3a6b] hover:bg-gray-100 rounded-lg transition-all"
+              title="New Chat"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+            <button 
+              className="p-2 text-gray-400 hover:text-[#1b3a6b] hover:bg-gray-100 rounded-lg transition-all hidden sm:block"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <Search className="w-4 h-4" />
+            </button>
             <button 
               onClick={handleDelete}
               className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"

@@ -10,11 +10,17 @@ import { ChurchGPTSuggestions } from "./ChurchGPTSuggestions"
 import { ChurchGPTSidebar } from "./ChurchGPTSidebar"
 import { Menu, X, ChevronDown, Search, MoreVertical, Edit2 } from "lucide-react"
 
-export function ChurchGPTChat({ initialSessionType = 'general' }: { initialSessionType?: string }) {
+export function ChurchGPTChat({ 
+  initialSessionType = 'general',
+  hideSidebar = false
+}: { 
+  initialSessionType?: string,
+  hideSidebar?: boolean
+}) {
   const [sessionType, setSessionType] = useState(initialSessionType)
   const [memberProfile, setMemberProfile] = useState<any>(null)
   const [orgId, setOrgId] = useState<string | undefined>(undefined)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(!hideSidebar)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   
   useEffect(() => {
@@ -70,34 +76,36 @@ export function ChurchGPTChat({ initialSessionType = 'general' }: { initialSessi
   return (
     <div className="relative flex h-screen overflow-hidden bg-[#fafafa]">
       {/* Sidebar - Contained Drawer on Mobile, Flex Child on Desktop */}
-      <div className={`
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
-        lg:translate-x-0 absolute lg:relative z-40 h-full 
-        transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none
-      `}>
-        <ChurchGPTSidebar 
-          conversations={conversations}
-          activeId={conversationId}
-          onSelect={(id) => {
-            loadMessages(id)
-            if (window.innerWidth < 1024) setIsSidebarOpen(false)
-          }}
-          onDelete={deleteConversation}
-          onNewChat={() => {
-            clearConversation()
-            if (window.innerWidth < 1024) setIsSidebarOpen(false)
-          }}
-          isLoading={isLoading}
-          memberProfile={memberProfile}
-        />
-        {/* Mobile Sidebar Close Overlay */}
-        {isSidebarOpen && (
-          <div 
-            className="fixed inset-0 bg-black/40 z-[-1] lg:hidden"
-            onClick={() => setIsSidebarOpen(false)}
+      {!hideSidebar && (
+        <div className={`
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+          lg:translate-x-0 absolute lg:relative z-40 h-full 
+          transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none
+        `}>
+          <ChurchGPTSidebar 
+            conversations={conversations}
+            activeId={conversationId}
+            onSelect={(id) => {
+              loadMessages(id)
+              if (window.innerWidth < 1024) setIsSidebarOpen(false)
+            }}
+            onDelete={deleteConversation}
+            onNewChat={() => {
+              clearConversation()
+              if (window.innerWidth < 1024) setIsSidebarOpen(false)
+            }}
+            isLoading={isLoading}
+            memberProfile={memberProfile}
           />
-        )}
-      </div>
+          {/* Mobile Sidebar Close Overlay */}
+          {isSidebarOpen && (
+            <div 
+              className="fixed inset-0 bg-black/40 z-[-1] lg:hidden"
+              onClick={() => setIsSidebarOpen(false)}
+            />
+          )}
+        </div>
+      )}
 
       {/* Main Container */}
       <div className="flex-1 flex flex-col h-full min-w-0 bg-[#fafafa]">
@@ -139,11 +147,29 @@ export function ChurchGPTChat({ initialSessionType = 'general' }: { initialSessi
           </div>
           
           <div className="flex items-center space-x-2">
+            {hideSidebar && (
+              <button 
+                onClick={clearConversation}
+                disabled={isLoading}
+                className="p-2 text-gray-400 hover:text-[#1b3a6b] hover:bg-gray-100 rounded-lg transition-all"
+                title="New Chat"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            )}
             <button className="p-2 text-gray-400 hover:text-[#1b3a6b] hover:bg-gray-100 rounded-lg transition-all hidden sm:block">
               <Search className="w-4 h-4" />
             </button>
-            <button className="p-2 text-gray-400 hover:text-[#1b3a6b] hover:bg-gray-100 rounded-lg transition-colors">
-              <MoreVertical className="w-4 h-4" />
+            <button 
+              onClick={() => {
+                if (window.confirm("Are you sure you want to clear this chat?")) {
+                  clearConversation()
+                }
+              }}
+              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete conversation"
+            >
+              <Trash2 className="w-4 h-4" />
             </button>
           </div>
         </header>

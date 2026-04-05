@@ -25,7 +25,7 @@ export function ChurchGPTWidget() {
 
       {isOpen && (
         <div className="fixed bottom-24 left-6 w-[400px] h-[600px] max-h-[80vh] max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col z-[998] border border-gray-100">
-          <ChurchGPTChat initialSessionType="general" />
+          <ChurchGPTChat initialSessionType="general" hideSidebar={true} />
         </div>
       )}
     </>

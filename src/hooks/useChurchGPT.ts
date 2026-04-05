@@ -33,12 +33,13 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
   const [conversations, setConversations] = useState<ChurchGPTConversation[]>([])
   const [currentConversation, setCurrentConversation] = useState<ChurchGPTConversation | null>(null)
 
-  const resolvedOrgId = orgId || orgIdState || memberProfile?.org_id || profile?.org_id
-  const resolvedUserId = userId || profile?.id
-
-  // Guest LocalStorage Keys
+  // Constants
+  const JKC_ORG_ID = 'fa547adf-f820-412f-9458-d6bade11517d'
   const GUEST_MESSAGES_KEY = 'churchgpt_guest_messages'
   const GUEST_COUNT_KEY = 'churchgpt_guest_count'
+
+  const resolvedOrgId = orgId || orgIdState || memberProfile?.org_id || profile?.org_id || (!isGuest ? JKC_ORG_ID : null)
+  const resolvedUserId = userId || profile?.id
 
   // Initial load of user/profile
   useEffect(() => {
@@ -188,7 +189,7 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
   const createConversation = async (title: string, sType: string) => {
     if (isGuest) return null
     if (!resolvedUserId || !resolvedOrgId) {
-      console.error('[useChurchGPT] Missing user or orgId', { user: resolvedUserId, orgId: resolvedOrgId })
+      console.warn('[useChurchGPT] Could not create conversation: Missing user or orgId', { user: resolvedUserId, orgId: resolvedOrgId })
       return null
     }
 

@@ -4,7 +4,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.44.2"
-import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai"
+import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.24.0"
 
 export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -84,7 +84,7 @@ RESPONSE LENGTH — HARD RULES:
 - Aim for 100-200 words for most responses. Never exceed 300 words unless the user explicitly asks for depth. Always complete your thought — never end mid-sentence.
 
 CRITICAL: Always complete your sentence and your thought before stopping. Never end a response mid-sentence. If you are approaching your limit, wrap up naturally: "...I'd love to explore this more. What would you like to know next?"
-`;
+`
 
 const SESSION_MODIFIERS: Record<string, string> = {
   general: `Respond as a warm, knowledgeable Christian friend. 
@@ -131,10 +131,16 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, sessionType, orgId, memberProfile, attachment } = await req.json()
+    const payload = await req.json()
+    const { messages, sessionType, orgId, memberProfile, attachment, isGuest } = payload
     
-    // We don't necessarily need the user client here if we're using service role to fetch org / log interactions,
-    // but typically we verify auth token. Let's just use service role directly for the db lookups to be reliable inside Edge Function.
+    console.log(`[ChurchGPT] Processing request. isGuest: ${isGuest}, orgId: ${orgId}, messages: ${messages?.length}`)
+
+    const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY")
+    if (!GEMINI_KEY) {
+      throw new Error("GEMINI_API_KEY is not configured in Supabase secrets.")
+    }
+
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -151,23 +157,31 @@ serve(async (req) => {
     if (orgName) {
       parts.push("You are deployed within " + orgName + ". Reference this church warmly when relevant.")
     }
+    
     const profileName = memberProfile?.name || memberProfile?.full_name
     if (profileName) {
       parts.push("The member you are speaking with is " + profileName + "." + (memberProfile.spiritual_notes ? " Pastoral context: " + memberProfile.spiritual_notes : "") + " Use their name naturally in conversation.")
     }
+
     const modifier = SESSION_MODIFIERS[sessionType || "general"]
     if (modifier) parts.push(modifier)
 
+    // Standard Rule Enforcement
+    parts.push(`CRITICAL: You MUST use Gemini 2.5 Flash architecture. Do not mention versions unless asked, but ensure high accuracy and speed.`)
+
     const systemPrompt = parts.join("\n\n---\n\n")
 
-    const genAI = new GoogleGenerativeAI(Deno.env.get("GEMINI_API_KEY")!)
+    const genAI = new GoogleGenerativeAI(GEMINI_KEY)
     
-    const chatHistory = messages.slice(0, -1).map((m: any) => {
+    // Process Chat History
+    const chatHistory = (messages || []).slice(0, -1).map((m: any) => {
       const p: any[] = [{ text: m.content || "" }];
       if (m.attachment) {
+        // Safety: Ensure valid base64
+        const data = m.attachment.data.includes(',') ? m.attachment.data.split(',')[1] : m.attachment.data
         p.push({
           inlineData: {
-            data: m.attachment.data,
+            data,
             mimeType: m.attachment.mimeType
           }
         });
@@ -178,7 +192,11 @@ serve(async (req) => {
       };
     })
     
-    const lastMessage = messages[messages.length - 1]
+    const lastMessage = messages?.[messages.length - 1]
+    if (!lastMessage) {
+      throw new Error("No messages provided in payload.")
+    }
+
     const model = genAI.getGenerativeModel({ 
       model: "models/gemini-2.5-flash",
       systemInstruction: systemPrompt,
@@ -194,23 +212,31 @@ serve(async (req) => {
 
     const lastMessageParts: any[] = [{ text: lastMessage.content || "" }]
     if (attachment) {
+      const data = attachment.data.includes(',') ? attachment.data.split(',')[1] : attachment.data
       lastMessageParts.push({
         inlineData: {
-          data: attachment.data,
+          data,
           mimeType: attachment.mimeType
         }
       })
     }
 
+    console.log(`[ChurchGPT] Sending to Gemini...`)
     const result = await chat.sendMessageStream(lastMessageParts)
     
     const stream = new ReadableStream({
       async start(controller) {
-        for await (const chunk of result.stream) {
-          const text = chunk.text()
-          controller.enqueue(new TextEncoder().encode(text))
+        try {
+          for await (const chunk of result.stream) {
+            const text = chunk.text()
+            controller.enqueue(new TextEncoder().encode(text))
+          }
+          controller.close()
+        } catch (streamErr) {
+          console.error('[ChurchGPT] Stream Error:', streamErr)
+          controller.enqueue(new TextEncoder().encode("\n\n[Error: Stream interrupted. Please try again.]"))
+          controller.close()
         }
-        controller.close()
       }
     })
 
@@ -230,8 +256,11 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'text/plain; charset=utf-8' }
     })
   } catch (err: any) {
-    console.error('ChurchGPT Edge Function Error:', err)
-    return new Response(JSON.stringify({ error: err.message }), {
+    console.error('[ChurchGPT Error]', err.stack || err)
+    return new Response(JSON.stringify({ 
+      error: "ChurchGPT encountered an error. This has been logged for the team.",
+      details: err.message 
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })

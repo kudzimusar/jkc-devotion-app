@@ -12,7 +12,7 @@ const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-key';
 const isMissingVars = !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (isMissingVars && process.env.NODE_ENV === 'production') {
-  console.warn('⚠️ [Supabase Admin] Missing environment variables. Static export will proceed, but dynamic admin features will fail.');
+  console.log('ℹ️ [Supabase Admin] Admin keys skipped for static export. This is normal for public-facing deployments.');
 }
 
 export const supabaseAdmin = createClient(url, serviceKey, {

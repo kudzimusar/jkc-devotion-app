@@ -169,7 +169,7 @@ export default function AILogsView() {
                         {log.persona}
                       </Badge>
                       <Badge variant="outline" className="border-slate-800 text-slate-500 text-[10px]">
-                        {log.model_used.includes('3.1') ? 'v3.1 Pro' : 'v1.5 Flash'}
+                        {log.model_used.includes('2.5') ? 'v2.5 Flash' : 'AI Assistant'}
                       </Badge>
                     </div>
                     <div className="text-[11px] text-slate-400 flex items-center gap-1.5 whitespace-nowrap overflow-hidden text-ellipsis px-1 py-1 rounded bg-slate-950/40">
