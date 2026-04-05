@@ -16,6 +16,7 @@ export default function ChurchGPTAuthenticatedChat() {
   const [authLoading, setAuthLoading] = useState(true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [editedTitle, setEditedTitle] = useState("New Chat")
   const bottomRef = useRef<HTMLDivElement>(null)
 
   const supabase = createBrowserClient(
@@ -229,7 +230,7 @@ export default function ChurchGPTAuthenticatedChat() {
         <footer className="bg-gradient-to-t from-[#fafafa] via-[#fafafa]/95 to-transparent pt-4 pb-4 px-4 shrink-0">
           <div className="max-w-3xl mx-auto flex flex-col items-center">
             <ChurchGPTInput 
-              onSend={(msg, sType) => sendMessage(msg, sType)} 
+              onSend={(msg, sType, att) => sendMessage(msg, sType, att)} 
               disabled={isLoading}
               sessionType={sessionType}
               setSessionType={setSessionType}

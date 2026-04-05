@@ -7,6 +7,11 @@ export interface ChurchGPTMessage {
   content: string
   timestamp: Date
   scriptureRefs?: string[]
+  attachment?: {
+    data: string; // base64
+    mimeType: string;
+    name?: string;
+  }
 }
 
 export interface ChurchGPTConversation {
@@ -208,8 +213,8 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
     return data.id
   }
 
-  const sendMessage = useCallback(async (content: string, overrideSessionType?: string) => {
-    if (!content.trim()) return
+  const sendMessage = useCallback(async (content: string, overrideSessionType?: string, attachment?: { data: string, mimeType: string, name?: string }) => {
+    if (!content.trim() && !attachment) return
 
     setIsLoading(true)
     setError(null)
@@ -234,7 +239,8 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
         id: crypto.randomUUID(),
         role: 'user',
         content,
-        timestamp: new Date()
+        timestamp: new Date(),
+        attachment
       }
       
       const newMessages = [...messages, userMessage]
@@ -288,7 +294,8 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
           orgId: isGuest ? null : resolvedOrgId,
           userId: isGuest ? null : resolvedUserId,
           memberProfile: isGuest ? null : (memberProfile || profile),
-          isGuest
+          isGuest,
+          attachment: userMessage.attachment
         })
       })
       

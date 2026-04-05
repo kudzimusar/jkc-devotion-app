@@ -173,7 +173,7 @@ export function ChurchGPTChat({ initialSessionType = 'general' }: { initialSessi
         <footer className="bg-gradient-to-t from-[#fafafa] via-[#fafafa]/95 to-transparent pt-4 pb-4 px-4 shrink-0 transition-all">
           <div className="max-w-3xl mx-auto flex flex-col items-center">
             <ChurchGPTInput 
-              onSend={(msg, sType) => sendMessage(msg, sType)} 
+              onSend={(msg, sType, att) => sendMessage(msg, sType, att)} 
               disabled={isLoading}
               sessionType={sessionType}
               setSessionType={setSessionType}

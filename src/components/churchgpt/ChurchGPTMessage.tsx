@@ -31,6 +31,22 @@ export function ChurchGPTMessage({ message }: { message: IChurchGPTMessage }) {
               : 'bg-white text-gray-800 border-[#ebebeb] shadow-sm'
           }`} style={{ borderRadius: isUser ? "18px 18px 4px 18px" : "4px 18px 18px 18px" }}>
             
+            {message.attachment && (
+              <div className="mb-3 overflow-hidden rounded-lg border border-white/10">
+                {message.attachment.mimeType.startsWith('image/') ? (
+                  <img 
+                    src={`data:${message.attachment.mimeType};base64,${message.attachment.data}`} 
+                    alt="Attachment" 
+                    className="max-w-full h-auto object-contain max-h-[300px]"
+                  />
+                ) : (
+                  <div className="bg-gray-100 p-3 flex items-center space-x-2">
+                    <span className="text-xs font-bold text-[#1b3a6b]">📄 {message.attachment.name || 'File'}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {message.content === '' && !isUser ? (
               <div className="flex items-center space-x-1.5 h-6">
                 <div className="w-1.5 h-4 bg-[#f5a623] animate-pulse" />

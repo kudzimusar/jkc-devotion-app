@@ -131,7 +131,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, sessionType, orgId, memberProfile } = await req.json()
+    const { messages, sessionType, orgId, memberProfile, attachment } = await req.json()
     
     // We don't necessarily need the user client here if we're using service role to fetch org / log interactions,
     // but typically we verify auth token. Let's just use service role directly for the db lookups to be reliable inside Edge Function.
@@ -161,25 +161,48 @@ serve(async (req) => {
     const systemPrompt = parts.join("\n\n---\n\n")
 
     const genAI = new GoogleGenerativeAI(Deno.env.get("GEMINI_API_KEY")!)
-    const model = genAI.getGenerativeModel({
-      model: "models/gemini-2.5-flash",
+    
+    const chatHistory = messages.slice(0, -1).map((m: any) => {
+      const p: any[] = [{ text: m.content || "" }];
+      if (m.attachment) {
+        p.push({
+          inlineData: {
+            data: m.attachment.data,
+            mimeType: m.attachment.mimeType
+          }
+        });
+      }
+      return {
+        role: m.role === 'user' ? 'user' : 'model',
+        parts: p,
+      };
+    })
+    
+    const lastMessage = messages[messages.length - 1]
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
       systemInstruction: systemPrompt,
       generationConfig: {
-        temperature: 0.7,
-        topP: 0.9,
         maxOutputTokens: 2000,
+        temperature: 0.7,
       }
     })
+    
+    const chat = model.startChat({ 
+      history: chatHistory,
+    })
 
-    const history = messages.slice(0, -1).map((msg: any) => ({
-      role: msg.role === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.content }]
-    }))
-    
-    const chat = model.startChat({ history })
-    const lastMessage = messages[messages.length - 1]
-    
-    const result = await chat.sendMessageStream(lastMessage.content)
+    const lastMessageParts: any[] = [{ text: lastMessage.content || "" }]
+    if (attachment) {
+      lastMessageParts.push({
+        inlineData: {
+          data: attachment.data,
+          mimeType: attachment.mimeType
+        }
+      })
+    }
+
+    const result = await chat.sendMessageStream(lastMessageParts)
     
     const stream = new ReadableStream({
       async start(controller) {
