@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, KeyboardEvent, useRef } from "react"
-import { Send, Mic, ChevronDown } from "lucide-react"
+import { Send, Mic, ChevronDown, Paperclip } from "lucide-react"
 
 interface ChurchGPTInputProps {
   onSend: (message: string, sessionType: string) => void
@@ -14,6 +14,7 @@ interface ChurchGPTInputProps {
 export function ChurchGPTInput({ onSend, disabled, sessionType, setSessionType, userRole }: ChurchGPTInputProps) {
   const [content, setContent] = useState("")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Session options based on role
   const sessionOptions = userRole === 'admin' || userRole === 'pastor'
@@ -79,6 +80,24 @@ export function ChurchGPTInput({ onSend, disabled, sessionType, setSessionType, 
             <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
           </div>
 
+          <button 
+            type="button" 
+            onClick={() => {
+              // alert('File attachments are coming in a future update.')
+              fileInputRef.current?.click()
+            }}
+            className="p-2 text-gray-400 hover:text-[#1b3a6b] hover:bg-gray-100 rounded-xl transition-all" 
+            disabled={disabled}
+            title="Attach file"
+          >
+            <Paperclip className="w-4 h-4" />
+          </button>
+          <input 
+            ref={fileInputRef}
+            type="file" 
+            className="hidden" 
+            onChange={(e) => console.log('File picked:', e.target.files?.[0])}
+          />
           <button type="button" className="p-2 text-gray-400 hover:text-[#1b3a6b] hover:bg-gray-100 rounded-xl transition-all" disabled={disabled}>
             <Mic className="w-4 h-4" />
           </button>

@@ -7,7 +7,7 @@ import { useChurchGPT } from "@/hooks/useChurchGPT"
 import { ChurchGPTMessage } from "@/components/churchgpt/ChurchGPTMessage"
 import { ChurchGPTInput } from "@/components/churchgpt/ChurchGPTInput"
 import { PublicChurchGPTSidebar } from "@/components/churchgpt-public/PublicChurchGPTSidebar"
-import { Menu, Search, MoreVertical, Edit2, Loader2 } from "lucide-react"
+import { Menu, Search, MoreVertical, Edit2, Loader2, Trash2 } from "lucide-react"
 
 export default function ChurchGPTAuthenticatedChat() {
   const router = useRouter()
@@ -50,8 +50,28 @@ export default function ChurchGPTAuthenticatedChat() {
     conversationId,
     currentConversation,
     loadMessages,
-    deleteConversation
-  } = useChurchGPT(sessionType, undefined, undefined, false)
+    deleteConversation,
+    renameConversation
+  } = useChurchGPT(sessionType)
+
+  useEffect(() => {
+    if (currentConversation) {
+      setEditedTitle(currentConversation.title || "New Chat")
+    }
+  }, [currentConversation])
+
+  const handleRename = async () => {
+    if (conversationId && editedTitle.trim()) {
+      await renameConversation(conversationId, editedTitle)
+      setIsEditingTitle(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (conversationId && window.confirm("Are you sure you want to delete this conversation?")) {
+      await deleteConversation(conversationId)
+    }
+  }
 
   useEffect(() => {
     if (currentConversation?.session_type) {
@@ -72,11 +92,11 @@ export default function ChurchGPTAuthenticatedChat() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#fafafa]">
-      {/* Sidebar */}
+    <div className="relative flex h-screen overflow-hidden bg-[#fafafa]">
+      {/* Sidebar - Contained Drawer on Mobile, Flex Child on Desktop */}
       <div className={`
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
-        lg:translate-x-0 fixed lg:relative z-50 h-full 
+        lg:translate-x-0 absolute lg:relative z-40 h-full 
         transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none
       `}>
         <PublicChurchGPTSidebar 
@@ -113,9 +133,27 @@ export default function ChurchGPTAuthenticatedChat() {
               <Menu className="w-5 h-5 text-gray-500" />
             </button>
             <div className="flex items-center space-x-2 truncate">
-              <h1 className="text-sm font-bold text-[#0f1f3d] leading-tight truncate">
-                {currentConversation?.title || "New Chat"}
-              </h1>
+              {isEditingTitle ? (
+                <input
+                  type="text"
+                  value={editedTitle}
+                  onChange={(e) => setEditedTitle(e.target.value)}
+                  onBlur={handleRename}
+                  onKeyDown={(e) => e.key === 'Enter' && handleRename()}
+                  autoFocus
+                  className="text-sm font-bold text-[#0f1f3d] bg-gray-50 border-none focus:ring-0 rounded p-1 w-full max-w-[200px]"
+                />
+              ) : (
+                <div 
+                  className="flex items-center space-x-2 cursor-pointer group"
+                  onClick={() => setIsEditingTitle(true)}
+                >
+                  <h1 className="text-sm font-bold text-[#0f1f3d] leading-tight truncate">
+                    {currentConversation?.title || "New Chat"}
+                  </h1>
+                  <Edit2 className="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              )}
               <span className="text-xs font-medium text-gray-300">•</span>
               <p className="text-[11px] text-[#D4AF37] font-bold uppercase tracking-widest">
                 {sessionType}
@@ -124,9 +162,44 @@ export default function ChurchGPTAuthenticatedChat() {
           </div>
           
           <div className="flex items-center space-x-2">
-            <button className="p-2 text-gray-400 hover:text-[#0f1f3d] hover:bg-gray-100 rounded-lg transition-colors">
-              <MoreVertical className="w-4 h-4" />
+            <button 
+              onClick={handleDelete}
+              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete conversation"
+            >
+              <Trash2 className="w-4 h-4" />
             </button>
+            <div className="relative group/menu">
+              <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all">
+                <MoreVertical className="w-4 h-4" />
+              </button>
+              <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-[60] py-1 overflow-hidden">
+                <button 
+                  onClick={() => setIsEditingTitle(true)}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-600 hover:bg-gray-50 flex items-center space-x-2"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  <span>Rename Chat</span>
+                </button>
+                <button 
+                  onClick={handleDelete}
+                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete Chat</span>
+                </button>
+                <div className="h-px bg-gray-100 my-1" />
+                <button 
+                  onClick={() => {
+                    clearConversation()
+                    setIsSidebarOpen(false)
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-[#1b3a6b] hover:bg-gray-50 font-medium"
+                >
+                  New Chat
+                </button>
+              </div>
+            </div>
           </div>
         </header>
 

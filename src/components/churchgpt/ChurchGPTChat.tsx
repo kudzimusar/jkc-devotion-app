@@ -68,11 +68,11 @@ export function ChurchGPTChat({ initialSessionType = 'general' }: { initialSessi
   }, [messages])
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#fafafa]">
-      {/* Sidebar - Dark Drawer / Overlay on Mobile */}
+    <div className="relative flex h-screen overflow-hidden bg-[#fafafa]">
+      {/* Sidebar - Contained Drawer on Mobile, Flex Child on Desktop */}
       <div className={`
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
-        lg:translate-x-0 fixed lg:relative z-50 h-full 
+        lg:translate-x-0 absolute lg:relative z-40 h-full 
         transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none
       `}>
         <ChurchGPTSidebar 

@@ -99,7 +99,7 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
 
   // Load messages for a conversation
   const loadMessages = useCallback(async (convoId: string) => {
-    if (isGuest) return
+    if (isGuest || !convoId) return
     setIsLoading(true)
     setError(null)
     try {
@@ -111,12 +111,15 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
       
       if (error) throw error
       
-      setMessages(data.map(m => ({
+      const mappedMessages = data.map(m => ({
         id: m.id,
         role: m.role as 'user' | 'assistant',
         content: m.content,
         timestamp: new Date(m.created_at)
-      })))
+      }))
+
+      // Atomic update
+      setMessages(mappedMessages)
       setConversationId(convoId)
       
       const convo = conversations.find(c => c.id === convoId)
@@ -148,6 +151,32 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
       }
     } catch (err) {
       console.error('Error deleting conversation:', err)
+    }
+  }, [conversationId, isGuest])
+
+  const renameConversation = useCallback(async (convoId: string, newTitle: string) => {
+    if (isGuest) {
+      setConversations(prev => prev.map(c => c.id === convoId ? { ...c, title: newTitle } : c))
+      if (conversationId === convoId) {
+        setCurrentConversation(prev => prev ? { ...prev, title: newTitle } : null)
+      }
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('churchgpt_conversations')
+        .update({ title: newTitle })
+        .eq('id', convoId)
+      
+      if (error) throw error
+      
+      setConversations(prev => prev.map(c => c.id === convoId ? { ...c, title: newTitle } : c))
+      if (conversationId === convoId) {
+        setCurrentConversation(prev => prev ? { ...prev, title: newTitle } : null)
+      }
+    } catch (err) {
+      console.error('Error renaming conversation:', err)
     }
   }, [conversationId, isGuest])
 
@@ -316,11 +345,26 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
     }
   }, [isGuest])
 
+  // Load conversations list only after userId is set
   useEffect(() => {
     if (resolvedOrgId && !isGuest) {
       loadConversations()
     }
   }, [resolvedOrgId, loadConversations, isGuest])
+
+  // Guest Persistence: Save to localStorage on message change
+  useEffect(() => {
+    if (isGuest && messages.length > 0) {
+      localStorage.setItem(GUEST_MESSAGES_KEY, JSON.stringify(messages))
+    }
+  }, [messages, isGuest])
+
+  // Persistence Fix: Load messages when conversationId changes
+  useEffect(() => {
+    if (conversationId && messages.length === 0 && !isLoading) {
+      loadMessages(conversationId)
+    }
+  }, [conversationId, messages.length, isLoading, loadMessages])
   
   return { 
     messages, 
@@ -333,6 +377,7 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
     currentConversation,
     loadMessages,
     deleteConversation,
+    renameConversation,
     setConversationId
   }
 }
