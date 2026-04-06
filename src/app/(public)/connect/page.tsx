@@ -46,6 +46,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 export default function KingdomConnectPage() {
   const [resolvedOrgId, setResolvedOrgId] = useState<string | null>(null);
   const [source, setSource] = useState('web');
+  const [mounted, setMounted] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>('events');
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState<any>(null);
@@ -61,6 +62,7 @@ export default function KingdomConnectPage() {
     const params = new URLSearchParams(window.location.search);
     const via = params.get('via') || params.get('utm_source') || 'web';
     setSource(via);
+    setMounted(true);
 
     resolvePublicOrgId().then(id => {
       setResolvedOrgId(id);
@@ -106,11 +108,14 @@ export default function KingdomConnectPage() {
       try {
         await navigator.share({
           title: 'Kingdom Connect Card',
-          text: 'Connect with Japan Kingdom Church through our digital connect card.',
+          text: 'Connect with Japan Kingdom Church',
           url: connectUrl
         });
-      } catch (e) {
-        console.error("Share failed:", e);
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.error('Share failed:', err);
+          toast.error('Could not share. Please copy the link manually.');
+        }
       }
     } else {
       navigator.clipboard.writeText(connectUrl);
@@ -228,8 +233,12 @@ export default function KingdomConnectPage() {
           </Button>
           
           <div className="p-8 bg-white border-2 border-dashed border-[#1b3a6b]/10 rounded-[2.5rem] flex flex-col items-center gap-4 shrink-0 shadow-inner w-full md:w-auto">
-            <div className="p-4 bg-white rounded-3xl shadow-2xl border border-[#1b3a6b]/5">
-               <img src={qrUrl} alt="QR Code" className="w-32 h-32" />
+            <div className="p-4 bg-white rounded-xl shadow-lg inline-block">
+              {mounted ? (
+                <img src={qrUrl} alt="QR Code" className="w-32 h-32" />
+              ) : (
+                <div className="w-32 h-32 bg-stone-100 flex items-center justify-center text-[8px] text-stone-400">LOADING QR...</div>
+              )}
             </div>
             <Button 
               variant="ghost" 

@@ -31,25 +31,40 @@ export default function InitialConnectModal({ user }: { user?: any }) {
     return () => window.removeEventListener('open-connect-modal', triggerModal);
   }, []);
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const handleClose = () => {
     setIsOpen(false);
   };
 
-  const handleShare = () => {
-    const connectUrl = `${window.location.origin}${basePath}/connect`;
+  const handleShare = async () => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const connectUrl = `${origin}${basePath}/connect`;
+    
     if (navigator.share) {
-      navigator.share({
-        title: 'Japan Kingdom Church - Connect Card',
-        text: 'Join our family and connect with us!',
-        url: connectUrl,
-      });
+      try {
+        await navigator.share({
+          title: 'Japan Kingdom Church - Connect Card',
+          text: 'Join our family and connect with us!',
+          url: connectUrl,
+        });
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.error('Share failed:', err);
+          toast.error('Could not share. Please copy the link manually.');
+        }
+      }
     } else {
       navigator.clipboard.writeText(connectUrl);
       toast.success("Connect Card link copied!");
     }
   };
 
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(window.location.origin + basePath + '/connect?via=qr')}&color=1B3A6B`;
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(origin + basePath + '/connect?via=qr')}&color=1B3A6B`;
 
   return (
     <AnimatePresence>
@@ -95,11 +110,15 @@ export default function InitialConnectModal({ user }: { user?: any }) {
                     </div>
 
                     <div className="bg-white p-4 rounded-[2rem] shadow-2xl relative z-10 w-48 h-48 flex items-center justify-center">
-                        <img 
-                           src={qrUrl} 
-                           alt="Kingdom Connect QR"
-                           className="w-full h-full rounded-lg"
-                        />
+                        {mounted ? (
+                          <img 
+                             src={qrUrl} 
+                             alt="Kingdom Connect QR"
+                             className="w-full h-full rounded-lg"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-stone-100 flex items-center justify-center text-[8px] text-stone-400">LOADING QR...</div>
+                        )}
                     </div>
 
                     <div className="relative z-10 space-y-3 w-full">
