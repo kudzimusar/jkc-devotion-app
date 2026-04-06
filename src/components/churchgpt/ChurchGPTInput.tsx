@@ -150,7 +150,7 @@ export function ChurchGPTInput({ onSend, disabled, sessionType, setSessionType, 
         <button
           onClick={handleSend}
           disabled={(!content.trim() && !selectedFile) || disabled}
-          className="bg-[#1b3a6b] text-[#f5a623] p-2 px-5 rounded-xl hover:bg-[#152e55] disabled:opacity-30 transition-all flex shrink-0 items-center justify-center shadow-lg group"
+          className="bg-[#1b3a6b] text-[#D4AF37] p-2 px-5 rounded-xl hover:bg-[#152e55] disabled:opacity-30 transition-all flex shrink-0 items-center justify-center shadow-lg group"
         >
           <span className="mr-2 text-xs font-bold text-white tracking-widest uppercase">Send</span>
           <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />

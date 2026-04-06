@@ -8,7 +8,7 @@ import { ChurchGPTMessage } from "./ChurchGPTMessage"
 import { ChurchGPTInput } from "./ChurchGPTInput"
 import { ChurchGPTSuggestions } from "./ChurchGPTSuggestions"
 import { ChurchGPTSidebar } from "./ChurchGPTSidebar"
-import { Menu, X, ChevronDown, Search, MoreVertical, Edit2 } from "lucide-react"
+import { Menu, X, ChevronDown, Search, MoreVertical, Edit2, Plus, Trash2 } from "lucide-react"
 
 export function ChurchGPTChat({ 
   initialSessionType = 'general',

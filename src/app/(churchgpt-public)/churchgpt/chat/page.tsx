@@ -7,7 +7,7 @@ import { useChurchGPT } from "@/hooks/useChurchGPT"
 import { ChurchGPTMessage } from "@/components/churchgpt/ChurchGPTMessage"
 import { ChurchGPTInput } from "@/components/churchgpt/ChurchGPTInput"
 import { PublicChurchGPTSidebar } from "@/components/churchgpt-public/PublicChurchGPTSidebar"
-import { Menu, Search, MoreVertical, Edit2, Loader2, Trash2 } from "lucide-react"
+import { Menu, Search, MoreVertical, Edit2, Loader2, Trash2, Plus } from "lucide-react"
 
 export default function ChurchGPTAuthenticatedChat() {
   const router = useRouter()
