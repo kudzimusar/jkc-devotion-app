@@ -23,9 +23,9 @@ export default function UnifiedLoginPage() {
 
     const performRedirection = (role: string, skipMemberRedirect: boolean = false) => {
         if (role === 'super_admin') {
-            router.replace(`${BP}/super-admin/`);
+            router.replace("/super-admin/");
         } else if (['pastor', 'owner'].includes(role)) {
-            router.replace(`${BP}/pastor-hq/`);
+            router.replace("/pastor-hq/");
         } else if (['admin', 'shepherd', 'ministry_leader', 'ministry_lead'].includes(role)) {
             router.replace(`${BP}/shepherd/dashboard/`);
         } else if (role === 'member' && !skipMemberRedirect) {

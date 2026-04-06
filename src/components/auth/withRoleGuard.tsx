@@ -35,7 +35,7 @@ export function withRoleGuard<T extends object>(
 
                 if (!session) {
                     // Not logged in
-                    router.replace(`${BP}/login/`);
+                    router.replace("/login/");
                     return;
                 }
 
@@ -44,15 +44,15 @@ export function withRoleGuard<T extends object>(
                 if (!isAuthorized) {
                     // ... (keep existing redirection logic for unauthorized roles)
                     if (session.role === 'super_admin') {
-                        router.replace(`${BP}/super-admin/`);
+                        router.replace("/super-admin/");
                     } else if (['pastor', 'owner'].includes(session.role)) {
-                        router.replace(`${BP}/pastor-hq/`);
+                        router.replace("/pastor-hq/");
                     } else if (['admin', 'shepherd'].includes(session.role)) {
-                        router.replace(`${BP}/shepherd/dashboard/`);
+                        router.replace("/shepherd/dashboard/");
                     } else if (session.role === 'ministry_leader' || session.role === 'ministry_lead') {
-                        router.replace(`${BP}/shepherd/dashboard/`);
+                        router.replace("/shepherd/dashboard/");
                     } else {
-                        router.replace(`${BP}/`);
+                        router.replace("/");
                     }
                     return;
                 }
@@ -69,7 +69,7 @@ export function withRoleGuard<T extends object>(
                         if (!currentPath.startsWith('/')) currentPath = '/' + currentPath;
 
                         if (!currentPath.includes('/settings')) {
-                           router.replace(`${BP}/shepherd/dashboard/settings?mfa_required=true`);
+                           router.replace("/shepherd/dashboard/settings?mfa_required=true");
                            return;
                         }
                     }

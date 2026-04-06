@@ -16,20 +16,20 @@ export function SuperAdminGuard({ children }: { children: React.ReactNode }) {
         const session = await AdminAuth.getAdminSession();
         
         if (!session) {
-          router.push(`${BP}/login/`);
+          router.push("/login/");
           return;
         }
 
         if (session.role !== 'super_admin') {
           console.error("Access denied: Not a super admin");
-          router.push(BP);
+          router.push("/");
           return;
         }
 
         setIsSuperAdmin(true);
       } catch (err) {
         console.error("SuperAdminGuard Error:", err);
-        router.push(BP);
+        router.push("/");
       } finally {
         setLoading(false);
       }
