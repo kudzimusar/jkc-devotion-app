@@ -22,13 +22,18 @@ export default function UnifiedLoginPage() {
     const [checkingSession, setCheckingSession] = useState(true);
 
     const performRedirection = (role: string, skipMemberRedirect: boolean = false) => {
+        console.log('[Login] Performing redirection for role:', role);
         if (role === 'super_admin') {
+            console.log('[Login] Redirecting to Super Admin Console');
             router.replace("/super-admin/");
         } else if (['pastor', 'owner'].includes(role)) {
+            console.log('[Login] Redirecting to Pastor HQ');
             router.replace("/pastor-hq/");
         } else if (['admin', 'shepherd', 'ministry_leader', 'ministry_lead'].includes(role)) {
+            console.log('[Login] Redirecting to Shepherd Dashboard');
             router.replace(`${BP}/shepherd/dashboard/`);
         } else if (role === 'member' && !skipMemberRedirect) {
+            console.log('[Login] Redirecting to Member Home');
             router.replace(`${BP}/`);
         }
         // If role is member and skipMemberRedirect is true, we stay on the login page

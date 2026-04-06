@@ -39,6 +39,10 @@ export default function DashboardClient() {
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [connectionMetrics, setConnectionMetrics] = useState<any>(null);
+  const [intentBreakdown, setIntentBreakdown] = useState<any[]>([]);
+  const [countryBreakdown, setCountryBreakdown] = useState<any[]>([]);
+
   useEffect(() => {
     async function fetchDashboardData() {
       try {
@@ -70,7 +74,53 @@ export default function DashboardClient() {
         const mrrValue = latestAnalytics?.metrics?.mrr || 0;
         const churnRate = (latestAnalytics?.metrics?.churn_rate || 0) * 100;
 
-        // 5. Fetch Recent Audit Logs
+        // 5. Fetch Global Connection Metrics
+        const { data: metrics } = await supabase
+          .from('vw_global_connection_metrics')
+          .select('*');
+        
+        if (metrics) {
+          const summary = metrics.reduce((acc: any, curr: any) => ({
+            total_inquiries: acc.total_inquiries + (curr.total_inquiries || 0),
+            pending_followups: acc.pending_followups + (curr.pending_followups || 0),
+            unique_prospects: acc.unique_prospects + (curr.unique_prospects || 0),
+            weekly_total: acc.weekly_total + (curr.dynamic_weekly_count || 0),
+          }), { total_inquiries: 0, pending_followups: 0, unique_prospects: 0, weekly_total: 0 });
+          setConnectionMetrics(summary);
+        }
+
+        // 5b. Fetch Breakdowns
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        
+        const { data: intents } = await supabase
+          .from('public_inquiries')
+          .select('intent_category')
+          .gte('created_at', sevenDaysAgo);
+        
+        if (intents) {
+          const counts = intents.reduce((acc: any, curr: any) => {
+            const cat = curr.intent_category || 'other';
+            acc[cat] = (acc[cat] || 0) + 1;
+            return acc;
+          }, {});
+          setIntentBreakdown(Object.entries(counts).map(([name, value]) => ({ name, value })));
+        }
+
+        const { data: countries } = await supabase
+          .from('public_inquiries')
+          .select('metadata')
+          .gte('created_at', sevenDaysAgo);
+        
+        if (countries) {
+          const counts = countries.reduce((acc: any, curr: any) => {
+            const country = (curr.metadata as any)?.country || 'Unknown';
+            acc[country] = (acc[country] || 0) + 1;
+            return acc;
+          }, {});
+          setCountryBreakdown(Object.entries(counts).map(([name, value]) => ({ name, value })));
+        }
+
+        // 6. Fetch Recent Audit Logs
         const { data: logs } = await supabase
           .from('admin_audit_logs')
           .select(`
@@ -191,6 +241,61 @@ export default function DashboardClient() {
             </Card>
           );
         })}
+      </div>
+
+      {/* Global Connections Cards (New) */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Activity className="w-5 h-5 text-jkc-gold" />
+          <h2 className="text-xl font-black text-white uppercase tracking-tight">Global Connections</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card className="bg-slate-900 border-slate-800 rounded-2xl p-6">
+             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Weekly Submissions</p>
+             <h4 className="text-3xl font-black text-white">{(connectionMetrics?.weekly_total || 0).toLocaleString()}</h4>
+             <p className="text-[10px] text-jkc-gold font-bold mt-2 uppercase tracking-widest">Last 7 Days</p>
+          </Card>
+          <Card className="bg-slate-900 border-slate-800 rounded-2xl p-6">
+             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Total inquiries</p>
+             <h4 className="text-3xl font-black text-white">{(connectionMetrics?.total_inquiries || 0).toLocaleString()}</h4>
+             <p className="text-[10px] text-slate-500 font-bold mt-2 uppercase tracking-widest">All-time Connect Card</p>
+          </Card>
+          <Card className="bg-slate-900 border-slate-800 rounded-2xl p-6">
+             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Pending Followups</p>
+             <h4 className="text-3xl font-black text-rose-400">{(connectionMetrics?.pending_followups || 0).toLocaleString()}</h4>
+             <p className="text-[10px] text-slate-500 font-bold mt-2 uppercase tracking-widest">Across All Organizations</p>
+          </Card>
+          <Card className="bg-slate-900 border-slate-800 rounded-2xl p-6">
+             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Unique Prospects</p>
+             <h4 className="text-3xl font-black text-indigo-400">{(connectionMetrics?.unique_prospects || 0).toLocaleString()}</h4>
+             <p className="text-[10px] text-slate-500 font-bold mt-2 uppercase tracking-widest">Distinct Individuals</p>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="bg-slate-900/40 border-slate-800/50 p-6 rounded-2xl">
+            <h5 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Intent Breakdown (Weekly)</h5>
+            <div className="space-y-2">
+              {intentBreakdown.length > 0 ? intentBreakdown.sort((a, b) => (b.value as number) - (a.value as number)).map((item, i) => (
+                <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-slate-800/50 border border-slate-700/30">
+                  <span className="text-xs text-white capitalize">{item.name.replace(/_/g, ' ')}</span>
+                  <span className="text-xs font-black text-jkc-gold">{item.value}</span>
+                </div>
+              )) : <p className="text-xs text-slate-500 italic">No intent data available for this week.</p>}
+            </div>
+          </Card>
+          <Card className="bg-slate-900/40 border-slate-800/50 p-6 rounded-2xl">
+            <h5 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Global Reach (Weekly)</h5>
+            <div className="space-y-2">
+              {countryBreakdown.length > 0 ? countryBreakdown.sort((a, b) => (b.value as number) - (a.value as number)).map((item, i) => (
+                <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-slate-800/50 border border-slate-700/30">
+                  <span className="text-xs text-white">{item.name}</span>
+                  <span className="text-xs font-black text-indigo-400">{item.value}</span>
+                </div>
+              )) : <p className="text-xs text-slate-500 italic">No geographic data available for this week.</p>}
+            </div>
+          </Card>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

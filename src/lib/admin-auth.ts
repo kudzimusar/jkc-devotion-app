@@ -46,25 +46,42 @@ export const AdminAuth = {
                     if (Date.now() - parsed.cachedAt < CACHE_TTL_MS) {
                         return parsed;
                     }
-                } catch { }
+                } catch (e) {
+                    console.error('[AdminAuth] Cache parse error:', e);
+                }
             }
         }
 
         // Fetch from Supabase
         try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session?.user) return null;
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            if (sessionError) throw sessionError;
+            if (!session?.user) {
+                console.log('[AdminAuth] No active session found');
+                return null;
+            }
 
             const res = await resolveAdminOrgId();
-            if (!res) return null;
+            if (!res) {
+                console.warn('[AdminAuth] Could not resolve organization context for user:', session.user.id);
+                return null;
+            }
+            
             const { orgId, role } = res;
-            if (!role || !ADMIN_ROLES.includes(role as AdminRole)) return null;
+            if (!role || !ADMIN_ROLES.includes(role as AdminRole)) {
+                console.warn('[AdminAuth] Invalid or insufficient role detected:', role);
+                return null;
+            }
 
-            const { data: profile } = await supabase
+            const { data: profile, error: profileError } = await supabase
                 .from('profiles')
                 .select('name')
                 .eq('id', session.user.id)
                 .single();
+
+            if (profileError) {
+                console.warn('[AdminAuth] Profile fetch warning (continuing with email):', profileError.message);
+            }
 
             const sessionData: CachedSession = {
                 userId: session.user.id,
@@ -78,8 +95,10 @@ export const AdminAuth = {
             if (typeof window !== 'undefined') {
                 sessionStorage.setItem(CACHE_KEY, JSON.stringify(sessionData));
             }
+            console.log(`[AdminAuth] Session established:`, { role, email: sessionData.email });
             return sessionData;
-        } catch {
+        } catch (err) {
+            console.error('[AdminAuth] Fatal session resolution error:', err);
             return null;
         }
     },

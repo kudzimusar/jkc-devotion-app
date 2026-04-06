@@ -13,23 +13,28 @@ export function SuperAdminGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function checkSuperAdmin() {
       try {
+        console.log('[SuperAdminGuard] Checking access...');
         const session = await AdminAuth.getAdminSession();
         
         if (!session) {
+          console.warn('[SuperAdminGuard] No session found, redirecting to login');
           router.push("/login/");
           return;
         }
 
+        console.log('[SuperAdminGuard] Role detected:', session.role);
+
         if (session.role !== 'super_admin') {
-          console.error("Access denied: Not a super admin");
+          console.error('[SuperAdminGuard] Access denied: Role is', session.role);
           router.push("/");
           return;
         }
 
         setIsSuperAdmin(true);
-      } catch (err) {
-        console.error("SuperAdminGuard Error:", err);
-        router.push("/");
+        console.log('[SuperAdminGuard] Access granted');
+      } catch (error) {
+        console.error("[SuperAdminGuard] Authorization crash:", error);
+        router.push("/login/");
       } finally {
         setLoading(false);
       }
