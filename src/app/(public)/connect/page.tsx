@@ -332,7 +332,7 @@ export default function KingdomConnectPage() {
           id="care" 
           active={activeSection} 
           onToggle={setActiveSection}
-          icon={<HandsPraying className="w-4 h-4" />}
+          icon={<PrayingHands className="w-4 h-4" />}
         >
           <div className="space-y-4 pt-4">
             <AccordionItem 
