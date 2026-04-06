@@ -24,7 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import Loading from "./loading";
 
 interface DashboardStat {
@@ -47,24 +47,24 @@ export default function DashboardClient() {
     async function fetchDashboardData() {
       try {
         // 1. Fetch Total Organizations
-        const { count: orgCount } = await supabase
+        const { count: orgCount } = await supabaseAdmin
           .from('organizations')
           .select('*', { count: 'exact', head: true });
 
         // 2. Fetch Total Members (Sum)
-        const { data: memberCounts } = await supabase
+        const { data: memberCounts } = await supabaseAdmin
           .rpc('get_org_member_counts');
         
         const totalUsers = memberCounts?.reduce((acc: number, curr: any) => acc + (curr.member_count || 0), 0) || 0;
 
         // 3. Fetch Unresolved AI Insights
-        const { count: insightCount } = await supabase
+        const { count: insightCount } = await supabaseAdmin
           .from('admin_ai_insights')
           .select('*', { count: 'exact', head: true })
           .is('resolved_at', null);
 
         // 4. Fetch Latest Analytics Row for MRR and Churn
-        const { data: latestAnalytics } = await supabase
+        const { data: latestAnalytics } = await supabaseAdmin
           .from('company_analytics')
           .select('metrics')
           .order('date', { ascending: false })
@@ -75,7 +75,7 @@ export default function DashboardClient() {
         const churnRate = (latestAnalytics?.metrics?.churn_rate || 0) * 100;
 
         // 5. Fetch Global Connection Metrics
-        const { data: metrics } = await supabase
+        const { data: metrics } = await supabaseAdmin
           .from('vw_global_connection_metrics')
           .select('*');
         
@@ -92,36 +92,38 @@ export default function DashboardClient() {
         // 5b. Fetch Breakdowns
         const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
         
-        const { data: intents } = await supabase
+        // FIX 5: Use visitor_intent instead of intent_category
+        const { data: intents } = await supabaseAdmin
           .from('public_inquiries')
-          .select('intent_category')
+          .select('visitor_intent')
           .gte('created_at', sevenDaysAgo);
         
         if (intents) {
           const counts = intents.reduce((acc: any, curr: any) => {
-            const cat = curr.intent_category || 'other';
+            const cat = curr.visitor_intent || 'other';
             acc[cat] = (acc[cat] || 0) + 1;
             return acc;
           }, {});
           setIntentBreakdown(Object.entries(counts).map(([name, value]) => ({ name, value })));
         }
 
-        const { data: countries } = await supabase
+        // FIX 6: Language Reach instead of Global Reach
+        const { data: languages } = await supabaseAdmin
           .from('public_inquiries')
-          .select('metadata')
+          .select('preferred_language')
           .gte('created_at', sevenDaysAgo);
         
-        if (countries) {
-          const counts = countries.reduce((acc: any, curr: any) => {
-            const country = (curr.metadata as any)?.country || 'Unknown';
-            acc[country] = (acc[country] || 0) + 1;
+        if (languages) {
+          const counts = languages.reduce((acc: any, curr: any) => {
+            const lang = curr.preferred_language || 'EN';
+            acc[lang] = (acc[lang] || 0) + 1;
             return acc;
           }, {});
           setCountryBreakdown(Object.entries(counts).map(([name, value]) => ({ name, value })));
         }
 
         // 6. Fetch Recent Audit Logs
-        const { data: logs } = await supabase
+        const { data: logs } = await supabaseAdmin
           .from('admin_audit_logs')
           .select(`
             *,
@@ -285,14 +287,14 @@ export default function DashboardClient() {
             </div>
           </Card>
           <Card className="bg-slate-900/40 border-slate-800/50 p-6 rounded-2xl">
-            <h5 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Global Reach (Weekly)</h5>
+            <h5 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Language Reach (Weekly)</h5>
             <div className="space-y-2">
               {countryBreakdown.length > 0 ? countryBreakdown.sort((a, b) => (b.value as number) - (a.value as number)).map((item, i) => (
                 <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-slate-800/50 border border-slate-700/30">
-                  <span className="text-xs text-white">{item.name}</span>
+                  <span className="text-xs text-white uppercase">{item.name}</span>
                   <span className="text-xs font-black text-indigo-400">{item.value}</span>
                 </div>
-              )) : <p className="text-xs text-slate-500 italic">No geographic data available for this week.</p>}
+              )) : <p className="text-xs text-slate-500 italic">No language data available for this week.</p>}
             </div>
           </Card>
         </div>

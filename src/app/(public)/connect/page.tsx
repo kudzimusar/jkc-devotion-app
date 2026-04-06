@@ -42,6 +42,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { sendConnectEmail } from './actions';
 
 export default function KingdomConnectPage() {
   const [resolvedOrgId, setResolvedOrgId] = useState<string | null>(null);
@@ -134,7 +135,7 @@ export default function KingdomConnectPage() {
         title,
         message,
         link_to: route,
-        status: 'unread'
+        is_read: false
       });
     } catch (e) {
       console.error("Notification failed:", e);
@@ -142,10 +143,24 @@ export default function KingdomConnectPage() {
   };
 
   // Submission Master
-  const submitForm = async (intent: string, childTable: string, data: any, childData: any) => {
+  const submitForm = async (intent: string, childTable: string | null, data: any, childData: any) => {
     if (!resolvedOrgId) return;
     setLoading(true);
     try {
+      // Specialized jkGroup logic for FIX 2
+      let finalMessage = data.message || data.notes || data.prayer_request || '';
+      if (intent === 'jkgroup') {
+        const groupContext = {
+          age_group: data.age_group,
+          group_type: data.group_type,
+          meeting_time: data.meeting_time,
+          is_member: data.is_member,
+          name: data.name || `${data.first_name || ''} ${data.last_name || ''}`.trim(),
+          email: data.email
+        };
+        finalMessage = `jkGroup Request [JSON]: ${JSON.stringify(groupContext)}`;
+      }
+
       // 1. Insert Parent Inquiry
       const { data: inquiry, error: inquiryError } = await supabase
         .from('public_inquiries')
@@ -158,15 +173,27 @@ export default function KingdomConnectPage() {
           last_name: data.last_name || data.name?.split(' ')[1] || '',
           email: data.email,
           phone: data.phone,
-          message: data.message || data.notes || data.prayer_request || ''
+          message: finalMessage
         })
         .select()
         .single();
 
       if (inquiryError) throw inquiryError;
 
-      // 2. Insert Child Record
-      if (childTable) {
+      // FIX 1 — Direct Brevo Email (Immediately after parent insert)
+      if (data.email) {
+        // Run in background, don't wait for it to block UI success
+        sendConnectEmail(
+          intent, 
+          data.email, 
+          data.name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Visitor'
+        ).catch(e => console.error("Brevo failed:", e));
+      }
+
+      // 2. Insert Child Record (Specialized for jkgroup due to FIX 2)
+      if (intent === 'jkgroup') {
+        // Skip child insert for jkgroup as the data is captured in parent message JSON
+      } else if (childTable) {
         const { error: childError } = await supabase
           .from(childTable)
           .insert({
@@ -177,19 +204,14 @@ export default function KingdomConnectPage() {
         if (childError) throw childError;
       }
 
-      // 3. Urgent Prayer Logic
+      // 3. Urgent Prayer Logic (FIX 3 uses corrected notifyAdmin)
       if (intent === 'prayer' && childData.urgency === 'Urgent') {
         await notifyAdmin(
-          'Urgent Prayer Request', 
+          '🚨 Urgent Prayer Request', 
           `${data.name || 'Anonymous'}: ${childData.prayer_request?.substring(0, 80)}...`,
           '/shepherd'
         );
       }
-
-      // 4. Brevo Trigger (Placeholder for Edge Function Hook or direct fetch)
-      // Since BREVO_API_KEY is sensitive, we trigger the visitor-connector edge function
-      // which handles Gemini analysis and eventually Brevo.
-      // The trigger on public_inquiries handles this automatically.
 
       toast.success("Successfully submitted. Blessings!");
       setActiveSection(null);
