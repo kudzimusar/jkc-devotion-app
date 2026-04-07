@@ -314,17 +314,17 @@ export default function KingdomConnectPage() {
             <AccordionItem 
               label="BECOME A MEMBER" 
               description="Join the family and discover your purpose."
-              form={<MembershipForm onSubmit={(d) => submitForm('membership', '', d, {})} loading={loading} session={session} />}
+              form={<MembershipForm onSubmit={(d: any) => submitForm('membership', '', d, {})} loading={loading} session={session} />}
             />
             <AccordionItem 
               label="VOLUNTEER" 
               description="Serve the kingdom with your talents."
-              form={<VolunteerForm onSubmit={(d) => submitForm('volunteer', 'volunteer_applications', d, d)} loading={loading} session={session} />}
+              form={<VolunteerForm onSubmit={(d: any) => submitForm('volunteer', 'volunteer_applications', d, d)} loading={loading} session={session} />}
             />
             <AccordionItem 
               label="JOIN A JKGROUP" 
               description="Find community in our small groups."
-              form={<GroupForm groups={groups} onSubmit={(d) => submitForm('jkgroup', 'bible_study_group_requests', d, d)} loading={loading} session={session} />}
+              form={<GroupForm groups={groups} onSubmit={(d: any) => submitForm('jkgroup', 'bible_study_group_requests', d, d)} loading={loading} session={session} />}
             />
             <Button 
               onClick={() => window.open('https://www.japankingdomchurch.com/give', '_blank')}
@@ -347,12 +347,12 @@ export default function KingdomConnectPage() {
             <AccordionItem 
               label="HEART OF THE HOUSE" 
               description="New members class to discover our vision."
-              form={<ClassForm type="heart_of_house" onSubmit={(d) => submitForm('class_hoth', 'class_registrations', d, d)} loading={loading} session={session} />}
+              form={<ClassForm type="heart_of_house" onSubmit={(d: any) => submitForm('class_hoth', 'class_registrations', d, d)} loading={loading} session={session} />}
             />
             <AccordionItem 
               label="KINGDOM JAPANESE LANGUAGE CLASS" 
               description="Learn Japanese in a Christ-centered environment."
-              form={<JapaneseClassForm onSubmit={(d) => submitForm('class_language', 'class_registrations', d, d)} loading={loading} session={session} />}
+              form={<JapaneseClassForm onSubmit={(d: any) => submitForm('class_language', 'class_registrations', d, d)} loading={loading} session={session} />}
             />
           </div>
         </SectionShell>
@@ -369,7 +369,7 @@ export default function KingdomConnectPage() {
             <AccordionItem 
               label="PRAYER REQUEST" 
               description="Our team is standing by to pray with you."
-              form={<PrayerForm onSubmit={(d) => submitForm('prayer', 'prayer_requests', d, d)} loading={loading} session={session} />}
+              form={<PrayerForm onSubmit={(d: any) => submitForm('prayer', 'prayer_requests', d, d)} loading={loading} session={session} />}
             />
           </div>
         </SectionShell>
@@ -528,11 +528,11 @@ function EventForm({ event, onSubmit, loading, session }: any) {
 
                   <div className="flex gap-4">
                     <div className="flex items-center space-x-2">
-                      <Checkbox checked={form.first_visit} onCheckedChange={(v) => setForm({...form, first_visit: !!v})} />
+                      <Checkbox checked={form.first_visit} onCheckedChange={(v: any) => setForm({...form, first_visit: !!v})} />
                        <Label className="text-[10px] font-bold text-slate-800 dark:text-slate-200">First Visit?</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Checkbox checked={form.join_mailing_list} onCheckedChange={(v) => setForm({...form, join_mailing_list: !!v})} />
+                      <Checkbox checked={form.join_mailing_list} onCheckedChange={(v: any) => setForm({...form, join_mailing_list: !!v})} />
                        <Label className="text-[10px] font-bold text-slate-800 dark:text-slate-200">Mailing List</Label>
                     </div>
                   </div>
@@ -636,7 +636,7 @@ function MembershipForm({ onSubmit, loading, session }: any) {
       </div>
 
       <div className="flex items-center space-x-2">
-        <Checkbox checked={form.join_mailing_list} onCheckedChange={(v) => setForm({...form, join_mailing_list: !!v})} />
+        <Checkbox checked={form.join_mailing_list} onCheckedChange={(v: any) => setForm({...form, join_mailing_list: !!v})} />
         <Label className="text-[10px] font-bold text-slate-800 dark:text-slate-200">Join Mailing List</Label>
       </div>
 
@@ -760,7 +760,7 @@ function GroupForm({ groups, onSubmit, loading, session }: any) {
       </div>
 
       <div className="flex items-center space-x-2">
-        <Checkbox checked={form.join_mailing_list} onCheckedChange={(v) => setForm({...form, join_mailing_list: !!v})} />
+        <Checkbox checked={form.join_mailing_list} onCheckedChange={(v: any) => setForm({...form, join_mailing_list: !!v})} />
         <Label className="text-[10px] font-bold text-slate-800 dark:text-slate-200">Join Mailing List</Label>
       </div>
 
@@ -848,7 +848,7 @@ function JapaneseClassForm({ onSubmit, loading, session }: any) {
       <Textarea placeholder="Why do you want to learn Japanese?" value={form.motivation} onChange={e => setForm({...form, motivation: e.target.value})} className="h-24 rounded-xl border-2 resize-none dark:bg-slate-700" />
       
       <div className="flex items-center space-x-2">
-        <Checkbox checked={form.join_mailing_list} onCheckedChange={(v) => setForm({...form, join_mailing_list: !!v})} />
+        <Checkbox checked={form.join_mailing_list} onCheckedChange={(v: any) => setForm({...form, join_mailing_list: !!v})} />
         <Label className="text-[10px] font-bold text-slate-800 dark:text-slate-200">Join Mailing List</Label>
       </div>
 
@@ -904,11 +904,11 @@ function PrayerForm({ onSubmit, loading, session }: any) {
       <div className="flex flex-col gap-2">
         <p className="text-[8px] font-bold text-muted-foreground bg-blue-500/5 p-2 rounded-lg border border-blue-500/10 mb-2">Note: Urgent prayer requests are broadcast directly to the intercessory leadership team.</p>
         <div className="flex items-center space-x-2">
-          <Checkbox checked={form.is_private} onCheckedChange={(v) => setForm({...form, is_private: !!v})} id="private-prayer" />
+          <Checkbox checked={form.is_private} onCheckedChange={(v: any) => setForm({...form, is_private: !!v})} id="private-prayer" />
           <Label htmlFor="private-prayer" className="text-[10px] font-bold cursor-pointer">Keep this private — prayer team only</Label>
         </div>
         <div className="flex items-center space-x-2">
-          <Checkbox checked={form.join_mailing_list} onCheckedChange={(v) => setForm({...form, join_mailing_list: !!v})} id="maillist-prayer" />
+          <Checkbox checked={form.join_mailing_list} onCheckedChange={(v: any) => setForm({...form, join_mailing_list: !!v})} id="maillist-prayer" />
           <Label htmlFor="maillist-prayer" className="text-[10px] font-bold cursor-pointer">Join Mailing List</Label>
         </div>
       </div>
