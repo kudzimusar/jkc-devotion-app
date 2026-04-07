@@ -18,6 +18,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePublicTheme } from './PublicThemeWrapper';
 import { Sparkles, Phone, Mail, HelpCircle, Heart, Languages, Share2, QrCode } from 'lucide-react';
 import { resolvePublicOrgId } from '@/lib/org-resolver';
+import { sendConnectEmail } from '@/app/(public)/connect/actions';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function ConnectSection() {
   const { isDark } = usePublicTheme();
@@ -48,9 +52,12 @@ export default function ConnectSection() {
     how_heard: '',
     preferred_language: 'EN',
     prayer_request: '',
+    urgency: 'General',
+    topic: 'General',
+    is_private: false,
     message: '',
     org_id: ''
-  }, "public-connect-v2");
+  }, "public-connect-v3");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,18 +68,60 @@ export default function ConnectSection() {
 
     setLoading(true);
     try {
-      // Auto-set how_heard if via QR
+      // 1. Insert Parent Inquiry
       const submissionData = {
-        ...formData,
+        org_id: resolvedOrgId,
+        visitor_intent: formData.visitor_intent,
         how_heard: isViaQr ? 'QR Code' : formData.how_heard,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        email: formData.email,
+        phone: formData.phone,
+        message: formData.visitor_intent === 'prayer_request' ? formData.prayer_request : formData.message,
         status: 'new'
       };
 
-      const { error } = await supabase
+      const { data: inquiry, error: inquiryError } = await supabase
         .from('public_inquiries')
-        .insert([submissionData]);
+        .insert([submissionData])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (inquiryError) throw inquiryError;
+
+      // 2. Insert into prayer_requests if intent is prayer
+      if (formData.visitor_intent === 'prayer_request') {
+        const { error: childError } = await supabase
+          .from('prayer_requests')
+          .insert({
+            inquiry_id: inquiry.id,
+            org_id: resolvedOrgId,
+            prayer_request: formData.prayer_request,
+            urgency: formData.urgency,
+            topic: formData.topic,
+            is_private: formData.is_private
+          });
+        
+        if (childError) throw childError;
+
+        // 3. Notification for urgent requests
+        if (formData.urgency === 'Urgent') {
+          await supabase.from('member_notifications').insert({
+            org_id: resolvedOrgId,
+            title: '🚨 Urgent Prayer Request',
+            message: `${formData.first_name} ${formData.last_name || ''}: ${formData.prayer_request.substring(0, 80)}...`,
+            link_to: '/shepherd',
+            is_read: false
+          });
+        }
+      }
+
+      // 4. Trigger Brevo Pipeline (Background)
+      sendConnectEmail(
+        formData.visitor_intent,
+        formData.email,
+        `${formData.first_name} ${formData.last_name || ''}`.trim()
+      ).catch(e => console.error("Brevo connect section failed:", e));
 
       toast.success("Submission received! A ministry leader will connect with you soon.");
       clearForm();
@@ -331,19 +380,80 @@ export default function ConnectSection() {
                 )}
               </div>
 
-              <motion.div layout className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest block"
-                       style={{ color: 'var(--muted-foreground)' }}>
-                  {formData.visitor_intent === 'prayer_request' ? 'Your Prayer Request' : 'Your Message'}
-                </label>
-                <Textarea
-                  required={formData.visitor_intent === 'prayer_request'}
-                  placeholder={formData.visitor_intent === 'prayer_request' ? "How can we pray for you today?" : "Tell us how we can help you..."}
-                  className="rounded-2xl min-h-[140px] p-6 border-2 transition-all resize-none shadow-inner"
-                  style={inputStyle}
-                  value={formData.message}
-                  onChange={e => handleFormChange('message', e.target.value)}
-                />
+              <motion.div layout className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest block"
+                         style={{ color: 'var(--muted-foreground)' }}>
+                    {formData.visitor_intent === 'prayer_request' ? 'How can we pray for you?' : 'Your Message'}
+                  </label>
+                  <Textarea
+                    required
+                    placeholder={formData.visitor_intent === 'prayer_request' ? "Tell us how we can intercede..." : "Tell us how we can help you..."}
+                    className="rounded-2xl min-h-[140px] p-6 border-2 transition-all resize-none shadow-inner"
+                    style={inputStyle}
+                    value={formData.visitor_intent === 'prayer_request' ? formData.prayer_request : formData.message}
+                    onChange={e => handleFormChange(formData.visitor_intent === 'prayer_request' ? 'prayer_request' : 'message', e.target.value)}
+                  />
+                </div>
+
+                <AnimatePresence>
+                  {formData.visitor_intent === 'prayer_request' && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-6 pt-4 border-t-2 border-dashed"
+                    >
+                      {/* Urgency */}
+                      <div className="space-y-3">
+                        <Label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Urgency</Label>
+                        <RadioGroup 
+                          value={formData.urgency} 
+                          onValueChange={v => handleFormChange('urgency', v)} 
+                          className="flex gap-4"
+                        >
+                           {['General', 'This week', 'Urgent'].map(v => (
+                             <Label key={v} className="flex items-center gap-2 cursor-pointer text-[10px] font-bold">
+                                <RadioGroupItem value={v} /> {v}
+                             </Label>
+                           ))}
+                        </RadioGroup>
+                      </div>
+
+                      {/* Topic */}
+                      <div className="space-y-3">
+                        <Label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Prayer Topic</Label>
+                        <RadioGroup 
+                          value={formData.topic} 
+                          onValueChange={v => handleFormChange('topic', v)} 
+                          className="flex flex-wrap gap-4"
+                        >
+                           {['Health', 'Family', 'Work/Finance', 'Immigration', 'Other'].map(v => (
+                             <Label key={v} className="flex items-center gap-1 cursor-pointer text-[10px] font-bold">
+                                <RadioGroupItem value={v} /> {v}
+                             </Label>
+                           ))}
+                        </RadioGroup>
+                      </div>
+
+                      {/* Privacy */}
+                      <div className="flex items-center space-x-2 pt-2">
+                        <Checkbox 
+                          id="private_prayer_main" 
+                          checked={formData.is_private} 
+                          onCheckedChange={(v) => handleFormChange('is_private', !!v)} 
+                        />
+                        <Label htmlFor="private_prayer_main" className="text-[10px] font-black uppercase tracking-widest cursor-pointer text-muted-foreground">Keep request private</Label>
+                      </div>
+
+                      {formData.urgency === 'Urgent' && (
+                        <p className="text-[8px] font-bold text-rose-500 bg-rose-500/5 p-2 rounded-lg border border-rose-500/10 italic">
+                          Alert: Urgent requests are sent directly to pastoral leadership.
+                        </p>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
 
               <div className="pt-4">
