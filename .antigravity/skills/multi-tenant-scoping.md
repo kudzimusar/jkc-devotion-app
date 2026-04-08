@@ -12,6 +12,20 @@
 - A user from Org A cannot see, modify, or delete data belonging to Org B.
 - No "naked" select queries (queries without filters) exist in the service layer.
 
+### Public Scoping (Unauthenticated Guest Context)
+
+For public-facing components where a session does not yet exist (e.g., Guest Attendance, Connect Card):
+
+1.  **Resolution**: Use `resolvePublicOrgId()` from `@/lib/org-resolver`. This function uses hostname mapping and logic-specific fallbacks to find the correct `org_id`.
+2.  **Implementation**:
+    ```typescript
+    import { resolvePublicOrgId } from '@/lib/org-resolver';
+    
+    const orgId = await resolvePublicOrgId();
+    const { data } = await supabase.from('events').select('*').eq('org_id', orgId);
+    ```
+3.  **Submission Pattern**: When saving data from an unauthenticated user (e.g., `public_inquiries`), pass the resolved `org_id` explicitly. Ensure the table has an RLS policy allowing `insert` for `anon`.
+
 ### Analytics Queries (Cross‑Tenant)
 
 For admin dashboards that need aggregated data across organizations:

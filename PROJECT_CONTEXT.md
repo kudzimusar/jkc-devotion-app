@@ -317,6 +317,23 @@ The `(public)` route group. Dynamic skeleton pulling Name, Logo, Colors from `or
 
 ---
 
+## Kingdom Connect Hub (KCC) intake flow
+The Kingdom Connect Hub is the primary intake engine for guests and non-members. It is designed for frictionless, unauthenticated conversion with AI-powered classification.
+
+### intake flow
+1.  **Submission**: User submits a form via `KingdomConnectModal` (global) or `/connect` (standalone).
+2.  **Inquiry Creation**: A row is inserted into `public_inquiries` with `status = 'new'`.
+3.  **Child Data**: Specific data is inserted into child tables (`event_registrations`, `prayer_requests`, `volunteer_applications`, etc.) with a foreign key to `public_inquiries.id` (`inquiry_id`).
+4.  **AI classification**: The `visitor-connector` Edge Function is triggered by a database webhook. It classifies the inquiry by topic and urgency, updating `public_inquiries.status = 'analyzed'`.
+5.  **Ministry Routing**: Leadership views these in the Shepherd Dashboard for follow-up.
+
+### intake constraints
+- **Permissions**: Child tables must have RLS `INSERT` policies allowed for `anon` users.
+- **Email handling**: Always use `email: data.email || null`. Brevo fails silently if sent an empty string. `null` is the required signal for anonymous or unprovided email.
+- **Multi-tenancy**: Must always resolve `org_id` using `resolvePublicOrgId()` to ensure unauthenticated submissions land in the correct church context.
+
+---
+
 ## Project-Specific Rules
 
 - **org_id is mandatory**: Every database query MUST be scoped by `org_id`. Use `org-resolver.ts`. Never hardcode.
