@@ -424,6 +424,9 @@ export default function ProfileHub() {
                 baptism_status: milestones.baptism_status || null,
                 membership_date: milestones.membership_date || null,
                 foundation_class_date: milestones.foundation_class_date || null,
+                first_visit_date: milestones.first_visit_date || null,
+                leadership_training_date: milestones.leadership_training_date || null,
+                ordained_date: milestones.ordained_date || null,
                 foundations_completed: milestones.foundations_completed || false,
                 updated_at: new Date().toISOString()
             };
@@ -450,7 +453,7 @@ export default function ProfileHub() {
             }
 
             toast.success("Spiritual journey sync complete.");
-            await loadData(user.id);
+            setMilestones(prev => ({ ...prev, ...milestones }));
         } catch (e: any) {
             console.error("Critical save failure:", e);
             toast.error("Failed to sync milestones: " + (e.message || "Unknown error"));
@@ -722,9 +725,6 @@ export default function ProfileHub() {
 
                 {/* GLOBAL LEFT SIDEBAR */}
                 <aside className="w-64 bg-card border-r border-border flex-col hidden md:flex shrink-0 transition-colors">
-                    <div className="p-8">
-                        <img src={`${BP}/church-logo.png`} alt="Church Logo" className="w-12 h-12 object-contain" />
-                    </div>
                     <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
                         <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted font-semibold text-sm transition-all">
                             <LayoutDashboard className="w-4 h-4" /> Home
@@ -770,26 +770,19 @@ export default function ProfileHub() {
 
                 {/* MAIN CONTENT AREA */}
                 <main className="flex-1 overflow-y-auto relative bg-background">
-                    <div className="h-64 md:h-80 bg-primary relative">
-                        <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
-                        <Button className="absolute top-6 right-6 bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-md rounded-xl font-bold">
-                            <Camera className="w-4 h-4 mr-2" /> Change Cover
-                        </Button>
-                    </div>
-
-                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-24 md:-mt-32 pb-12">
+                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
                         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
 
                             {/* LEFT PROFILE CARD */}
                             <div className="w-full lg:w-[320px] shrink-0 space-y-6">
-                                <div className="bg-card rounded-[2rem] shadow-xl border border-border overflow-hidden relative p-8 flex flex-col items-center transition-colors">
+                                <div className="bg-card rounded-[2rem] shadow-xl border border-border overflow-hidden relative p-6 flex flex-col items-center transition-colors">
                                     <div className="w-32 h-32 rounded-full border-4 border-card bg-primary text-primary-foreground text-5xl font-black flex items-center justify-center relative shadow-xl z-10 mb-6">
                                         {profile?.name?.[0] || user?.name?.[0]}
                                     </div>
                                     <h2 className="text-2xl font-black text-center text-foreground">{profile?.name || user?.name}</h2>
-                                    <p className="text-sm text-muted-foreground font-semibold mb-8 text-center">{profile?.country_of_origin || 'Local Assembly'}</p>
+                                    <p className="text-sm text-muted-foreground font-semibold mb-4 text-center">{profile?.country_of_origin || 'Local Assembly'}</p>
 
-                                    <div className="w-full space-y-4 mb-8 text-foreground">
+                                    <div className="w-full space-y-3 mb-4 text-foreground">
                                         <div className="flex items-center justify-between p-3 px-4 rounded-xl bg-muted">
                                             <span className="text-sm font-semibold text-muted-foreground">Completed Days</span>
                                             <span className="text-primary font-black">{stats.completed}</span>
@@ -797,6 +790,18 @@ export default function ProfileHub() {
                                         <div className="flex items-center justify-between p-3 px-4 rounded-xl bg-muted">
                                             <span className="text-sm font-semibold text-muted-foreground">Current Streak</span>
                                             <span className="text-amber-500 font-black">{stats.streak}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-3 px-4 rounded-xl bg-muted">
+                                            <span className="text-sm font-semibold text-muted-foreground">Member Since</span>
+                                            <span className="text-foreground font-black text-xs">{milestones?.membership_date ?? 'Not recorded'}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-3 px-4 rounded-xl bg-muted">
+                                            <span className="text-sm font-semibold text-muted-foreground">Spiritual Stage</span>
+                                            <span className="text-foreground font-black text-xs capitalize">{profile?.growth_stage?.replace('_', ' ') || profile?.membership_status || 'Visitor'}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-3 px-4 rounded-xl bg-muted">
+                                            <span className="text-sm font-semibold text-muted-foreground">Ministry</span>
+                                            <span className="text-foreground font-black text-xs">{ministryRoles[0]?.ministry_name || 'Unassigned'}</span>
                                         </div>
                                     </div>
                                     <div className="w-full space-y-3">
@@ -873,49 +878,6 @@ export default function ProfileHub() {
                                         <p className="text-sm text-muted-foreground font-medium mt-2">Manage your structured data for Church analytics.</p>
                                     </div>
 
-                                    {/* CHURCH IMPACT DASHBOARD (NEW) */}
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                                        <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-3xl p-6 flex flex-col justify-between group hover:bg-emerald-500/10 transition-colors">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <Users className="w-5 h-5 text-emerald-500" />
-                                                <TrendingUp className="w-4 h-4 text-emerald-500/50" />
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500/60 mb-1">Recent Growth</p>
-                                                <p className="text-2xl font-black text-emerald-500">+{churchImpact.memberGrowth} members</p>
-                                                <p className="text-[10px] text-muted-foreground font-medium opacity-70">Joined the mission this month</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-violet-500/5 border border-violet-500/10 rounded-3xl p-6 flex flex-col justify-between group hover:bg-violet-500/10 transition-colors">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <Trophy className="w-5 h-5 text-violet-500" />
-                                                <Sparkles className="w-4 h-4 text-violet-500/50" />
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-violet-500/60 mb-1">Lives Impacted</p>
-                                                <p className="text-2xl font-black text-violet-500">{churchImpact.totalSalvations} Salvations</p>
-                                                <p className="text-[10px] text-muted-foreground font-medium opacity-70">Recorded in the last quarter</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-blue-500/5 border border-blue-500/10 rounded-3xl p-6 flex flex-col justify-between group hover:bg-blue-500/10 transition-colors">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <Activity className="w-5 h-5 text-blue-500" />
-                                                <ArrowUpRight className="w-4 h-4 text-blue-500/50" />
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-blue-500/60 mb-1">Mission Progress</p>
-                                                <div className="flex items-end gap-2">
-                                                    <p className="text-2xl font-black text-blue-500">{churchImpact.missionProgress}%</p>
-                                                    <div className="flex-1 shrink-0 h-1.5 bg-blue-500/10 rounded-full mb-2 overflow-hidden">
-                                                        <div className="h-full bg-blue-500 rounded-full transition-all duration-1000" style={{ width: `${churchImpact.missionProgress}%` }}></div>
-                                                    </div>
-                                                </div>
-                                                <p className="text-[10px] text-muted-foreground font-medium opacity-70">Goal: Church Expansion 2026</p>
-                                            </div>
-                                        </div>
-                                    </div>
 
                                     {/* Prophetic Intelligence Indicator (PIL) */}
                                     {propheticInsight && (
