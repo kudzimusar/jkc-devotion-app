@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { resolvePublicOrgId } from '@/lib/org-resolver';
 import { basePath } from '@/lib/utils';
@@ -53,6 +54,7 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
   const [loading, setLoading] = useState(false);
   const [events, setEvents] = useState<any[]>([]);
   const [groups, setGroups] = useState<any[]>([]);
+  const pathname = usePathname();
 
   // Navigation / URLs (same as standalone page)
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -73,18 +75,17 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
       }
     });
 
-    // SECURITY/UX: Only show automatic pop-up for guests who aren't already logged in
+    // SECURITY/UX: Only show automatic pop-up once per session for all users
+    if (pathname && pathname.includes('/connect')) return;
     const hasSeenModal = sessionStorage.getItem('kcc_modal_shown');
-    if (!user && !hasSeenModal) {
+    if (!hasSeenModal) {
       // 2 second delay
       const timer = setTimeout(() => {
         setIsOpen(true);
-        // Important: session storage must be set to prevent infinite popups
-        // Note: setting it on close to fulfill step 1 requirement "close button must... set sessionStorage"
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [user]);
+  }, [user, pathname]);
 
   // LISTEN FOR CUSTOM TRIGGER (e.g., from Guest Attendance buttons)
   useEffect(() => {
@@ -190,20 +191,56 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
         ).catch(e => console.error("Brevo failed:", e));
       }
 
-      if (intent !== 'jkgroup' && childTable) {
+      if (childTable) {
+        // Clean childData to only include valid columns for the specific table
+        const cleanChildData: any = {
+          inquiry_id: inquiry.id,
+          org_id: resolvedOrgId
+        };
+
+        if (childTable === 'prayer_requests') {
+          cleanChildData.request_text = childData.prayer_request || childData.message || '';
+          cleanChildData.urgency = childData.urgency || 'Normal';
+          cleanChildData.category = childData.topic || 'General';
+          cleanChildData.is_anonymous = !!(childData.is_anonymous || !childData.name || childData.name === 'Guest');
+        } else if (childTable === 'event_registrations') {
+          cleanChildData.event_id = childData.event_id;
+          cleanChildData.name = data.name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Visitor';
+          cleanChildData.email = data.email || null;
+          cleanChildData.guest_count = String(childData.guest_count || 1);
+          cleanChildData.first_visit = !!childData.first_visit;
+          cleanChildData.is_member = !!childData.is_member;
+          cleanChildData.message = childData.message || '';
+        } else if (childTable === 'volunteer_applications') {
+          cleanChildData.name = data.name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Visitor';
+          cleanChildData.email = data.email || null;
+          cleanChildData.phone = data.phone || null;
+          cleanChildData.is_member = !!childData.is_member;
+          cleanChildData.ministry_interests = [childData.ministry_area || 'General'];
+          cleanChildData.ministry_area = childData.ministry_area || 'General';
+          cleanChildData.experience_summary = childData.notes || '';
+          cleanChildData.availability = childData.availability || 'Weekends';
+        } else if (childTable === 'class_registrations') {
+          cleanChildData.name = data.name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Visitor';
+          cleanChildData.email = data.email || null;
+          cleanChildData.phone = data.phone || null;
+          cleanChildData.class_type = childData.class_type || 'japanese';
+          cleanChildData.japanese_level = childData.japanese_level || childData.proficiency || '';
+          cleanChildData.message = childData.message || '';
+        } else if (childTable === 'bible_study_group_requests') {
+          cleanChildData.group_id = childData.group_id || null;
+          cleanChildData.message = `Preference: ${childData.group_type || 'Any'}. Age: ${childData.age_group || 'Any'}. Time: ${childData.meeting_time || 'Any'}`;
+          cleanChildData.status = 'pending';
+        }
+
         const { error: childError } = await supabase
           .from(childTable)
-          .insert({
-            ...childData,
-            inquiry_id: inquiry.id,
-            org_id: resolvedOrgId
-          });
+          .insert(cleanChildData);
         if (childError) throw childError;
       }
 
       toast.success("Successfully submitted. Blessings!");
       setActiveSection(null);
-      // Wait a moment then close? Or keep open? The instruction implies it stays open for confirmation unless user manually closes.
     } catch (error: any) {
       console.error(error);
       toast.error("Submission failed. Please try again.");
@@ -216,7 +253,6 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 w-full h-full">
-          {/* Backdrop (Darkened and clickable to dismiss) */}
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -225,14 +261,12 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
             className="fixed inset-0 bg-black/80 backdrop-blur-md"
           />
 
-          {/* Modal Panel (Full KCC Hub Content) */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             className="relative w-full max-w-2xl max-h-[90vh] bg-white dark:bg-[#0f172a] rounded-[2.5rem] shadow-2xl overflow-y-auto flex flex-col pointer-events-auto border border-slate-200 dark:border-slate-800 font-geist-sans"
           >
-            {/* Close Button UI */}
             <button 
               onClick={handleClose}
               className="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center z-[110] hover:scale-110 active:scale-95 transition-all text-slate-500 hover:text-[#1b3a6b] dark:hover:text-[#f5a623]"
@@ -240,7 +274,6 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
               <X className="w-5 h-5" />
             </button>
 
-            {/* Hub Content (Copied from connect/page.tsx with enhancements) */}
             <div className="pt-12 pb-8 px-6 text-center space-y-6">
               <div className="flex flex-col items-center gap-4">
                 <div className="w-16 h-16 bg-[#1b3a6b] rounded-2xl flex items-center justify-center rotate-3 shadow-xl">
@@ -252,7 +285,6 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
                 </div>
               </div>
 
-              {/* Share & QR (Optional in modal, but specifically requested for parity) */}
               <div className="flex flex-col items-center gap-4 px-4">
                 <Button 
                   variant="outline" 
@@ -281,10 +313,8 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
               </div>
             </div>
 
-            {/* Accordion Hub */}
             <div className="px-6 pb-24 space-y-4">
               
-              {/* EVENTS SECTION */}
               {events.length > 0 && (
                 <SectionShell 
                   title="EVENTS" 
@@ -310,7 +340,6 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
                 </SectionShell>
               )}
 
-              {/* CONNECT TO JKC SECTION */}
               <SectionShell 
                 title="CONNECT TO JKC" 
                 id="connect" 
@@ -343,7 +372,6 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
                 </div>
               </SectionShell>
 
-              {/* CLASSES SECTION */}
               <SectionShell 
                 title="CLASSES" 
                 id="classes" 
@@ -365,7 +393,6 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
                 </div>
               </SectionShell>
 
-              {/* CARE & SUPPORT SECTION */}
               <SectionShell 
                 title="CARE & SUPPORT" 
                 id="care" 
@@ -382,7 +409,6 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
                 </div>
               </SectionShell>
 
-              {/* Footer Attribution */}
               <div className="text-center pt-8">
                  <p className="text-[8px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-[0.4em]">Integrated with Church OS Ministry Intelligence</p>
               </div>
@@ -393,8 +419,6 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
     </AnimatePresence>
   );
 }
-
-// --- SUB-COMPONENTS (Refined for Modal) ---
 
 function SectionShell({ title, id, active, onToggle, children, icon }: any) {
   const isOpen = active === id;
@@ -458,14 +482,12 @@ function AccordionItem({ label, description, form }: any) {
   );
 }
 
-// --- FORMS (Re-using logic from page.tsx) ---
-
 function EventForm({ event, onSubmit, loading, session }: any) {
     const [isOpen, setIsOpen] = useState(false);
     const [form, setForm] = useState({
       name: session?.user_metadata?.first_name ? `${session.user_metadata.first_name} ${session.user_metadata.last_name || ''}` : '',
       email: session?.email || '',
-      guest_count: 1,
+      guest_count: '1',
       first_visit: false,
       is_member: !!session,
       message: '',
@@ -493,7 +515,12 @@ function EventForm({ event, onSubmit, loading, session }: any) {
         </button>
         <AnimatePresence>
           {isOpen && (
-            <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="p-6 bg-white dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700">
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="p-6 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-700"
+            >
               <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="space-y-4">
                  <div className="space-y-4">
                     <Input 
@@ -506,8 +533,7 @@ function EventForm({ event, onSubmit, loading, session }: any) {
                     <div className="space-y-1">
                       <Input 
                         type="email" 
-                        placeholder="Email Address" 
-                        required={!form.is_member} 
+                        placeholder="Email (Optional)" 
                         value={form.email} 
                         onChange={e => setForm({...form, email: e.target.value})}
                         className="h-12 rounded-xl border-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 border-slate-300 dark:border-slate-600 font-bold"
@@ -515,19 +541,23 @@ function EventForm({ event, onSubmit, loading, session }: any) {
                     </div>
                     
                     <div className="space-y-3">
-                      <Label className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Guest Count</Label>
-                      <RadioGroup 
-                        value={String(form.guest_count)} 
-                        onValueChange={v => setForm({...form, guest_count: parseInt(v)})}
-                        className="flex flex-wrap gap-2"
-                      >
+                      <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Guest Count</p>
+                      <div className="flex flex-wrap gap-2">
                         {['1', '2-3', '4-6', '7+'].map(v => (
-                          <Label key={v} className="cursor-pointer border-2 p-2 rounded-xl border-transparent hover:border-[#f5a623]/20 bg-slate-50 dark:bg-slate-800 flex items-center gap-2">
-                             <RadioGroupItem value={v} />
-                             <span className="text-[10px] font-black text-slate-800 dark:text-slate-200">{v}</span>
-                          </Label>
+                          <button
+                            key={v}
+                            type="button"
+                            onClick={() => setForm({...form, guest_count: v as any})}
+                            className={`px-5 py-3 rounded-2xl border-2 text-[14px] font-bold transition-all duration-300 hover:scale-[1.03] active:scale-95 shadow-sm hover:shadow-md
+                              ${String(form.guest_count) === v
+                                ? 'bg-gradient-to-br from-[#1b3a6b] to-[#2a5298] border-[#1b3a6b] text-white shadow-lg shadow-[#1b3a6b]/20'
+                                : 'bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100 hover:border-[#f5a623]/30'
+                              }`}
+                          >
+                            {v}
+                          </button>
                         ))}
-                      </RadioGroup>
+                      </div>
                     </div>
   
                     <div className="flex gap-4">
@@ -604,14 +634,23 @@ function MembershipForm({ onSubmit, loading, session }: any) {
         </div>
   
         <div className="space-y-3">
-          <Label className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Marital Status</Label>
-          <RadioGroup value={form.marital_status} onValueChange={v => setForm({...form, marital_status: v})} className="flex flex-wrap gap-4">
-             {['Single', 'Married', 'Divorced', 'Widowed'].map(v => (
-               <Label key={v} className="flex items-center gap-2 cursor-pointer text-[10px] font-bold">
-                  <RadioGroupItem value={v} /> {v}
-               </Label>
-             ))}
-          </RadioGroup>
+          <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Marital Status</p>
+          <div className="flex flex-wrap gap-2">
+            {['Single', 'Married', 'Divorced', 'Widowed'].map(v => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setForm({...form, marital_status: v})}
+                className={`px-5 py-3 rounded-2xl border-2 text-[14px] font-bold transition-all duration-300 hover:scale-[1.03] active:scale-95 shadow-sm hover:shadow-md
+                  ${form.marital_status === v
+                    ? 'bg-gradient-to-br from-[#1b3a6b] to-[#2a5298] border-[#1b3a6b] text-white shadow-lg shadow-[#1b3a6b]/20'
+                    : 'bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100 hover:border-[#f5a623]/30'
+                  }`}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
         </div>
   
         <Select value={form.how_heard} onValueChange={v => setForm({...form, how_heard: v})}>
@@ -629,7 +668,7 @@ function MembershipForm({ onSubmit, loading, session }: any) {
         </Select>
   
         <div className="space-y-3">
-          <Label className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Faith Decision</Label>
+          <Label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Faith Decision</Label>
           <RadioGroup value={form.faith_decision} onValueChange={v => setForm({...form, faith_decision: v})} className="space-y-2">
              {['Yes recently', 'Already a believer', 'Still exploring'].map(v => (
                <Label key={v} className="flex items-center gap-2 cursor-pointer text-[10px] font-bold">
@@ -664,8 +703,8 @@ function VolunteerForm({ onSubmit, loading, session }: any) {
   
     return (
       <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="space-y-4 text-left">
-        <Input placeholder="Full Name" required value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="h-12 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 border-slate-300 dark:border-slate-600 font-bold" />
-        <Input type="email" placeholder="Email" required={!form.is_member} value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="h-12 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 border-slate-300 dark:border-slate-600 font-bold" />
+        <Input placeholder="Full Name" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="h-12 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 border-slate-300 dark:border-slate-600 font-bold" />
+        <Input type="email" placeholder="Email (Optional)" value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="h-12 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 border-slate-300 dark:border-slate-600 font-bold" />
         <Input placeholder="Phone" required={!form.is_member} value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} className="h-12 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 border-slate-300 dark:border-slate-600 font-bold" />
         
         <div className="flex items-center space-x-4">
@@ -687,15 +726,24 @@ function VolunteerForm({ onSubmit, loading, session }: any) {
           </SelectContent>
         </Select>
   
-        <div className="space-y-3">
-          <Label className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Availability</Label>
-          <RadioGroup value={form.availability} onValueChange={v => setForm({...form, availability: v})} className="flex flex-wrap gap-4">
-             {['Sundays', 'Weekdays', 'Evenings', 'Flexible'].map(v => (
-               <Label key={v} className="flex items-center gap-2 cursor-pointer text-[10px] font-bold">
-                  <RadioGroupItem value={v} /> {v}
-               </Label>
-             ))}
-          </RadioGroup>
+        <div className="space-y-3 px-2">
+          <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Availability</p>
+          <div className="flex flex-wrap gap-2">
+            {['Sundays', 'Weekdays', 'Evenings', 'Flexible'].map(v => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setForm({...form, availability: v})}
+                className={`px-4 py-2 rounded-xl border-2 text-[13px] font-bold transition-all
+                  ${form.availability === v
+                    ? 'bg-[#1b3a6b] border-[#1b3a6b] text-white'
+                    : 'bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-100'
+                  }`}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
         </div>
   
         <Textarea placeholder="Experience..." value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} className="h-24 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 border-slate-300 dark:border-slate-600 font-bold resize-none" />
@@ -725,7 +773,7 @@ function GroupForm({ groups, onSubmit, loading, session }: any) {
         <Input type="email" placeholder="Email" required value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="h-12 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 border-slate-300 dark:border-slate-600 font-bold" />
         
         <div className="space-y-3">
-          <Label className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Age Group</Label>
+          <Label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Age Group</Label>
           <RadioGroup value={form.age_group} onValueChange={v => setForm({...form, age_group: v})} className="flex flex-wrap gap-4">
              {['Under 18', '18-24', '25-34', '35-44', '45-54', '55+'].map(v => (
                <Label key={v} className="flex items-center gap-1 cursor-pointer text-[10px] font-bold">
@@ -736,7 +784,7 @@ function GroupForm({ groups, onSubmit, loading, session }: any) {
         </div>
   
         <div className="space-y-3">
-          <Label className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Group Preference</Label>
+          <Label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Group Preference</Label>
           <RadioGroup value={form.group_type} onValueChange={v => setForm({...form, group_type: v})} className="flex flex-wrap gap-4">
              {['Bible study', 'Prayer', 'Young adults', 'Families', 'International'].map(v => (
                <Label key={v} className="flex items-center gap-1 cursor-pointer text-[10px] font-bold">
@@ -819,7 +867,7 @@ function PrayerForm({ onSubmit, loading, session }: any) {
     return (
       <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="space-y-4 text-left">
         <Input placeholder="Name (optional)" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="h-12 rounded-xl dark:bg-slate-800" />
-        <Input type="email" placeholder="Email (for confirmation)" required value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="h-12 rounded-xl dark:bg-slate-800" />
+        <Input type="email" placeholder="Email (optional)" value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="h-12 rounded-xl dark:bg-slate-800" />
         
         <div className="grid grid-cols-2 gap-3">
           <Select value={form.urgency} onValueChange={v => setForm({...form, urgency: v})}>

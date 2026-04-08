@@ -78,8 +78,15 @@ export default function DashboardPage() {
     const [generatedPlainKey, setGeneratedPlainKey] = useState<string | null>(null);
     const [creatingKey, setCreatingKey] = useState(false);
 
-    // Stats
+    // Brand settings state (controlled inputs)
+    const [orgName, setOrgName] = useState("");
+    const [logoUrl, setLogoUrl] = useState("");
+    const [brandColor, setBrandColor] = useState("#10b981");
+    const [savingSettings, setSavingSettings] = useState(false);
+
+    // Analytics
     const [monthlyViews, setMonthlyViews] = useState(0);
+    const [dailyInquiries, setDailyInquiries] = useState<number[]>([]);
 
     useEffect(() => {
         loadDashboard();
@@ -116,6 +123,9 @@ export default function DashboardPage() {
                 });
             } else {
                 setOrg(orgData);
+                setOrgName(orgData.name || "");
+                setLogoUrl(orgData.logo_url || "");
+                setBrandColor(orgData.brand_color || "#10b981");
             }
 
             // Fetch Roll
@@ -154,8 +164,30 @@ export default function DashboardPage() {
                 ]);
             }
 
-            // Fetch analytics (Mocking recent 30 day views for visual)
-            setMonthlyViews(Math.floor(Math.random() * 5000) + 1200);
+            // Fetch real daily inquiry counts for last 30 days
+            const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+            const orgIdForAnalytics = orgData?.id;
+            if (orgIdForAnalytics) {
+                const { data: inquiryRows } = await supabase
+                    .from("public_inquiries")
+                    .select("created_at")
+                    .eq("org_id", orgIdForAnalytics)
+                    .gte("created_at", thirtyDaysAgo)
+                    .order("created_at", { ascending: true });
+
+                const dailyCounts: Record<string, number> = {};
+                for (let i = 29; i >= 0; i--) {
+                    const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+                    dailyCounts[d.toISOString().slice(0, 10)] = 0;
+                }
+                (inquiryRows || []).forEach(row => {
+                    const day = row.created_at.slice(0, 10);
+                    if (dailyCounts[day] !== undefined) dailyCounts[day]++;
+                });
+                const counts = Object.values(dailyCounts);
+                setDailyInquiries(counts);
+                setMonthlyViews(counts.reduce((a, b) => a + b, 0));
+            }
 
         } catch (err) {
             console.error(err);
@@ -233,6 +265,24 @@ export default function DashboardPage() {
         } catch (err) {
             toast.error("Failed to delete key");
             loadDashboard();
+        }
+    }
+
+    async function handleSaveSettings() {
+        if (!org || org.id === "mock-org-123") return;
+        setSavingSettings(true);
+        try {
+            const { error } = await supabase
+                .from("organizations")
+                .update({ name: orgName, logo_url: logoUrl, brand_color: brandColor })
+                .eq("id", org.id);
+            if (error) throw error;
+            setOrg({ ...org, name: orgName, logo_url: logoUrl, brand_color: brandColor });
+            toast.success("Settings saved successfully");
+        } catch (err: any) {
+            toast.error("Failed to save: " + err.message);
+        } finally {
+            setSavingSettings(false);
         }
     }
 
@@ -348,9 +398,9 @@ export default function DashboardPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="h-64 w-full flex items-end gap-1.5 pt-4">
-                                    {/* Mock Bar Chart with framer motion */}
-                                    {Array.from({ length: 30 }).map((_, i) => {
-                                        const height = Math.floor(Math.random() * 80) + 20;
+                                    {(dailyInquiries.length > 0 ? dailyInquiries : Array(30).fill(0)).map((count, i) => {
+                                        const max = Math.max(...(dailyInquiries.length > 0 ? dailyInquiries : [1]), 1);
+                                        const height = Math.max((count / max) * 100, count > 0 ? 4 : 2);
                                         return (
                                             <motion.div
                                                 key={i}
@@ -360,10 +410,10 @@ export default function DashboardPage() {
                                                 className="flex-1 bg-primary/40 hover:bg-primary rounded-t-sm cursor-pointer relative group transition-colors"
                                             >
                                                 <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-xs px-2 py-1 rounded shadow-lg pointer-events-none transition-opacity whitespace-nowrap z-10">
-                                                    {Math.floor(height * 12.3)} views
+                                                    {count} {count === 1 ? "inquiry" : "inquiries"}
                                                 </div>
                                             </motion.div>
-                                        )
+                                        );
                                     })}
                                 </div>
 
@@ -495,7 +545,8 @@ export default function DashboardPage() {
                                         <label className="text-sm font-medium">Organization Name</label>
                                         <input
                                             type="text"
-                                            defaultValue={org?.name}
+                                            value={orgName}
+                                            onChange={(e) => setOrgName(e.target.value)}
                                             className="flex h-10 w-full rounded-md border border-white/20 bg-black/20 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                                         />
                                     </div>
@@ -508,7 +559,8 @@ export default function DashboardPage() {
                                             <input
                                                 type="url"
                                                 placeholder="https://..."
-                                                defaultValue={org?.logo_url || ""}
+                                                value={logoUrl}
+                                                onChange={(e) => setLogoUrl(e.target.value)}
                                                 className="flex h-10 w-full rounded-md border border-white/20 bg-black/20 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                             />
                                             <p className="text-xs text-white/50">Used at the top of the widget.</p>
@@ -521,12 +573,14 @@ export default function DashboardPage() {
                                             <div className="flex gap-3">
                                                 <input
                                                     type="color"
-                                                    defaultValue={org?.brand_color || "#10b981"}
+                                                    value={brandColor}
+                                                    onChange={(e) => setBrandColor(e.target.value)}
                                                     className="h-10 w-14 rounded-md border-0 bg-transparent cursor-pointer p-0"
                                                 />
                                                 <input
                                                     type="text"
-                                                    defaultValue={org?.brand_color || "#10b981"}
+                                                    value={brandColor}
+                                                    onChange={(e) => setBrandColor(e.target.value)}
                                                     className="flex-1 h-10 rounded-md border border-white/20 bg-black/20 px-3 py-2 text-sm ring-offset-background font-mono"
                                                 />
                                             </div>
@@ -536,7 +590,9 @@ export default function DashboardPage() {
 
                                 </CardContent>
                                 <CardFooter className="border-t border-white/10 bg-black/20 pt-4">
-                                    <Button onClick={() => toast.success("Settings saved")}>Save Changes</Button>
+                                    <Button onClick={handleSaveSettings} disabled={savingSettings}>
+                                        {savingSettings ? "Saving..." : "Save Changes"}
+                                    </Button>
                                 </CardFooter>
                             </Card>
                         </div>

@@ -24,7 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { supabase } from "@/lib/supabase";
 import Loading from "./loading";
 
 interface DashboardStat {
@@ -47,24 +47,12 @@ export default function DashboardClient() {
     async function fetchDashboardData() {
       try {
         // 1. Fetch Total Organizations
-        const { count: orgCount } = await supabaseAdmin
+        const { count: orgCount } = await supabase
           .from('organizations')
           .select('*', { count: 'exact', head: true });
 
-        // 2. Fetch Total Members (Sum)
-        const { data: memberCounts } = await supabaseAdmin
-          .rpc('get_org_member_counts');
-        
-        const totalUsers = memberCounts?.reduce((acc: number, curr: any) => acc + (curr.member_count || 0), 0) || 0;
-
-        // 3. Fetch Unresolved AI Insights
-        const { count: insightCount } = await supabaseAdmin
-          .from('admin_ai_insights')
-          .select('*', { count: 'exact', head: true })
-          .is('resolved_at', null);
-
-        // 4. Fetch Latest Analytics Row for MRR and Churn
-        const { data: latestAnalytics } = await supabaseAdmin
+        // 2. Fetch Latest Analytics Row for MRR, Churn, and Total Members
+        const { data: latestAnalytics } = await supabase
           .from('company_analytics')
           .select('metrics')
           .order('date', { ascending: false })
@@ -73,31 +61,47 @@ export default function DashboardClient() {
 
         const mrrValue = latestAnalytics?.metrics?.mrr || 0;
         const churnRate = (latestAnalytics?.metrics?.churn_rate || 0) * 100;
+        // Total members is aggregated nightly by daily-analytics-aggregator edge function
+        const totalUsers = latestAnalytics?.metrics?.total_members || 0;
 
-        // 5. Fetch Global Connection Metrics
-        const { data: metrics } = await supabaseAdmin
-          .from('vw_global_connection_metrics')
-          .select('*');
+        // 3. Fetch Unresolved AI Insights
+        const { count: insightCount } = await supabase
+          .from('admin_ai_insights')
+          .select('*', { count: 'exact', head: true })
+          .is('resolved_at', null);
+
+        // 4. Fetch Global Connection Metrics
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+        const [
+          { count: totalInquiries },
+          { count: pendingFollowups },
+          { data: allEmails },
+          { count: weeklyTotal }
+        ] = await Promise.all([
+          supabase.from('public_inquiries').select('*', { count: 'exact', head: true }),
+          supabase.from('public_inquiries').select('*', { count: 'exact', head: true }).eq('status', 'new'),
+          supabase.from('public_inquiries').select('email'),
+          supabase.from('public_inquiries').select('*', { count: 'exact', head: true }).gte('created_at', sevenDaysAgo)
+        ]);
         
-        if (metrics) {
-          const summary = metrics.reduce((acc: any, curr: any) => ({
-            total_inquiries: acc.total_inquiries + (curr.total_inquiries || 0),
-            pending_followups: acc.pending_followups + (curr.pending_followups || 0),
-            unique_prospects: acc.unique_prospects + (curr.unique_prospects || 0),
-            weekly_total: acc.weekly_total + (curr.dynamic_weekly_count || 0),
-          }), { total_inquiries: 0, pending_followups: 0, unique_prospects: 0, weekly_total: 0 });
-          setConnectionMetrics(summary);
-        }
+        const uniqueEmails = new Set(allEmails?.map(d => d.email).filter(Boolean) || []).size;
+
+        setConnectionMetrics({
+          total_inquiries: totalInquiries || 0,
+          pending_followups: pendingFollowups || 0,
+          unique_prospects: uniqueEmails || 0,
+          weekly_total: weeklyTotal || 0,
+        });
 
         // 5b. Fetch Breakdowns
-        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
         
-        // FIX 5: Use visitor_intent instead of intent_category
-        const { data: intents } = await supabaseAdmin
+        // Intent breakdown by visitor_intent
+        const { data: intents } = await supabase
           .from('public_inquiries')
           .select('visitor_intent')
           .gte('created_at', sevenDaysAgo);
-        
+
         if (intents) {
           const counts = intents.reduce((acc: any, curr: any) => {
             const cat = curr.visitor_intent || 'other';
@@ -107,12 +111,12 @@ export default function DashboardClient() {
           setIntentBreakdown(Object.entries(counts).map(([name, value]) => ({ name, value })));
         }
 
-        // FIX 6: Language Reach instead of Global Reach
-        const { data: languages } = await supabaseAdmin
+        // Language reach breakdown
+        const { data: languages } = await supabase
           .from('public_inquiries')
           .select('preferred_language')
           .gte('created_at', sevenDaysAgo);
-        
+
         if (languages) {
           const counts = languages.reduce((acc: any, curr: any) => {
             const lang = curr.preferred_language || 'EN';
@@ -122,8 +126,8 @@ export default function DashboardClient() {
           setCountryBreakdown(Object.entries(counts).map(([name, value]) => ({ name, value })));
         }
 
-        // 6. Fetch Recent Audit Logs
-        const { data: logs } = await supabaseAdmin
+        // 5. Fetch Recent Audit Logs
+        const { data: logs } = await supabase
           .from('admin_audit_logs')
           .select(`
             *,

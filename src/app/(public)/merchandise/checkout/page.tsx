@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { 
-    Trash2, Plus, Minus, ShoppingBag, 
-    ArrowRight, ArrowLeft, CreditCard,
-    ShieldCheck, Truck, Package, ChevronLeft,
-    CheckCircle2, Loader2, Lock
+import {
+    ShieldCheck, Truck, ChevronLeft,
+    Loader2, Lock
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -28,8 +26,8 @@ export default function CheckoutPage() {
     const [submitting, setSubmitting] = useState(false);
     const [orgId, setOrgId] = useState<string>("");
     
-    const [isSuccess, setIsSuccess] = useState(false);
-    
+    const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
     const { values: formData, handleChange: handleInputChange, clear: clearForm } = useStickyForm({
         email: "",
         phone: "",
@@ -92,46 +90,52 @@ export default function CheckoutPage() {
     const handleCheckout = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitting(true);
-        
-        // Simulate payment processing
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        localStorage.removeItem("merchandise_cart");
-        clearForm();
-        setIsSuccess(true);
-        setSubmitting(false);
-        toast.success("Divine Transaction Complete!");
-    };
+        setCheckoutError(null);
 
-    if (isSuccess) {
-        return (
-            <div className="min-h-screen bg-background flex flex-col">
-                <div className="flex-1 flex items-center justify-center pt-32 pb-20 px-4 text-center">
-                    <motion.div 
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="max-w-md space-y-8"
-                    >
-                        <div className="w-24 h-24 bg-emerald-500/10 rounded-[2.5rem] flex items-center justify-center text-emerald-500 mx-auto border-2 border-emerald-500/20">
-                            <CheckCircle2 size={48} className="animate-bounce" />
-                        </div>
-                        <div>
-                            <h1 className="text-4xl font-black uppercase tracking-tight mb-4">Payment Successful</h1>
-                            <p className="text-muted-foreground font-medium">Your kingdom gear is being prepared for shipment. A confirmation email has been sent to <span className="text-primary font-bold">{formData.email}</span>.</p>
-                        </div>
-                        <div className="space-y-4 pt-6">
-                            <Link href="/merchandise">
-                                <Button className="w-full h-16 rounded-[2rem] bg-foreground text-background font-black text-sm uppercase tracking-widest shadow-xl">BACK TO SHOP</Button>
-                            </Link>
-                            <Link href="/">
-                                <Button variant="ghost" className="w-full h-12 rounded-2xl font-black text-[10px] tracking-widest uppercase">RETURN HOME</Button>
-                            </Link>
-                        </div>
-                    </motion.div>
-                </div>
-            </div>
-        );
-    }
+        try {
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+            const response = await fetch(`${supabaseUrl}/functions/v1/stripe-checkout`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${supabaseAnonKey}`,
+                },
+                body: JSON.stringify({
+                    cart: cart.map(item => ({
+                        id: item.id,
+                        name: item.name,
+                        price: item.price,
+                        quantity: item.quantity,
+                        images: item.images,
+                    })),
+                    orgId,
+                    customerEmail: formData.email,
+                    shippingDetails: {
+                        firstName: formData.firstName,
+                        lastName: formData.lastName,
+                        address: formData.address,
+                        city: formData.city,
+                        postalCode: formData.postalCode,
+                    },
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.url) {
+                throw new Error(data.error || "Checkout session creation failed");
+            }
+
+            // Redirect to Stripe hosted checkout
+            window.location.href = data.url;
+        } catch (err: any) {
+            setCheckoutError(err.message);
+            toast.error(err.message || "Checkout failed. Please try again.");
+            setSubmitting(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-background">
@@ -202,7 +206,10 @@ export default function CheckoutPage() {
                                     <div className="flex items-center gap-3 p-5 bg-muted/30 rounded-[2rem] text-[9px] font-black uppercase tracking-widest text-muted-foreground">
                                         <ShieldCheck size={18} className="text-emerald-500" /> Secure Encryption via Stripe & SSL
                                     </div>
-                                    <Button 
+                                    {checkoutError && (
+                                        <p className="text-xs text-red-500 font-bold text-center">{checkoutError}</p>
+                                    )}
+                                    <Button
                                         type="submit" 
                                         disabled={submitting}
                                         className="w-full h-14 rounded-2xl bg-foreground hover:bg-black text-background font-black text-xs uppercase tracking-[0.2em] shadow-lg active:scale-[0.98] transition-all"

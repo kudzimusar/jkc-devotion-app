@@ -20,6 +20,7 @@ import {
 import { useAdminCtx } from "../Context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface PastoralMessage {
     id: string;
@@ -47,6 +48,7 @@ export default function CommunicationsLogPage() {
     const [selectedMessage, setSelectedMessage] = useState<PastoralMessage | null>(null);
 
     const { orgId } = useAdminCtx();
+    const [resending, setResending] = useState(false);
 
     useEffect(() => {
         if (orgId) fetchMessages();
@@ -71,6 +73,52 @@ export default function CommunicationsLogPage() {
             console.error("Error fetching messages:", err);
         } finally {
             setLoading(false);
+        }
+    }
+
+    async function handleResend(msg: PastoralMessage) {
+        setResending(true);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { toast.error("Not authenticated"); return; }
+
+            // Create a single-recipient campaign record
+            const { data: campaign, error: campErr } = await supabase
+                .from('communication_campaigns')
+                .insert({
+                    org_id: orgId,
+                    subject_en: msg.subject || 'Pastoral Message',
+                    body_en: msg.body,
+                    channels: ['email'],
+                    target_type: 'specific',
+                    target_member_ids: [msg.receiver_id],
+                    status: 'draft',
+                    created_by: msg.sender_id,
+                })
+                .select('id')
+                .single();
+
+            if (campErr || !campaign) throw new Error('Failed to create resend campaign');
+
+            // Dispatch via coce-dispatch edge function
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+            const res = await fetch(`${supabaseUrl}/functions/v1/coce-dispatch`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token || supabaseAnonKey}`,
+                },
+                body: JSON.stringify({ campaign_id: campaign.id }),
+            });
+
+            if (!res.ok) throw new Error('Dispatch failed');
+            toast.success(`Message resent to ${msg.receiver?.name || 'member'}`);
+            setSelectedMessage(null);
+        } catch (err: any) {
+            toast.error('Resend failed: ' + err.message);
+        } finally {
+            setResending(false);
         }
     }
 
@@ -275,8 +323,12 @@ export default function CommunicationsLogPage() {
                             </div>
                             <div className="p-8 border-t border-border bg-muted/30 flex gap-3">
                                 <Button variant="outline" onClick={() => setSelectedMessage(null)} className="flex-1 h-12 rounded-xl font-black uppercase text-[10px] tracking-widest">Close Log</Button>
-                                <Button className="flex-1 h-12 rounded-xl bg-primary text-white font-black uppercase text-[10px] tracking-widest gap-2">
-                                    Resend Message <Send className="w-3.5 h-3.5" />
+                                <Button
+                                    className="flex-1 h-12 rounded-xl bg-primary text-white font-black uppercase text-[10px] tracking-widest gap-2"
+                                    onClick={() => selectedMessage && handleResend(selectedMessage)}
+                                    disabled={resending}
+                                >
+                                    {resending ? "Sending..." : "Resend Message"} <Send className="w-3.5 h-3.5" />
                                 </Button>
                             </div>
                         </motion.div>

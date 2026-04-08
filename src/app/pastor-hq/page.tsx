@@ -4,12 +4,13 @@ import { usePastorCtx } from "./pastor-context";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { basePath as BP } from "@/lib/utils";
-import { 
-    Users, TrendingUp, DollarSign, Activity, 
-    ArrowUpRight, ArrowDownRight, MessageSquare, 
+import {
+    Users, TrendingUp, DollarSign, Activity,
+    ArrowUpRight, ArrowDownRight, MessageSquare,
     ShieldAlert, Mail, Calendar, Sparkles,
     BarChart3, PieChart, LineChart, Loader2
 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import { getPastorDashboardData } from "@/lib/pastor-hq-actions";
@@ -159,12 +160,43 @@ function PastorHQDashboard() {
                                 </div>
                             </div>
                             
-                            <div className="h-[300px] flex items-center justify-center border-2 border-dashed border-border rounded-3xl group hover:border-violet-500/30 transition-colors">
-                                <div className="text-center space-y-2 opacity-30 group-hover:opacity-100 transition-opacity">
-                                    <DollarSign className="w-10 h-10 mx-auto text-violet-500" />
-                                    <p className="text-xs font-bold uppercase tracking-widest">Giving Trend Visualization Loading...</p>
+                            {data?.finance?.monthlyBreakdown?.length > 0 ? (
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <BarChart data={data.finance.monthlyBreakdown} margin={{ top: 4, right: 8, left: 8, bottom: 4 }}>
+                                        <XAxis
+                                            dataKey="month_start"
+                                            tickFormatter={(v) => new Date(v).toLocaleString('default', { month: 'short' })}
+                                            tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }}
+                                            axisLine={false}
+                                            tickLine={false}
+                                        />
+                                        <YAxis
+                                            tickFormatter={(v) => `¥${(v / 1000).toFixed(0)}k`}
+                                            tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }}
+                                            axisLine={false}
+                                            tickLine={false}
+                                            width={52}
+                                        />
+                                        <Tooltip
+                                            formatter={(v: any) => [`¥${Number(v ?? 0).toLocaleString()}`, 'Giving']}
+                                            labelFormatter={(l) => new Date(l).toLocaleString('default', { month: 'long', year: 'numeric' })}
+                                            contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '1rem', fontSize: 11 }}
+                                        />
+                                        <Bar dataKey="total_amount" radius={[6, 6, 0, 0]} maxBarSize={48}>
+                                            {(data.finance.monthlyBreakdown as any[]).map((_: any, i: number) => (
+                                                <Cell key={i} fill={i === data.finance.monthlyBreakdown.length - 1 ? '#8b5cf6' : '#8b5cf640'} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="h-[300px] flex items-center justify-center border-2 border-dashed border-border rounded-3xl">
+                                    <div className="text-center space-y-2 opacity-40">
+                                        <DollarSign className="w-10 h-10 mx-auto text-violet-500" />
+                                        <p className="text-xs font-bold uppercase tracking-widest">No giving data yet</p>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>

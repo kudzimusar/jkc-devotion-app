@@ -101,8 +101,56 @@ serve(async (req) => {
 
     if (updateError) throw updateError
 
-    // 4. (Future) BREVO Integration placeholder
-    // In a real scenario, call Brevo API here using Deno.env.get('BREVO_API_KEY')
+    // 4. BREVO Integration: Confirmation Email
+    const apiKey = Deno.env.get('BREVO_API_KEY')
+    if (apiKey && record.email) {
+      console.log(`Sending Brevo email to ${record.email} for intent ${record.visitor_intent}`)
+      
+      const subjects: Record<string, string> = {
+        'prayer': "Your prayer request has been received — Japan Kingdom Church",
+        'membership': "Welcome — Your JKC membership application has been received",
+        'volunteer': "Thank you for volunteering — Japan Kingdom Church",
+        'jkgroup': "Your jkGroup request has been received — Japan Kingdom Church",
+        'class_hoth': "Heart of the House registration confirmed — Japan Kingdom Church",
+        'class_language': "Kingdom Japanese Language Class — Application received",
+        'event': "Event registration confirmed — Japan Kingdom Church"
+      }
+      
+      const subject = subjects[record.visitor_intent] || "Thank you for connecting — Japan Kingdom Church"
+      const step = aiResult.reply_suggestion || "We have received your message and will get back to you shortly."
+
+      try {
+        const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'api-key': apiKey
+          },
+          body: JSON.stringify({
+            sender: { name: "Japan Kingdom Church", email: "info@kudzimusar.com" },
+            to: [{ email: record.email, name: `${record.first_name} ${record.last_name || ''}`.trim() }],
+            subject: subject,
+            htmlContent: `
+              <div style="font-family: sans-serif; padding: 20px; color: #1b3a6b;">
+                <p>Dear ${record.first_name},</p>
+                <p>Thank you for reaching out to Japan Kingdom Church. ${step}</p>
+                <p>Blessings,<br>Japan Kingdom Church Team</p>
+              </div>
+            `
+          })
+        })
+        
+        if (!brevoRes.ok) {
+          const err = await brevoRes.json()
+          console.error('[Brevo Error]', err)
+        } else {
+          console.log('[Brevo Success]')
+        }
+      } catch (e) {
+        console.error('[Brevo Fetch Error]', e)
+      }
+    }
 
     return new Response(JSON.stringify({ success: true, aiResult }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

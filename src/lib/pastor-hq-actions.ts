@@ -16,11 +16,17 @@ export interface PulseData {
   };
 }
 
+export interface MonthlyBreakdown {
+  month_start: string;
+  total_amount: number;
+}
+
 export interface FinanceSummary {
   monthlyIncome: number;
   incomeTrend: number;
   budgetPerformance: number;
   topMinistry: string;
+  monthlyBreakdown: MonthlyBreakdown[];
 }
 
 export interface MinistryHealth {
@@ -101,13 +107,20 @@ export async function getPastorDashboardData(orgId?: string) {
     color: m.health_score > 80 ? 'text-emerald-500' : m.health_score > 50 ? 'text-amber-500' : 'text-red-500'
   }));
 
-  // Financial Momentum
+  // Financial Momentum — current month + last 6 months for chart
   const { data: financeData } = await supabase
     .from('vw_financial_momentum')
     .select('*')
     .eq('org_id', effectiveOrgId)
     .order('month_start', { ascending: false })
     .limit(2);
+
+  const { data: monthlyBreakdownData } = await supabase
+    .from('vw_financial_momentum')
+    .select('month_start, total_amount')
+    .eq('org_id', effectiveOrgId)
+    .order('month_start', { ascending: true })
+    .limit(6);
 
   const currentMonthFinance = financeData?.[0];
   const totalIncome = Number(currentMonthFinance?.total_amount || 0);
@@ -162,7 +175,11 @@ export async function getPastorDashboardData(orgId?: string) {
       monthlyIncome: totalIncome,
       incomeTrend: 14,
       budgetPerformance: 102,
-      topMinistry: "Global Missions"
+      topMinistry: "Global Missions",
+      monthlyBreakdown: (monthlyBreakdownData || []).map(r => ({
+        month_start: r.month_start,
+        total_amount: Number(r.total_amount || 0)
+      }))
     },
     ministriesHealth: ministries.length > 0 ? ministries : [
       { name: "Default Dept", score: 100, status: "Strong", color: "text-emerald-500" }

@@ -42,7 +42,9 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+
 import { sendConnectEmail } from './actions';
+
 
 export default function KingdomConnectPage() {
   const [resolvedOrgId, setResolvedOrgId] = useState<string | null>(null);
@@ -180,27 +182,55 @@ export default function KingdomConnectPage() {
 
       if (inquiryError) throw inquiryError;
 
-      // FIX 1 — Direct Brevo Email (Immediately after parent insert)
-      if (data.email) {
-        // Run in background, don't wait for it to block UI success
-        sendConnectEmail(
-          intent, 
-          data.email, 
-          data.name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Visitor'
-        ).catch(e => console.error("Brevo failed:", e));
-      }
+      // 2. Email confirmation is HANDLED BY DB TRIGGER autonomously
+      // No need for a client-side action here.
 
-      // 2. Insert Child Record (Specialized for jkgroup due to FIX 2)
-      if (intent === 'jkgroup') {
-        // Skip child insert for jkgroup as the data is captured in parent message JSON
-      } else if (childTable) {
+      // 2. Insert Child Record
+      if (childTable) {
+        // Clean childData to only include valid columns for the specific table
+        const cleanChildData: any = {
+          inquiry_id: inquiry.id,
+          org_id: resolvedOrgId
+        };
+
+        if (childTable === 'prayer_requests') {
+          cleanChildData.request_text = childData.prayer_request || childData.message || '';
+          cleanChildData.urgency = childData.urgency || 'Normal';
+          cleanChildData.category = childData.topic || 'General';
+          cleanChildData.is_anonymous = !!(childData.is_anonymous || !childData.name || childData.name === 'Guest');
+        } else if (childTable === 'event_registrations') {
+          cleanChildData.event_id = childData.event_id;
+          cleanChildData.name = data.name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Visitor';
+          cleanChildData.email = data.email || null;
+          cleanChildData.guest_count = String(childData.guest_count || 1);
+          cleanChildData.first_visit = !!childData.first_visit;
+          cleanChildData.is_member = !!childData.is_member;
+          cleanChildData.message = childData.message || '';
+        } else if (childTable === 'volunteer_applications') {
+          cleanChildData.name = data.name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Visitor';
+          cleanChildData.email = data.email || null;
+          cleanChildData.phone = data.phone || null;
+          cleanChildData.is_member = !!childData.is_member;
+          cleanChildData.ministry_interests = [childData.ministry_area || 'General'];
+          cleanChildData.ministry_area = childData.ministry_area || 'General';
+          cleanChildData.experience_summary = childData.notes || '';
+          cleanChildData.availability = childData.availability || 'Weekends';
+        } else if (childTable === 'class_registrations') {
+          cleanChildData.name = data.name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Visitor';
+          cleanChildData.email = data.email || null;
+          cleanChildData.phone = data.phone || null;
+          cleanChildData.class_type = childData.class_type || 'japanese';
+          cleanChildData.japanese_level = childData.japanese_level || childData.proficiency || '';
+          cleanChildData.message = childData.message || '';
+        } else if (childTable === 'bible_study_group_requests') {
+          cleanChildData.group_id = childData.group_id || null;
+          cleanChildData.message = `Preference: ${childData.group_type || 'Any'}. Age: ${childData.age_group || 'Any'}. Time: ${childData.meeting_time || 'Any'}`;
+          cleanChildData.status = 'pending';
+        }
+
         const { error: childError } = await supabase
           .from(childTable)
-          .insert({
-            ...childData,
-            inquiry_id: inquiry.id,
-            org_id: resolvedOrgId
-          });
+          .insert(cleanChildData);
         if (childError) throw childError;
       }
 
@@ -460,7 +490,7 @@ function EventForm({ event, onSubmit, loading, session }: any) {
   const [form, setForm] = useState({
     name: session?.user?.user_metadata?.first_name ? `${session.user.user_metadata.first_name} ${session.user.user_metadata.last_name || ''}` : '',
     email: session?.user?.email || '',
-    guest_count: 1,
+    guest_count: '1',
     first_visit: false,
     is_member: !!session,
     message: '',
@@ -507,23 +537,26 @@ function EventForm({ event, onSubmit, loading, session }: any) {
                       onChange={e => setForm({...form, email: e.target.value})}
                       className="h-12 rounded-xl border-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 border-slate-300 dark:border-slate-600 font-bold"
                     />
-                  {!session && <p className="text-[8px] font-bold text-slate-500 dark:text-slate-400 px-2 italic text-left uppercase">Required if you are not a JKC member</p>}
                   </div>
                   
                   <div className="space-y-3">
-                    <Label className="text-[9px] font-black text-[#64748b] tracking-widest uppercase">Guest Count</Label>
-                    <RadioGroup 
-                      value={String(form.guest_count)} 
-                      onValueChange={v => setForm({...form, guest_count: parseInt(v)})}
-                      className="flex flex-wrap gap-2"
-                    >
+                    <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Guest Count</p>
+                    <div className="flex flex-wrap gap-2">
                       {['1', '2-3', '4-6', '7+'].map(v => (
-                        <Label key={v} className="cursor-pointer border-2 p-2 rounded-xl border-transparent hover:border-[#f5a623]/20 bg-[#f8fafc] flex items-center gap-2">
-                           <RadioGroupItem value={v} />
-                           <span className="text-[10px] font-black text-slate-800 dark:text-slate-200">{v}</span>
-                        </Label>
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => setForm({...form, guest_count: v as any})}
+                          className={`px-5 py-3 rounded-2xl border-2 text-[14px] font-bold transition-all duration-300 hover:scale-[1.03] active:scale-95 shadow-sm hover:shadow-md
+                            ${String(form.guest_count) === v
+                              ? 'bg-gradient-to-br from-[#1b3a6b] to-[#2a5298] border-[#1b3a6b] text-white shadow-lg shadow-[#1b3a6b]/20'
+                              : 'bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100 hover:border-[#f5a623]/30'
+                            }`}
+                        >
+                          {v}
+                        </button>
                       ))}
-                    </RadioGroup>
+                    </div>
                   </div>
 
                   <div className="flex gap-4">
@@ -600,14 +633,23 @@ function MembershipForm({ onSubmit, loading, session }: any) {
       </div>
 
       <div className="space-y-3">
-        <Label className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Marital Status</Label>
-        <RadioGroup value={form.marital_status} onValueChange={v => setForm({...form, marital_status: v})} className="flex gap-4">
-           {['Single', 'Married', 'Divorced', 'Widowed'].map(v => (
-             <Label key={v} className="flex items-center gap-2 cursor-pointer text-[10px] font-bold text-slate-800 dark:text-slate-200">
-                <RadioGroupItem value={v} /> {v}
-             </Label>
-           ))}
-        </RadioGroup>
+        <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Marital Status</p>
+        <div className="flex flex-wrap gap-2">
+          {['Single', 'Married', 'Divorced', 'Widowed'].map(v => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setForm({...form, marital_status: v})}
+              className={`px-4 py-2 rounded-xl border-2 text-[13px] font-bold transition-all
+                ${form.marital_status === v
+                  ? 'bg-[#1b3a6b] border-[#1b3a6b] text-white'
+                  : 'bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-100'
+                }`}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
       </div>
 
       <Select value={form.how_heard} onValueChange={v => setForm({...form, how_heard: v})}>
@@ -625,7 +667,7 @@ function MembershipForm({ onSubmit, loading, session }: any) {
       </Select>
 
       <div className="space-y-3">
-        <Label className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Faith Decision</Label>
+        <Label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Faith Decision</Label>
         <RadioGroup value={form.faith_decision} onValueChange={v => setForm({...form, faith_decision: v})} className="space-y-2">
            {['Yes recently', 'Already a believer', 'Still exploring'].map(v => (
              <Label key={v} className="flex items-center gap-2 cursor-pointer text-[10px] font-bold text-slate-800 dark:text-slate-200">
@@ -689,15 +731,24 @@ function VolunteerForm({ onSubmit, loading, session }: any) {
         </SelectContent>
       </Select>
 
-      <div className="space-y-3">
-        <Label className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Availability</Label>
-        <RadioGroup value={form.availability} onValueChange={v => setForm({...form, availability: v})} className="flex flex-wrap gap-4">
-           {['Sundays', 'Weekdays', 'Evenings', 'Flexible'].map(v => (
-             <Label key={v} className="flex items-center gap-2 cursor-pointer text-[10px] font-bold">
-                <RadioGroupItem value={v} /> {v}
-             </Label>
-           ))}
-        </RadioGroup>
+      <div className="space-y-3 px-2">
+        <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Availability</p>
+        <div className="flex flex-wrap gap-2">
+          {['Sundays', 'Weekdays', 'Evenings', 'Flexible'].map(v => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setForm({...form, availability: v})}
+              className={`px-5 py-3 rounded-2xl border-2 text-[14px] font-bold transition-all duration-300 hover:scale-[1.03] active:scale-95 shadow-sm hover:shadow-md
+                ${form.availability === v
+                  ? 'bg-gradient-to-br from-[#1b3a6b] to-[#2a5298] border-[#1b3a6b] text-white shadow-lg shadow-[#1b3a6b]/20'
+                  : 'bg-white/80 dark:bg-slate-700/80 backdrop-blur-sm border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100 hover:border-[#f5a623]/30'
+                }`}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
       </div>
 
       <Textarea placeholder="Experience or specialized skills in this area..." value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} className="h-24 rounded-xl border-2 resize-none" />
@@ -727,7 +778,7 @@ function GroupForm({ groups, onSubmit, loading, session }: any) {
       <Input type="email" placeholder="Email" required value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="h-12 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 border-slate-300 dark:border-slate-600 font-bold" />
       
       <div className="space-y-3">
-        <Label className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Age Group</Label>
+        <Label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Age Group</Label>
         <RadioGroup value={form.age_group} onValueChange={v => setForm({...form, age_group: v})} className="flex flex-wrap gap-4">
            {['Under 18', '18-24', '25-34', '35-44', '45-54', '55+'].map(v => (
              <Label key={v} className="flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-800 dark:text-slate-200">
@@ -738,7 +789,7 @@ function GroupForm({ groups, onSubmit, loading, session }: any) {
       </div>
 
       <div className="space-y-3">
-        <Label className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Group Type Preference</Label>
+        <Label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Group Type Preference</Label>
         <RadioGroup value={form.group_type} onValueChange={v => setForm({...form, group_type: v})} className="flex flex-wrap gap-4">
            {['Bible study', 'Prayer group', 'Young adults', 'Families', 'International'].map(v => (
              <Label key={v} className="flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-800 dark:text-slate-200">
@@ -749,7 +800,7 @@ function GroupForm({ groups, onSubmit, loading, session }: any) {
       </div>
 
       <div className="space-y-3">
-        <Label className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Meeting Time Preference</Label>
+        <Label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Meeting Time Preference</Label>
         <RadioGroup value={form.meeting_time} onValueChange={v => setForm({...form, meeting_time: v})} className="flex flex-wrap gap-4">
            {['Weekday morning', 'Weekday evening', 'Weekend', 'Online'].map(v => (
              <Label key={v} className="flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-800 dark:text-slate-200">
@@ -871,12 +922,11 @@ function PrayerForm({ onSubmit, loading, session }: any) {
   });
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="space-y-4">
+    <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="space-y-4 text-left">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <Input placeholder="Your name or 'Anonymous'" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="h-12 rounded-xl font-bold" />
-        <Input type="email" placeholder="Email Address" required={!session} value={form.email || ''} onChange={e => setForm({...form, email: e.target.value})} className="h-12 rounded-xl font-bold" />
+        <Input placeholder="Your name (Optional)" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="h-12 rounded-xl font-bold" />
+        <Input type="email" placeholder="Email (Optional)" value={form.email || ''} onChange={e => setForm({...form, email: e.target.value})} className="h-12 rounded-xl font-bold" />
       </div>
-      {!session && <p className="text-[8px] font-black text-rose-500/80 px-2 italic uppercase">Note: Email is required for guest prayer requests</p>}
       <Textarea placeholder="How can we pray for you today?" required value={form.prayer_request} onChange={e => setForm({...form, prayer_request: e.target.value})} className="h-32 rounded-xl border-2 resize-none font-medium" />
       
       <div className="space-y-3">

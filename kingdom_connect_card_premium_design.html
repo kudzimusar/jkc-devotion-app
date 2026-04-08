@@ -1,0 +1,188 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+.kcc-wrap{background:#0c1220;padding:24px;font-family:'DM Sans',sans-serif;border-radius:16px}
+.kcc-modal{background:#111827;border:1px solid rgba(245,166,35,0.15);border-radius:24px;overflow:hidden;max-width:420px;margin:0 auto}
+.kcc-header{padding:32px 28px 24px;text-align:center;background:linear-gradient(180deg,#0f1f3d 0%,#111827 100%);position:relative}
+.kcc-cross{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;position:absolute;top:16px;right:16px;cursor:pointer}
+.kcc-cross svg{width:14px;height:14px;stroke:#9ca3af;stroke-width:2}
+.kcc-badge{width:56px;height:56px;background:#1b3a6b;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;border:1px solid rgba(245,166,35,0.3)}
+.kcc-badge svg{width:28px;height:28px}
+.kcc-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:#fff;letter-spacing:-0.5px;line-height:1.1}
+.kcc-subtitle{font-size:10px;font-weight:500;letter-spacing:0.3em;color:#f5a623;margin-top:6px;text-transform:uppercase}
+.kcc-share-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:calc(100% - 56px);margin:16px auto 0;padding:10px 20px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;cursor:pointer;transition:all 0.2s}
+.kcc-share-btn:hover{background:rgba(245,166,35,0.08);border-color:rgba(245,166,35,0.3)}
+.kcc-share-btn svg{width:14px;height:14px;stroke:#f5a623;stroke-width:2}
+.kcc-share-btn span{font-size:11px;font-weight:500;letter-spacing:0.15em;color:#d1d5db;text-transform:uppercase}
+.kcc-qr-wrap{margin:20px 28px 0;padding:16px;background:rgba(255,255,255,0.03);border:1px dashed rgba(245,166,35,0.2);border-radius:16px;display:flex;align-items:center;gap:16px}
+.kcc-qr-box{width:56px;height:56px;background:#fff;border-radius:8px;flex-shrink:0;display:grid;grid-template-columns:repeat(7,1fr);gap:1px;padding:5px}
+.qr-cell{border-radius:1px}
+.kcc-qr-info{}
+.kcc-qr-info p{font-size:11px;font-weight:500;color:#f5a623;letter-spacing:0.05em}
+.kcc-qr-info span{font-size:10px;color:#6b7280;margin-top:2px;display:block}
+.kcc-qr-dl{margin-top:8px;font-size:10px;color:#9ca3af;display:flex;align-items:center;gap:4px;cursor:pointer}
+.kcc-qr-dl:hover{color:#f5a623}
+.kcc-qr-dl svg{width:10px;height:10px;stroke:currentColor}
+.kcc-sections{padding:20px 20px 28px}
+.kcc-section{border:1px solid rgba(255,255,255,0.07);border-radius:16px;margin-bottom:10px;overflow:hidden;transition:border-color 0.2s}
+.kcc-section.active{border-color:rgba(245,166,35,0.3)}
+.kcc-section-head{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer}
+.kcc-section-icon{width:34px;height:34px;border-radius:10px;background:rgba(27,58,107,0.4);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.kcc-section-icon svg{width:15px;height:15px}
+.kcc-section-label{font-size:11px;font-weight:500;letter-spacing:0.2em;color:#f5a623;text-transform:uppercase;flex:1}
+.kcc-section-chevron{width:18px;height:18px;stroke:#6b7280;stroke-width:2;transition:transform 0.25s}
+.kcc-section.active .kcc-section-chevron{transform:rotate(180deg);stroke:#f5a623}
+.kcc-section-body{padding:0 16px 16px;display:none}
+.kcc-section.active .kcc-section-body{display:block}
+.kcc-item{padding:11px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:space-between}
+.kcc-item:hover{background:rgba(245,166,35,0.06);border-color:rgba(245,166,35,0.2)}
+.kcc-item-left{}
+.kcc-item-label{font-size:11px;font-weight:500;letter-spacing:0.1em;color:#e5e7eb;text-transform:uppercase}
+.kcc-item-desc{font-size:10px;color:#6b7280;margin-top:2px}
+.kcc-item-arrow{width:14px;height:14px;stroke:#f5a623;stroke-width:2;flex-shrink:0}
+.kcc-give-btn{width:100%;padding:13px;background:#059669;border:none;border-radius:12px;color:#fff;font-size:11px;font-weight:500;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px}
+.kcc-give-btn svg{width:14px;height:14px;stroke:#fff;stroke-width:2}
+.kcc-form-preview{background:rgba(255,255,255,0.03);border-radius:12px;padding:14px;margin-top:8px}
+.kcc-field-label{font-size:9px;font-weight:500;letter-spacing:0.15em;color:#f5a623;text-transform:uppercase;margin-bottom:5px}
+.kcc-input-mock{height:38px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:9px;margin-bottom:10px;padding:0 12px;display:flex;align-items:center}
+.kcc-input-mock span{font-size:12px;color:#4b5563}
+.kcc-pill-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.kcc-pill{padding:6px 12px;border-radius:8px;font-size:10px;font-weight:500;letter-spacing:0.05em;cursor:pointer;transition:all 0.15s}
+.kcc-pill.off{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#6b7280}
+.kcc-pill.on{background:#1b3a6b;border:1px solid rgba(245,166,35,0.4);color:#f5a623}
+.kcc-submit{width:100%;padding:11px;background:#1b3a6b;border:none;border-radius:10px;color:#fff;font-size:10px;font-weight:500;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;margin-top:4px}
+.kcc-footer{text-align:center;padding:0 0 4px}
+.kcc-footer span{font-size:9px;font-weight:500;letter-spacing:0.25em;color:#374151;text-transform:uppercase}
+</style>
+
+<div class="kcc-wrap">
+  <div class="kcc-modal">
+    <div class="kcc-header">
+      <div class="kcc-cross">
+        <svg viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+      <div class="kcc-badge">
+        <svg viewBox="0 0 24 24" fill="#f5a623"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </div>
+      <div class="kcc-title">Kingdom Connect</div>
+      <div class="kcc-subtitle">Japan Kingdom Church · Digital Card</div>
+      <div class="kcc-share-btn">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        <span>Share Kingdom Connect Card</span>
+      </div>
+    </div>
+
+    <div class="kcc-qr-wrap">
+      <div class="kcc-qr-box" id="qr"></div>
+      <div class="kcc-qr-info">
+        <p>Kingdom Connect QR</p>
+        <span>Scan to open · replaces bench QR</span>
+        <div class="kcc-qr-dl">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download for bench cards
+        </div>
+      </div>
+    </div>
+
+    <div class="kcc-sections">
+
+      <div class="kcc-section active" onclick="toggleSection(this)">
+        <div class="kcc-section-head">
+          <div class="kcc-section-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#f5a623" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <span class="kcc-section-label">Events</span>
+          <svg class="kcc-section-chevron" viewBox="0 0 24 24" fill="none"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="kcc-section-body">
+          <div class="kcc-item">
+            <div class="kcc-item-left">
+              <div class="kcc-item-label">Sunday Service</div>
+              <div class="kcc-item-desc">14 Apr · Minato-ku · 5pm</div>
+            </div>
+            <svg class="kcc-item-arrow" viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="kcc-form-preview">
+            <div class="kcc-field-label">Your name</div>
+            <div class="kcc-input-mock"><span>Full name</span></div>
+            <div class="kcc-field-label">Guest count</div>
+            <div class="kcc-pill-row">
+              <div class="kcc-pill on">1</div>
+              <div class="kcc-pill off">2–3</div>
+              <div class="kcc-pill off">4–6</div>
+              <div class="kcc-pill off">7+</div>
+            </div>
+            <div class="kcc-submit">Confirm Registration</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kcc-section" onclick="toggleSection(this)">
+        <div class="kcc-section-head">
+          <div class="kcc-section-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#f5a623" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          </div>
+          <span class="kcc-section-label">Connect to JKC</span>
+          <svg class="kcc-section-chevron" viewBox="0 0 24 24" fill="none"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="kcc-section-body">
+          <div class="kcc-item"><div class="kcc-item-left"><div class="kcc-item-label">Become a Member</div><div class="kcc-item-desc">Join the family · Heart of the House next step</div></div><svg class="kcc-item-arrow" viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6"/></svg></div>
+          <div class="kcc-item"><div class="kcc-item-left"><div class="kcc-item-label">Volunteer</div><div class="kcc-item-desc">Serve the Kingdom with your gifts</div></div><svg class="kcc-item-arrow" viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6"/></svg></div>
+          <div class="kcc-item"><div class="kcc-item-left"><div class="kcc-item-label">Join a jkGroup</div><div class="kcc-item-desc">Community small groups</div></div><svg class="kcc-item-arrow" viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6"/></svg></div>
+          <button class="kcc-give-btn"><svg viewBox="0 0 24 24" fill="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="#fff" stroke-width="2" fill="none"/></svg> Give to the Kingdom</button>
+        </div>
+      </div>
+
+      <div class="kcc-section" onclick="toggleSection(this)">
+        <div class="kcc-section-head">
+          <div class="kcc-section-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#f5a623" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          </div>
+          <span class="kcc-section-label">Classes</span>
+          <svg class="kcc-section-chevron" viewBox="0 0 24 24" fill="none"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="kcc-section-body">
+          <div class="kcc-item"><div class="kcc-item-left"><div class="kcc-item-label">Heart of the House</div><div class="kcc-item-desc">New members class · discover your purpose</div></div><svg class="kcc-item-arrow" viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6"/></svg></div>
+          <div class="kcc-item"><div class="kcc-item-left"><div class="kcc-item-label">Kingdom Japanese Language Class</div><div class="kcc-item-desc">All levels · faith-centred environment</div></div><svg class="kcc-item-arrow" viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+      </div>
+
+      <div class="kcc-section" onclick="toggleSection(this)">
+        <div class="kcc-section-head">
+          <div class="kcc-section-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#f5a623" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </div>
+          <span class="kcc-section-label">Care &amp; Support</span>
+          <svg class="kcc-section-chevron" viewBox="0 0 24 24" fill="none"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="kcc-section-body">
+          <div class="kcc-item"><div class="kcc-item-left"><div class="kcc-item-label">Prayer Request</div><div class="kcc-item-desc">Our team is standing by to pray with you</div></div><svg class="kcc-item-arrow" viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="kcc-footer">
+      <span>Integrated with Church OS Ministry Intelligence</span>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleSection(el){
+  var all=document.querySelectorAll('.kcc-section');
+  all.forEach(function(s){if(s!==el)s.classList.remove('active');});
+  el.classList.toggle('active');
+}
+(function(){
+  var el=document.getElementById('qr');
+  var pat=[1,1,1,1,1,1,1,0,1,0,1,0,0,1,1,0,1,1,1,0,1,1,0,0,1,1,1,0,1,1,1,0,1,1,0,1,0,1,1,1,0,1,1,0,1,0,1,1,1,0,1,0,0,0,1,0,1,0,0,0,0,1,1,1,1,1,1,1,0,1,0,1,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,0,0,1,1,0,1,0,1,1,0,0,1,0,1,0,0,1,0,1,1,1,0,1,0,0,1,0,1,0,1,0,0,1,0,1,0,0,0,0,0,0,0,1,0,1,0,0,1,0,1,0,1,0,0,0,0,0,0,0,1,1,1,0,1,0,1,0,0,0,1,1,0,1,0,0,1,1,0,1,0,0,1,0,1,0,1,1,0,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,0,1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,1,0,1,0,1,1,0,0,1,1,1,0,1,0,0,1,0,1,0];
+  pat.forEach(function(v){
+    var c=document.createElement('div');
+    c.className='qr-cell';
+    c.style.background=v?'#1b3a6b':'transparent';
+    el.appendChild(c);
+  });
+})();
+</script>

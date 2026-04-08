@@ -41,22 +41,47 @@ export default function AIOpsView() {
           score: (l.organization_features?.[0]?.engagement_score || 0).toFixed(1)
         }));
 
-        // 3. Mock Chart Data (since historical stats are newly created)
-        const insightCategories = [
-          { name: 'Churn Risk', value: 45, color: '#f43f5e' },
-          { name: 'Upgrade Opp', value: 25, color: '#d946ef' },
-          { name: 'Growth Insight', value: 20, color: '#8b5cf6' },
-          { name: 'Anomaly', value: 10, color: '#f59e0b' },
-        ];
+        // 3a. Historical open rate from last 7 days of company_analytics
+        const { data: analyticsHistory } = await supabase
+          .from('company_analytics')
+          .select('date, metrics')
+          .order('date', { ascending: true })
+          .limit(7);
 
-        const historicalOpenRate = [
-          { date: '03-22', openRate: 65 },
-          { date: '03-23', openRate: 68 },
-          { date: '03-24', openRate: 72 },
-          { date: '03-25', openRate: 70 },
-          { date: '03-26', openRate: 74 },
-          { date: '03-27', openRate: 78 },
-          { date: '03-28', openRate: 82 },
+        const historicalOpenRate = (analyticsHistory || []).map((row: any) => ({
+          date: new Date(row.date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }),
+          openRate: Math.round((row.metrics?.open_rate || 0) * 100),
+        }));
+
+        // 3b. Insight categories from real unresolved admin_ai_insights
+        const { data: insightsRaw } = await supabase
+          .from('admin_ai_insights')
+          .select('insight_type')
+          .is('resolved_at', null);
+
+        const categoryColors: Record<string, string> = {
+          churn_risk: '#f43f5e',
+          upgrade_opportunity: '#d946ef',
+          growth_insight: '#8b5cf6',
+          anomaly: '#f59e0b',
+        };
+
+        const categoryCounts = (insightsRaw || []).reduce((acc: Record<string, number>, row: any) => {
+          const key = row.insight_type || 'anomaly';
+          acc[key] = (acc[key] || 0) + 1;
+          return acc;
+        }, {});
+
+        const total = Object.values(categoryCounts).reduce((a: number, b: number) => a + b, 0) || 1;
+        const insightCategories = Object.entries(categoryCounts).map(([name, count]) => ({
+          name: name.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+          value: Math.round(((count as number) / total) * 100),
+          color: categoryColors[name] || '#94a3b8',
+        }));
+
+        // Fallback if no real insights yet
+        const finalInsightCategories = insightCategories.length > 0 ? insightCategories : [
+          { name: 'No Insights Yet', value: 100, color: '#94a3b8' },
         ];
 
         const latest = analytics?.[0]?.metrics || {
@@ -69,7 +94,7 @@ export default function AIOpsView() {
           insightsCount: latest.total_insights || 0,
           avgHelpfulness: latest.avg_helpfulness || 0,
           openRate: latest.open_rate || 0,
-          insightCategories,
+          insightCategories: finalInsightCategories,
           historicalOpenRate,
           adoptionLeaders: formattedLeaders
         });

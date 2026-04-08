@@ -48,18 +48,48 @@ serve(async (req) => {
       // Step A: LOG START
       console.log(`Transcribing sermon: ${sermon_id} (${youtube_url})`)
       
-      // Step B: TRANSCRIPTION (Mocking external API call)
-      // In a real production system, this would call OpenAI Whisper or Google Cloud Speech-to-Text
-      const transcriptMock = `This is an AI-generated transcript for sermon ${sermon_id}. 
-      The speaker discussed faith, resilience, and the community of believers today.`
-      
+      // Step B: TRANSCRIPTION via Gemini 1.5 Flash (supports YouTube URLs natively)
+      const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+      if (!geminiApiKey) throw new Error('GEMINI_API_KEY is not set');
+
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+      const geminiResponse = await fetch(geminiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              {
+                file_data: {
+                  mime_type: 'video/mp4',
+                  file_uri: youtube_url,
+                }
+              },
+              {
+                text: 'Transcribe this sermon audio verbatim. Return only the transcript text with speaker labels where identifiable. No commentary, no summary — just the raw transcript.'
+              }
+            ]
+          }],
+          generationConfig: { maxOutputTokens: 8192, temperature: 0.1 }
+        })
+      });
+
+      if (!geminiResponse.ok) {
+        const errText = await geminiResponse.text();
+        throw new Error(`Gemini transcription failed: ${errText}`);
+      }
+
+      const geminiData = await geminiResponse.json();
+      const transcriptText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      if (!transcriptText) throw new Error('Empty transcript returned from Gemini');
+
       // Step C: UPDATE MEDIA ASSETS
       const { error: assetError } = await supabaseClient
         .from('media_assets')
-        .update({ 
-            url: 'https://transcripts.church.os/' + sermon_id + '.txt', 
-            metadata: { full_text: transcriptMock }, 
-            status: 'active' 
+        .update({
+            url: 'https://transcripts.church.os/' + sermon_id + '.txt',
+            metadata: { full_text: transcriptText },
+            status: 'active'
         })
         .eq('sermon_id', sermon_id)
         .eq('type', 'transcript');
@@ -67,7 +97,7 @@ serve(async (req) => {
       if (assetError) throw assetError;
 
       // Step D: LOG USAGE & INCREMENT QUOTA
-      const estimatedTokens = Math.round(transcriptMock.split(' ').length * 1.5);
+      const estimatedTokens = Math.round(transcriptText.split(' ').length * 1.5);
       await supabaseClient.from('ai_usage').insert({
           org_id: job.org_id,
           job_id: job_id,
@@ -103,17 +133,50 @@ serve(async (req) => {
             throw new Error(`Transcript not ready for summary: ${sermon_id}`);
         }
 
-        // AI SUMMARY (Mocking GPT-4/Bison call)
-        const summaryMock = `A deep dive into faith and community resilience. Key lessons include prayer, support, and hope.`;
-        
+        // AI SUMMARY via Gemini
+        const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+        if (!geminiApiKey) throw new Error('GEMINI_API_KEY is not set');
+
+        const transcriptText = transcriptAsset.metadata?.full_text || '';
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+        const summaryResponse = await fetch(geminiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: `You are a pastoral assistant. Given this sermon transcript, produce a JSON object with:
+- "summary": a 2-3 sentence summary of the sermon
+- "key_points": an array of 3-5 main takeaway phrases
+
+Transcript:
+${transcriptText.slice(0, 6000)}
+
+Return only valid JSON.`
+                    }]
+                }],
+                generationConfig: { maxOutputTokens: 1024, temperature: 0.3 }
+            })
+        });
+
+        const summaryData = await summaryResponse.json();
+        const rawSummary = summaryData.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        let parsedSummary = { summary: '', key_points: [] as string[] };
+        try {
+            const cleaned = rawSummary.replace(/```json|```/g, '').trim();
+            parsedSummary = JSON.parse(cleaned);
+        } catch (_) {
+            parsedSummary = { summary: rawSummary.slice(0, 300), key_points: [] };
+        }
+
         await supabaseClient.from('media_assets').update({
             url: 'https://notes.church.os/' + sermon_id + '.txt',
-            metadata: { summary: summaryMock, key_points: ['Faith', 'Community', 'Resilience'] },
+            metadata: parsedSummary,
             status: 'active'
         }).eq('sermon_id', sermon_id).eq('type', 'notes');
 
         // Step D: LOG USAGE
-        const estimatedTokens = summaryMock.split(' ').length * 2.0; 
+        const estimatedTokens = (transcriptText.split(' ').length + (parsedSummary.summary?.split(' ').length || 0)) * 2.0; 
         await supabaseClient.from('ai_usage').insert({
             org_id: job.org_id,
             job_id: job_id,
