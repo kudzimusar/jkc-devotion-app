@@ -11,6 +11,7 @@ export interface SoapEntry {
     observation: string;
     application: string;
     prayer: string;
+    mood?: string;
     updated_at: string | null;
 }
 
@@ -81,8 +82,20 @@ export const SoapJournal = {
         // Update aggregate stats for the admin pipeline
         try {
             await this.updateMemberStats(user.id, orgId);
+            
+            // Log the activity for growth intelligence
+            await supabase.from('devotion_logs').insert({
+                member_id: user.id,
+                org_id: orgId,
+                type: 'journal',
+                metadata: {
+                    day: dayNumber,
+                    mood: entry.mood,
+                    has_soap: !!(entry.scripture || entry.observation || entry.application || entry.prayer)
+                }
+            });
         } catch (e) {
-            console.warn("Failed to update aggregate stats", e);
+            console.warn("Failed to update aggregate stats or log devoted activity", e);
         }
 
         return data;

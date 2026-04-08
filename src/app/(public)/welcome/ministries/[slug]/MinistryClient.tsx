@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ChevronLeft, Loader2, Send, Users, MapPin, Calendar, Globe, BookOpen, MessagesSquare } from 'lucide-react';
+import { resolvePublicOrgId } from '@/lib/org-resolver';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
@@ -111,9 +112,11 @@ export default function MinistryClient({ slug }: { slug: string }) {
     e.preventDefault();
     setSubmitting(true);
 
+    const orgId = await resolvePublicOrgId();
     const { error } = await supabase
       .from('public_inquiries')
       .insert([{
+        org_id: orgId,
         first_name: formData.name,
         last_name: '',
         email: formData.email,

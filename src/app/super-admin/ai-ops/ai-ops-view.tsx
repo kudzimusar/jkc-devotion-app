@@ -85,9 +85,9 @@ export default function AIOpsView() {
         ];
 
         const latest = analytics?.[0]?.metrics || {
-          total_insights: 342,
-          avg_helpfulness: 4.8,
-          open_rate: 68
+          total_insights: 0,
+          avg_helpfulness: 0,
+          open_rate: 0
         };
 
         setData({

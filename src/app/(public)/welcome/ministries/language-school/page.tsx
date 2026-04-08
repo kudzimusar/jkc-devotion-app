@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ChevronDown, Calendar, MapPin, Clock, BookOpen, User, Users, Languages, FileText, Download, CheckCircle2, ChevronRight, Loader2, Globe } from 'lucide-react';
+import { resolvePublicOrgId } from '@/lib/org-resolver';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
@@ -32,9 +33,12 @@ PHONE: ${formData.phone}
 NOTES: ${formData.message}
     `.trim();
 
+    const orgId = await resolvePublicOrgId();
+
     const { error } = await supabase
       .from('public_inquiries')
       .insert([{
+        org_id: orgId,
         first_name: formData.name,
         last_name: '',
         email: formData.email,
