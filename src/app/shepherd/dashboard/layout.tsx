@@ -23,9 +23,9 @@ export default function ShepherdDashboardLayout({ children }: { children: React.
     });
 
     const loadSession = useCallback(async () => {
-        const session = await AdminAuth.getAdminSession();
+        const session = await AdminAuth.getSession('tenant');
         if (!session) {
-            router.replace("/login/");
+            router.replace("/ministry/login/");
             return;
         }
 
@@ -40,10 +40,10 @@ export default function ShepherdDashboardLayout({ children }: { children: React.
             loading: false,
             authed: true,
             ctx: {
-                role: session.role,
+                role: session.role as AdminRole,
                 userName: session.name,
-                userId: session.userId,
-                orgId: session.orgId,
+                userId: session.identity_id,
+                orgId: session.org_id || '',
                 alertCount: count || 0,
                 refreshDashboard: () => loadSession(),
             }

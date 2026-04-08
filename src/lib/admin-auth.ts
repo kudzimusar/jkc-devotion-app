@@ -1,152 +1,183 @@
 "use client";
 /**
- * Admin Auth Module
- * Handles admin session persistence, role caching, and route guarding
- * for the /shepherd/* dashboard routes.
+ * Admin Auth Module (Refactored)
+ * Handles domain-isolated sessions, multi-context resolution, and route guarding.
  */
 import { supabase } from './supabase';
 import { basePath as BP } from './utils';
-import { resolveAdminOrgId, clearOrgCache } from './org-resolver';
+import { clearOrgCache } from './org-resolver';
 
-export const ADMIN_ROLES = ['super_admin', 'pastor', 'owner', 'shepherd', 'admin', 'ministry_lead', 'ministry_leader', 'member'] as const;
-export type AdminRole = typeof ADMIN_ROLES[number];
+export type AuthDomain = 'corporate' | 'tenant' | 'onboarding' | 'member';
+export type AuthSurface = 'console' | 'mission-control' | 'ministry' | 'profile' | 'onboarding';
+
+// ── Legacy compatibility exports ──
+export type AdminRole = 'super_admin' | 'pastor' | 'owner' | 'shepherd' | 'admin' | 'ministry_lead' | 'ministry_leader' | 'member';
+
+export const ADMIN_ROLES: AdminRole[] = [
+    'super_admin', 'pastor', 'owner', 'shepherd', 'admin', 'ministry_lead', 'ministry_leader', 'member'
+];
 
 export const ROLE_HIERARCHY: Record<AdminRole, number> = {
     super_admin: 100,
-    pastor: 100,
-    owner: 95,
-    shepherd: 80,
-    admin: 70,
-    ministry_lead: 60,
-    ministry_leader: 60,
+    pastor: 90,
+    owner: 85,
+    shepherd: 70,
+    admin: 60,
+    ministry_lead: 40,
+    ministry_leader: 40,
     member: 10,
 };
 
-const CACHE_KEY = 'church_os_admin_session';
-const CACHE_TTL_MS = 60 * 60 * 1000; // 60 minutes for better UX
-
-interface CachedSession {
-    userId: string;
-    email: string;
-    name: string;
-    role: AdminRole;
-    orgId: string;
-    cachedAt: number;
+export interface DomainSession {
+  identity_id: string;
+  auth_domain: AuthDomain;
+  auth_surface: AuthSurface;
+  org_id?: string;
+  role: string;
+  expires_at: number;
+  name: string;
+  email: string;
 }
 
+const DOMAIN_CACHE_KEY = 'church_os_active_domain';
+const SESSION_CACHE_KEY = 'church_os_domain_session';
+
 export const AdminAuth = {
-    // ── Get session (from cache or Supabase) ──
-    async getAdminSession(): Promise<CachedSession | null> {
-        // Check cache first
-        if (typeof window !== 'undefined') {
-            const cached = sessionStorage.getItem(CACHE_KEY);
-            if (cached) {
-                try {
-                    const parsed: CachedSession = JSON.parse(cached);
-                    if (Date.now() - parsed.cachedAt < CACHE_TTL_MS) {
-                        return parsed;
+    // ── Get session (Isolated by domain) ──
+    async getSession(requiredDomain?: AuthDomain): Promise<DomainSession | null> {
+        if (typeof window === 'undefined') return null;
+
+        const cached = sessionStorage.getItem(SESSION_CACHE_KEY);
+        if (cached) {
+            try {
+                const session: DomainSession = JSON.parse(cached);
+                if (Date.now() < session.expires_at) {
+                    if (!requiredDomain || session.auth_domain === requiredDomain) {
+                        return session;
                     }
-                } catch (e) {
-                    console.error('[AdminAuth] Cache parse error:', e);
                 }
+            } catch (e) {
+                console.error('[AdminAuth] Session parse error:', e);
             }
         }
 
-        // Fetch from Supabase
+        // Fetch/Resolve session from view
         try {
-            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-            if (sessionError) throw sessionError;
-            if (!session?.user) {
-                console.log('[AdminAuth] No active session found');
-                return null;
-            }
+            const { data: { session: sbSession } } = await supabase.auth.getSession();
+            if (!sbSession?.user) return null;
 
-            const res = await resolveAdminOrgId();
-            if (!res) {
-                console.warn('[AdminAuth] Could not resolve organization context for user:', session.user.id);
-                return null;
-            }
+            // Fetch contexts for this identity
+            const { data: contexts, error } = await supabase
+                .from('v_user_auth_contexts')
+                .select('*')
+                .eq('identity_id', sbSession.user.id);
+
+            if (error || !contexts || contexts.length === 0) return null;
+
+            // If a domain is required, filter for it
+            let activeContext = contexts[0];
+            const cachedDomain = sessionStorage.getItem(DOMAIN_CACHE_KEY);
             
-            const { orgId, role } = res;
-            if (!role || !ADMIN_ROLES.includes(role as AdminRole)) {
-                console.warn('[AdminAuth] Invalid or insufficient role detected:', role);
-                return null;
+            if (requiredDomain) {
+                activeContext = contexts.find(c => c.auth_domain === requiredDomain) || contexts[0];
+                if (activeContext.auth_domain !== requiredDomain) return null;
+            } else if (cachedDomain) {
+                activeContext = contexts.find(c => c.auth_domain === cachedDomain) || contexts[0];
             }
 
-            const { data: profile, error: profileError } = await supabase
+            const { data: profile } = await supabase
                 .from('profiles')
                 .select('name')
-                .eq('id', session.user.id)
+                .eq('id', sbSession.user.id)
                 .single();
 
-            if (profileError) {
-                console.warn('[AdminAuth] Profile fetch warning (continuing with email):', profileError.message);
-            }
-
-            const sessionData: CachedSession = {
-                userId: session.user.id,
-                email: session.user.email || '',
-                name: profile?.name || session.user.email || 'User',
-                role: role as AdminRole,
-                orgId: orgId as string,
-                cachedAt: Date.now(),
+            const domainSession: DomainSession = {
+                identity_id: sbSession.user.id,
+                auth_domain: activeContext.auth_domain,
+                auth_surface: activeContext.auth_surface,
+                org_id: activeContext.org_id,
+                role: activeContext.role,
+                expires_at: Date.now() + (30 * 60 * 1000), // 30 min default
+                name: profile?.name || sbSession.user.email || 'User',
+                email: sbSession.user.email || ''
             };
 
-            if (typeof window !== 'undefined') {
-                sessionStorage.setItem(CACHE_KEY, JSON.stringify(sessionData));
-            }
-            console.log(`[AdminAuth] Session established:`, { role, email: sessionData.email });
-            return sessionData;
+            sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(domainSession));
+            sessionStorage.setItem(DOMAIN_CACHE_KEY, domainSession.auth_domain);
+            
+            return domainSession;
         } catch (err) {
-            console.error('[AdminAuth] Fatal session resolution error:', err);
+            console.error('[AdminAuth] Session resolution error:', err);
             return null;
         }
     },
 
     // ── Login ──
-    async loginAdmin(email: string, password: string): Promise<{
+    async login(email: string, password: string, domain: AuthDomain): Promise<{
         success: boolean;
-        role?: AdminRole;
-        name?: string;
+        session?: DomainSession;
         error?: string;
     }> {
-        // Clear any existing cache
+        // Clear existing session
         if (typeof window !== 'undefined') {
-            sessionStorage.removeItem(CACHE_KEY);
+            sessionStorage.removeItem(SESSION_CACHE_KEY);
+            sessionStorage.setItem(DOMAIN_CACHE_KEY, domain);
             clearOrgCache();
         }
 
         const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
         if (authError) return { success: false, error: authError.message };
 
-        const session = await this.getAdminSession();
+        const session = await this.getSession(domain);
         if (!session) {
             await supabase.auth.signOut();
-            return { success: false, error: 'You do not have administrative access for this organization.' };
+            return { success: false, error: `Access denied. No active context for the ${domain} domain.` };
         }
 
-        return { success: true, role: session.role, name: session.name };
+        return { success: true, session };
     },
 
     // ── Logout ──
-    async logoutAdmin() {
+    async logout() {
         if (typeof window !== 'undefined') {
-            sessionStorage.removeItem(CACHE_KEY);
+            sessionStorage.removeItem(SESSION_CACHE_KEY);
+            sessionStorage.removeItem(DOMAIN_CACHE_KEY);
             clearOrgCache();
         }
         await supabase.auth.signOut();
-        window.location.href = `${BP}/login/`;
+        window.location.href = `${BP}/`;
     },
 
-    // ── Check if role has permission ──
-    can(userRole: AdminRole, requiredRole: AdminRole): boolean {
-        return (ROLE_HIERARCHY[userRole] || 0) >= (ROLE_HIERARCHY[requiredRole] || 0);
+    // ── Permission check: does role meet or exceed required clearance ──
+    can(role: string, requiredRole: AdminRole): boolean {
+        return (ROLE_HIERARCHY[role as AdminRole] ?? 0) >= (ROLE_HIERARCHY[requiredRole] ?? 0);
     },
 
-    // ── Clear cache (force refresh) ──
+    // ── Clear cached session ──
     clearCache() {
         if (typeof window !== 'undefined') {
-            sessionStorage.removeItem(CACHE_KEY);
+            sessionStorage.removeItem(SESSION_CACHE_KEY);
+            sessionStorage.removeItem(DOMAIN_CACHE_KEY);
         }
     },
+
+    // ── Deprecated: logoutAdmin (Legacy compat alias) ──
+    async logoutAdmin() {
+        return this.logout();
+    },
+
+    // ── Deprecated: getAdminSession (Legacy compat) ──
+    async getAdminSession() {
+        const session = await this.getSession();
+        if (!session) return null;
+        return {
+            userId: session.identity_id,
+            email: session.email,
+            name: session.name,
+            role: session.role as any,
+            orgId: session.org_id || '',
+            cachedAt: Date.now()
+        };
+    }
 };
+

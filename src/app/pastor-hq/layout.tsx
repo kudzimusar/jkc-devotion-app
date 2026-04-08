@@ -20,13 +20,14 @@ export default function PastorHQLayout({ children }: { children: React.ReactNode
     });
 
     const loadSession = useCallback(async () => {
-        const session = await AdminAuth.getAdminSession();
+        const session = await AdminAuth.getSession('tenant');
         
         // Strict Pastor/SuperAdmin/Owner check for Pastor HQ
-        const authorized = session && (session.role === 'super_admin' || session.role === 'owner' || (session.role as string) === 'pastor');
+        // Surface check: mission-control
+        const authorized = session && session.auth_surface === 'mission-control';
 
         if (!authorized) {
-            router.replace("/pastor-hq/login/");
+            router.replace("/church/login/");
             return;
         }
 
@@ -34,10 +35,10 @@ export default function PastorHQLayout({ children }: { children: React.ReactNode
             loading: false,
             authed: true,
             ctx: {
-                role: session.role,
+                role: session.role as AdminRole,
                 userName: session.name,
-                userId: session.userId,
-                orgId: session.orgId,
+                userId: session.identity_id,
+                orgId: session.org_id || '',
                 refreshDashboard: () => loadSession(),
             }
         });
@@ -46,8 +47,8 @@ export default function PastorHQLayout({ children }: { children: React.ReactNode
     useEffect(() => { loadSession(); }, [loadSession]);
 
     const handleLogout = async () => {
-        await AdminAuth.logoutAdmin();
-        router.push("/pastor-hq/login/");
+        await AdminAuth.logout();
+        router.push("/church/login/");
     };
 
     if (state.loading) {

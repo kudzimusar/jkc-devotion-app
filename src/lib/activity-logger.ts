@@ -15,6 +15,20 @@ export async function logActivity(
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return;
 
+        // If it's a login action, also log to the new domain-aware audit system
+        if (action === 'LOGIN') {
+            await supabase.rpc('fn_log_auth_event', {
+                p_identity_id: session.user.id,
+                p_auth_domain: metadata.domain || 'tenant',
+                p_auth_surface: metadata.surface || 'mission-control',
+                p_intent: metadata.intent || 'login',
+                p_gateway: 'web-v3',
+                p_org_id: metadata.org_id,
+                p_mfa_verified: !!session.user.factors?.some(f => f.status === 'verified'),
+                p_user_agent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server'
+            });
+        }
+
         // Try to get org_id from metadata first, then user_metadata, then profile
         let orgId = metadata.org_id || session.user.user_metadata?.org_id;
 

@@ -3,55 +3,49 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdminAuth } from "@/lib/admin-auth";
-import { basePath as BP } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 export function SuperAdminGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    async function checkSuperAdmin() {
+    async function checkAccess() {
       try {
-        console.log('[SuperAdminGuard] Checking access...');
-        const session = await AdminAuth.getAdminSession();
+        const session = await AdminAuth.getSession('corporate');
         
         if (!session) {
-          console.warn('[SuperAdminGuard] No session found, redirecting to login');
-          router.push("/login/");
+          router.push("/corporate/login");
           return;
         }
 
-        console.log('[SuperAdminGuard] Role detected:', session.role);
-
-        if (session.role !== 'super_admin') {
-          console.error('[SuperAdminGuard] Access denied: Role is', session.role);
-          router.push("/");
+        if (session.auth_surface !== 'console') {
+          router.push("/auth/context-selector?domain=corporate");
           return;
         }
 
-        setIsSuperAdmin(true);
-        console.log('[SuperAdminGuard] Access granted');
+        setAuthorized(true);
       } catch (error) {
         console.error("[SuperAdminGuard] Authorization crash:", error);
-        router.push("/login/");
+        router.push("/corporate/login");
       } finally {
         setLoading(false);
       }
     }
 
-    checkSuperAdmin();
+    checkAccess();
   }, [router]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background/50 backdrop-blur-sm">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center min-h-screen bg-[#080c14]">
+        <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
       </div>
     );
   }
 
-  if (!isSuperAdmin) return null;
+  if (!authorized) return null;
 
   return <>{children}</>;
 }
