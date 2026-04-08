@@ -629,7 +629,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                                 </div>
                                                 <div>
                                                     <p className="font-bold">Faith Decision</p>
-                                                    <p className="text-[10px] opacity-40 leading-none">Accepted Christ at JKC Service</p>
+                                                    <p className="text-[10px] opacity-40 leading-none">Accepted Christ at Church Service</p>
                                                 </div>
                                             </div>
                                             <p className="text-xs font-mono opacity-60">2026-03-01</p>
@@ -968,7 +968,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                 {merchOrders.length === 0 ? (
                                     <div className="py-12 border-2 border-dashed border-foreground/10 rounded-3xl flex flex-col items-center justify-center opacity-40 text-center">
                                         <ShoppingBag className="w-12 h-12 mb-3" />
-                                        <p className="max-w-[200px] text-xs font-bold">No orders yet. Visit the JKC Store to browse.</p>
+                                        <p className="max-w-[200px] text-xs font-bold">No orders yet. Visit the Store to browse.</p>
                                     </div>
                                 ) : (
                                     <div className="glass border-foreground/10 rounded-3xl overflow-hidden">
@@ -1012,7 +1012,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                             <h4 className="font-black text-sm uppercase tracking-wider text-primary">Security Note</h4>
                         </div>
                         <p className="text-xs opacity-60 leading-relaxed font-medium">
-                            Your Connection Card is an encrypted record used specifically for JKC spiritual oversight.
+                            Your Connection Card is an encrypted record used specifically for your church's spiritual oversight.
                             Manage your data privacy in settings.
                         </p>
                     </Card>

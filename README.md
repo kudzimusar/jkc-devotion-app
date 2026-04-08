@@ -6,7 +6,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Style-Tailwind_4-06b6d4?logo=tailwind-css)](https://tailwindcss.com/)
 [![AI Engine](https://img.shields.io/badge/AI-Gemini_2.5_Flash-orange)](https://deepmind.google/technologies/gemini/)
 
-**Church OS** is a multi-tenant, enterprise-grade spiritual platform designed for **Japan Kingdom Church (JKC)** and the global church ecosystem. It functions as a "Proactive Shepherd," merging high-engagement spiritual growth tools for members with state-of-the-art administrative and intelligence layers for leadership.
+**Church OS** is a multi-tenant, enterprise-grade spiritual platform designed for the **global church ecosystem**. First client: Japan Kingdom Church Tokyo (JKC), Tokyo. It functions as a "Proactive Shepherd," merging high-engagement spiritual growth tools for members with state-of-the-art administrative and intelligence layers for leadership.
 
 ---
 
@@ -142,6 +142,11 @@ To ensure layout stability and visual consistency, the following components and 
     *   **Button Design**: Attendance buttons must use high-contrast solid white backgrounds to ensure visibility over video backgrounds.
     *   **Guest Card**: The `InitialConnectModal` must be triggered automatically for guests OR manually via the `open-connect-modal` event from the Hero.
 
+4.  **Kingdom Connect Hub (`KingdomConnectModal.tsx`)**
+    *   **Visual Preservation**: This component uses a custom "Digital Sanctuary" premium design (DM Sans, translucent surfaces, navy/gold palette). Do NOT revert to standard Shadcn/Tailwind default styles.
+    *   **Multi-Tenant Intelligence**: Submissions MUST use `resolvePublicOrgId()` to ensure data lands in the correct tenant (JKC by default) regardless of authentication state.
+    *   **Guest Privacy**: The `email` field must be saved as `null` when blank, never an empty string `""`, to prevent CRM sync errors.
+
 3.  **Routing & Redirects (GitHub Pages Subpath Aware)**
     *   **Path Resolution**: All `router.push`, `router.replace`, and `window.location.href` calls MUST use the `basePath` (BP) prefix from `@/lib/utils`. 
     *   **Reason**: Hardcoded root redirects (`/`) trigger 404 errors on `kudzimusar.github.io/jkc-devotion-app/`.
@@ -150,5 +155,5 @@ To ensure layout stability and visual consistency, the following components and 
 
 ---
 
-Built with reverence for the ministry of **Japan Kingdom Church**.
+Built for the global church. First deployed at Japan Kingdom Church Tokyo (JKC).
 **Version 3.0.2 — Performance & Reliability Lock.**

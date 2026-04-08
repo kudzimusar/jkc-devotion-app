@@ -84,7 +84,7 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
             <div className="flex items-center gap-4">
                 <div>
                     <h2 className="text-sm font-black tracking-widest text-foreground uppercase">Mission Control</h2>
-                    <p className="text-[10px] text-muted-foreground font-medium tracking-wider">Japan Kingdom Church · Shepherd Dashboard</p>
+                    <p className="text-[10px] text-muted-foreground font-medium tracking-wider">Church OS · Shepherd Dashboard</p>
                 </div>
             </div>
 

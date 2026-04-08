@@ -173,7 +173,7 @@ export default function KingdomConnectPage() {
           status: 'new',
           first_name: data.first_name || data.name?.split(' ')[0] || 'Unknown',
           last_name: data.last_name || data.name?.split(' ')[1] || '',
-          email: data.email,
+          email: data.email || null,
           phone: data.phone,
           message: finalMessage
         })
@@ -270,7 +270,7 @@ export default function KingdomConnectPage() {
           </div>
           <div className="space-y-1">
             <h1 className="text-3xl font-black tracking-tighter text-[#1b3a6b] dark:text-white uppercase leading-none">Kingdom Connect</h1>
-            <p className="text-[10px] font-black tracking-[0.4em] text-slate-600 dark:text-slate-400 uppercase">Japan Kingdom Church Digital Card</p>
+            <p className="text-[10px] font-black tracking-[0.4em] text-slate-600 dark:text-slate-400 uppercase">Your Church Digital Card</p>
           </div>
         </div>
 
@@ -332,9 +332,9 @@ export default function KingdomConnectPage() {
           </SectionShell>
         )}
 
-        {/* CONNECT TO JKC SECTION */}
-        <SectionShell 
-          title="CONNECT TO JKC" 
+        {/* CONNECT SECTION */}
+        <SectionShell
+          title="CONNECT"
           id="connect" 
           active={activeSection} 
           onToggle={setActiveSection}
@@ -713,7 +713,7 @@ function VolunteerForm({ onSubmit, loading, session }: any) {
       </div>
       
       <div className="flex items-center space-x-4">
-        <Label className="text-[10px] font-bold text-slate-800 dark:text-slate-200">Are you a member of JKC?</Label>
+        <Label className="text-[10px] font-bold text-slate-800 dark:text-slate-200">Are you a church member?</Label>
         <RadioGroup value={form.is_member ? 'yes' : 'no'} onValueChange={v => setForm({...form, is_member: v === 'yes'})} className="flex gap-4">
            <Label className="flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-800 dark:text-slate-200"><RadioGroupItem value="yes" /> Yes</Label>
            <Label className="flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-800 dark:text-slate-200"><RadioGroupItem value="no" /> No</Label>

@@ -21,10 +21,10 @@ export function TopNav({ user, userRole, stats, devotion, currentDate, onLoginCl
             <div className="max-w-screen-xl mx-auto px-4 py-3 flex items-center justify-between">
                 <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                     <div className="w-8 h-8 md:w-10 md:h-10 relative">
-                        <img src={`${BP}/church-logo.png`} alt="JKC Logo" className="w-full h-full object-contain" />
+                        <img src={`${BP}/church-logo.png`} alt="Church Logo" className="w-full h-full object-contain" />
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-[10px] md:text-xs font-black uppercase tracking-widest opacity-80 leading-none">Japan Kingdom Church</span>
+                        <span className="text-[10px] md:text-xs font-black uppercase tracking-widest opacity-80 leading-none">Your Church</span>
                         <span className="text-xs md:text-sm font-bold text-[var(--primary)] tracking-widest mt-0.5">ジャパン・キングダム・チャーチ</span>
                     </div>
                 </Link>

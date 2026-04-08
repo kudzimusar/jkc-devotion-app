@@ -723,7 +723,7 @@ export default function ProfileHub() {
                 {/* GLOBAL LEFT SIDEBAR */}
                 <aside className="w-64 bg-card border-r border-border flex-col hidden md:flex shrink-0 transition-colors">
                     <div className="p-8">
-                        <img src={`${BP}/church-logo.png`} alt="JKC" className="w-12 h-12 object-contain" />
+                        <img src={`${BP}/church-logo.png`} alt="Church Logo" className="w-12 h-12 object-contain" />
                     </div>
                     <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
                         <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted font-semibold text-sm transition-all">

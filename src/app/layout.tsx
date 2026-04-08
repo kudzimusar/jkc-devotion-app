@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "JKC Transformed Life 2026",
-  description: "90 Days of Transformation - March 2026 Devotional",
+  title: "Church OS",
+  description: "Church OS — Multi-tenant church management platform",
   manifest: "/jkc-devotion-app/manifest.json",
   icons: {
     icon: "/jkc-devotion-app/icon.png",

@@ -164,7 +164,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: A
                 <DialogDescription id="auth-modal-description" className="sr-only">Login or register to access Church OS dashboard.</DialogDescription>
                 <div className="bg-background rounded-[3.5rem] border border-border overflow-hidden shadow-2xl p-6 md:p-10 transition-all duration-500 animate-in zoom-in-95 fade-in duration-300">
                     <div className="flex flex-col items-center gap-4 relative mb-6">
-                        <img src={`${BP}/church-logo.png`} alt="JKC" className="w-16 h-16 object-contain" />
+                        <img src={`${BP}/church-logo.png`} alt="Church Logo" className="w-16 h-16 object-contain" />
                         <div className="space-y-1 text-center">
                             <h3 className="text-3xl font-serif">Join the Journey</h3>
                             <p className="text-sm px-8" style={{ color: 'var(--muted-foreground)' }}>Your private journal, synced anywhere.</p>

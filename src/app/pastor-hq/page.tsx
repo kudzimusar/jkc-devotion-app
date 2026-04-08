@@ -73,7 +73,7 @@ function PastorHQDashboard() {
                 </h2>
                 <div className="flex items-center gap-2">
                     <p className="text-muted-foreground font-medium tracking-wide">
-                        The spiritual and strategic climate of JKC is categorized as
+                        The spiritual and strategic climate of this church is categorized as
                     </p>
                     <span className="text-emerald-500 font-bold uppercase tracking-widest text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10">
                         {data?.climate?.theme || "Vibrant"}
