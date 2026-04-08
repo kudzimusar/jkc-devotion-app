@@ -150,13 +150,14 @@ export default function WatchClient() {
   const trackEvent = async (sermonId: string, event: string, watchTime: number = 0) => {
     if (!orgId) return;
 
-    await supabase.from('member_analytics').insert({
+    const { error } = await supabase.from('member_analytics').insert({
       org_id: orgId,
       sermon_id: sermonId,
       event_type: event,
       watch_time: watchTime,
       device_type: typeof window !== 'undefined' && window.innerWidth < 768 ? 'mobile' : 'desktop'
     });
+    if (error) console.error('[WatchClient] member_analytics insert failed:', error.message, { sermonId, event });
   };
 
   const handleShare = () => {

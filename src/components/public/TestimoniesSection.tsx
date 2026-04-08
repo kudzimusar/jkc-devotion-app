@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { resolvePublicOrgId } from '@/lib/org-resolver';
 import { Loader2 } from 'lucide-react';
 
 export default function TestimoniesSection() {
@@ -11,9 +12,11 @@ export default function TestimoniesSection() {
   useEffect(() => {
     async function fetchTestimonies() {
       try {
+        const orgId = await resolvePublicOrgId();
         const { data } = await supabase
           .from('public_testimonies')
           .select('*')
+          .eq('org_id', orgId)
           .order('created_at', { ascending: false });
 
         if (data) setTestimonies(data);
