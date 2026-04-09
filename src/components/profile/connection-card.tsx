@@ -73,6 +73,9 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
 
     const [ministryRoles, setMinistryRoles] = useState<any[]>([]);
     const [newMinistry, setNewMinistry] = useState("");
+    const [ministrySearchQuery, setMinistrySearchQuery] = useState('');
+    const [ministrySearchResults, setMinistrySearchResults] = useState<any[]>([]);
+    const [showMinistryDropdown, setShowMinistryDropdown] = useState(false);
 
     const [stewardship, setStewardship] = useState<any[]>([]);
 
@@ -319,6 +322,20 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
         setPrayers(prayers.map(p => p.id === id ? { ...p, status: newStatus } : p));
         if (profile) AnalyticsService.logEvent(profile.id, 'prayer_status_changed', { id });
     }
+
+    const handleMinistrySearch = async (query: string) => {
+        setMinistrySearchQuery(query);
+        if (!query.trim() || !profile?.org_id) { setMinistrySearchResults([]); return; }
+        const { data } = await supabase
+            .from('vw_ministry_directory')
+            .select('id, name, category')
+            .eq('org_id', profile.org_id)
+            .ilike('name', `%${query}%`)
+            .order('name')
+            .limit(8);
+        setMinistrySearchResults(data || []);
+        setShowMinistryDropdown(true);
+    };
 
     const handleAddMinistry = async () => {
         if (!newMinistry || !profile || !profile.org_id) return;
@@ -752,9 +769,44 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                 <div className="grid md:grid-cols-2 gap-8">
                                     <div className="space-y-4">
                                         <h4 className="text-sm font-bold uppercase tracking-widest opacity-40">Service & Volunteering</h4>
-                                        <div className="flex gap-2 mb-4">
-                                            <Input placeholder="Role (e.g. Greeter)" value={newMinistry} onChange={e => setNewMinistry(e.target.value)} className="glass border-foreground/10 rounded-2xl h-10" />
-                                            <Button onClick={handleAddMinistry} size="sm" className="rounded-2xl bg-[var(--primary)] font-bold px-4 text-white"><Plus className="w-4 h-4" /></Button>
+                                        <div className="relative mb-4">
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Search ministries..."
+                                                    value={ministrySearchQuery}
+                                                    onChange={e => handleMinistrySearch(e.target.value)}
+                                                    onFocus={() => ministrySearchResults.length > 0 && setShowMinistryDropdown(true)}
+                                                    className="flex-1 glass border border-foreground/10 rounded-2xl h-10 px-4 text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-[var(--primary)]/40"
+                                                />
+                                                <Button
+                                                    onClick={handleAddMinistry}
+                                                    size="sm"
+                                                    disabled={!newMinistry}
+                                                    className="rounded-2xl bg-[var(--primary)] font-bold px-4 text-white"
+                                                >
+                                                    <Plus className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                            {showMinistryDropdown && ministrySearchResults.length > 0 && (
+                                                <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--card)] border border-foreground/10 rounded-2xl shadow-xl z-50 overflow-hidden">
+                                                    {ministrySearchResults.map(m => (
+                                                        <button
+                                                            key={m.id}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setNewMinistry(m.name);
+                                                                setMinistrySearchQuery(m.name);
+                                                                setShowMinistryDropdown(false);
+                                                            }}
+                                                            className="w-full text-left px-4 py-2.5 hover:bg-foreground/5 transition-colors"
+                                                        >
+                                                            <p className="text-sm font-bold">{m.name}</p>
+                                                            <p className="text-[10px] text-foreground/40 capitalize">{m.category}</p>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="space-y-3">
                                             {ministryRoles.map(m => (

@@ -113,6 +113,17 @@ export default function CommunicationsLogPage() {
             });
 
             if (!res.ok) throw new Error('Dispatch failed');
+
+            // Record delivery
+            await supabase.from('communication_deliveries').insert({
+                org_id: orgId,
+                campaign_id: campaign.id,
+                member_id: msg.receiver_id,
+                channel: 'email',
+                status: 'sent',
+                sent_at: new Date().toISOString(),
+            });
+
             toast.success(`Message resent to ${msg.receiver?.name || 'member'}`);
             setSelectedMessage(null);
         } catch (err: any) {

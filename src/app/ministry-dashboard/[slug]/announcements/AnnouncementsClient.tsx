@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { MinistryAuth, MinistrySession } from '@/lib/ministry-auth';
 import { toast } from 'sonner';
-import { AlertCircle, ArrowUpCircle, MessageCircle, Send, Paperclip, Eye, LayoutGrid, List, FileText } from 'lucide-react';
+import { AlertCircle, ArrowUpCircle, MessageCircle, Send, Paperclip, Eye, LayoutGrid, List, FileText, Plus, Megaphone } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AnnouncementsClient() {
@@ -23,6 +23,12 @@ export default function AnnouncementsClient() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [attachments, setAttachments] = useState<File[]>([]);
     const [announcementAttachments, setAnnouncementAttachments] = useState<Record<string, any[]>>({});
+
+    // New Announcement (downward — lead → team)
+    const [showAnnounceForm, setShowAnnounceForm] = useState(false);
+    const [announceTitle, setAnnounceTitle] = useState('');
+    const [announceBody, setAnnounceBody] = useState('');
+    const [isAnnouncing, setIsAnnouncing] = useState(false);
 
     const fetchAnnouncements = async (sess: MinistrySession) => {
         if (!sess?.ministryId) {
@@ -88,6 +94,38 @@ export default function AnnouncementsClient() {
             console.error(err);
         });
     }, [slug]);
+
+    const handlePostAnnouncement = async () => {
+        if (!announceTitle.trim() || !announceBody.trim() || !session) return;
+        setIsAnnouncing(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) { toast.error('Session expired'); return; }
+
+            const { data: profile } = await supabase
+                .from('profiles').select('org_id').eq('id', user.id).single();
+
+            const { error } = await supabase.from('ministry_announcements').insert({
+                org_id: profile?.org_id,
+                ministry_id: session.ministryId,
+                author_id: user.id,
+                direction: 'downward',
+                title: announceTitle,
+                body: announceBody,
+                priority: 'normal',
+            });
+            if (error) throw error;
+            toast.success('Announcement posted to your team.');
+            setAnnounceTitle('');
+            setAnnounceBody('');
+            setShowAnnounceForm(false);
+            fetchAnnouncements(session);
+        } catch (e: any) {
+            toast.error(e.message || 'Failed to post announcement');
+        } finally {
+            setIsAnnouncing(false);
+        }
+    };
 
     const handleSendUpward = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -177,10 +215,56 @@ export default function AnnouncementsClient() {
                         <h1 className="text-2xl font-black text-white tracking-wide">{session.ministryName} Announcements</h1>
                         <p className="text-white/40 text-sm mt-1 font-medium uppercase tracking-widest">Two-way communication with Mission Control.</p>
                     </div>
-                     <Link href={`/ministry-dashboard/${slug}`} className="text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white transition-colors border border-white/10 px-4 py-2 rounded-full bg-[#0d1421]">
-                        ← Back to Ministry Hub
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setShowAnnounceForm(v => !v)}
+                            className="text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-colors border border-emerald-400/20 hover:border-emerald-400/40 px-4 py-2 rounded-full bg-[#0d1421] flex items-center gap-2"
+                        >
+                            <Plus className="w-3.5 h-3.5" /> New Announcement
+                        </button>
+                        <Link href={`/ministry-dashboard/${slug}`} className="text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white transition-colors border border-white/10 px-4 py-2 rounded-full bg-[#0d1421]">
+                            ← Back to Ministry Hub
+                        </Link>
+                    </div>
                 </div>
+
+                {/* New Announcement Form (lead → team) */}
+                {showAnnounceForm && (
+                    <div className="bg-emerald-950/20 border border-emerald-500/20 rounded-3xl p-6 space-y-4">
+                        <h3 className="text-sm font-black text-white flex items-center gap-2">
+                            <Megaphone className="w-4 h-4 text-emerald-400" /> Post Team Announcement
+                        </h3>
+                        <input
+                            type="text"
+                            placeholder="Announcement title"
+                            value={announceTitle}
+                            onChange={e => setAnnounceTitle(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-500/50 transition-all"
+                        />
+                        <textarea
+                            placeholder="Write your message to the team..."
+                            rows={4}
+                            value={announceBody}
+                            onChange={e => setAnnounceBody(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-500/50 transition-all resize-none"
+                        />
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handlePostAnnouncement}
+                                disabled={isAnnouncing || !announceTitle.trim() || !announceBody.trim()}
+                                className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm rounded-xl px-4 py-2.5 transition-all disabled:opacity-50"
+                            >
+                                {isAnnouncing ? 'Posting...' : 'Post to Team'}
+                            </button>
+                            <button
+                                onClick={() => setShowAnnounceForm(false)}
+                                className="px-4 py-2.5 rounded-xl border border-white/10 text-white/40 hover:text-white text-sm font-bold transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {/* Inbox */}

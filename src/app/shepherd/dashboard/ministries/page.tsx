@@ -24,6 +24,7 @@ const TOOLTIP_STYLE = {
 export default function MinistriesPage() {
     const [members, setMembers] = useState<any[]>([]);
     const [candidates, setCandidates] = useState<any[]>([]);
+    const [talentMatches, setTalentMatches] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     const { orgId } = useAdminCtx();
@@ -31,16 +32,18 @@ export default function MinistriesPage() {
     useEffect(() => {
         if (!orgId) return;
         const load = async () => {
-            const [rolesRes, skillsRes] = await Promise.all([
+            const [rolesRes, skillsRes, talentRes] = await Promise.all([
                 supabase.from('ministry_members').select('*').eq('org_id', orgId).eq('is_active', true),
-                supabase.from('member_skills').select('*, profiles(name, avatar_url, org_id)')
+                supabase.from('member_skills').select('*, profiles(name, avatar_url, org_id)'),
+                supabase.from('vw_ministry_talent_match').select('*').eq('org_id', orgId).limit(40)
             ]);
-            
+
             // Filter skills/candidates by org_id (since profiles join might not filter outer query)
             const filteredCandidates = (skillsRes.data || []).filter((s: any) => s.profiles?.org_id === orgId);
-            
+
             setMembers(rolesRes.data || []);
             setCandidates(filteredCandidates);
+            setTalentMatches(talentRes.data || []);
             setLoading(false);
         };
         load();
@@ -145,7 +148,7 @@ export default function MinistriesPage() {
                         No ministry members found. Seed data from the admin console.
                     </div>
                 )}
-                {/* Candidates Search & Match (NEW) */}
+                {/* Talent Match — real data from vw_ministry_talent_match */}
                 <div className="mt-8 border-t border-border pt-8">
                     <div className="flex items-center justify-between mb-6">
                         <div>
@@ -157,57 +160,66 @@ export default function MinistriesPage() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {['Youth Ministry', 'Worship', 'Media', 'Counseling'].map(min => {
-                            const minCandidates = candidates.filter(c => {
-                                const skill = c.skill_name.toLowerCase();
-                                if (min === 'Worship' && (skill.includes('music') || skill.includes('sing') || skill.includes('choir'))) return true;
-                                if (min === 'Youth Ministry' && (skill.includes('teach') || skill.includes('youth'))) return true;
-                                if (min === 'Media' && (skill.includes('tech') || skill.includes('video') || skill.includes('edit'))) return true;
-                                if (min === 'Counseling' && skill.includes('counsel')) return true;
-                                return false;
-                            });
+                    {(() => {
+                        // Group talent matches by ministry_name
+                        const byMinistry: Record<string, any[]> = {};
+                        for (const row of talentMatches) {
+                            const key = row.ministry_name || 'Other';
+                            if (!byMinistry[key]) byMinistry[key] = [];
+                            byMinistry[key].push(row);
+                        }
+                        const ministryGroups = Object.entries(byMinistry);
 
+                        if (ministryGroups.length === 0) {
                             return (
-                                <div key={min} className="bg-card border border-border rounded-3xl p-6 h-full flex flex-col shadow-sm transition-colors">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <p className="text-xs font-black text-muted-foreground uppercase">{min}</p>
-                                        <span className="text-[10px] text-muted-foreground/40 font-bold">{minCandidates.length} matches</span>
-                                    </div>
-                                    <div className="space-y-3 flex-1">
-                                        {minCandidates.length > 0 ? minCandidates.slice(0, 3).map(c => (
-                                            <div key={c.id} className="flex items-center justify-between bg-muted/30 p-3 rounded-2xl border border-border/50">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-[10px] font-black text-primary">
-                                                        {c.profiles?.name?.[0] || '?'}
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs font-bold text-foreground">{c.profiles?.name}</p>
-                                                        <p className="text-[9px] text-muted-foreground truncate max-w-[100px]">{c.skill_name} · {c.skill_level}</p>
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    onClick={() => handleInvite(c, min)}
-                                                    className="p-2 bg-violet-500/10 text-violet-400 rounded-xl hover:bg-violet-500/20 transition-colors"
-                                                >
-                                                    <Users className="w-3 h-3" />
-                                                </button>
-                                            </div>
-                                        )) : (
-                                            <div className="h-20 flex items-center justify-center border-2 border-dashed border-border rounded-2xl text-[10px] text-muted-foreground/20 font-bold uppercase">
-                                                No Candidates
-                                            </div>
-                                        )}
-                                    </div>
-                                    {minCandidates.length > 3 && (
-                                        <button className="mt-4 text-[9px] font-black text-primary uppercase tracking-widest hover:text-foreground transition-colors">
-                                            + {minCandidates.length - 3} more candidates
-                                        </button>
-                                    )}
+                                <div className="text-center py-10 text-[10px] text-muted-foreground/30 font-bold uppercase border-2 border-dashed border-border rounded-2xl">
+                                    No talent matches found. Ensure vw_ministry_talent_match view exists.
                                 </div>
                             );
-                        })}
-                    </div>
+                        }
+
+                        return (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {ministryGroups.map(([min, minCandidates]) => (
+                                    <div key={min} className="bg-card border border-border rounded-3xl p-6 h-full flex flex-col shadow-sm transition-colors">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <p className="text-xs font-black text-muted-foreground uppercase">{min}</p>
+                                            <span className="text-[10px] text-muted-foreground/40 font-bold">{minCandidates.length} matches</span>
+                                        </div>
+                                        <div className="space-y-3 flex-1">
+                                            {minCandidates.slice(0, 3).map((c: any) => (
+                                                <div key={c.member_id + c.skill_name} className="flex items-center justify-between bg-muted/30 p-3 rounded-2xl border border-border/50">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-[10px] font-black text-primary">
+                                                            {c.member_name?.[0] || '?'}
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs font-bold text-foreground">{c.member_name}</p>
+                                                            <p className="text-[9px] text-muted-foreground truncate max-w-[100px]">{c.skill_level || 'Member'}</p>
+                                                            <span className="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[8px] font-black uppercase tracking-wide">
+                                                                <CheckCircle2 className="w-2.5 h-2.5" /> {c.skill_name}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleInvite({ user_id: c.member_id, profiles: { name: c.member_name } }, min)}
+                                                        className="p-2 bg-violet-500/10 text-violet-400 rounded-xl hover:bg-violet-500/20 transition-colors"
+                                                    >
+                                                        <Users className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {minCandidates.length > 3 && (
+                                            <button className="mt-4 text-[9px] font-black text-primary uppercase tracking-widest hover:text-foreground transition-colors">
+                                                + {minCandidates.length - 3} more candidates
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        );
+                    })()}
                 </div>
             </div>
         </div>

@@ -24,17 +24,18 @@ serve(async (req) => {
       }
     )
 
-    const { 
-        churchName, 
-        contactEmail, 
-        domain, 
+    const {
+        churchName,
+        contactEmail,
+        domain,
         logoUrl,
         theologicalTradition,
         ministryEmphasis,
         worshipStyle,
         congregationSize,
         primaryLanguage,
-        tier 
+        tier,
+        selectedMinistries,
     } = await req.json()
 
     if (!churchName || !contactEmail || !domain || !tier) {
@@ -117,6 +118,35 @@ serve(async (req) => {
 
     if (keyErr) {
         console.error('Failed to store API key:', keyErr);
+    }
+
+    // 5.5. Provision selected ministries
+    const MINISTRY_DATA = [
+        { name: 'Worship Ministry',     slug: 'worship',     category: 'worship',  icon: 'music',        color: '#7C3AED' },
+        { name: 'Prayer Ministry',      slug: 'prayer',      category: 'worship',  icon: 'activity',     color: '#8B5CF6' },
+        { name: "Children's Ministry",  slug: 'childrens',   category: 'care',     icon: 'heart',        color: '#F59E0B' },
+        { name: 'Youth Ministry',       slug: 'youth',       category: 'care',     icon: 'star',         color: '#10B981' },
+        { name: 'Media Ministry',       slug: 'media',       category: 'media',    icon: 'video',        color: '#06B6D4' },
+        { name: 'Evangelism Ministry',  slug: 'evangelism',  category: 'outreach', icon: 'send',         color: '#EF4444' },
+        { name: 'Missions Ministry',    slug: 'missions',    category: 'outreach', icon: 'globe',        color: '#F43F5E' },
+        { name: 'Fellowship Circles',   slug: 'fellowship',  category: 'care',     icon: 'users',        color: '#84CC16' },
+        { name: 'Finance Ministry',     slug: 'finance',     category: 'admin',    icon: 'dollar-sign',  color: '#14B8A6' },
+        { name: 'Hospitality Ministry', slug: 'hospitality', category: 'care',     icon: 'coffee',       color: '#F97316' },
+        { name: 'Pastoral Care',        slug: 'pastoral',    category: 'care',     icon: 'shield',       color: '#A855F7' },
+        { name: 'Ushering Ministry',    slug: 'ushers',      category: 'admin',    icon: 'door-open',    color: '#0EA5E9' },
+        { name: 'The Food Pantry',      slug: 'food-pantry', category: 'outreach', icon: 'apple',        color: '#F59E0B' },
+        { name: 'Akiramenai Outreach',  slug: 'akiramenai',  category: 'outreach', icon: 'heart',        color: '#EF4444' },
+    ];
+
+    const ministriesToCreate = Array.isArray(selectedMinistries)
+        ? MINISTRY_DATA.filter(m => selectedMinistries.includes(m.name))
+        : [];
+
+    if (ministriesToCreate.length > 0) {
+        const { error: minErr } = await supabaseAdmin
+            .from('ministries')
+            .insert(ministriesToCreate.map(m => ({ ...m, org_id: org.id, is_active: true })));
+        if (minErr) console.error('Ministry provisioning failed:', minErr);
     }
 
     // 6. Trigger AI Provisioning (Fire and forget style in Deno)

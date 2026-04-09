@@ -134,10 +134,20 @@ serve(async (req) => {
                 to: [{ email: profile.email }],
                 subject: subject,
                 htmlContent: `<div style="font-family: sans-serif; white-space: pre-wrap;">${bodyContent}</div>`,
-                tags: [campaign_id]
+                tags: [campaign.id]
               })
             });
-            if (brevoRes.ok) sentToMember = true;
+            if (brevoRes.ok) {
+              sentToMember = true;
+              await supabaseClient.from('communication_deliveries').insert({
+                org_id: campaign.org_id,
+                campaign_id: campaign.id,
+                member_id: profile.member_id,
+                channel: 'email',
+                status: 'sent',
+                sent_at: new Date().toISOString()
+              });
+            }
             else {
               console.error("Brevo error:", await brevoRes.text());
             }

@@ -4,6 +4,7 @@
 import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { resolvePublicOrgId } from '@/lib/org-resolver';
 import { ChevronLeft, ArrowRight, Loader2 } from 'lucide-react';
 
 type Ministry = {
@@ -43,11 +44,14 @@ export default function MinistriesListPage() {
   useEffect(() => {
     async function fetchMinistries() {
       try {
+        const orgId = await resolvePublicOrgId();
         const { data, error } = await supabase
-          .from('ministries')
-          .select('*')
-          .order('name');
-        
+          .from('vw_ministry_directory')
+          .select('id, name, slug, description, category, is_active')
+          .eq('org_id', orgId)
+          .eq('is_active', true)
+          .order('category');
+
         if (error) throw error;
         if (data) setMinistries(data);
       } catch (err) {

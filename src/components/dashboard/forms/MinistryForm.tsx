@@ -1,30 +1,75 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStickyForm } from "@/hooks/useStickyForm";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { assignMinistryRoleAction } from "@/app/actions/admin";
-import { BookOpen, ShieldCheck, Sparkles } from "lucide-react";
+import { ShieldCheck, Sparkles, Search, Loader2 } from "lucide-react";
 import { useAdminCtx } from "@/app/shepherd/dashboard/Context";
-import { MINISTRIES } from "@/lib/constants";
+import { supabase } from "@/lib/supabase";
 
 import { MemberSearchSelect } from "../MemberSearchSelect";
+
+interface MinistryResult {
+    id: string;
+    name: string;
+    category: string;
+    leader_name: string | null;
+}
 
 export function MinistryForm({ onSuccess, initialMemberId }: { onSuccess: () => void, initialMemberId?: string }) {
     const { userId: adminId, orgId } = useAdminCtx();
     const [loading, setLoading] = useState(false);
     const { values, handleChange, clear } = useStickyForm({
         memberId: initialMemberId || "",
-        ministry: MINISTRIES.worship,
+        ministry: "",
         role: "member"
     }, "admin-assign-ministry");
 
+    // Live ministry search
+    const [ministryQuery, setMinistryQuery] = useState('');
+    const [ministryResults, setMinistryResults] = useState<MinistryResult[]>([]);
+    const [ministrySearching, setMinistrySearching] = useState(false);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [selectedMinistryName, setSelectedMinistryName] = useState(values.ministry || '');
+
+    useEffect(() => {
+        if (!orgId || ministryQuery.trim().length < 1) {
+            setMinistryResults([]);
+            return;
+        }
+        const timer = setTimeout(async () => {
+            setMinistrySearching(true);
+            const { data } = await supabase
+                .from('vw_ministry_directory')
+                .select('id, name, category, leader_name')
+                .eq('org_id', orgId)
+                .ilike('name', `%${ministryQuery}%`)
+                .order('name')
+                .limit(10);
+            setMinistryResults(data || []);
+            setMinistrySearching(false);
+            setShowDropdown(true);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [ministryQuery, orgId]);
+
+    const selectMinistry = (m: MinistryResult) => {
+        setSelectedMinistryName(m.name);
+        handleChange('ministry', m.name);
+        setMinistryQuery('');
+        setShowDropdown(false);
+    };
+
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        
+
         if (!values.memberId) {
             toast.error("Please select a member first");
+            return;
+        }
+        if (!values.ministry) {
+            toast.error("Please select a ministry");
             return;
         }
 
@@ -35,6 +80,7 @@ export function MinistryForm({ onSuccess, initialMemberId }: { onSuccess: () => 
         if (result.success) {
             toast.success("Ministry invitation sent successfully!");
             clear();
+            setSelectedMinistryName('');
             onSuccess();
         } else {
             toast.error("Error: " + result.error);
@@ -54,8 +100,8 @@ export function MinistryForm({ onSuccess, initialMemberId }: { onSuccess: () => 
 
             <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase text-muted-foreground">Select Member</label>
-                <MemberSearchSelect 
-                    onSelect={(id) => handleChange('memberId', id)} 
+                <MemberSearchSelect
+                    onSelect={(id) => handleChange('memberId', id)}
                     selectedId={values.memberId}
                     showSkills={true}
                     placeholder="Search by name or email..."
@@ -63,17 +109,54 @@ export function MinistryForm({ onSuccess, initialMemberId }: { onSuccess: () => 
             </div>
 
             <div className="grid grid-cols-2 gap-3">
+                {/* Ministry live search */}
                 <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-muted-foreground">Ministry</label>
                     <div className="relative">
-                        <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/30" />
-                        <select name="ministry" value={values.ministry} onChange={e => handleChange('ministry', e.target.value)} className="w-full h-9 bg-muted border border-border rounded-xl pl-9 pr-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-all">
-                            {Object.entries(MINISTRIES).map(([key, name]) => (
-                                <option key={key} value={name} className="bg-card">{name}</option>
-                            ))}
-                        </select>
+                        {selectedMinistryName ? (
+                            <div className="flex items-center gap-2 h-9 bg-muted border border-border rounded-xl px-3">
+                                <span className="text-xs text-foreground flex-1 truncate">{selectedMinistryName}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => { setSelectedMinistryName(''); handleChange('ministry', ''); }}
+                                    className="text-muted-foreground hover:text-foreground text-[10px] font-bold"
+                                >✕</button>
+                            </div>
+                        ) : (
+                            <>
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/30 z-10" />
+                                <input
+                                    type="text"
+                                    value={ministryQuery}
+                                    onChange={e => { setMinistryQuery(e.target.value); setShowDropdown(true); }}
+                                    onFocus={() => setShowDropdown(true)}
+                                    placeholder="Search ministry..."
+                                    className="w-full h-9 bg-muted border border-border rounded-xl pl-9 pr-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+                                />
+                                {ministrySearching && (
+                                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground animate-spin" />
+                                )}
+                            </>
+                        )}
+                        {showDropdown && ministryResults.length > 0 && !selectedMinistryName && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden max-h-48 overflow-y-auto">
+                                {ministryResults.map(m => (
+                                    <button
+                                        key={m.id}
+                                        type="button"
+                                        onClick={() => selectMinistry(m)}
+                                        className="w-full text-left px-3 py-2 hover:bg-muted transition-colors"
+                                    >
+                                        <p className="text-xs font-bold text-foreground">{m.name}</p>
+                                        <p className="text-[9px] text-muted-foreground capitalize">{m.category}{m.leader_name ? ` · ${m.leader_name}` : ''}</p>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
+
+                {/* Role select */}
                 <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-muted-foreground">Role</label>
                     <div className="relative">
