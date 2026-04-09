@@ -12,9 +12,9 @@ export function InitialConnectModal({ user }: { user?: any }) {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    // SECURITY/UX: Only show automatic pop-up for guests who aren't already logged in
+    // Show once per session for ALL visitors regardless of auth state
     const hasSeenModal = sessionStorage.getItem('kcc_modal_shown');
-    if (!user && !hasSeenModal) {
+    if (!hasSeenModal) {
       // 2 second delay as specified
       const timer = setTimeout(() => {
         setIsOpen(true);
