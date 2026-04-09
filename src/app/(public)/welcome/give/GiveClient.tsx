@@ -10,6 +10,7 @@ import {
   Globe, TrendingUp, HandHeart, Coins
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
 
 const IMPACT_CARDS = [
   { icon: Heart, title: 'Worship', desc: 'Supporting the spiritual atmosphere and worship team.' },
@@ -42,6 +43,40 @@ const ZelleIcon = () => (
 
 export default function GiveClient() {
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [cardAmount, setCardAmount] = useState('');
+  const [cardFund, setCardFund] = useState('tithe');
+  const [cardName, setCardName] = useState('');
+  const [cardEmail, setCardEmail] = useState('');
+  const [cardLoading, setCardLoading] = useState(false);
+
+  const handleCardGiving = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!cardAmount || Number(cardAmount) <= 0) return;
+    setCardLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-checkout', {
+        body: {
+          type: 'giving',
+          amount: Number(cardAmount),
+          fund_designation: cardFund,
+          fund_name: cardFund.charAt(0).toUpperCase() + cardFund.slice(1),
+          currency: 'JPY',
+          org_id: 'fa547adf-f820-412f-9458-d6bade11517d',
+          given_by_name: cardName,
+          given_by_email: cardEmail,
+          customer_email: cardEmail,
+          success_url: window.location.href + '?giving=success',
+          cancel_url: window.location.href,
+        }
+      });
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+    } catch (err: any) {
+      toast.error('Failed to start payment: ' + (err.message || 'Unknown error'));
+    } finally {
+      setCardLoading(false);
+    }
+  };
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -161,8 +196,86 @@ export default function GiveClient() {
       </section>
 
 
+      {/* Give with Card Section */}
+      <section data-section="give-card" className="max-w-2xl mx-auto px-6 py-12">
+        <div className="glass rounded-3xl border border-[var(--primary)]/20 p-8 space-y-6">
+          <div className="space-y-2">
+            <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] uppercase">Instant</p>
+            <h2 className="text-3xl font-black flex items-center gap-3">
+              <CreditCard className="w-7 h-7 text-[var(--primary)]" />
+              Give with Card
+            </h2>
+            <p className="text-muted-foreground text-sm font-medium">Secure checkout via Stripe. Supports all major credit and debit cards.</p>
+          </div>
+          <form onSubmit={handleCardGiving} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-50">Your Name</label>
+                <input
+                  type="text"
+                  placeholder="Full name"
+                  value={cardName}
+                  onChange={(e) => setCardName(e.target.value)}
+                  className="w-full h-11 rounded-2xl px-4 text-sm bg-foreground/5 border border-foreground/10 focus:outline-none focus:border-[var(--primary)]/50"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-50">Email</label>
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  value={cardEmail}
+                  onChange={(e) => setCardEmail(e.target.value)}
+                  className="w-full h-11 rounded-2xl px-4 text-sm bg-foreground/5 border border-foreground/10 focus:outline-none focus:border-[var(--primary)]/50"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-50">Amount (JPY)</label>
+                <input
+                  type="number"
+                  placeholder="e.g. 5000"
+                  value={cardAmount}
+                  onChange={(e) => setCardAmount(e.target.value)}
+                  min="1"
+                  required
+                  className="w-full h-11 rounded-2xl px-4 text-sm bg-foreground/5 border border-foreground/10 focus:outline-none focus:border-[var(--primary)]/50"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-50">Fund</label>
+                <select
+                  value={cardFund}
+                  onChange={(e) => setCardFund(e.target.value)}
+                  className="w-full h-11 rounded-2xl px-4 text-sm bg-foreground/5 border border-foreground/10 focus:outline-none focus:border-[var(--primary)]/50"
+                >
+                  <option value="tithe">Tithe</option>
+                  <option value="offering">Offering</option>
+                  <option value="missions">Missions</option>
+                  <option value="building">Building Fund</option>
+                  <option value="benevolence">Benevolence</option>
+                </select>
+              </div>
+            </div>
+            <button
+              type="submit"
+              disabled={cardLoading}
+              className="w-full h-12 rounded-2xl bg-[var(--primary)] text-white font-black text-sm tracking-wide disabled:opacity-60 hover:opacity-90 transition-opacity"
+            >
+              {cardLoading ? 'Redirecting to Stripe...' : 'Give Now via Stripe'}
+            </button>
+          </form>
+        </div>
+        <div className="flex items-center gap-4 mt-8">
+          <div className="flex-1 h-px bg-foreground/10" />
+          <span className="text-[10px] font-black tracking-widest opacity-30 uppercase">or give via</span>
+          <div className="flex-1 h-px bg-foreground/10" />
+        </div>
+      </section>
+
       <div className="max-w-screen-xl mx-auto px-6 pb-32 space-y-40">
-        
+
         {/* Method 1: Tithe.ly */}
         <section id="online" data-section="give-online" className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="space-y-8">

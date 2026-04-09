@@ -17,7 +17,46 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
 
-    const { cart, orgId, customerEmail, shippingDetails } = await req.json();
+    const body = await req.json();
+
+    // Giving flow
+    if (body.type === 'giving') {
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        line_items: [{
+          price_data: {
+            currency: body.currency || 'jpy',
+            product_data: {
+              name: body.fund_name || 'Church Giving',
+              description: 'Thank you for your generous gift'
+            },
+            unit_amount: Math.round(body.amount * 100)
+          },
+          quantity: 1
+        }],
+        metadata: {
+          org_id: body.org_id || '',
+          user_id: body.user_id || '',
+          fund_designation: body.fund_designation || 'tithe',
+          given_by_name: body.given_by_name || '',
+          given_by_email: body.given_by_email || '',
+          is_anonymous: body.is_anonymous ? 'true' : 'false',
+          is_recurring: 'false',
+          notes: body.notes || '',
+          ministry_id: body.ministry_id || '',
+          type: 'giving'
+        },
+        customer_email: body.customer_email,
+        success_url: body.success_url || `${body.org_domain}/give?success=true`,
+        cancel_url: body.cancel_url || `${body.org_domain}/give`,
+      });
+      return new Response(JSON.stringify({ url: session.url }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // existing cart logic continues below...
+    const { cart, orgId, customerEmail, shippingDetails } = body;
 
     if (!cart || cart.length === 0) throw new Error("Cart is empty");
 

@@ -58,6 +58,7 @@ interface ProfileViewProps {
 export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<ProfileData | null>(null);
+    const [user, setUser] = useState<{ id: string } | null>(null);
     const [stats, setStats] = useState({ completed: 0, streak: 0 });
     const [saving, setSaving] = useState(false);
     const [pastoralNotes, setPastoralNotes] = useState("");
@@ -78,6 +79,10 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
     const [showMinistryDropdown, setShowMinistryDropdown] = useState(false);
 
     const [stewardship, setStewardship] = useState<any[]>([]);
+    const [showGivingForm, setShowGivingForm] = useState(false);
+    const [givingAmount, setGivingAmount] = useState('');
+    const [givingFund, setGivingFund] = useState('tithe');
+    const [givingLoading, setGivingLoading] = useState(false);
 
     const [attendanceData, setAttendanceData] = useState<number[]>([]);
 
@@ -108,6 +113,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
         try {
             setLoading(true);
             const { data: { user: authUser } } = await supabase.auth.getUser();
+            if (authUser) setUser({ id: authUser.id });
             const targetId = memberId || authUser?.id;
 
             if (!targetId) return;
@@ -468,6 +474,38 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
             setSavingNotes(false);
         }
     }
+
+    const handleGiveNow = async () => {
+        if (!givingAmount || Number(givingAmount) <= 0) {
+            toast.error('Please enter a valid amount');
+            return;
+        }
+        setGivingLoading(true);
+        try {
+            const { data, error } = await supabase.functions.invoke('stripe-checkout', {
+                body: {
+                    type: 'giving',
+                    amount: Number(givingAmount),
+                    fund_designation: givingFund,
+                    fund_name: givingFund.charAt(0).toUpperCase() + givingFund.slice(1),
+                    currency: 'JPY',
+                    org_id: profile?.org_id,
+                    user_id: user?.id,
+                    given_by_name: profile?.name,
+                    given_by_email: profile?.email,
+                    customer_email: profile?.email,
+                    success_url: window.location.href + '?giving=success',
+                    cancel_url: window.location.href,
+                }
+            });
+            if (error) throw error;
+            if (data?.url) window.location.href = data.url;
+        } catch (err: any) {
+            toast.error('Payment setup failed: ' + err.message);
+        } finally {
+            setGivingLoading(false);
+        }
+    };
 
     if (loading) {
         return <div className="p-20 flex justify-center"><Clock className="w-8 h-8 animate-spin opacity-20" /></div>;
@@ -839,9 +877,37 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                         <CreditCard className="w-5 h-5 text-[var(--primary)]" />
                                         Stewardship Log
                                     </h3>
-                                    <Button className="rounded-full bg-indigo-600 font-bold gap-2">
-                                        <Plus className="w-4 h-4" /> GIVE NOW
-                                    </Button>
+                                    {!showGivingForm ? (
+                                        <Button onClick={() => setShowGivingForm(true)} className="rounded-full bg-indigo-600 font-bold gap-2">
+                                            <Plus className="w-4 h-4" /> GIVE NOW
+                                        </Button>
+                                    ) : (
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <Input
+                                                type="number"
+                                                placeholder="Amount (JPY)"
+                                                value={givingAmount}
+                                                onChange={(e) => setGivingAmount(e.target.value)}
+                                                className="w-32 h-9 rounded-full text-sm"
+                                            />
+                                            <select
+                                                value={givingFund}
+                                                onChange={(e) => setGivingFund(e.target.value)}
+                                                className="h-9 rounded-full px-3 text-sm bg-background border border-foreground/20"
+                                            >
+                                                <option value="tithe">Tithe</option>
+                                                <option value="offering">Offering</option>
+                                                <option value="missions">Missions</option>
+                                                <option value="building">Building</option>
+                                            </select>
+                                            <Button onClick={handleGiveNow} disabled={givingLoading} className="rounded-full bg-indigo-600 font-bold h-9 px-4 text-sm">
+                                                {givingLoading ? 'Processing...' : 'Give'}
+                                            </Button>
+                                            <Button onClick={() => setShowGivingForm(false)} variant="ghost" className="rounded-full h-9 px-3 text-sm opacity-60">
+                                                Cancel
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="space-y-4">
