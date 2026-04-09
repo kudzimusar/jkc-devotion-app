@@ -50,11 +50,40 @@ export default function GiveClient() {
     resolvePublicOrgId().then(setOrgId);
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paypalStatus = params.get('paypal');
+    const token = params.get('token'); // PayPal order_id
+
+    if (paypalStatus === 'success' && token) {
+      supabase.functions.invoke('paypal-giving', {
+        body: {
+          action: 'capture',
+          order_id: token,
+          org_id: orgId ?? '',
+        }
+      }).then(({ data, error }) => {
+        if (error) {
+          toast.error('Payment capture failed');
+        } else if (data?.status === 'COMPLETED') {
+          toast.success('Thank you! Your gift has been received.');
+          window.history.replaceState({}, '', window.location.pathname);
+        }
+      });
+    }
+
+    if (paypalStatus === 'cancelled') {
+      toast.error('PayPal payment was cancelled.');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [orgId]);
+
   const [cardAmount, setCardAmount] = useState('');
   const [cardFund, setCardFund] = useState('tithe');
   const [cardName, setCardName] = useState('');
   const [cardEmail, setCardEmail] = useState('');
   const [cardLoading, setCardLoading] = useState(false);
+  const [paypalLoading, setPaypalLoading] = useState(false);
 
   const handleCardGiving = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +111,39 @@ export default function GiveClient() {
       toast.error('Failed to start payment: ' + (err.message || 'Unknown error'));
     } finally {
       setCardLoading(false);
+    }
+  };
+
+  const handlePayPalGiving = async () => {
+    if (!cardAmount || Number(cardAmount) <= 0) {
+      toast.error('Please enter an amount above');
+      return;
+    }
+    setPaypalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('paypal-giving', {
+        body: {
+          action: 'create',
+          org_id: orgId ?? '',
+          amount: Number(cardAmount),
+          currency: 'JPY',
+          fund_designation: cardFund,
+          given_by_name: cardName,
+          given_by_email: cardEmail,
+          success_url: window.location.origin +
+            '/jkc-devotion-app/welcome/give?paypal=success',
+          cancel_url: window.location.origin +
+            '/jkc-devotion-app/welcome/give?paypal=cancelled',
+        }
+      });
+      if (error) throw error;
+      if (data?.approval_url) {
+        window.location.href = data.approval_url;
+      }
+    } catch (err: any) {
+      toast.error('PayPal setup failed: ' + (err.message || 'Unknown error'));
+    } finally {
+      setPaypalLoading(false);
     }
   };
 
@@ -271,6 +333,20 @@ export default function GiveClient() {
               className="w-full h-12 rounded-2xl bg-[var(--primary)] text-white font-black text-sm tracking-wide disabled:opacity-60 hover:opacity-90 transition-opacity"
             >
               {cardLoading ? 'Redirecting to Stripe...' : 'Give Now via Stripe'}
+            </button>
+            <button
+              type="button"
+              onClick={handlePayPalGiving}
+              disabled={paypalLoading}
+              className="w-full h-12 rounded-2xl bg-[#FFC439] text-[#003087] font-black text-sm tracking-wide disabled:opacity-60 hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+            >
+              {paypalLoading ? 'Redirecting to PayPal...' : (
+                <>
+                  <span className="font-black text-[#003087]">Pay</span>
+                  <span className="font-black text-[#009CDE]">Pal</span>
+                  <span className="text-[#003087]">— Give via PayPal</span>
+                </>
+              )}
             </button>
           </form>
         </div>
