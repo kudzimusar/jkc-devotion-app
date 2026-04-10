@@ -419,7 +419,7 @@ const DetailedFooter = ({ setPage }: { setPage: (p: string) => void }) => {
             <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 mb-8">Registry</h4>
             <ul className="space-y-4 text-sm font-bold text-slate-500">
               <li><button onClick={() => setPage('registry')} className="hover:text-emerald-600">Find a Church</button></li>
-              <li><button onClick={() => setPage('register')} className="hover:text-emerald-600">Verify Profile</button></li>
+              <li><button onClick={() => setPage('login')} className="hover:text-emerald-600">Verify Profile</button></li>
               <li><button onClick={() => setPage('registry')} className="hover:text-emerald-600">Leader Directory</button></li>
             </ul>
           </div>
@@ -437,8 +437,8 @@ const DetailedFooter = ({ setPage }: { setPage: (p: string) => void }) => {
             <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 mb-8">Company</h4>
             <ul className="space-y-4 text-sm font-bold text-slate-500">
               <li><button onClick={() => setPage('index')} className="hover:text-emerald-600">Our Mission</button></li>
-              <li><button onClick={() => setPage('register')} className="hover:text-emerald-600">Partnering</button></li>
-              <li><button onClick={() => setPage('register')} className="hover:text-emerald-600">Support Hub</button></li>
+              <li><button onClick={() => setPage('partners')} className="hover:text-emerald-600">Partnering</button></li>
+              <li><button onClick={() => setPage('support')} className="hover:text-emerald-600">Support Hub</button></li>
             </ul>
           </div>
 
@@ -903,10 +903,12 @@ export default function App() {
       philanthropy: `${BP}/platform/philanthropy/`,
       church: `${BP}/platform/church/japan-kingdom-church-tokyo/`,
       register: `${BP}/platform/register/`,
-      login: `${BP}/corporate/login/`,
+      login: `${BP}/platform/login/`,
       index: `${BP}/platform/`,
       dashboard: `${BP}/shepherd/dashboard/`,
       pricing: `${BP}/platform/register/`,
+      partners: `${BP}/platform/partners/`,
+      support: `${BP}/platform/support/`,
     };
     if (routes[p]) router.push(routes[p]);
   };
