@@ -23,9 +23,13 @@ export interface PersonaContext {
     recent_soap_entries: any[];
   };
   concierge?: {
-    checklist: any[];
-    completion_percentage: number;
-    missing_fields: string[];
+    announcements: any[];
+    ministries: any[];
+    current_devotion_theme: string | null;
+    website_pages: any[];
+    checklist?: any[];
+    completion_percentage?: number;
+    missing_fields?: string[];
   };
   steward?: {
     profile: any;
@@ -58,15 +62,8 @@ export async function getContextForPersona(
   console.log(`[RAG CONTEXT] Fetching for ${persona} (User: ${sanitizedUserId || 'GUEST'}, Role: ${userRole})`);
   
   if (!sanitizedUserId) {
-    console.log(`[RAG CONTEXT] Returning basic concierge context for Guest`);
-    // Basic concierge info for guests
-    return { 
-      concierge: { 
-        checklist: [], 
-        completion_percentage: 0, 
-        missing_fields: ['name', 'email'] 
-      } 
-    };
+    console.log(`[RAG CONTEXT] Guest detected — fetching public church info for concierge`);
+    // Fall through to switch — concierge case handles guests safely (no userId queries)
   }
   
   try {
@@ -76,6 +73,7 @@ export async function getContextForPersona(
         const { data: insights } = await supabase
           .from('prophetic_insights')
           .select('*, member:profiles(name, email)')
+          .eq('org_id', orgId)
           .eq('status', 'active')
           .order('created_at', { ascending: false })
           .limit(5);
@@ -157,26 +155,41 @@ export async function getContextForPersona(
         };
         break;
         
-      case 'concierge':
-        // Profile completion as checklist
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('phone, avatar_url, country_of_origin, skills_talents')
-          .eq('id', userId)
-          .single();
-        
-        const missing = [];
-        if (!profile?.phone) missing.push('phone');
-        if (!profile?.avatar_url) missing.push('profile picture');
-        if (!profile?.country_of_origin) missing.push('country of origin');
-        if (!profile?.skills_talents || profile.skills_talents.length === 0) missing.push('skills and talents');
-        
+      case 'concierge': {
+        const [announcementsRes, ministriesRes, devRes] = await Promise.all([
+          supabase.from('ministry_announcements')
+            .select('title, body, created_at')
+            .eq('org_id', orgId)
+            .eq('direction', 'downward')
+            .order('created_at', { ascending: false })
+            .limit(5),
+          supabase.from('ministries')
+            .select('name, slug, category, description')
+            .eq('org_id', orgId)
+            .eq('is_active', true)
+            .order('category'),
+          supabase.from('devotions')
+            .select('title, theme, scripture_reference, date')
+            .order('date', { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+        ]);
         context.concierge = {
-          checklist: [],
-          completion_percentage: ((4 - missing.length) / 4) * 100,
-          missing_fields: missing
+          announcements: announcementsRes.data || [],
+          ministries: ministriesRes.data || [],
+          current_devotion_theme: devRes.data?.theme || null,
+          website_pages: [
+            { name: 'Home', path: '/welcome', description: 'Church homepage with hero, announcements, feed' },
+            { name: 'Watch', path: '/welcome/watch', description: 'Live stream and sermon archive' },
+            { name: 'Visit', path: '/welcome/visit', description: 'Service times, location, plan your visit' },
+            { name: 'Give', path: '/welcome/give', description: 'Online giving — Stripe, PayPal, Zelle, bank transfer' },
+            { name: 'Ministries', path: '/welcome/ministries', description: 'All church ministries and how to join' },
+            { name: 'Connect', path: '/welcome/visit', description: 'Contact us, prayer requests, connect card' },
+          ],
+          ...(sanitizedUserId ? { checklist: [], completion_percentage: 0, missing_fields: [] } : {})
         };
         break;
+      }
 
       case 'steward':
         const { data: stewardProfile } = await supabase
