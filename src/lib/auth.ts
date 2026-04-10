@@ -18,26 +18,40 @@ export interface AuthResponse {
     error?: string;
 }
 
+// Shared Promise cache — all components on the same page load share one
+// network round-trip instead of each firing their own getSession + profiles query.
+let _userPromise: Promise<User | null> | null = null;
+
 export const Auth = {
     // Get current session
-    async getCurrentUser(): Promise<User | null> {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) return null;
+    async getCurrentUser(forceRefresh = false): Promise<User | null> {
+        if (_userPromise && !forceRefresh) return _userPromise;
 
-        // Get profile data
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+        _userPromise = (async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.user) return null;
 
-        return {
-            id: session.user.id,
-            email: session.user.email,
-            name: profile?.name || session.user.user_metadata?.full_name || 'User',
-            avatar_url: profile?.avatar_url || session.user.user_metadata?.avatar_url,
-            org_id: profile?.org_id || session.user.user_metadata?.org_id
-        };
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+
+                return {
+                    id: session.user.id,
+                    email: session.user.email,
+                    name: profile?.name || session.user.user_metadata?.full_name || 'User',
+                    avatar_url: profile?.avatar_url || session.user.user_metadata?.avatar_url,
+                    org_id: profile?.org_id || session.user.user_metadata?.org_id
+                };
+            } catch {
+                _userPromise = null; // reset on error so the next call retries
+                return null;
+            }
+        })();
+
+        return _userPromise;
     },
 
     // Create new account
@@ -86,7 +100,7 @@ export const Auth = {
 
             if (error) throw error;
 
-            const user = await this.getCurrentUser();
+            const user = await this.getCurrentUser(true); // force fresh fetch after login
             return { success: true, user: user || undefined };
         } catch (err) {
             const error = err as Error;
@@ -133,8 +147,15 @@ export const Auth = {
 
     // Logout
     async logout() {
+        _userPromise = null; // clear in-memory cache
         await supabase.auth.signOut();
-        window.location.href = BP || '/';
+        if (typeof window !== 'undefined') {
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('sb-')) localStorage.removeItem(key);
+            });
+            sessionStorage.clear();
+        }
+        window.location.replace(BP || '/'); // replace = no back-button return to stale session
     },
 
     // Update profile
@@ -159,6 +180,7 @@ export const Auth = {
     },
     // Delete account (Client-side cleanup)
     async deleteAccount(): Promise<AuthResponse> {
+        _userPromise = null; // clear in-memory cache
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return { success: false, error: 'No user logged in' };
 
