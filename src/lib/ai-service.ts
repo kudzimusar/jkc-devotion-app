@@ -289,6 +289,7 @@ export const AIService = {
             const pages = c.website_pages || [];
             ragContextString = `\n--- GROUNDED CONCIERGE DATA ---\n` +
                 `- Current Devotion Theme: ${c.current_devotion_theme || 'N/A'}\n` +
+                `- Current Scripture: ${c.current_scripture || 'N/A'}\n` +
                 `- Active Ministries (${ministries.length}): ${ministries.map((m: any) => m.name).join(', ') || 'None listed'}\n` +
                 `- Recent Announcements:\n` +
                 (announcements.length > 0

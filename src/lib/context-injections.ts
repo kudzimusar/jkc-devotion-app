@@ -26,6 +26,7 @@ export interface PersonaContext {
     announcements: any[];
     ministries: any[];
     current_devotion_theme: string | null;
+    current_scripture?: string | null;
     website_pages: any[];
     checklist?: any[];
     completion_percentage?: number;
@@ -169,7 +170,7 @@ export async function getContextForPersona(
             .eq('is_active', true)
             .order('category'),
           supabase.from('devotions')
-            .select('title, theme, scripture_reference, date')
+            .select('title, theme, scripture, date')
             .order('date', { ascending: false })
             .limit(1)
             .maybeSingle(),
@@ -178,6 +179,7 @@ export async function getContextForPersona(
           announcements: announcementsRes.data || [],
           ministries: ministriesRes.data || [],
           current_devotion_theme: devRes.data?.theme || null,
+          current_scripture: devRes.data?.scripture || null,
           website_pages: [
             { name: 'Home', path: '/welcome', description: 'Church homepage with hero, announcements, feed' },
             { name: 'Watch', path: '/welcome/watch', description: 'Live stream and sermon archive' },
