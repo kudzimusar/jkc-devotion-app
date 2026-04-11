@@ -8,13 +8,14 @@
 
 1. Create component `AIOnboardingStatus.tsx` that:
    - Fetches `organization_intelligence` for current org
-   - Shows status: pending → processing → completed
-   - Displays first insight when available
+   - Shows status: pending → processing → completed → failed
+   - Displays first insight when available (from `prophetic_insights`)
    - Uses glassmorphic styling matching dashboard
+   - Subscribes to realtime updates via Supabase
 
 2. Integrate into `ShepherdView` at top of dashboard
 
-3. Add polling every 30 seconds while status is 'processing'
+3. Add retry mechanism calling `provision-church-intelligence` edge function
 
 4. When status becomes 'completed', fetch and display first insight
 

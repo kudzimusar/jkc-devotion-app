@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { basePath as BP } from "@/lib/utils";
 
 export type AuthDomain = 'corporate' | 'onboarding' | 'tenant' | 'member';
-export type AuthSurface = 'console' | 'mission-control' | 'ministry' | 'profile' | 'onboarding';
+export type AuthSurface = 'console' | 'pastor-hq' | 'mission-control' | 'ministry' | 'profile' | 'onboarding';
 export type SecurityTier = 'strict' | 'elevated' | 'standard' | 'low-friction';
 
 export interface BaseAuthProps {
@@ -113,7 +113,8 @@ export const BaseAuth = ({
         // Static redirect map for all other surfaces
         const redirectMap: Record<Exclude<AuthSurface, 'ministry'>, string> = {
           'console': '/super-admin',
-          'mission-control': '/pastor-hq',
+          'pastor-hq': '/pastor-hq',
+          'mission-control': '/shepherd/dashboard',
           'profile': '/member/profile',
           'onboarding': '/onboarding'
         };

@@ -8,7 +8,7 @@ import { basePath as BP } from './utils';
 import { clearOrgCache } from './org-resolver';
 
 export type AuthDomain = 'corporate' | 'tenant' | 'onboarding' | 'member';
-export type AuthSurface = 'console' | 'mission-control' | 'ministry' | 'profile' | 'onboarding';
+export type AuthSurface = 'console' | 'pastor-hq' | 'mission-control' | 'ministry' | 'profile' | 'onboarding';
 
 // ── Legacy compatibility exports ──
 export type AdminRole = 'super_admin' | 'pastor' | 'owner' | 'shepherd' | 'admin' | 'ministry_lead' | 'ministry_leader' | 'member';
@@ -40,6 +40,7 @@ export interface DomainSession {
 }
 
 const DOMAIN_CACHE_KEY = 'church_os_active_domain';
+const SURFACE_CACHE_KEY = 'church_os_active_surface';
 const SESSION_CACHE_KEY = 'church_os_domain_session';
 
 export const AdminAuth = {
@@ -77,12 +78,15 @@ export const AdminAuth = {
             // If a domain is required, filter for it
             let activeContext = contexts[0];
             const cachedDomain = sessionStorage.getItem(DOMAIN_CACHE_KEY);
+            const cachedSurface = sessionStorage.getItem(SURFACE_CACHE_KEY);
             
             if (requiredDomain) {
-                activeContext = contexts.find(c => c.auth_domain === requiredDomain) || contexts[0];
+                activeContext = contexts.find(c => c.auth_domain === requiredDomain && (!cachedSurface || c.auth_surface === cachedSurface)) || contexts.find(c => c.auth_domain === requiredDomain) || contexts[0];
                 if (activeContext.auth_domain !== requiredDomain) return null;
             } else if (cachedDomain) {
-                activeContext = contexts.find(c => c.auth_domain === cachedDomain) || contexts[0];
+                activeContext = contexts.find(c => c.auth_domain === cachedDomain && (!cachedSurface || c.auth_surface === cachedSurface)) || contexts.find(c => c.auth_domain === cachedDomain) || contexts[0];
+            } else if (cachedSurface) {
+                activeContext = contexts.find(c => c.auth_surface === cachedSurface) || contexts[0];
             }
 
             const { data: profile } = await supabase
@@ -104,6 +108,7 @@ export const AdminAuth = {
 
             sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(domainSession));
             sessionStorage.setItem(DOMAIN_CACHE_KEY, domainSession.auth_domain);
+            sessionStorage.setItem(SURFACE_CACHE_KEY, domainSession.auth_surface);
             
             return domainSession;
         } catch (err) {

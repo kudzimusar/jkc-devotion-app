@@ -7,14 +7,14 @@
 **Implementation Steps:**
 
 1. Build a feature store (table `organization_features`) with:
-   - Engagement metrics (journal frequency, prayer request volume)
-   - AI insight open rate
-   - Payment history (failed payments, upgrade/downgrade)
-   - Support tickets
-2. Run a Vertex AI model (or logistic regression) weekly to compute churn probability per organization.
+   - `engagement_score` (computed from journal frequency, prayer request volume)
+   - `last_journal_at`
+   - `active_member_count`
+   - `churn_probability`
+2. Run a Vertex AI model (or rule-based equivalent) weekly to compute churn probability per organization based on activity drops.
 3. Store predictions in `organization_features.churn_probability`.
-4. In the admin console, show a churn risk list with high‑risk churches.
-5. Provide actions: “Send retention email”, “View engagement history”, “Flag for support follow‑up”.
+4. In the admin console, show a churn risk list with high‑risk churches (> 0.7 probability).
+5. Provide actions: “Send retention email”, “View engagement history”, “Plan pastoral visit”.
 
 **Success Criteria:** Admins proactively intervene with high‑risk churches, reducing churn.
 

@@ -23,8 +23,8 @@ export default function PastorHQLayout({ children }: { children: React.ReactNode
         const session = await AdminAuth.getSession('tenant');
         
         // Strict Pastor/SuperAdmin/Owner check for Pastor HQ
-        // Surface check: mission-control
-        const authorized = session && session.auth_surface === 'mission-control';
+        // Surface check: pastor-hq
+        const authorized = session && session.auth_surface === 'pastor-hq';
 
         if (!authorized) {
             router.replace("/church/login/");

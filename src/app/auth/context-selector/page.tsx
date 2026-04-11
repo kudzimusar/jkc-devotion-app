@@ -44,6 +44,11 @@ function ContextSelectorContent() {
   }
 
   const handleSelect = (context: AuthContext) => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('church_os_active_domain', context.auth_domain);
+      sessionStorage.setItem('church_os_active_surface', context.auth_surface);
+      sessionStorage.removeItem('church_os_domain_session'); // Force refresh
+    }
     router.push(DomainAuth.getSurfaceRoute(context.auth_surface));
   };
 

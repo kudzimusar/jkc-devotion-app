@@ -260,11 +260,11 @@ The `(public)` route group. Dynamic skeleton pulling Name, Logo, Colors from `or
 
 | Dashboard | Access | Core Purpose | Data Source |
 |-----------|--------|--------------|-------------|
-| **Devotion Dashboard** | Members | Spiritual growth tracking | `soap_entries`, `member_stats` |
-| **Shepherd Dashboard** | Pastors/Leaders | Congregation health & care | `prophetic_insights`, `ai_ministry_insights` |
-| **Ministry Dashboard** | Ministry Leaders | Ministry-level insights | `ai_ministry_insights` (approved only) |
-| **Pastor HQ** | Pastors | Strategic intelligence | `vw_*` views, `prophetic_insights` |
-| **Super Admin Console** | Church OS Team | SaaS business metrics | `company_analytics`, `admin_ai_insights` |
+| **Member Hub** | Members | Spiritual growth & **ChurchGPT** | `soap_entries`, `member_stats` |
+| **Mission Control** | Pastors/Leaders | Congregation health & **Assistant Bot** | `prophetic_insights`, `ai_ministry_insights` |
+| **Ministry Dashboard** | Ministry Leaders | Departmental **Growth Blueprints** | `ai_ministry_insights` (approved only) |
+| **Pastor HQ** | Pastors | Strategic **Prophetic Intelligence** | `vw_*` views, `prophetic_insights` |
+| **Super Admin Console** | Church OS Team | Global **ROI & PIL Orchestration** | `company_analytics`, `admin_ai_insights` |
 
 ### Shepherd Dashboard Intelligence Cards
 - **Prophetic Insights**: From `prophetic_insights`, unacknowledged, sorted by risk

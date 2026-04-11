@@ -106,6 +106,13 @@ The Admin Dashboard is the "Nerve Center" for Japan Kingdom Church leaders, acce
     *   *"Insight: 80% of new members are from the Adachi-ku area. Suggest opening a new Fellowship Group cluster there."*
     *   *"Insight: Anxiety sentiment has increased by 30% in journals this week. Suggest a sermon on 'The Peace of God'."*
 
+### **D. Financial Intelligence Layer (Specialized Finance Hub)**
+For the Finance Ministry, the Mission Control expands into a high-fidelity fiscal monitoring layer:
+*   **Giving Health Dashboard**: Real-time tracking of Tithes, Offerings, and Building Funds with year-over-year comparisons.
+*   **Giving at Risk (Churn Analytics)**: An AI model that flags members who have stopped giving or whose giving patterns have significantly decreased, allowing for proactive pastoral care.
+*   **Ministry ROI Tracking**: Correlates ministry activities (reports/events) with financial health and salvations to determine the "Spiritual ROI" of each department.
+*   **Recurring Pledge Management**: Integrated with Stripe to manage monthly pledges and predict future church cash flow.
+
 ---
 
 ## 📊 4. Data Analytics Board: Spiritual Intelligence Layer
@@ -129,13 +136,18 @@ A high-level view of how many people are moving from each stage:
 5.  **Membership** (Full integration).
 *   *Observation*: If the "drop-off" between Attendance and Salvation is too high, the leadership knows to adjust their gospel presentation.
 
+### **D. Bible Study & Fellowship Hub**
+A decentralized community management system:
+*   **Group Coordination**: Leaders manage group meeting times, locations (Tokyo Wards), and member enrollment.
+*   **Self-Enrollment**: Members can find and join Bible Study groups directly from their profile based on location and meeting days.
+
 ---
 
 ## 🌟 5. Benefits of the Church OS to the Church
-1.  **Data-Driven Compassion**: Stop guessing who is struggling; the AI identifies them before they leave.
-2.  **Scalable Discipleship**: A small pastoral team can monitor the spiritual habits of hundreds of people with ease.
-3.  **Bilingual Unity**: Removes the language barrier, merging two congregations into one spiritual body.
-4.  **Privacy & Privacy**: Individual journals are private, but the *collective pulse* is shared, providing a balanced approach to oversight.
+1.  **Data-Driven Compassion**: Stop guessing who is struggling; the **Prophetic Intelligence** identifies them before they leave.
+2.  **Scalable Discipleship**: A small pastoral team can monitor the spiritual habits of hundreds with the **Church OS Assistant bot**.
+3.  **Bilingual Unity & ChurchGPT**: Removes the language barrier and provides deep theological grounding in both heart languages.
+4.  **Operational Excellence**: Real-time 0-100 engagement scoring ensures leadership always has an accurate pulse on the house.
 
 ---
 
@@ -161,6 +173,8 @@ The system includes a **Model Context Protocol (MCP)** server, bridging the gap 
     *   Prevents Cross-Domain Hijacking.
     *   Tracks usage metrics for performance monitoring.
 *   **Mock Stripe Hub**: A fully-ready architecture for handling Tithes and Offerings, currently in a "Mock Demonstration" mode for training and screencasts.
+*   **Merchandise Hub**: A system for members to order church-branded apparel and resources, tracked directly on their profile.
+*   **Children's Registry (Junior Church)**: A secure check-in system linked via `guardian_links` to ensure child safety and attendance tracking.
 *   **Global Assistant Bot**: A persistent floating assistant (`GlobalAIAssistant.tsx`) that provides context-aware help on any page of the app.
 
 ---

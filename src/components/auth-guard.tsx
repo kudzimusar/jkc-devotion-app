@@ -66,13 +66,18 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
             // Enforce surface boundaries if logged in
             if (session && !isLogin) {
-                if (pathname.startsWith("/pastor-hq") && session.auth_surface !== 'mission-control') {
+                if (pathname.startsWith("/pastor-hq") && session.auth_surface !== 'pastor-hq') {
                     router.replace("/auth/context-selector?domain=tenant");
                     return;
                 }
-                if (pathname.startsWith("/shepherd") && session.auth_surface !== 'ministry') {
-                    router.replace("/auth/context-selector?domain=tenant");
-                    return;
+                if (pathname.startsWith("/shepherd") && (session.auth_surface !== 'mission-control' && session.auth_surface !== 'ministry')) {
+                    // Exception: Permit pastor-hq to access settings for MFA compliance
+                    if (pathname.startsWith("/shepherd/dashboard/settings") && session.auth_surface === 'pastor-hq') {
+                        // Allow access
+                    } else {
+                        router.replace("/auth/context-selector?domain=tenant");
+                        return;
+                    }
                 }
             }
 

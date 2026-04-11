@@ -8,9 +8,11 @@ import {
   HandHelping, Coins, Network, ChevronRight, Menu, X,
   ExternalLink, Bell, LayoutDashboard, Database,
   Fingerprint, Sparkles, HeartHandshake, Share2, MessageSquare,
-  Play, Clock, Phone, Youtube, Music, LogOut, Settings, Filter, ArrowUpRight
+  Play, Clock, Phone, Youtube, Music, LogOut, Settings, Filter, ArrowUpRight,
+  BookOpen, Shield, Check
 } from "lucide-react";
 import { useRouter } from 'next/navigation';
+import { Badge } from "@/components/ui/badge";
 import { basePath as BP } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 
@@ -233,6 +235,150 @@ const HeroV5 = ({ setPage }: { setPage: (p: string) => void }) => (
     </div>
   </section>
 );
+
+const EcosystemPillars = () => {
+  const pillars = [
+    {
+      id: 1,
+      title: "Member Hub & Devotion Engine",
+      icon: <BookOpen className="w-5 h-5 text-indigo-400" />,
+      tag: "SPIRITUAL CORE",
+      desc: "The spiritual 'Secret Place' for every believer. Features ChurchGPT for context-aware theological inquiry, automated SOAP journaling with sentiment analysis, and bilingual scripture immersion.",
+      features: ["ChurchGPT Companion", "Sentiment Tracking", "90-Day Journey", "Streak Gamification"]
+    },
+    {
+      id: 2,
+      title: "Mission Control (Shepherd Dash)",
+      icon: <Shield className="w-5 h-5 text-rose-400" />,
+      tag: "ADMINISTRATIVE HEART",
+      desc: "Powered by the Church OS Assistant bot. Real-time engagement scoring (0-100), predictive Care Alerts (Red/Amber), and automated Victory Briefings via Brevo.",
+      features: ["Assistant bot", "Engagement Radar", "Proactive Alerts", "Briefing Engine"]
+    },
+    {
+      id: 3,
+      title: "Ministry Leadership Dashboard",
+      icon: <Users className="w-5 h-5 text-amber-400" />,
+      tag: "OPERATIONAL BLUEPRINT",
+      desc: "Vertical-specific intelligence for department leads. Includes AI-generated Growth Blueprints, a Pastoral Approval Gate for machine-insights, and intelligent resource matching.",
+      features: ["Growth Blueprints", "Approval Gates", "Skill Matching", "Dept Analytics"]
+    },
+    {
+      id: 4,
+      title: "SaaS Onboarding & Growth Portal",
+      icon: <Zap className="w-5 h-5 text-emerald-400" />,
+      tag: "DIGITAL GATEWAY",
+      desc: "Frictionless provisioning with Theological DNA capture. Automated church setup, Day 1 Growth Strategies, and secure Magic Link onboarding for leadership teams.",
+      features: ["DNA Capture", "Auto-Provisioning", "Magic Links", "Global Registry"]
+    },
+    {
+      id: 5,
+      title: "Corporate Console (Super Admin)",
+      icon: <Globe className="w-5 h-5 text-blue-400" />,
+      tag: "PLATFORM ENGINE",
+      desc: "Command-level orchestration for the platform. Global analytics, real-time health monitoring across all sanctuaries, and PIL engine oversight.",
+      features: ["Global ROI", "PIL Strategy", "Multi-Tenant Ops", "Health Pulse"]
+    }
+  ];
+
+  return (
+    <section className="py-24 bg-[#0a0c10] relative overflow-hidden">
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px] -z-10" />
+      <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[100px] -z-10" />
+      
+      <div className="container mx-auto px-6">
+        <div className="mb-20 space-y-4">
+          <Badge className="bg-indigo-500/10 text-indigo-400 border-indigo-500/20 px-4 py-1.5 rounded-full text-[10px] font-black tracking-[0.2em] uppercase">
+            Platform Architecture
+          </Badge>
+          <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-none font-manrope">
+            The Five Pillars of <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-emerald-400">Church OS</span>
+          </h2>
+          <p className="text-slate-400 max-w-2xl text-lg font-light leading-relaxed">
+            A comprehensive, AI-orchestrated ecosystem designed to strengthen every layer of modern church life—from the secret place to the command center.
+          </p>
+        </div>
+
+        <div className="hidden lg:block overflow-hidden rounded-3xl border border-slate-800/50 bg-slate-900/20 backdrop-blur-xl">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-900/60 border-b border-slate-800">
+                <th className="px-8 py-6 text-[10px] font-black text-slate-500 tracking-[0.2em] uppercase w-16 text-center">#</th>
+                <th className="px-8 py-6 text-[10px] font-black text-slate-500 tracking-[0.2em] uppercase w-1/4">Pillar & Core Service</th>
+                <th className="px-8 py-6 text-[10px] font-black text-slate-500 tracking-[0.2em] uppercase">Intelligence Capability & Descriptive</th>
+                <th className="px-8 py-6 text-[10px] font-black text-slate-500 tracking-[0.2em] uppercase w-1/4">Key Features</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/40">
+              {pillars.map((pillar) => (
+                <tr key={pillar.id} className="group hover:bg-white/[0.02] transition-colors">
+                  <td className="px-8 py-10 align-top text-center">
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-800/50 text-slate-400 font-bold text-xs group-hover:bg-indigo-500/20 group-hover:text-indigo-400 transition-colors">
+                      0{pillar.id}
+                    </span>
+                  </td>
+                  <td className="px-8 py-10 align-top">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-slate-800/50 group-hover:scale-110 transition-transform">
+                          {pillar.icon}
+                        </div>
+                        <h4 className="text-lg font-bold text-white leading-none">{pillar.title}</h4>
+                      </div>
+                      <span className="inline-block text-[9px] font-black text-amber-500/80 tracking-widest uppercase bg-amber-500/5 px-2 py-1 rounded border border-amber-500/10">
+                        {pillar.tag}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-8 py-10 align-top">
+                    <p className="text-slate-400 text-sm leading-relaxed max-w-md italic font-light">
+                      {pillar.desc}
+                    </p>
+                  </td>
+                  <td className="px-8 py-10 align-top">
+                    <div className="grid grid-cols-2 gap-2">
+                      {pillar.features.map((feat, i) => (
+                        <div key={i} className="flex items-center gap-2 text-[10px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors uppercase tracking-wider">
+                          <Check className="w-2.5 h-2.5 text-emerald-500/60" />
+                          {feat}
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile View */}
+        <div className="lg:hidden space-y-6">
+          {pillars.map((pillar) => (
+            <div key={pillar.id} className="p-6 rounded-2xl border border-slate-800 bg-slate-900/40 backdrop-blur-md space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="p-2.5 rounded-xl bg-slate-800/50">
+                  {pillar.icon}
+                </div>
+                <span className="text-xs font-bold text-slate-600">0{pillar.id}</span>
+              </div>
+              <div>
+                <h4 className="text-xl font-bold text-white mb-1">{pillar.title}</h4>
+                <p className="text-slate-400 text-sm leading-relaxed">{pillar.desc}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-800/50">
+                {pillar.features.map((feat, i) => (
+                  <div key={i} className="flex items-center gap-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                    <Check className="w-2.5 h-2.5 text-emerald-400" />
+                    {feat}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
 
 const FeatureIntegrity = ({ setPage }: { setPage: (p: string) => void }) => (
   <section className="py-32 bg-white">
@@ -496,9 +642,9 @@ const RegistryPage = ({ setPage }: { setPage: (p: string) => void }) => {
       setRegLoading(true);
       let query = supabase
         .from('church_registry')
-        .select('name, slug, city, country, denomination, member_count, is_verified, is_church_os_client, address')
+        .select('name, slug, city, country, denomination, member_count, is_verified, is_church_os_client, address, pastor_name', { count: 'exact' })
         .order('is_church_os_client', { ascending: false })
-        .limit(20);
+        .limit(100);
       if (searchQuery) {
         query = query.or(`name.ilike.%${searchQuery}%,city.ilike.%${searchQuery}%,country.ilike.%${searchQuery}%,denomination.ilike.%${searchQuery}%`);
       }
@@ -557,6 +703,11 @@ const RegistryPage = ({ setPage }: { setPage: (p: string) => void }) => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
+                {!regLoading && churches.length > 0 && (
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                    <Badge className="bg-slate-100 text-slate-400 lowercase">{churches.length} found</Badge>
+                  </div>
+                )}
               </div>
             </Card>
 
@@ -587,6 +738,9 @@ const RegistryPage = ({ setPage }: { setPage: (p: string) => void }) => {
                     <MapPin size={12}/> {c.city}, {c.country}
                   </p>
                   <p className="text-slate-300 text-xs mt-1">{c.denomination} · {c.member_count?.toLocaleString()} members</p>
+                  <p className="text-slate-400 text-[10px] font-bold mt-2">
+                    <span className="uppercase tracking-widest opacity-60">Lead Pastor:</span> <span className="text-slate-600">{c.pastor_name || 'TBD'}</span>
+                  </p>
                   <div className="mt-8 pt-6 border-t border-slate-50 flex items-center justify-between text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">
                     <span>View Full Profile</span>
                     <ArrowUpRight size={14} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
@@ -927,6 +1081,7 @@ export default function App() {
       case 'index': return (
         <>
           <HeroV5 setPage={nav} />
+          <EcosystemPillars />
           <FeatureIntegrity setPage={nav} />
           <PhilanthropyBridge setPage={nav} />
           <DetailedFooter setPage={nav} />

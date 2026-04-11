@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 
 export type AuthDomain = 'corporate' | 'tenant' | 'onboarding' | 'member';
-export type AuthSurface = 'console' | 'mission-control' | 'ministry' | 'profile' | 'onboarding';
+export type AuthSurface = 'console' | 'pastor-hq' | 'mission-control' | 'ministry' | 'profile' | 'onboarding';
 
 export interface AuthContext {
   identity_id: string;
@@ -58,7 +58,8 @@ export const DomainAuth = {
   getSurfaceRoute(surface: AuthSurface): string {
     const routes: Record<AuthSurface, string> = {
       'console': '/super-admin',
-      'mission-control': '/pastor-hq',
+      'pastor-hq': '/pastor-hq',
+      'mission-control': '/shepherd/dashboard',
       'ministry': '/shepherd/dashboard',
       'profile': '/member/profile',
       'onboarding': '/onboarding'

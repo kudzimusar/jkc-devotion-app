@@ -12,41 +12,39 @@
 
 ## 🏛️ The Five-Pillar Ecosystem
 
-Church OS is not a single app; it is a full-stack digital ecosystem covering every layer of church life and SaaS administration.
+Church OS is not a single app; it is a full-stack digital ecosystem covering every layer of church life and SaaS administration, powered by the latest in AI orchestration.
 
-### 🌐 1. Public Website & Member Hub (`/public`, `/devotion`)
-The visitor-facing storefront and the member's spiritual "secret place."
-- **Tenant Branding**: Dynamically pulls name, logo, and core colors from the `organizations` table via the `org-resolver`.
-- **SOAP Devotion Engine**: A daily journaling system (Scripture, Observation, Application, Prayer) with SVG-based progress tracking.
-- **AI Bible Concierge**: A context-aware chat interface for historical and cultural scripture insights.
-- **Bilingual Scripture**: Instant NASB/Japanese toggle for international congregations.
+### 🌐 1. Member Hub & Devotion Engine (`/public`, `/devotion`)
+The spiritual "Secret Place" for every believer and the visitor's digital sanctuary.
+- **ChurchGPT Companion**: A deep, context-aware theological AI for historically grounded scripture discourse.
+- **SOAP Devotion Engine**: Advanced daily journaling with automated spiritual sentiment tracking and 90-day transformation progress.
+- **Bilingual Scripture Mastery**: Instant NASB/Japanese immersion for seamless international congregational study.
+- **Growth Gamification**: Streak-based rewards and consistent engagement tracking across the spiritual journey.
 
 ### 🛡️ 2. Mission Control: The Shepherd Dashboard (`/shepherd`)
-The administrative heartbeat for managing spiritual health and engagement.
-- **Engagement Radar**: A 0-100 score for every member based on devotion streaks and service activity.
-- **Care Alerts**: Color-coded triggers (🔴 Critical, 🟡 Warning) for inactive members requiring pastoral follow-up.
-- **Victory Briefings & Newsletters**: Automated, AI-summarized church updates and spiritual briefings dispatched via the Brevo engine.
-- **Counseling Queue**: Managing prayer and guidance requests with prioritized categories.
-- **Operational Pulse**: Real-time stats on church-wide spiritual climate.
+The administrative heartbeat for managing spiritual health, powered by high-fidelity surveillance.
+- **Church OS Assistant Bot**: A hyper-accelerated pastoral sidekick for managing inquiries, scheduling, and congregational data.
+- **Prophetic Engagement Radar**: A 0-100 real-time score for every member, detecting "drift" before it becomes a departure.
+- **Care Alerts (🔴 Critical / 🟡 Warning)**: Automated triggers for inactive members requiring immediate pastoral touchpoints.
+- **Victory Briefings**: Automated, AI-curated church updates and spiritual briefings dispatched via the Brevo engine.
 
 ### 📊 3. Ministry Leadership Dashboard (`/ministry-dashboard`)
-Scoped intelligence for specific ministry leads (Worship, Media, Kids, Evangelism).
-- **Ministry-Specific Insights**: AI-generated growth opportunities tailored to each department.
-- **Insight Approval Gate**: A unique pastoral review bridge where AI insights are vetted before being dispatched to ministry leaders.
-- **Resource Matching**: Analyzing member skills and spiritual gifts against ministry needs.
+Vertical-specific intelligence tailored for department leads (Worship, Media, Youth, Outreach).
+- **Ministry Growth Blueprints**: AI-generated strategic roadmaps for specific departments based on congregational health data.
+- **Pastoral Approval Gate**: A unique human-in-the-loop bridge for vetting machine-insights before they reach ministry leaders.
+- **Intelligent Resource Matching**: Algorithmic matching of member skills and spiritual gifts to specific ministry needs.
 
-### ⚡ 4. Church Onboarding & SaaS Portal (`/onboarding`)
-The gateway for new churches to register and provision their own "Digital Sanctuary."
-- **SaaS Provisioning**: Multi-tier registration flow (Lite, Pro, Enterprise).
-- **AI Intelligence DNA**: Captures the church's tradition, worship style, and language to ground the AI.
-- **Growth Blueprints**: Automated provisioning of the first AI-generated growth strategy upon account setup.
-- **Magic Link Invitations**: Secure, seamless onboarding for church staff.
+### ⚡ 4. SaaS Onboarding & Growth Portal (`/onboarding`)
+The frictionless entry point for new churches to provision their own independent Digital Sanctuary.
+- **Theological DNA Capture**: Grounding the AI in the specific tradition, worship style, and language of the church.
+- **Day 1 Growth Strategy**: Automated generation of the first church growth blueprint upon account creation.
+- **Magic Link Onboarding**: Secure, one-tap registration for entire leadership teams and pastoral staff.
 
 ### 🏢 5. Corporate Console: The Super Admin Layer (`/super-admin`)
-The "God-mode" administration for the platform itself.
-- **Platform Analytics**: High-level metrics on MRR, user churn, and platform growth across all tenants.
-- **Tenant Management**: Overlooking all registered church organizations and their health scores.
-- **System Orchestration**: Monitoring background cron jobs (Weekly Sweeps, AI Workers) and serverless function performance.
+The global engine room for platform orchestration and multi-tenant performance management.
+- **Global ROI Analytics**: High-level metrics on platform-wide MRR, Churn, and AI helpfulness scores.
+- **PIL Engine Orchestration**: Monitoring the background Prophetic Intelligence Layer across all 2 million+ potential nodes.
+- **Tenant Health Oversight**: Command-level view of all registered church organizations and their operational status.
 
 ---
 

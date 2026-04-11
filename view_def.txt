@@ -1,0 +1,46 @@
+ SELECT om.user_id AS identity_id,
+    'corporate'::text AS auth_domain,
+    'console'::text AS auth_surface,
+    om.role,
+    om.org_id
+   FROM org_members om
+  WHERE (om.role = 'super_admin'::text)
+UNION ALL
+ SELECT om.user_id AS identity_id,
+    'tenant'::text AS auth_domain,
+    'pastor-hq'::text AS auth_surface,
+    om.role,
+    om.org_id
+   FROM org_members om
+  WHERE (om.role = ANY (ARRAY['pastor'::text, 'owner'::text]))
+UNION ALL
+ SELECT om.user_id AS identity_id,
+    'tenant'::text AS auth_domain,
+    'mission-control'::text AS auth_surface,
+    om.role,
+    om.org_id
+   FROM org_members om
+  WHERE (om.role = ANY (ARRAY['shepherd'::text, 'admin'::text, 'owner'::text, 'pastor'::text]))
+UNION ALL
+ SELECT om.user_id AS identity_id,
+    'tenant'::text AS auth_domain,
+    'ministry'::text AS auth_surface,
+    om.role,
+    om.org_id
+   FROM org_members om
+  WHERE (om.role = ANY (ARRAY['ministry_lead'::text, 'ministry_leader'::text, 'deacon'::text, 'elder'::text]))
+UNION ALL
+ SELECT om.user_id AS identity_id,
+    'member'::text AS auth_domain,
+    'profile'::text AS auth_surface,
+    'member'::text AS role,
+    om.org_id
+   FROM org_members om
+UNION ALL
+ SELECT os.identity_id,
+    'onboarding'::text AS auth_domain,
+    'onboarding'::text AS auth_surface,
+    os.status AS role,
+    NULL::uuid AS org_id
+   FROM onboarding_sessions os
+  WHERE (os.identity_id IS NOT NULL);
