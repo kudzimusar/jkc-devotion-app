@@ -132,7 +132,13 @@ export function Sidebar() {
             <div className="p-3 border-t border-border flex-shrink-0 space-y-1">
                 {showPastorSwitch && !collapsed && (
                     <button
-                        onClick={() => router.push("/pastor-hq/")}
+                        onClick={() => {
+                            if (typeof window !== 'undefined') {
+                                sessionStorage.setItem('church_os_active_surface', 'pastor-hq');
+                                sessionStorage.removeItem('church_os_domain_session');
+                            }
+                            router.push("/pastor-hq/");
+                        }}
                         className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-violet-600 dark:text-violet-400 hover:bg-violet-500/10 transition-all group"
                     >
                         <ShieldCheck className="w-4 h-4" />

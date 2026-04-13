@@ -90,7 +90,13 @@ export default function PastorHQLayout({ children }: { children: React.ReactNode
 
                             {/* Operational Hot-Switch */}
                             <button 
-                                onClick={() => router.push("/shepherd/dashboard/")}
+                                onClick={() => {
+                                    if (typeof window !== 'undefined') {
+                                        sessionStorage.setItem('church_os_active_surface', 'mission-control');
+                                        sessionStorage.removeItem('church_os_domain_session');
+                                    }
+                                    router.push("/shepherd/dashboard/");
+                                }}
                                 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-violet-500 transition-colors"
                             >
                                 Switch to Mission Control

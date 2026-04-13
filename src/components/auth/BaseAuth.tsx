@@ -57,8 +57,57 @@ export const BaseAuth = ({
 
       if (contextError) throw contextError;
 
+      let finalContexts = contexts;
+
+      // Auto-provision missing domain context on first login
       if (!contexts || contexts.length === 0) {
-        // Log unauthorized attempt
+        try {
+          // Attempt to auto-create context based on domain
+          if (authDomain === 'onboarding') {
+            // Create onboarding_sessions entry
+            const { error: onboardError } = await supabase
+              .from('onboarding_sessions')
+              .insert({
+                identity_id: data.user.id,
+                email: data.user.email!,
+                status: 'email_verified',
+                current_step: 'org_creation'
+              });
+            if (!onboardError) {
+              // Retry the context query
+              const { data: retryContexts } = await supabase
+                .from('v_user_auth_contexts')
+                .select('*')
+                .eq('identity_id', data.user.id)
+                .eq('auth_domain', authDomain);
+              finalContexts = retryContexts || [];
+            }
+          } else if (authDomain === 'member') {
+            // For member domain, create entry with default org (JKC)
+            const JKC_ORG_ID = 'fa547adf-f820-412f-9458-d6bade11517d';
+            const { error: memberError } = await supabase
+              .from('member_profiles')
+              .insert({
+                identity_id: data.user.id,
+                org_id: JKC_ORG_ID
+              });
+            if (!memberError) {
+              const { data: retryContexts } = await supabase
+                .from('v_user_auth_contexts')
+                .select('*')
+                .eq('identity_id', data.user.id)
+                .eq('auth_domain', authDomain);
+              finalContexts = retryContexts || [];
+            }
+          }
+          // For corporate and tenant domains, don't auto-provision — require explicit admin action
+        } catch (autoProvisionErr) {
+          console.warn('[BaseAuth] Auto-provision failed:', autoProvisionErr);
+        }
+      }
+
+      if (!finalContexts || finalContexts.length === 0) {
+        // Still no context after auto-provision attempt
         await supabase.rpc('fn_log_auth_event', {
           p_identity_id: data.user.id,
           p_auth_domain: authDomain,
@@ -66,9 +115,9 @@ export const BaseAuth = ({
           p_intent: intent,
           p_gateway: 'invalid_domain_access'
         });
-        
+
         await supabase.auth.signOut();
-        throw new Error(`Access denied. You do not have permissions for the ${authDomain} domain.`);
+        throw new Error(`Access denied. You do not have permissions for the ${authDomain} domain. Please contact your administrator.`);
       }
 
       // Success - Log audit
@@ -78,11 +127,11 @@ export const BaseAuth = ({
         p_auth_surface: authSurface,
         p_intent: intent,
         p_gateway: 'web_portal',
-        p_org_id: contexts[0].org_id
+        p_org_id: finalContexts[0]?.org_id
       });
 
       // Handle multi-role context selection if needed
-      if (contexts.length > 1) {
+      if (finalContexts.length > 1) {
         // Redirect to context selector
         router.push(`/auth/context-selector?domain=${authDomain}&surface=${authSurface}`);
       } else if (authSurface === 'ministry') {
@@ -93,24 +142,33 @@ export const BaseAuth = ({
           .eq('leader_id', data.user.id)
           .single();
         if (ministry?.slug) {
-          router.push(`${BP}/ministry-dashboard/${ministry.slug}`);
+          router.push(`/ministry-dashboard/${ministry.slug}`);
         } else {
           // Step 2: fallback — check org_members.ministry_id
           const { data: membership } = await supabase
             .from('org_members')
             .select('ministry_id, ministries(slug)')
-            .eq('user_id', data.user.id)
+            .eq('identity_id', data.user.id)
             .eq('role', 'ministry_lead')
             .single();
           const slug = (membership?.ministries as any)?.slug;
           if (slug) {
-            router.push(`${BP}/ministry-dashboard/${slug}`);
+            router.push(`/ministry-dashboard/${slug}`);
           } else {
-            router.push(`${BP}/ministry-dashboard`);
+            router.push(`/ministry-dashboard`);
           }
         }
       } else {
         // Static redirect map for all other surfaces
+        const targetSurface = finalContexts[0]?.auth_surface || authSurface;
+        
+        // Ensure browser Cache knows about it
+        if (typeof window !== 'undefined') {
+            sessionStorage.setItem('church_os_active_domain', authDomain);
+            sessionStorage.setItem('church_os_active_surface', targetSurface);
+            sessionStorage.removeItem('church_os_domain_session');
+        }
+
         const redirectMap: Record<Exclude<AuthSurface, 'ministry'>, string> = {
           'console': '/super-admin',
           'pastor-hq': '/pastor-hq',
@@ -118,7 +176,7 @@ export const BaseAuth = ({
           'profile': '/member/profile',
           'onboarding': '/onboarding'
         };
-        router.push(`${BP}${redirectMap[authSurface as Exclude<AuthSurface, 'ministry'>]}`);
+        router.push(`${redirectMap[targetSurface as Exclude<AuthSurface, 'ministry'>]}`);
       }
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred");

@@ -12,7 +12,7 @@ import {
   BookOpen, Shield, Check
 } from "lucide-react";
 import { useRouter } from 'next/navigation';
-import { Badge } from "@/components/ui/badge";
+import { Badge as UiBadge } from "@/components/ui/badge";
 import { basePath as BP } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 

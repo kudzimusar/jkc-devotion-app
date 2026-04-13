@@ -73,7 +73,17 @@ export const AdminAuth = {
                 .select('*')
                 .eq('identity_id', sbSession.user.id);
 
-            if (error || !contexts || contexts.length === 0) return null;
+            if (error) {
+                console.error('[AdminAuth] Context fetch error:', error);
+                return null;
+            }
+
+            if (!contexts || contexts.length === 0) {
+                console.warn('[AdminAuth] No auth contexts found for user:', sbSession.user.id);
+                // Don't immediately return null - this could be a transient state
+                // Return a minimal session to allow access to login pages
+                return null;
+            }
 
             // If a domain is required, filter for it
             let activeContext = contexts[0];
@@ -144,13 +154,20 @@ export const AdminAuth = {
 
     // ── Logout ──
     async logout() {
+        let redirectPath = '/login/';
         if (typeof window !== 'undefined') {
+            const cachedDomain = sessionStorage.getItem(DOMAIN_CACHE_KEY);
+            if (cachedDomain === 'corporate') redirectPath = '/corporate/login/';
+            if (cachedDomain === 'onboarding') redirectPath = '/onboarding/login/';
+            if (cachedDomain === 'member') redirectPath = '/member/login/';
+            
             sessionStorage.removeItem(SESSION_CACHE_KEY);
             sessionStorage.removeItem(DOMAIN_CACHE_KEY);
+            sessionStorage.removeItem(SURFACE_CACHE_KEY);
             clearOrgCache();
         }
         await supabase.auth.signOut();
-        window.location.href = `${BP}/`;
+        window.location.href = `${BP}${redirectPath}`;
     },
 
     // ── Permission check: does role meet or exceed required clearance ──

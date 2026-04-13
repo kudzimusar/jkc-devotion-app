@@ -2,7 +2,7 @@
 # Read this before doing anything. Do not explore the codebase unless asked.
 
 ## What this project is
-Multi-tenant church management SaaS. Primary client: Japan Kingdom Church Tokyo (JKC).
+**Church OS**: An enterprise-grade, multi-tenant church management SaaS designed for the global church ecosystem. This platform is owned and built by **Shadreck Kudzanai Musarurwa**, CEO of **Church OS PVT LTD**.
 Static export to GitHub Pages. Next.js + Supabase + Gemini AI.
 
 ## Critical architecture rules
@@ -16,12 +16,22 @@ Static export to GitHub Pages. Next.js + Supabase + Gemini AI.
 ## JKC org ID
 fa547adf-f820-412f-9458-d6bade11517d
 
+## Documentation Integrity Rule (RELIGIOUS)
+- **Living Document Policy**: Every new feature, strategic improvement, or architectural change MUST be documented in `PROJECT_CONTEXT.md` before the task is marked as complete.
+- **Purpose**: This file is the source of truth for marketing documentation, investor appraisal, and architectural alignment. Failure to document = Task Incomplete.
+- **Skills & Rules**: Also update the skills table and hardcoded rules in `PROJECT_CONTEXT.md` to reflect new capabilities.
+
 ## What is currently working (confirmed production)
 - ChurchGPT live at /jkc-devotion-app/churchgpt/ (gemini-2.5-flash via Edge Function)
-- Stripe checkout Edge Function deployed (needs STRIPE_SECRET_KEY secret set)
-- Gemini sermon transcription in ai-worker Edge Function
-- Settings brand save writes to organizations table
-- Pastor HQ finance chart pulls from vw_financial_momentum
+- Stripe checkout Edge Function deployed (supports SaaS Billing and Member Giving)
+- Gemini sermon transcription & AI-worker (transcripts, summaries, key points)
+- Watch Library with retention analytics (trackEvent every 30s)
+- Spiritual Response System (Salvation, Prayer, Testimony, Membership)
+- Member Journey & Milestone Sync (Master `profiles` synchronization)
+- Junior Church (Guardian-child links & check-in flow)
+- 12-Model PIL Engine (health sweeps, disengagement risk, geo-expansion)
+- 5-Step Premium Onboarding (Theological DNA capture)
+- COCE Engine (Brevo-integrated campaign dispatch)
 
 ## Open issues (priority order)
 1. ChurchGPT identity hardening — must not capitulate when user dislikes Christianity

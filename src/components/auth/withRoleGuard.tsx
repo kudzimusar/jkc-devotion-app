@@ -52,7 +52,7 @@ export function withRoleGuard<T extends object>(
                     } else if (session.role === 'ministry_leader' || session.role === 'ministry_lead') {
                         router.replace("/shepherd/dashboard/");
                     } else {
-                        router.replace("/");
+                        router.replace("/auth/context-selector");
                     }
                     return;
                 }
@@ -69,7 +69,9 @@ export function withRoleGuard<T extends object>(
                         if (!currentPath.startsWith('/')) currentPath = '/' + currentPath;
 
                         if (!currentPath.includes('/settings')) {
-                           router.replace("/shepherd/dashboard/settings?mfa_required=true");
+                            // Dynamically push to the appropriate layout boundary to avoid layout stripping!
+                            const isPastorHQPath = currentPath.startsWith('/pastor-hq');
+                            router.replace(isPastorHQPath ? "/pastor-hq/settings?mfa_required=true" : "/shepherd/dashboard/settings?mfa_required=true");
                            return;
                         }
                     }

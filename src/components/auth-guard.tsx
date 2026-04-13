@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { AdminAuth } from "@/lib/admin-auth";
+import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
 
 /**
@@ -34,7 +35,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         async function checkDomainIsolation() {
             // Determine required domain based on URL
             let requiredDomain: 'corporate' | 'tenant' | 'onboarding' | 'member' | null = null;
-            
+
             if (pathname.startsWith("/super-admin") || pathname.startsWith("/corporate")) {
                 requiredDomain = 'corporate';
             } else if (pathname.startsWith("/pastor-hq") || pathname.startsWith("/shepherd") || pathname.startsWith("/church") || pathname.startsWith("/ministry")) {
@@ -50,10 +51,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
                 return;
             }
 
-            const session = await AdminAuth.getSession(requiredDomain);
-            
-            if (!session && !isLogin) {
-                // Redirect to the SPECIFIC login for this domain
+            // Check if user is authenticated with Supabase at all
+            const { data: { session: sbSession } } = await supabase.auth.getSession();
+
+            // If no Supabase session and not on login page, redirect
+            if (!sbSession && !isLogin) {
                 const loginMap: Record<string, string> = {
                     'corporate': '/corporate/login',
                     'tenant': '/church/login',
@@ -61,6 +63,34 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
                     'member': '/member/login'
                 };
                 router.replace(loginMap[requiredDomain] || "/");
+                return;
+            }
+
+            // If on login page, allow it (no domain check needed)
+            if (isLogin) {
+                setLoading(false);
+                return;
+            }
+
+            // User is authenticated with Supabase, now check domain context
+            const session = await AdminAuth.getSession(requiredDomain);
+
+            if (!session) {
+                // Try without domain filter as fallback
+                const anySession = await AdminAuth.getSession();
+                if (!anySession) {
+                    // No session in any domain, redirect to login
+                    const loginMap: Record<string, string> = {
+                        'corporate': '/corporate/login',
+                        'tenant': '/church/login',
+                        'onboarding': '/onboarding/login',
+                        'member': '/member/login'
+                    };
+                    router.replace(loginMap[requiredDomain] || "/");
+                    return;
+                }
+                // Has session but wrong domain - redirect to context selector
+                router.replace("/auth/context-selector?domain=" + requiredDomain);
                 return;
             }
 
