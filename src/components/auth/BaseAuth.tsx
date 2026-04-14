@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Flame, Eye, EyeOff, Mail, Lock, AlertCircle, Loader2, ShieldCheck, Key, ArrowRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { basePath as BP } from "@/lib/utils";
+import { resolveSlugByOrgId } from "@/lib/org-resolver";
 
 export type AuthDomain = 'corporate' | 'onboarding' | 'tenant' | 'member';
 export type AuthSurface = 'console' | 'pastor-hq' | 'mission-control' | 'ministry' | 'profile' | 'onboarding';
@@ -34,6 +35,26 @@ export const BaseAuth = ({
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [contextHint, setContextHint] = useState<null | 'single' | 'multi'>(null);
+  const [hintLoading, setHintLoading] = useState(false);
+
+  const handleEmailBlur = async () => {
+    if (!email || !email.includes('@')) return;
+    setHintLoading(true);
+    try {
+      const { data } = await supabase.rpc('fn_preview_context_count', {
+        p_email: email,
+        p_domain: authDomain
+      });
+      if (data) {
+        setContextHint(data.has_multiple ? 'multi' : (data.count > 0 ? 'single' : null));
+      }
+    } catch {
+      // Silent fail — never block login
+    } finally {
+      setHintLoading(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,7 +153,7 @@ export const BaseAuth = ({
 
       // Handle multi-role context selection if needed
       if (finalContexts.length > 1) {
-        // Redirect to context selector
+        // Redirect to context selector — user has multiple offices/roles to choose from
         router.push(`/auth/context-selector?domain=${authDomain}&surface=${authSurface}`);
       } else if (authSurface === 'ministry') {
         // Dynamic lookup — ministry leads each have their own dashboard slug
@@ -167,16 +188,29 @@ export const BaseAuth = ({
             sessionStorage.setItem('church_os_active_domain', authDomain);
             sessionStorage.setItem('church_os_active_surface', targetSurface);
             sessionStorage.removeItem('church_os_domain_session');
+            // Mark as direct login entry — Pastor HQ skips 2MFA on direct access
+            if (targetSurface === 'pastor-hq') {
+                sessionStorage.setItem('church_os_phq_direct', '1');
+            } else {
+                sessionStorage.removeItem('church_os_phq_direct');
+            }
         }
 
-        const redirectMap: Record<Exclude<AuthSurface, 'ministry'>, string> = {
+        // For member profile surface, route to /{church_slug}/member/profile
+        if (targetSurface === 'profile') {
+          const orgId = finalContexts[0]?.org_id;
+          const churchSlug = orgId ? await resolveSlugByOrgId(orgId) : null;
+          router.push(churchSlug ? `/${churchSlug}/member/profile` : '/member/profile');
+          return;
+        }
+
+        const redirectMap: Record<Exclude<AuthSurface, 'ministry' | 'profile'>, string> = {
           'console': '/super-admin',
           'pastor-hq': '/pastor-hq',
           'mission-control': '/shepherd/dashboard',
-          'profile': '/member/profile',
           'onboarding': '/onboarding'
         };
-        router.push(`${redirectMap[targetSurface as Exclude<AuthSurface, 'ministry'>]}`);
+        router.push(`${redirectMap[targetSurface as Exclude<AuthSurface, 'ministry' | 'profile'>]}`);
       }
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred");
@@ -258,12 +292,24 @@ export const BaseAuth = ({
                 <input
                   type="email"
                   value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  onChange={e => { setEmail(e.target.value); setContextHint(null); }}
+                  onBlur={handleEmailBlur}
                   placeholder="name@church.org"
                   className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-violet-500/50 focus:bg-violet-500/10 transition-all font-medium"
                   required
                 />
               </div>
+              {hintLoading && (
+                <p className="text-[10px] font-bold text-white/20 ml-1 mt-1.5 animate-pulse">Resolving identity...</p>
+              )}
+              {!hintLoading && contextHint === 'multi' && (
+                <p className="text-[10px] font-bold text-violet-400/80 ml-1 mt-1.5">
+                  Multiple access contexts detected — you will be asked to choose a dashboard after login.
+                </p>
+              )}
+              {!hintLoading && contextHint === 'single' && (
+                <p className="text-[10px] font-bold text-emerald-400/60 ml-1 mt-1.5">Identity recognised.</p>
+              )}
             </div>
 
             {securityTier !== 'low-friction' && (
@@ -396,7 +442,7 @@ export const BaseAuthMember = () => (
     authDomain="member"
     authSurface="profile"
     intent="spiritual_engagement"
-    securityTier="low-friction"
+    securityTier="standard"
     title="Member Hub"
     subtitle="Access your spiritual journey and church profile."
   />
