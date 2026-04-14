@@ -2,10 +2,16 @@
 
 import { motion } from 'framer-motion';
 import { usePublicTheme } from './PublicThemeWrapper';
+import { useChurch } from '@/lib/church-context';
 
 export default function ServiceSchedule() {
+  const { org, slug } = useChurch();
   const { isDark } = usePublicTheme();
-  const schedules = [
+  
+  const isJKC = slug === 'jkc-devotion-app' || slug === 'jkc';
+  
+  type ScheduleItem = { label: string; time: string; note: string };
+  const schedules: ScheduleItem[] = (org?.service_schedule as ScheduleItem[] | undefined) ?? (isJKC ? [
     {
       label: "PRAYER SERVICE",
       time: "09:30 — 10:00",
@@ -16,7 +22,9 @@ export default function ServiceSchedule() {
       time: "10:30 — 12:30",
       note: "IN-PERSON & ONLINE"
     }
-  ];
+  ] : []);
+
+  const calendlyUrl = org?.calendly_url ?? (isJKC ? "https://calendly.com/visitjkc/service" : null);
 
   return (
     <div data-section="schedule" className="relative">
@@ -69,19 +77,25 @@ export default function ServiceSchedule() {
             ))}
           </div>
 
-          <div className="pt-8">
-            <a
-              href="https://calendly.com/visitjkc/service"
-              target="_blank"
-              className="inline-flex items-center gap-4 font-black px-12 py-6 rounded-full text-sm tracking-[0.2em] transition-all"
-              style={{
-                background: 'var(--jkc-gold)',
-                color: 'var(--jkc-navy)',
-                boxShadow: 'var(--shadow-md)'
-              }}
-            >
-              PLAN MY VISIT →
-            </a>
+          <div className="pt-8 text-center flex justify-center">
+            {calendlyUrl ? (
+              <a
+                href={calendlyUrl}
+                target="_blank"
+                className="inline-flex items-center gap-4 font-black px-12 py-6 rounded-full text-sm tracking-[0.2em] transition-all"
+                style={{
+                  background: 'var(--jkc-gold)',
+                  color: 'var(--jkc-navy)',
+                  boxShadow: 'var(--shadow-md)'
+                }}
+              >
+                PLAN MY VISIT →
+              </a>
+            ) : (
+              <p className="text-[10px] font-black tracking-widest uppercase opacity-30" style={{ color: 'var(--footer-muted)' }}>
+                Powered by Church OS
+              </p>
+            )}
           </div>
         </div>
       </section>

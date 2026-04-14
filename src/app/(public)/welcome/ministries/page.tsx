@@ -1,10 +1,9 @@
-
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { resolvePublicOrgId } from '@/lib/org-resolver';
+import { useChurch } from '@/lib/church-context';
 import { ChevronLeft, ArrowRight, Loader2 } from 'lucide-react';
 
 type Ministry = {
@@ -40,15 +39,20 @@ const MINISTRY_IMAGES: Record<string, string> = {
 export default function MinistriesListPage() {
   const [ministries, setMinistries] = useState<Ministry[]>([]);
   const [loading, setLoading] = useState(true);
+  const { org, isLoading: orgLoading } = useChurch();
 
   useEffect(() => {
     async function fetchMinistries() {
+      if (orgLoading) return;
+      if (!org?.id) {
+        setLoading(false);
+        return;
+      }
       try {
-        const orgId = await resolvePublicOrgId();
         const { data, error } = await supabase
           .from('vw_ministry_directory')
           .select('id, name, slug, description, category, is_active')
-          .eq('org_id', orgId)
+          .eq('org_id', org.id)
           .eq('is_active', true)
           .order('category');
 
@@ -61,7 +65,7 @@ export default function MinistriesListPage() {
       }
     }
     fetchMinistries();
-  }, []);
+  }, [org?.id, orgLoading]);
 
   return (
     <div className="min-h-screen pt-24 pb-24" style={{ background: 'var(--background)' }}>

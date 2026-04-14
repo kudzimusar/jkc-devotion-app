@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { resolvePublicOrgId } from '@/lib/org-resolver';
+import { useChurch } from '@/lib/church-context';
 import { basePath } from '@/lib/utils';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -46,6 +46,9 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 export default function KingdomConnectModal({ user }: { user?: any }) {
+  const { org, isLoading: orgLoading } = useChurch();
+  const currentOrgId = org?.id;
+
   const [isOpen, setIsOpen] = useState(false);
   const [resolvedOrgId, setResolvedOrgId] = useState<string | null>(null);
   const [source, setSource] = useState('web');
@@ -68,24 +71,22 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
     const via = params.get('via') || params.get('utm_source') || 'modal';
     setSource(via);
 
-    resolvePublicOrgId().then(id => {
-      setResolvedOrgId(id);
-      if (id) {
-        fetchPublicData(id);
-      }
-    });
+    if (currentOrgId) {
+      setResolvedOrgId(currentOrgId);
+      fetchPublicData(currentOrgId);
+    }
 
     // SECURITY/UX: Only show automatic pop-up once per session for all users
     if (pathname && pathname.includes('/connect')) return;
     const hasSeenModal = sessionStorage.getItem('kcc_modal_shown');
-    if (!hasSeenModal) {
+    if (!hasSeenModal && !orgLoading) {
       // 2 second delay
       const timer = setTimeout(() => {
         setIsOpen(true);
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [user, pathname]);
+  }, [user, pathname, currentOrgId, orgLoading]);
 
   // LISTEN FOR CUSTOM TRIGGER (e.g., from Guest Attendance buttons)
   useEffect(() => {

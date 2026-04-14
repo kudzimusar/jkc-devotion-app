@@ -141,10 +141,7 @@ export default function DashboardClient() {
         // 5. Fetch Recent Audit Logs
         const { data: logs } = await supabase
           .from('admin_audit_logs')
-          .select(`
-            *,
-            profiles:admin_id (name, email)
-          `)
+          .select('*')
           .order('created_at', { ascending: false })
           .limit(5);
 
@@ -366,7 +363,7 @@ export default function DashboardClient() {
                         <p className="text-sm font-medium text-white">{log.action?.replace(/_/g, ' ').toUpperCase()}</p>
                         <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">{new Date(log.created_at).toLocaleTimeString()}</span>
                       </div>
-                      <p className="text-xs text-slate-400 mb-2">Performed by {log.profiles?.email}</p>
+                      <p className="text-xs text-slate-400 mb-2">Performed by {log.admin_id || 'System'}</p>
                       <div className="flex items-center gap-2">
                          <span className={cn(
                            "px-2 py-0.5 rounded-full text-[10px] font-bold border",

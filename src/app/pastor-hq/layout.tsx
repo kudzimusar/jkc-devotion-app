@@ -94,6 +94,8 @@ export default function PastorHQLayout({ children }: { children: React.ReactNode
                                     if (typeof window !== 'undefined') {
                                         sessionStorage.setItem('church_os_active_surface', 'mission-control');
                                         sessionStorage.removeItem('church_os_domain_session');
+                                        // Do NOT clear church_os_phq_direct — the pastor remains authenticated
+                                        // for this session and must be able to return freely without re-doing 2MFA
                                     }
                                     router.push("/shepherd/dashboard/");
                                 }}

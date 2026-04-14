@@ -6,7 +6,7 @@ import { Youtube, Search, LucideIcon, FileText, Download, PlayCircle, Star, Book
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import TestimoniesSection from '@/components/public/TestimoniesSection';
-import { resolvePublicOrgId } from '@/lib/org-resolver';
+import { useChurch } from '@/lib/church-context';
 
 declare global {
   interface Window {
@@ -45,9 +45,10 @@ export default function WatchClient() {
   const [responseType, setResponseType] = useState<'salvation_decision' | 'prayer_request' | 'testimony' | 'membership_interest' | null>(null);
   const [responseMessage, setResponseMessage] = useState('');
   const [isSubmittingResponse, setIsSubmittingResponse] = useState(false);
-  const [orgId, setOrgId] = useState<string | null>(null);
+  const { org, isLoading: orgLoading } = useChurch();
+  const currentOrgId = org?.id;
   const playerRef = useRef<any>(null);
-  const watchTimerRef = useRef<any>(null);
+  const watchTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     // Load YouTube API
@@ -57,26 +58,16 @@ export default function WatchClient() {
       const firstScriptTag = document.getElementsByTagName('script')[0];
       firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
     }
-
-    const init = async () => {
-      const id = await resolvePublicOrgId();
-      if (!id) {
-        setLoading(false);
-        return;
-      }
-      setOrgId(id);
-    };
-    init();
   }, []);
 
   useEffect(() => {
-    if (!orgId) return;
+    if (!currentOrgId) return;
 
     const fetchSermons = async () => {
       const { data } = await supabase
         .from('public_sermons')
         .select('*, assets:media_assets(*)')
-        .eq('org_id', orgId)
+        .eq('org_id', currentOrgId)
         .eq('status', 'published')
         .order('date', { ascending: false });
 
@@ -90,7 +81,7 @@ export default function WatchClient() {
       const { data } = await supabase
         .from('live_streams')
         .select('*')
-        .eq('org_id', orgId)
+        .eq('org_id', currentOrgId)
         .eq('status', 'live')
         .maybeSingle();
 
@@ -104,7 +95,7 @@ export default function WatchClient() {
         clearInterval(interval);
         if (watchTimerRef.current) clearInterval(watchTimerRef.current);
     };
-  }, [orgId]);
+  }, [currentOrgId]);
 
   const initPlayer = (videoId: string, sermonId: string) => {
     if (!window.YT || !window.YT.Player) return;
@@ -148,10 +139,10 @@ export default function WatchClient() {
   };
 
   const trackEvent = async (sermonId: string, event: string, watchTime: number = 0) => {
-    if (!orgId) return;
+    if (!currentOrgId) return;
 
     const { error } = await supabase.from('member_analytics').insert({
-      org_id: orgId,
+      org_id: currentOrgId,
       sermon_id: sermonId,
       event_type: event,
       watch_time: watchTime,
@@ -174,14 +165,14 @@ export default function WatchClient() {
         return;
     }
 
-    if (!orgId) return;
+    if (!currentOrgId) return;
 
     if (type === 'like' ? isLiked : isBookmarked) {
         await supabase.from('sermon_interactions').delete().eq('sermon_id', currentSermon.id).eq('user_id', user.id).eq('type', type);
         type === 'like' ? setIsLiked(false) : setIsBookmarked(false);
     } else {
         await supabase.from('sermon_interactions').insert({
-            org_id: orgId,
+            org_id: currentOrgId,
             sermon_id: currentSermon.id,
             user_id: user.id,
             type: type
@@ -200,10 +191,10 @@ export default function WatchClient() {
     }
 
     setIsSubmittingResponse(true);
-    if (!orgId) return;
+    if (!currentOrgId) return;
 
     const { error } = await supabase.from('spiritual_responses').insert({
-        org_id: orgId,
+        org_id: currentOrgId,
         sermon_id: currentSermon.id,
         user_id: user.id,
         type: responseType,
@@ -269,7 +260,7 @@ export default function WatchClient() {
       (s.transcript_text?.toLowerCase() || '').includes(search.toLowerCase())
     );
 
-   if (!loading && !orgId) {
+   if (!orgLoading && !currentOrgId) {
      return (
        <div className="pt-32 min-h-screen flex items-center justify-center text-center px-6">
          <div className="space-y-6">

@@ -57,24 +57,32 @@ export function withRoleGuard<T extends object>(
                     return;
                 }
 
-                // MFA ENFORCEMENT for Leadership
+                // MFA ENFORCEMENT — Pastor HQ entry only.
+                // Mission Control is freely accessible to pastor/owner/super_admin without aal2.
+                // aal2 is only required when entering Pastor HQ from Mission Control (elevation).
                 if (['pastor', 'super_admin', 'owner'].includes(session.role)) {
-                    const { data: mfaData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-                    if (mfaData?.currentLevel !== 'aal2') {
-                        
-                        let currentPath = pathname;
-                        while(currentPath.startsWith(BP)) {
-                            currentPath = currentPath.substring(BP.length);
-                        }
-                        if (!currentPath.startsWith('/')) currentPath = '/' + currentPath;
+                    let currentPath = pathname;
+                    while(currentPath.startsWith(BP)) {
+                        currentPath = currentPath.substring(BP.length);
+                    }
+                    if (!currentPath.startsWith('/')) currentPath = '/' + currentPath;
 
-                        if (!currentPath.includes('/settings')) {
-                            // Dynamically push to the appropriate layout boundary to avoid layout stripping!
-                            const isPastorHQPath = currentPath.startsWith('/pastor-hq');
-                            router.replace(isPastorHQPath ? "/pastor-hq/settings?mfa_required=true" : "/shepherd/dashboard/settings?mfa_required=true");
-                           return;
+                    const isPastorHQPath = currentPath.startsWith('/pastor-hq');
+
+                    if (isPastorHQPath) {
+                        // Only check aal2 for Pastor HQ paths — and skip if this is a direct entry
+                        const isDirect = typeof window !== 'undefined' && sessionStorage.getItem('church_os_phq_direct') === '1';
+                        if (!isDirect) {
+                            const { data: mfaData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+                            if (mfaData?.currentLevel !== 'aal2') {
+                                if (!currentPath.includes('/settings')) {
+                                    router.replace("/pastor-hq/settings?mfa_required=true");
+                                    return;
+                                }
+                            }
                         }
                     }
+                    // Mission Control paths: no aal2 check — full tab access for high-authority roles
                 }
 
                 setStatus({ loading: false, authorized: true });

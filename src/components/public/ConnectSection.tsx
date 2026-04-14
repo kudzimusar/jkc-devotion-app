@@ -17,7 +17,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePublicTheme } from './PublicThemeWrapper';
 import { Sparkles, Phone, Mail, HelpCircle, Heart, Languages, Share2, QrCode } from 'lucide-react';
-import { resolvePublicOrgId } from '@/lib/org-resolver';
+import { useChurch } from '@/lib/church-context';
 import { sendConnectEmail } from '@/app/(public)/connect/actions';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -29,19 +29,20 @@ export default function ConnectSection() {
   const [isViaQr, setIsViaQr] = useState(false);
   const [resolvedOrgId, setResolvedOrgId] = useState<string>('');
 
+  const { org, isLoading: orgLoading } = useChurch();
+  const currentOrgId = org?.id;
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('via') === 'qr' || params.get('utm_source') === 'qr') {
       setIsViaQr(true);
     }
     
-    resolvePublicOrgId().then(id => {
-      if (id) {
-        setResolvedOrgId(id);
-        setFormData(prev => ({ ...prev, org_id: id }));
-      }
-    });
-  }, []);
+    if (currentOrgId) {
+      setResolvedOrgId(currentOrgId);
+      setFormData(prev => ({ ...prev, org_id: currentOrgId }));
+    }
+  }, [currentOrgId]);
 
   const { values: formData, handleChange: handleFormChange, setValues: setFormData, clear: clearForm } = useStickyForm({
     first_name: '',

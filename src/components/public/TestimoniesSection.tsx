@@ -2,21 +2,27 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { resolvePublicOrgId } from '@/lib/org-resolver';
+import { useChurch } from '@/lib/church-context';
 import { Loader2 } from 'lucide-react';
 
 export default function TestimoniesSection() {
   const [testimonies, setTestimonies] = useState<any[]>([]);
+  const { org, slug, isLoading: orgLoading } = useChurch();
+  const isJKC = !slug || slug === 'jkc-devotion-app';
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchTestimonies() {
+      if (orgLoading) return;
+      if (!org?.id) {
+        setLoading(false);
+        return;
+      }
       try {
-        const orgId = await resolvePublicOrgId();
         const { data } = await supabase
           .from('public_testimonies')
           .select('*')
-          .eq('org_id', orgId)
+          .eq('org_id', org.id)
           .order('created_at', { ascending: false });
 
         if (data) setTestimonies(data);
@@ -27,7 +33,7 @@ export default function TestimoniesSection() {
       }
     }
     fetchTestimonies();
-  }, []);
+  }, [org?.id, orgLoading]);
 
   if (loading) return (
     <div className="py-20 flex justify-center items-center">
@@ -112,22 +118,24 @@ export default function TestimoniesSection() {
           ))}
         </div>
 
-        {/* WATCH MORE button */}
-        <div className="max-w-screen-xl mx-auto px-6 pb-16 flex justify-center">
-          <a
-            href="https://www.youtube.com/@JapanKingdomChurch"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 px-12 py-5 rounded-full text-sm font-black tracking-[0.2em] uppercase transition-all hover:scale-105 active:scale-95"
-            style={{
-              background: 'var(--jkc-navy)',
-              color: 'white',
-              boxShadow: '0 8px 32px rgba(27,58,107,0.4)'
-            }}
-          >
-            WATCH MORE →
-          </a>
-        </div>
+        {/* WATCH MORE button — JKC only (other orgs don't have a YouTube channel configured) */}
+        {isJKC && (
+          <div className="max-w-screen-xl mx-auto px-6 pb-16 flex justify-center">
+            <a
+              href="https://www.youtube.com/@JapanKingdomChurch"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-3 px-12 py-5 rounded-full text-sm font-black tracking-[0.2em] uppercase transition-all hover:scale-105 active:scale-95"
+              style={{
+                background: 'var(--jkc-navy)',
+                color: 'white',
+                boxShadow: '0 8px 32px rgba(27,58,107,0.4)'
+              }}
+            >
+              WATCH MORE →
+            </a>
+          </div>
+        )}
       </section>
 
       {/* Wave bottom — navy flows into white */}

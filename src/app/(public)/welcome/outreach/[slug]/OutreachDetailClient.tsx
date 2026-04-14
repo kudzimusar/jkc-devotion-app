@@ -65,10 +65,10 @@ Volunteers come together to create care packs and deliver them to the homeless. 
     name: 'The Food Pantry',
     tagline: 'Providing nourishment to families in need',
     description: 'The Food Pantry Ministry is dedicated to combating hunger in Tokyo by providing essential nourishment to single mothers and low-income families.',
-    fullDescription: `At Japan Kingdom Church, our food pantry is a vital resource for single mothers and their children, foreigners in need of food assistance, and the homeless. We ensure our pantry is stocked with relevant and nutritious food items to meet the diverse needs of our community.
+    fullDescription: `In our community, the food pantry is a vital resource for single mothers and their children, foreigners in need of food assistance, and the homeless. We ensure our pantry is stocked with relevant and nutritious food items to meet the diverse needs of our community.
 
 We welcome volunteers to support our mission by donating to the food pantry or helping with food deliveries. Your contributions and time make a significant difference in the lives of those we serve. Join us in this meaningful outreach to provide sustenance and hope to those in need.`,
-    location: 'Japan Kingdom Church, 〒196-0015 Akishima, Tokyo',
+    location: 'Church Location (Refer to Visit Page)',
     frequency: 'When church doors are open',
     image: '/jkc-devotion-app/images/ministry_foodpantry_card.png',
     color: '#F59E0B',

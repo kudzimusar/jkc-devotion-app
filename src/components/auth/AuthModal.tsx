@@ -19,7 +19,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-import { resolvePublicOrgId } from '@/lib/org-resolver';
+import { useChurch } from '@/lib/church-context';
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -41,22 +41,25 @@ export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: A
 
     const [organizations, setOrganizations] = useState<{ id: string, name: string }[]>([]);
 
+    const { org, isLoading: orgLoading } = useChurch();
+    const currentOrgId = org?.id;
+
     useEffect(() => {
         const fetchOrgs = async () => {
             const { data } = await supabase
                 .from('organizations')
                 .select('id, name')
-                .eq('subscription_status', 'active');
+                .eq('status', 'active');
             if (data) setOrganizations(data);
-
-            // Resolve current org for default selection
-            const resolvedOrgId = await resolvePublicOrgId();
-            if (resolvedOrgId && !values.org_id) {
-                handleStickyChange("org_id", resolvedOrgId);
-            }
         };
         fetchOrgs();
-    }, [values.org_id]);
+    }, []);
+
+    useEffect(() => {
+        if (currentOrgId && !values.org_id) {
+            handleStickyChange("org_id", currentOrgId);
+        }
+    }, [currentOrgId, values.org_id]);
 
     const email = values.email;
     const setEmail = (val: string) => handleStickyChange("email", val);

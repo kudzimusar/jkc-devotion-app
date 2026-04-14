@@ -6,6 +6,11 @@
  * trigger a new GitHub Actions build to include their slug.
  */
 import { supabase } from "@/lib/supabase";
+import { ChurchProvider } from "@/lib/church-context";
+import PublicNav from '@/components/public/PublicNav';
+import PublicFooter from '@/components/public/PublicFooter';
+import { PublicThemeWrapper } from '@/components/public/PublicThemeWrapper';
+import { ConnectModalProvider } from '@/components/public/ConnectModalProvider';
 
 export async function generateStaticParams() {
   const { data, error } = await supabase
@@ -35,5 +40,15 @@ export default function ChurchSlugLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <ChurchProvider>
+      <PublicThemeWrapper>
+        <ConnectModalProvider>
+          <PublicNav />
+          <main className="flex-1">{children}</main>
+          <PublicFooter />
+        </ConnectModalProvider>
+      </PublicThemeWrapper>
+    </ChurchProvider>
+  );
 }

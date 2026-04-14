@@ -28,7 +28,16 @@ export async function getDevotionForDate(dateStr: string): Promise<Devotion | nu
     }
 
     // Fallback to local JSON
-    const local = (localDevotions as Devotion[]).find(d => d.date === dateStr);
+    const devotionsArray = Array.isArray(localDevotions) 
+        ? localDevotions 
+        : (localDevotions as any).default || [];
+        
+    const local = (devotionsArray as Devotion[]).find(d => d.date === dateStr);
+    
+    if (!local) {
+        console.warn(`Devotion not found for date: ${dateStr} in either Supabase or local data.`);
+    }
+    
     return local || null;
 }
 

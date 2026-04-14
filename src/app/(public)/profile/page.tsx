@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Auth } from "@/lib/auth";
 import { supabase, ExtendedProfileService, AnalyticsService } from "@/lib/supabase";
+import { useChurch } from "@/lib/church-context";
 import { SoapJournal } from "@/lib/soap-journal";
 import {
     User as UserIcon, Users, Heart, Trophy, Shield,
@@ -79,6 +80,7 @@ const EXPERIENCE_YEARS = [1, 2, 3, 5, 8, 10, 15, 20];
 const SKILL_LEVELS = ['Beginner', 'Intermediate', 'Expert', 'Professional'];
 
 export default function ProfileHub() {
+    const { slug } = useChurch();
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('identity');
@@ -708,7 +710,6 @@ export default function ProfileHub() {
     const handleLogout = async () => {
         try {
             await Auth.logout();
-            window.location.href = BP || '/';
         } catch (error) {
             toast.error("Error logging out.");
         }
@@ -748,7 +749,7 @@ export default function ProfileHub() {
                         <div className="pt-8 pb-4 px-4 text-xs font-black uppercase tracking-widest text-[var(--jkc-gold)] opacity-80 border-t border-border mt-6">
                             shortcuts
                         </div>
-                        <Link href="/welcome/devotion" className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground hover:bg-muted font-black text-sm transition-all">
+                        <Link href={slug ? `/${slug}/member/devotions` : '/welcome/devotion'} className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground hover:bg-muted font-black text-sm transition-all">
                             <BookOpen className="w-4 h-4 text-[var(--jkc-gold)]" /> Daily Devotion
                         </Link>
                         
@@ -840,7 +841,7 @@ export default function ProfileHub() {
                                             variant="ghost"
                                             className="w-full h-12 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted"
                                         >
-                                            <Link href="/welcome/devotion">
+                                            <Link href={slug ? `/${slug}/member/devotions` : '/welcome/devotion'}>
                                                 <BookOpen className="w-4 h-4 mr-2" />
                                                 Return to Devotion
                                             </Link>

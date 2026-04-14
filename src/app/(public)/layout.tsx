@@ -2,6 +2,7 @@ import PublicNav from '@/components/public/PublicNav';
 import PublicFooter from '@/components/public/PublicFooter';
 import { PublicThemeWrapper } from '@/components/public/PublicThemeWrapper';
 import { ConnectModalProvider } from '@/components/public/ConnectModalProvider';
+import { ChurchProvider } from '@/lib/church-context';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -21,12 +22,14 @@ export default function PublicLayout({
   children: React.ReactNode
 }) {
   return (
-    <PublicThemeWrapper>
-      <ConnectModalProvider>
-        <PublicNav />
-        <main className="flex-1">{children}</main>
-        <PublicFooter />
-      </ConnectModalProvider>
-    </PublicThemeWrapper>
+    <ChurchProvider>
+      <PublicThemeWrapper>
+        <ConnectModalProvider>
+          <PublicNav />
+          <main className="flex-1">{children}</main>
+          <PublicFooter />
+        </ConnectModalProvider>
+      </PublicThemeWrapper>
+    </ChurchProvider>
   );
 }

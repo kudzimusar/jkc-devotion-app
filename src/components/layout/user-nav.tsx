@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { AdminAuth } from "@/lib/admin-auth";
 import { LogOut, User, Settings, Bell } from "lucide-react";
 import {
   DropdownMenu,
@@ -35,8 +36,7 @@ export function UserNav() {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/login");
+    await AdminAuth.logout();
   };
 
   const initials = profile?.name

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { resolvePublicOrgId } from '@/lib/org-resolver';
+import { useChurch } from '@/lib/church-context';
 import { basePath } from '@/lib/utils';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -56,6 +56,9 @@ export default function KingdomConnectPage() {
   const [events, setEvents] = useState<any[]>([]);
   const [groups, setGroups] = useState<any[]>([]);
 
+  const { org, isLoading: orgLoading } = useChurch();
+  const currentOrgId = org?.id;
+
   // Navigation / URLs
   const connectUrl = typeof window !== 'undefined' ? `${window.location.origin}${basePath}/connect` : '';
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(connectUrl + '?via=qr')}&color=1B3A6B`;
@@ -67,17 +70,15 @@ export default function KingdomConnectPage() {
     setSource(via);
     setMounted(true);
 
-    resolvePublicOrgId().then(id => {
-      setResolvedOrgId(id);
-      if (id) {
-        fetchPublicData(id);
-      }
-    });
+    if (currentOrgId) {
+      setResolvedOrgId(currentOrgId);
+      fetchPublicData(currentOrgId);
+    }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
-  }, []);
+  }, [currentOrgId]);
 
   async function fetchPublicData(orgId: string) {
     try {
@@ -110,8 +111,8 @@ export default function KingdomConnectPage() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Kingdom Connect Card',
-          text: 'Connect with Japan Kingdom Church',
+          title: `${org?.name || 'Kingdom'} Connect Card`,
+          text: `Connect with ${org?.name || 'our church'}`,
           url: connectUrl
         });
       } catch (err: any) {

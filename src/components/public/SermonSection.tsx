@@ -1,21 +1,23 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { format } from 'date-fns';
 import { Calendar, Tag, Users } from 'lucide-react';
-import { resolvePublicOrgId } from '@/lib/org-resolver';
+import { useChurch } from '@/lib/church-context';
 
 export default function SermonSection() {
   const [sermon, setSermon] = useState<any>(null);
+  const { org, isLoading: orgLoading } = useChurch();
 
   useEffect(() => {
     const fetchSermon = async () => {
-      const orgId = await resolvePublicOrgId();
-      if (!orgId) return;
+      if (orgLoading || !org?.id) return;
 
       const { data } = await supabase
         .from('public_sermons')
         .select('*')
-        .eq('org_id', orgId)
+        .eq('org_id', org.id)
         .eq('status', 'published')
         .order('is_featured', { ascending: false })
         .order('date', { ascending: false })
@@ -25,7 +27,7 @@ export default function SermonSection() {
       if (data) setSermon(data);
     };
     fetchSermon();
-  }, []);
+  }, [org?.id, orgLoading]);
 
   if (!sermon) return null;
 

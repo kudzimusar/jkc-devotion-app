@@ -105,7 +105,7 @@ export function Sidebar({ className }: SidebarProps) {
 
       <div className="p-6 border-t border-slate-800/50">
         <Link
-          href="/settings"
+          href="/corporate/settings"
           className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all group"
         >
           <Settings className="w-4 h-4 group-hover:rotate-45 transition-transform" />

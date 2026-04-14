@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ChevronLeft, Loader2, Send, Users, MapPin, Calendar, Globe, BookOpen, MessagesSquare } from 'lucide-react';
-import { resolvePublicOrgId } from '@/lib/org-resolver';
+import { useChurch } from '@/lib/church-context';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
@@ -80,13 +80,18 @@ export default function MinistryClient({ slug }: { slug: string }) {
   });
 
   const [groups, setGroups] = useState<any[]>([]);
+  const { org, isLoading: orgLoading } = useChurch();
+  const currentOrgId = org?.id;
 
   useEffect(() => {
     async function fetchMinistry() {
+      if (orgLoading || !currentOrgId) return;
+
       const { data } = await supabase
         .from('ministries')
         .select('*')
         .eq('slug', slug)
+        .eq('org_id', currentOrgId)
         .single();
       
       if (data) {
@@ -95,6 +100,7 @@ export default function MinistryClient({ slug }: { slug: string }) {
             const { data: groupData } = await supabase
                 .from('bible_study_groups')
                 .select('*')
+                .eq('org_id', currentOrgId)
                 .eq('is_active', true)
                 .order('name');
             setGroups(groupData || []);
@@ -106,17 +112,22 @@ export default function MinistryClient({ slug }: { slug: string }) {
       setLoading(false);
     }
     fetchMinistry();
-  }, [slug]);
+  }, [slug, currentOrgId, orgLoading]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
 
-    const orgId = await resolvePublicOrgId();
+    if (!currentOrgId) {
+      toast.error('Organization context missing');
+      setSubmitting(false);
+      return;
+    }
+
     const { error } = await supabase
       .from('public_inquiries')
       .insert([{
-        org_id: orgId,
+        org_id: currentOrgId,
         first_name: formData.name,
         last_name: '',
         email: formData.email,

@@ -49,14 +49,44 @@ export async function resolvePublicOrgId(): Promise<string | null> {
 
   try {
     if (isLocal) {
-      const { data, error } = await supabase
-        .from('organizations')
-        .select('id')
-        .eq('id', JKC_ORG_ID)
-        .single();
-      
-      if (error) console.error('[ORG RESOLVER] Local resolve failed:', error.message);
-      orgId = data?.id ?? null;
+      // Step 2a: Try to resolve from the church slug in sessionStorage (set by ChurchProvider)
+      const slugFromSession = typeof window !== 'undefined' ? sessionStorage.getItem('church_os_church_slug') : null;
+      if (slugFromSession) {
+        const { data } = await supabase
+          .from('organizations')
+          .select('id')
+          .eq('church_slug', slugFromSession)
+          .eq('status', 'active')
+          .single();
+        orgId = data?.id ?? null;
+      }
+
+      // Step 2b: Try to extract slug from URL path (e.g. /grace-fellowship/...)
+      if (!orgId && typeof window !== 'undefined') {
+        const pathSegments = window.location.pathname.replace(/^\//, '').split('/');
+        const firstSegment = pathSegments[0];
+        if (firstSegment && firstSegment !== 'jkc-devotion-app' && firstSegment !== 'welcome' && firstSegment !== 'member') {
+          const { data } = await supabase
+            .from('organizations')
+            .select('id')
+            .eq('church_slug', firstSegment)
+            .eq('status', 'active')
+            .single();
+          orgId = data?.id ?? null;
+        }
+      }
+
+      // Step 2c: Default to JKC for dev/localhost with no slug context
+      if (!orgId) {
+        const { data, error } = await supabase
+          .from('organizations')
+          .select('id')
+          .eq('id', JKC_ORG_ID)
+          .single();
+
+        if (error) console.error('[ORG RESOLVER] Local resolve failed:', error.message);
+        orgId = data?.id ?? null;
+      }
     } else {
       const { data, error } = await supabase
         .from('organizations')

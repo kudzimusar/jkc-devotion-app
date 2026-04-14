@@ -308,5 +308,316 @@
     "scripture": "Matthew 21:23–24:51",
     "declaration": "Thank you Jesus for your guidance and warning to prepare us.",
     "week_theme": "HolyWeek"
+  },
+  {
+    "id": 32,
+    "date": "2026-04-01",
+    "week": 5,
+    "theme": "Easter Holy Week (Second half)",
+    "title": "I need to be ready to meet Jesus.",
+    "scripture": "Matthew 25:1~13, 31~46, 26:1-16",
+    "declaration": "I need to be ready to meet Jesus.",
+    "week_theme": "HolyWeek"
+  },
+  {
+    "id": 33,
+    "date": "2026-04-02",
+    "week": 5,
+    "theme": "Easter Holy Week (Second half)",
+    "title": "I personally receive the sacrifice of Jesus into my life.",
+    "scripture": "Matthew 26:17-75",
+    "declaration": "I personally receive the sacrifice of Jesus into my life.",
+    "week_theme": "HolyWeek"
+  },
+  {
+    "id": 34,
+    "date": "2026-04-03",
+    "week": 5,
+    "theme": "Easter Holy Week (Second half)",
+    "title": "By the death of Jesus, I am able to come to God the Father directly.",
+    "scripture": "Matthew 27:1-61",
+    "declaration": "By the death of Jesus, I am able to come to God the Father directly.",
+    "week_theme": "HolyWeek"
+  },
+  {
+    "id": 35,
+    "date": "2026-04-04",
+    "week": 5,
+    "theme": "Easter Holy Week (Second half)",
+    "title": "Nothing could stop the resurrection of Jesus.",
+    "scripture": "Matthew 27:62-66",
+    "declaration": "Nothing could stop the resurrection of Jesus.",
+    "week_theme": "HolyWeek"
+  },
+  {
+    "id": 36,
+    "date": "2026-04-05",
+    "week": 6,
+    "theme": "Understanding the heart of God for the lost souls",
+    "title": "Jesus is risen! Now I am sent by Jesus to go and share the gospel!",
+    "scripture": "Matthew 28:1-20",
+    "declaration": "Jesus is risen! Now I am sent by Jesus to go and share the gospel!",
+    "week_theme": "HeartForLost"
+  },
+  {
+    "id": 37,
+    "date": "2026-04-06",
+    "week": 6,
+    "theme": "Understanding the heart of God for the lost souls",
+    "title": "Resurrection of Jesus brought salvation from my sin and death.",
+    "scripture": "John 11:25,26",
+    "declaration": "Resurrection of Jesus brought salvation from my sin and death.",
+    "week_theme": "HeartForLost"
+  },
+  {
+    "id": 38,
+    "date": "2026-04-07",
+    "week": 6,
+    "theme": "Understanding the heart of God for the lost souls",
+    "title": "Thank you Jesus for dying for us all while we were yet sinners.",
+    "scripture": "Romans 5:1-21",
+    "declaration": "Thank you Jesus for dying for us all while we were yet sinners.",
+    "week_theme": "HeartForLost"
+  },
+  {
+    "id": 39,
+    "date": "2026-04-08",
+    "week": 6,
+    "theme": "Understanding the heart of God for the lost souls",
+    "title": "The Father's sacrifice to send His only Son Jesus was for me and for everyone.",
+    "scripture": "John 3:14-17",
+    "declaration": "The Father's sacrifice to send His only Son Jesus was for me and for everyone.",
+    "week_theme": "HeartForLost"
+  },
+  {
+    "id": 40,
+    "date": "2026-04-09",
+    "week": 6,
+    "theme": "Understanding the heart of God for the lost souls",
+    "title": "The Father's desire is for more souls to come to salvation through Jesus Christ.",
+    "scripture": "2 Peter 3:8,9",
+    "declaration": "The Father's desire is for more souls to come to salvation through Jesus Christ.",
+    "week_theme": "HeartForLost"
+  },
+  {
+    "id": 41,
+    "date": "2026-04-10",
+    "week": 6,
+    "theme": "Understanding the heart of God for the lost souls",
+    "title": "The compassion of Jesus gives chance to every one for salvation.",
+    "scripture": "Matthew 20:30-34, 24:14",
+    "declaration": "The compassion of Jesus gives chance to every one for salvation.",
+    "week_theme": "HeartForLost"
+  },
+  {
+    "id": 42,
+    "date": "2026-04-11",
+    "week": 6,
+    "theme": "Understanding the heart of God for the lost souls",
+    "title": "The repentance of sinners brings joy in heaven!",
+    "scripture": "Luke 15:8-10",
+    "declaration": "The repentance of sinners brings joy in heaven!",
+    "week_theme": "HeartForLost"
+  },
+  {
+    "id": 43,
+    "date": "2026-04-12",
+    "week": 7,
+    "theme": "The great commission to share the gospel with others",
+    "title": "I am chosen by God to bear fruit and that the fruit should remain.",
+    "scripture": "John 15:16-17",
+    "declaration": "I am chosen by God to bear fruit and that the fruit should remain.",
+    "week_theme": "GreatCommission"
+  },
+  {
+    "id": 44,
+    "date": "2026-04-13",
+    "week": 7,
+    "theme": "The great commission to share the gospel with others",
+    "title": "Help me Lord to sanctify you in my heart, and be ready to give an answer of my hope to every one that asks me.",
+    "scripture": "1 Peter 3:12-22",
+    "declaration": "Help me Lord to sanctify you in my heart, and be ready to give an answer of my hope to every one that asks me.",
+    "week_theme": "GreatCommission"
+  },
+  {
+    "id": 45,
+    "date": "2026-04-14",
+    "week": 7,
+    "theme": "The great commission to share the gospel with others",
+    "title": "I'll let my light shine that Jesus gave me and let others come to know you.",
+    "scripture": "Matthew 5:13-16",
+    "declaration": "I'll let my light shine that Jesus gave me and let others come to know you.",
+    "week_theme": "GreatCommission"
+  },
+  {
+    "id": 46,
+    "date": "2026-04-15",
+    "week": 7,
+    "theme": "The great commission to share the gospel with others",
+    "title": "I'm not ashamed of the gospel of God because their eternity life depends on it.",
+    "scripture": "Romans 1:15-17",
+    "declaration": "I'm not ashamed of the gospel of God because their eternity life depends on it.",
+    "week_theme": "GreatCommission"
+  },
+  {
+    "id": 47,
+    "date": "2026-04-16",
+    "week": 7,
+    "theme": "The great commission to share the gospel with others",
+    "title": "I can share the salvation message with others.",
+    "scripture": "Romans 10:8-17",
+    "declaration": "I can share the salvation message with others.",
+    "week_theme": "GreatCommission"
+  },
+  {
+    "id": 48,
+    "date": "2026-04-17",
+    "week": 7,
+    "theme": "The great commission to share the gospel with others",
+    "title": "No one can come to Jesus unless the Father draws them.",
+    "scripture": "John 6:44-47, 12:32",
+    "declaration": "No one can come to Jesus unless the Father draws them.",
+    "week_theme": "GreatCommission"
+  },
+  {
+    "id": 49,
+    "date": "2026-04-18",
+    "week": 7,
+    "theme": "The great commission to share the gospel with others",
+    "title": "I just need to share my experience with Jesus and the gospel with simplicity.",
+    "scripture": "1 Corinthians 1:17, 18",
+    "declaration": "I just need to share my experience with Jesus and the gospel with simplicity.",
+    "week_theme": "GreatCommission"
+  },
+  {
+    "id": 50,
+    "date": "2026-04-19",
+    "week": 8,
+    "theme": "Preparation of my heart for outreach",
+    "title": "Lord, I am willing to be a laborer to win souls in your harvest.",
+    "scripture": "Matthew 9:36-38",
+    "declaration": "Lord, I am willing to be a laborer to win souls in your harvest.",
+    "week_theme": "Preparation"
+  },
+  {
+    "id": 51,
+    "date": "2026-04-20",
+    "week": 8,
+    "theme": "Preparation of my heart for outreach",
+    "title": "I can share my own experience with Jesus and invite people to come and see Jesus for themselves.",
+    "scripture": "John 4:1-30",
+    "declaration": "I can share my own experience with Jesus and invite people to come and see Jesus for themselves.",
+    "week_theme": "Preparation"
+  },
+  {
+    "id": 52,
+    "date": "2026-04-21",
+    "week": 8,
+    "theme": "Preparation of my heart for outreach",
+    "title": "Send me as a reaper in the harvest of souls.",
+    "scripture": "John 4:31-38",
+    "declaration": "Send me as a reaper in the harvest of souls.",
+    "week_theme": "Preparation"
+  },
+  {
+    "id": 53,
+    "date": "2026-04-22",
+    "week": 8,
+    "theme": "Preparation of my heart for outreach",
+    "title": "Let my family and friends hear the word of Jesus themselves!",
+    "scripture": "John 4:39-42",
+    "declaration": "Let my family and friends hear the word of Jesus themselves!",
+    "week_theme": "Preparation"
+  },
+  {
+    "id": 54,
+    "date": "2026-04-23",
+    "week": 8,
+    "theme": "Preparation of my heart for outreach",
+    "title": "I have been given the ministry of reconciliation of souls to Christ.",
+    "scripture": "2 Corinthians 5:17-20",
+    "declaration": "I have been given the ministry of reconciliation of souls to Christ.",
+    "week_theme": "Preparation"
+  },
+  {
+    "id": 55,
+    "date": "2026-04-24",
+    "week": 8,
+    "theme": "Preparation of my heart for outreach",
+    "title": "Lord, I understand your commission. Help me to put my faith into action!",
+    "scripture": "James 2:14-18",
+    "declaration": "Lord, I understand your commission. Help me to put my faith into action!",
+    "week_theme": "Preparation"
+  },
+  {
+    "id": 56,
+    "date": "2026-04-25",
+    "week": 8,
+    "theme": "Preparation of my heart for outreach",
+    "title": "Let the light of the glorious gospel of Christ shine unto the people around me!",
+    "scripture": "2 Corinthians 4:1-7",
+    "declaration": "Let the light of the glorious gospel of Christ shine unto the people around me!",
+    "week_theme": "Preparation"
+  },
+  {
+    "id": 57,
+    "date": "2026-04-26",
+    "week": 9,
+    "theme": "Let the Holy Spirit lead us to share the gospel and the love of Jesus",
+    "title": "Fill me with the Holy Ghost to receive power to witness.",
+    "scripture": "Acts 1:4-8",
+    "declaration": "Fill me with the Holy Ghost to receive power to witness.",
+    "week_theme": "HolySpiritLead"
+  },
+  {
+    "id": 58,
+    "date": "2026-04-27",
+    "week": 9,
+    "theme": "Let the Holy Spirit lead us to share the gospel and the love of Jesus",
+    "title": "Grant unto me your servant the boldness to speak your word!",
+    "scripture": "Acts 4:12, 13, 29-33",
+    "declaration": "Grant unto me your servant the boldness to speak your word!",
+    "week_theme": "HolySpiritLead"
+  },
+  {
+    "id": 59,
+    "date": "2026-04-28",
+    "week": 9,
+    "theme": "Let the Holy Spirit lead us to share the gospel and the love of Jesus",
+    "title": "Help me to open my mouth boldly by the Holy Spirit.",
+    "scripture": "Ephesians 6:19-20, Isaiah 61:1-3",
+    "declaration": "Help me to open my mouth boldly by the Holy Spirit.",
+    "week_theme": "HolySpiritLead"
+  },
+  {
+    "id": 60,
+    "date": "2026-04-29",
+    "week": 9,
+    "theme": "Let the Holy Spirit lead us to share the gospel and the love of Jesus",
+    "title": "Holy Spirit, lead me, to go and speak without doubting.",
+    "scripture": "Luke 12:11, 12, Acts 11:11-15",
+    "declaration": "Holy Spirit, lead me, to go and speak without doubting.",
+    "week_theme": "HolySpiritLead"
+  },
+  {
+    "id": 61,
+    "date": "2026-04-30",
+    "week": 9,
+    "theme": "Let the Holy Spirit lead us to share the gospel and the love of Jesus",
+    "title": "Let the love of God be our witness to the world!",
+    "scripture": "John 13:35, 1John 4:7-9, 16-19",
+    "declaration": "Let the love of God be our witness to the world!",
+    "week_theme": "HolySpiritLead"
+  },
+  {
+    "id": 62,
+    "date": "2026-05-01",
+    "week": 10,
+    "theme": "Final Transformation",
+    "title": "I have been transformed by the renewing of my mind.",
+    "scripture": "Romans 12:1-3",
+    "declaration": "I have been transformed by the renewing of my mind. And I will continue on to seek the Lord!",
+    "week_theme": "Transformation"
   }
 ]
+

@@ -18,11 +18,18 @@ import { toast } from 'sonner';
 
 import { usePublicTheme } from './PublicThemeWrapper';
 import { ShopService } from '@/lib/shop-service';
+import { useChurch } from '@/lib/church-context';
 
 export default function PublicNav() {
   const { isDark } = usePublicTheme();
+  const { org, slug } = useChurch();
   const pathname = usePathname();
   const isHomePage = pathname === '/' || pathname === '/jkc-devotion-app/' || pathname === '/jkc-devotion-app';
+
+  // Branding — use org data when available, fall back to JKC defaults
+  const isJKC = !slug || slug === 'jkc-devotion-app';
+  const logoSrc = org?.logo_url ?? '/jkc-devotion-app/images/logo-horizontal.png';
+  const churchName = org?.name ?? 'Japan Kingdom Church';
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -105,14 +112,17 @@ export default function PublicNav() {
    */
   const handleSignOut = async () => {
     try {
+        // Capture slug before clearing session
+        const currentSlug = slug ?? sessionStorage.getItem('church_os_church_slug');
         await supabase.auth.signOut();
         setUser(null);
         setIsDropdownOpen(false);
+        sessionStorage.clear();
         toast.success('Signed out successfully');
-        // Force a page refresh/navigation to clean up all auth states. 
-        // Use relative path to avoid root-domain 404s on GitHub Pages.
-        const basePath = window.location.pathname.startsWith('/jkc-devotion-app') ? '/jkc-devotion-app/' : '/';
-        window.location.href = basePath;
+        const base = window.location.pathname.startsWith('/jkc-devotion-app') ? '/jkc-devotion-app' : '';
+        window.location.href = currentSlug
+          ? `${base}/${currentSlug}/member/login`
+          : `${base}/member/login`;
     } catch (e) {
         toast.error('Error signing out');
     }
@@ -197,13 +207,25 @@ export default function PublicNav() {
         <div className="max-w-screen-xl mx-auto px-6 h-full flex
                         items-center justify-between">
 
-          <Link href="/" className="hover:opacity-80 transition-opacity">
-            <img
-              src="/jkc-devotion-app/images/logo-horizontal.png"
-              alt="Japan Kingdom Church"
-              className="h-8 w-auto"
-              style={{ filter: (isDark || !scrolled) ? 'brightness(1.5)' : 'none' }}
-            />
+          <Link href="/" className="hover:opacity-80 transition-opacity flex items-center gap-2">
+            {org?.logo_url ? (
+              <img
+                src={org.logo_url}
+                alt={churchName}
+                className="h-8 w-auto"
+              />
+            ) : isJKC ? (
+              <img
+                src="/jkc-devotion-app/images/logo-horizontal.png"
+                alt="Japan Kingdom Church"
+                className="h-8 w-auto"
+                style={{ filter: (isDark || !scrolled) ? 'brightness(1.5)' : 'none' }}
+              />
+            ) : (
+              <span className="text-sm font-black uppercase tracking-widest" style={{ color: isDark ? '#fff' : '#111' }}>
+                {churchName}
+              </span>
+            )}
           </Link>
 
           {/* Desktop center links */}

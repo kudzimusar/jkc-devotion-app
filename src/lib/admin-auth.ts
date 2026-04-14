@@ -11,21 +11,23 @@ export type AuthDomain = 'corporate' | 'tenant' | 'onboarding' | 'member';
 export type AuthSurface = 'console' | 'pastor-hq' | 'mission-control' | 'ministry' | 'profile' | 'onboarding';
 
 // ── Legacy compatibility exports ──
-export type AdminRole = 'super_admin' | 'pastor' | 'owner' | 'shepherd' | 'admin' | 'ministry_lead' | 'ministry_leader' | 'member';
+export type AdminRole = 'super_admin' | 'pastor' | 'owner' | 'shepherd' | 'admin' | 'ministry_lead' | 'ministry_leader' | 'elder' | 'deacon' | 'member';
 
 export const ADMIN_ROLES: AdminRole[] = [
-    'super_admin', 'pastor', 'owner', 'shepherd', 'admin', 'ministry_lead', 'ministry_leader', 'member'
+    'super_admin', 'pastor', 'owner', 'shepherd', 'admin', 'ministry_lead', 'ministry_leader', 'elder', 'deacon', 'member'
 ];
 
 export const ROLE_HIERARCHY: Record<AdminRole, number> = {
-    super_admin: 100,
-    pastor: 90,
-    owner: 85,
-    shepherd: 70,
-    admin: 60,
-    ministry_lead: 40,
-    ministry_leader: 40,
-    member: 10,
+    super_admin:     100,
+    pastor:           90,
+    owner:            75,
+    admin:            60,
+    shepherd:         55,
+    elder:            50,
+    deacon:           40,
+    ministry_lead:    30,
+    ministry_leader:  30,
+    member:           10,
 };
 
 export interface DomainSession {
@@ -158,12 +160,17 @@ export const AdminAuth = {
         if (typeof window !== 'undefined') {
             const cachedDomain = sessionStorage.getItem(DOMAIN_CACHE_KEY);
             if (cachedDomain === 'corporate') redirectPath = '/corporate/login/';
+            if (cachedDomain === 'tenant') redirectPath = '/church/login/';
             if (cachedDomain === 'onboarding') redirectPath = '/onboarding/login/';
-            if (cachedDomain === 'member') redirectPath = '/member/login/';
-            
+            if (cachedDomain === 'member') {
+                const churchSlug = sessionStorage.getItem('church_os_church_slug');
+                redirectPath = churchSlug ? `/${churchSlug}/member/login/` : '/member/login/';
+            }
+
             sessionStorage.removeItem(SESSION_CACHE_KEY);
             sessionStorage.removeItem(DOMAIN_CACHE_KEY);
             sessionStorage.removeItem(SURFACE_CACHE_KEY);
+            sessionStorage.removeItem('church_os_church_slug');
             clearOrgCache();
         }
         await supabase.auth.signOut();

@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Church, Gift, Star, Calendar, Bell, X } from 'lucide-react';
+import { useChurch } from '@/lib/church-context';
 
 interface FeedItem {
     id: string;
@@ -128,17 +129,21 @@ function FeedCard({ item, onDismiss }: { item: FeedItem; onDismiss: (id: string)
 export function FeedSection() {
     const [items, setItems] = useState<FeedItem[]>([]);
     const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+    const { org, isLoading: orgLoading } = useChurch();
 
     useEffect(() => {
+        if (orgLoading || !org?.id) return;
+
         supabase
             .from('member_feed_items')
             .select('*')
+            .eq('org_id', org.id)
             .order('published_at', { ascending: false })
             .limit(10)
             .then(({ data }) => {
                 setItems(data || []);
             });
-    }, []);
+    }, [org?.id, orgLoading]);
 
     const handleDismiss = (id: string) => {
         setDismissed(prev => new Set([...prev, id]));

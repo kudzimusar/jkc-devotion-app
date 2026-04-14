@@ -20,15 +20,20 @@ function ContextSelectorContent() {
   useEffect(() => {
     async function loadContexts() {
       const allContexts = await DomainAuth.getContexts();
-      if (filterDomain) {
-        setContexts(allContexts.filter(c => c.auth_domain === filterDomain));
-      } else {
-        setContexts(allContexts);
+      const filtered = filterDomain
+        ? allContexts.filter(c => c.auth_domain === filterDomain)
+        : allContexts;
+
+      if (filtered.length === 0) {
+        router.push('/');
+        return;
       }
+
+      setContexts(filtered);
       setLoading(false);
     }
     loadContexts();
-  }, [filterDomain]);
+  }, [filterDomain, router]);
 
   if (loading) {
     return (
@@ -38,16 +43,17 @@ function ContextSelectorContent() {
     );
   }
 
-  if (contexts.length === 0) {
-    router.push("/");
-    return null;
-  }
-
   const handleSelect = (context: AuthContext) => {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('church_os_active_domain', context.auth_domain);
       sessionStorage.setItem('church_os_active_surface', context.auth_surface);
       sessionStorage.removeItem('church_os_domain_session'); // Force refresh
+      // Direct selection from context page = no 2MFA elevation required
+      if (context.auth_surface === 'pastor-hq') {
+        sessionStorage.setItem('church_os_phq_direct', '1');
+      } else {
+        sessionStorage.removeItem('church_os_phq_direct');
+      }
     }
     router.push(DomainAuth.getSurfaceRoute(context.auth_surface));
   };

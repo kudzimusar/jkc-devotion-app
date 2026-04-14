@@ -12,6 +12,7 @@ import {
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { resolvePublicOrgId } from '@/lib/org-resolver';
+import { useChurch } from '@/lib/church-context';
 
 const IMPACT_CARDS = [
   { icon: Heart, title: 'Worship', desc: 'Supporting the spiritual atmosphere and worship team.' },
@@ -44,13 +45,12 @@ const ZelleIcon = () => (
 
 export default function GiveClient() {
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  const [orgId, setOrgId] = useState<string | null>(null);
+  const { org, isLoading: orgLoading } = useChurch();
+  const orgId = org?.id;
 
   useEffect(() => {
-    resolvePublicOrgId().then(setOrgId);
-  }, []);
+    if (orgLoading || !orgId) return;
 
-  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const paypalStatus = params.get('paypal');
     const token = params.get('token'); // PayPal order_id
@@ -60,7 +60,7 @@ export default function GiveClient() {
         body: {
           action: 'capture',
           order_id: token,
-          org_id: orgId ?? '',
+          org_id: orgId,
         }
       }).then(({ data, error }) => {
         if (error) {
@@ -76,7 +76,7 @@ export default function GiveClient() {
       toast.error('PayPal payment was cancelled.');
       window.history.replaceState({}, '', window.location.pathname);
     }
-  }, [orgId]);
+  }, [orgId, orgLoading]);
 
   const [cardAmount, setCardAmount] = useState('');
   const [cardFund, setCardFund] = useState('tithe');

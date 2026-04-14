@@ -34,14 +34,16 @@ import {
   MapPin,
   Mail,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Flame
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { getDevotionForDate, Devotion } from "@/lib/devotions-service";
+import { Devotion } from "@/lib/devotions-service";
+import { getDevotionForDate } from "@/data/devotions";
 import { BibleApi, BibleVerse, BibleRef } from "@/lib/bible-api";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -56,6 +58,7 @@ import type { User as AuthUser } from "@/lib/auth";
 import { SoapJournal, SoapEntry, SOAP_EXPLANATION } from "@/lib/soap-journal";
 import { basePath as BP } from "@/lib/utils";
 import { FeedSection } from "@/components/feed/FeedSection";
+import { useChurch } from "@/lib/church-context";
 
 const FloatingHearts = () => {
   const [hearts, setHearts] = useState<{ id: number; left: number; delay: number; duration: number; size: number }[]>([]);
@@ -86,9 +89,16 @@ const WEEK_THEMES = [
   { week: 3, name: "Submission", icon: Hand, desc: "Humility and Yielding" },
   { week: 4, name: "Obedience", icon: UserRound, desc: "Love in Action" },
   { week: 5, name: "Holy Week", icon: Cross, desc: "Passion and Transformation" },
+  { week: 6, name: "Heart for Lost", icon: HeartPulse, desc: "The Heart of God" },
+  { week: 7, name: "Commission", icon: Globe, desc: "The Great Commission" },
+  { week: 8, name: "Preparation", icon: Sparkles, desc: "Preparing the Heart" },
+  { week: 9, name: "Holy Spirit", icon: Flame, desc: "Spirit-Led Outreach" },
+  { week: 10, name: "Transformation", icon: Sparkles, desc: "Final Transformation" },
 ];
 
 const SundayCheckIn = ({ user, currentDate }: { user: any, currentDate: Date }) => {
+  const { org } = useChurch();
+  const currentOrgId = org?.id;
   const [loading, setLoading] = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
   const todayStr = format(currentDate, "yyyy-MM-dd");
@@ -124,6 +134,7 @@ const SundayCheckIn = ({ user, currentDate }: { user: any, currentDate: Date }) 
       // 1. Log to attendance_records (legacy/check-in)
       const { error: err1 } = await supabase.from('attendance_records').insert([{
         user_id: user.id,
+        org_id: currentOrgId,
         event_date: todayStr,
         event_type: type === 'Not Attending' ? 'absence' : 'sunday_service',
         notes: `Checked in as ${type}`
@@ -136,6 +147,7 @@ const SundayCheckIn = ({ user, currentDate }: { user: any, currentDate: Date }) 
 
       await supabase.from('attendance_logs').upsert({
         user_id: user.id,
+        org_id: currentOrgId,
         service_date: todayStr,
         status: statusToken
       }, { onConflict: 'user_id, service_date' });
@@ -253,6 +265,8 @@ export default function DevotionalApp() {
   const [emailNotConfirmed, setEmailNotConfirmed] = useState(false);
   const [shareProgress, setShareProgress] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const { org, isLoading: orgLoading } = useChurch();
+  const currentOrgId = org?.id;
 
   const [isDeclared, setIsDeclared] = useState(false);
 
@@ -267,6 +281,7 @@ export default function DevotionalApp() {
                     .from('user_declarations')
                     .select('id')
                     .eq('user_id', user.id)
+                    .eq('org_id', currentOrgId)
                     .eq('devotion_id', devotion.id.toString())
                     .maybeSingle();
                 
@@ -305,10 +320,8 @@ export default function DevotionalApp() {
   const [mounted, setMounted] = useState(false);
   const loadStats = async () => {
     if (user) {
-      // Try to get org_id from user metadata or profile
-      const orgId = user.org_id;
-      if (orgId) {
-        const s = await SoapJournal.getStats(orgId as string);
+      if (currentOrgId) {
+        const s = await SoapJournal.getStats(currentOrgId as string);
         setStats(s);
       }
     }
@@ -362,9 +375,8 @@ export default function DevotionalApp() {
         setDevotion(d || undefined);
 
         if (d) {
-          if (user && user.org_id) {
-            const orgId = user.org_id;
-            const entry = await SoapJournal.getEntry(d.id, orgId as string);
+          if (user && currentOrgId) {
+            const entry = await SoapJournal.getEntry(d.id, currentOrgId as string);
             setSoapEntry(entry);
             setNote(entry.observation || "");
           } else {
@@ -412,6 +424,7 @@ export default function DevotionalApp() {
 
       // 2. Persist to Backend
       const { error } = await supabase.from('user_declarations').insert({
+        org_id: currentOrgId,
         user_id: user?.id || null,
         devotion_id: devotion.id.toString(),
         declaration_text: devotion.declaration,
@@ -436,14 +449,13 @@ export default function DevotionalApp() {
     }
     try {
       setLoading(true);
-      const orgId = user.org_id;
-      if (!orgId) throw new Error("Organization context missing");
+      if (!currentOrgId) throw new Error("Organization context missing");
       const entryToSave = { ...soapEntry, observation: note, day_number: devotion.id, scripture: devotion.scripture };
-      const savedEntry = await SoapJournal.saveEntry(devotion.id, entryToSave, orgId as string);
+      const savedEntry = await SoapJournal.saveEntry(devotion.id, entryToSave, currentOrgId as string);
       setSoapEntry(entryToSave);
 
       // Fire and forget AI background processing
-      AIService.processSentiment(user.id, savedEntry.id, note, format(currentDate, "yyyy-MM-dd"));
+      AIService.processSentiment(user.id, currentOrgId, savedEntry.id, note, format(currentDate, "yyyy-MM-dd"));
 
       toast.success("Saved Successfully!");
       loadStats();

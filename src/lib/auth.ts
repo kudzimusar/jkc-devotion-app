@@ -38,12 +38,20 @@ export const Auth = {
                     .eq('id', session.user.id)
                     .single();
 
+                // Get org_id from org_members as primary source of truth for tenancy
+                const { data: membership } = await supabase
+                    .from('org_members')
+                    .select('org_id')
+                    .eq('user_id', session.user.id)
+                    .limit(1)
+                    .maybeSingle();
+
                 return {
                     id: session.user.id,
                     email: session.user.email,
                     name: profile?.name || session.user.user_metadata?.full_name || 'User',
                     avatar_url: profile?.avatar_url || session.user.user_metadata?.avatar_url,
-                    org_id: profile?.org_id || session.user.user_metadata?.org_id
+                    org_id: membership?.org_id || profile?.org_id || session.user.user_metadata?.org_id
                 };
             } catch {
                 _userPromise = null; // reset on error so the next call retries
@@ -149,13 +157,16 @@ export const Auth = {
     async logout() {
         _userPromise = null; // clear in-memory cache
         await supabase.auth.signOut();
+        let loginPath = `${BP}/member/login`;
         if (typeof window !== 'undefined') {
+            const churchSlug = sessionStorage.getItem('church_os_church_slug');
+            if (churchSlug) loginPath = `/${churchSlug}/member/login`;
             Object.keys(localStorage).forEach(key => {
                 if (key.startsWith('sb-')) localStorage.removeItem(key);
             });
             sessionStorage.clear();
         }
-        window.location.replace(BP || '/'); // replace = no back-button return to stale session
+        window.location.replace(loginPath); // replace = no back-button return to stale session
     },
 
     // Update profile
@@ -193,7 +204,9 @@ export const Auth = {
             if (profileErr) throw profileErr;
 
             await supabase.auth.signOut();
-            window.location.href = BP || '/';
+            const churchSlug = typeof window !== 'undefined' ? sessionStorage.getItem('church_os_church_slug') : null;
+            const loginPath = churchSlug ? `/${churchSlug}/member/login` : `${BP}/member/login`;
+            window.location.href = loginPath;
             return { success: true };
         } catch (err) {
             const error = err as Error;

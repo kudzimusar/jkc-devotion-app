@@ -1,72 +1,100 @@
 -- ==========================================
--- Church OS Test Data Seeding Script
+-- Church OS: Domain Context Seed Script
 -- ==========================================
--- This script creates test users and org data for testing auth flows
--- Run with: psql -h <host> -U postgres -d postgres -f supabase/seed.sql
+-- Run this in Supabase Dashboard → SQL Editor
+-- AFTER creating the 4 test users manually in Authentication → Users
+--
+-- Test users to create first:
+--   test-corporate@church.os  / TestCorp123!
+--   test-tenant@church.os     / TestTenant123!
+--   test-member@church.os     / TestMember123!
+--   test-onboarding@church.os / TestOnboard123!
+-- ==========================================
 
--- 1. CREATE TEST ORGANIZATIONS
-INSERT INTO public.organizations (id, name, slug, domain, primary_contact_email)
-VALUES
-  ('00000000-0000-0000-0000-000000000001', 'Test Church - Tenant 1', 'test-church-1', 'jkc.church.local', 'pastor@testchurch.local'),
-  ('00000000-0000-0000-0000-000000000002', 'Test Church - Tenant 2', 'test-church-2', 'grace.church.local', 'admin@gracechurch.local')
-ON CONFLICT (id) DO NOTHING;
+DO $$
+DECLARE
+  v_jkc_org_id  UUID := 'fa547adf-f820-412f-9458-d6bade11517d';
+  v_test_org_id UUID := '00000000-0000-0000-0000-000000000001';
+  v_corp_id     UUID;
+  v_tenant_id   UUID;
+  v_member_id   UUID;
+  v_onboard_id  UUID;
+BEGIN
 
--- 2. CREATE TEST USERS IN SUPABASE AUTH
--- Note: These need to be created via Supabase dashboard or auth API
--- Email: test-corporate@church.os | Password: TestCorp123!
--- Email: test-tenant@church.os | Password: TestTenant123!
--- Email: test-member@church.os | Password: TestMember123!
--- Email: test-onboarding@church.os | Password: TestOnboard123!
+  -- Resolve actual user IDs from auth.users by email
+  SELECT id INTO v_corp_id    FROM auth.users WHERE email = 'test-corporate@church.os';
+  SELECT id INTO v_tenant_id  FROM auth.users WHERE email = 'test-tenant@church.os';
+  SELECT id INTO v_member_id  FROM auth.users WHERE email = 'test-member@church.os';
+  SELECT id INTO v_onboard_id FROM auth.users WHERE email = 'test-onboarding@church.os';
 
--- 3. CREATE IDENTITIES (synced via trigger from auth.users)
--- These are normally created automatically by the trigger, but we can seed them manually
-INSERT INTO public.identities (id, email, created_at)
-VALUES
-  ('10000000-0000-0000-0000-000000000001', 'test-corporate@church.os', NOW()),
-  ('20000000-0000-0000-0000-000000000001', 'test-tenant@church.os', NOW()),
-  ('30000000-0000-0000-0000-000000000001', 'test-member@church.os', NOW()),
-  ('40000000-0000-0000-0000-000000000001', 'test-onboarding@church.os', NOW())
-ON CONFLICT (id) DO NOTHING;
+  -- ── 1. Create test org for tenant user ──────────────────────────
+  INSERT INTO public.organizations (id, name, domain)
+  VALUES (v_test_org_id, 'Test Church', 'testchurch.local')
+  ON CONFLICT (id) DO NOTHING;
 
--- 4. SEED CORPORATE ADMIN (Super Admin)
-INSERT INTO public.admin_roles (identity_id, role)
-VALUES
-  ('10000000-0000-0000-0000-000000000001', 'super_admin')
-ON CONFLICT (identity_id, role) DO NOTHING;
+  -- ── 2. Sync identities (trigger should do this, but be explicit) ─
+  IF v_corp_id IS NOT NULL THEN
+    INSERT INTO public.identities (id, email) VALUES (v_corp_id, 'test-corporate@church.os')
+    ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email;
+  END IF;
+  IF v_tenant_id IS NOT NULL THEN
+    INSERT INTO public.identities (id, email) VALUES (v_tenant_id, 'test-tenant@church.os')
+    ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email;
+  END IF;
+  IF v_member_id IS NOT NULL THEN
+    INSERT INTO public.identities (id, email) VALUES (v_member_id, 'test-member@church.os')
+    ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email;
+  END IF;
+  IF v_onboard_id IS NOT NULL THEN
+    INSERT INTO public.identities (id, email) VALUES (v_onboard_id, 'test-onboarding@church.os')
+    ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email;
+  END IF;
 
--- 5. SEED TENANT USERS (Church Leaders)
-INSERT INTO public.org_members (identity_id, org_id, role)
-VALUES
-  ('20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'owner'),
-  ('20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'pastor')
-ON CONFLICT (identity_id, org_id) DO NOTHING;
+  -- ── 3. Corporate domain → admin_roles ───────────────────────────
+  IF v_corp_id IS NOT NULL THEN
+    INSERT INTO public.admin_roles (identity_id, role)
+    VALUES (v_corp_id, 'super_admin')
+    ON CONFLICT (identity_id, role) DO NOTHING;
+    RAISE NOTICE 'CORPORATE seeded: %', v_corp_id;
+  ELSE
+    RAISE WARNING 'CORPORATE user not found. Create test-corporate@church.os in Auth first.';
+  END IF;
 
--- 6. SEED MEMBER PROFILES
-INSERT INTO public.member_profiles (identity_id, org_id)
-VALUES
-  ('30000000-0000-0000-0000-000000000001', 'fa547adf-f820-412f-9458-d6bade11517d')
-ON CONFLICT (identity_id, org_id) DO NOTHING;
+  -- ── 4. Tenant domain → org_members ──────────────────────────────
+  IF v_tenant_id IS NOT NULL THEN
+    INSERT INTO public.org_members (user_id, org_id, role)
+    VALUES (v_tenant_id, v_test_org_id, 'owner')
+    ON CONFLICT (user_id, org_id) DO UPDATE SET role = 'owner';
+    RAISE NOTICE 'TENANT seeded: %', v_tenant_id;
+  ELSE
+    RAISE WARNING 'TENANT user not found. Create test-tenant@church.os in Auth first.';
+  END IF;
 
--- 7. SEED ONBOARDING SESSIONS (For new church signup)
-INSERT INTO public.onboarding_sessions (identity_id, email, status, current_step)
-VALUES
-  ('40000000-0000-0000-0000-000000000001', 'test-onboarding@church.os', 'email_verified', 'org_creation')
-ON CONFLICT (id) DO NOTHING;
+  -- ── 5. Member domain → org_members (view reads org_members for member domain) ──
+  IF v_member_id IS NOT NULL THEN
+    INSERT INTO public.org_members (user_id, org_id, role)
+    VALUES (v_member_id, v_jkc_org_id, 'member')
+    ON CONFLICT (user_id, org_id) DO UPDATE SET role = 'member';
+    RAISE NOTICE 'MEMBER seeded: %', v_member_id;
+  ELSE
+    RAISE WARNING 'MEMBER user not found. Create test-member@church.os in Auth first.';
+  END IF;
 
--- 8. SEED PROFILES TABLE (User metadata)
-INSERT INTO public.profiles (id, name, email, org_id, membership_status, growth_stage, created_at, updated_at)
-VALUES
-  ('10000000-0000-0000-0000-000000000001', 'Test Corporate Admin', 'test-corporate@church.os', 'fa547adf-f820-412f-9458-d6bade11517d', 'active', 'engaged', NOW(), NOW()),
-  ('20000000-0000-0000-0000-000000000001', 'Test Tenant Pastor', 'test-tenant@church.os', '00000000-0000-0000-0000-000000000001', 'active', 'engaged', NOW(), NOW()),
-  ('30000000-0000-0000-0000-000000000001', 'Test Member', 'test-member@church.os', 'fa547adf-f820-412f-9458-d6bade11517d', 'visitor', 'curious', NOW(), NOW()),
-  ('40000000-0000-0000-0000-000000000001', 'Test Onboarder', 'test-onboarding@church.os', NULL, 'visitor', 'curious', NOW(), NOW())
-ON CONFLICT (id) DO NOTHING;
+  -- ── 6. Onboarding domain → onboarding_sessions ──────────────────
+  IF v_onboard_id IS NOT NULL THEN
+    INSERT INTO public.onboarding_sessions (identity_id, email, status, current_step)
+    VALUES (v_onboard_id, 'test-onboarding@church.os', 'email_verified', 'org_creation')
+    ON CONFLICT DO NOTHING;
+    RAISE NOTICE 'ONBOARDING seeded: %', v_onboard_id;
+  ELSE
+    RAISE WARNING 'ONBOARDING user not found. Create test-onboarding@church.os in Auth first.';
+  END IF;
 
--- 9. VERIFY DATA
-SELECT 'Corporate Admin' as user_type, COUNT(*) as count FROM public.admin_roles;
-SELECT 'Org Members' as user_type, COUNT(*) as count FROM public.org_members;
-SELECT 'Member Profiles' as user_type, COUNT(*) as count FROM public.member_profiles;
-SELECT 'Onboarding Sessions' as user_type, COUNT(*) as count FROM public.onboarding_sessions;
-SELECT 'Identities' as user_type, COUNT(*) as count FROM public.identities;
+END $$;
 
-COMMIT;
+-- ── Verification ────────────────────────────────────────────────────
+SELECT 'identities'        AS table_name, COUNT(*) AS rows FROM public.identities;
+SELECT 'admin_roles'       AS table_name, COUNT(*) AS rows FROM public.admin_roles;
+SELECT 'org_members'       AS table_name, COUNT(*) AS rows FROM public.org_members;
+SELECT 'member_profiles'   AS table_name, COUNT(*) AS rows FROM public.member_profiles;
+SELECT 'onboarding_sessions' AS table_name, COUNT(*) AS rows FROM public.onboarding_sessions;

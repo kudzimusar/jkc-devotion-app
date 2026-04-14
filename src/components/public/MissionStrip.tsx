@@ -1,6 +1,14 @@
 'use client';
 
+import { useChurch } from '@/lib/church-context';
+
 export default function MissionStrip() {
+  const { org, slug } = useChurch();
+  const isJKC = slug === 'jkc-devotion-app' || slug === 'jkc';
+  const mission = org?.mission_statement ?? (isJKC 
+    ? "Building a Strong Christian Community that Represents Christ to Japanese Society"
+    : "Building a Strong Christian Community that Represents Christ to Our Society");
+
   return (
     <div data-section="mission" className="relative">
       <section
@@ -11,9 +19,7 @@ export default function MissionStrip() {
         <div className="max-w-4xl mx-auto">
           <p className="text-2xl md:text-5xl font-serif italic font-medium leading-relaxed md:leading-tight"
              style={{ color: 'var(--jkc-navy)' }}>
-            "Building a Strong Christian Community that Represents{' '}
-            <span className="non-italic font-black">Christ</span>{' '}
-            to Japanese Society"
+             "{mission}"
           </p>
         </div>
       </section>

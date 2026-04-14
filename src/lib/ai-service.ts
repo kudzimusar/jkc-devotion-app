@@ -13,7 +13,6 @@ import { logAIConversation } from "./ai-logger";
 
 // Lazy Initialization helper to ensure environment variables are ready
 let genAI: any = null;
-let model: any = null;
 
 const intelligentFallback = (userRole: string, userName: string, query: string, contextPayload?: any, chatHistory?: { role: string, content: string }[]): string => {
     const lowerQuery = query.toLowerCase().trim();
@@ -405,8 +404,10 @@ export const AIService = {
         const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
         if (apiKey && apiKey !== "YOUR_GEMINI_API_KEY") {
             try {
+                const aiModel = getAIModel();
+                if (!aiModel) throw new Error("AI Model not available");
                 const prompt = `Draft a church newsletter covering: ${topics.join(", ")}. Mention we have ${activePrayersCount} active prayers and ${recentMilestonesCount} new milestones. Use a warm, visionary tone.`;
-                const result = await model.generateContent(prompt);
+                const result = await aiModel.generateContent(prompt);
                 const response = await result.response;
                 return response.text();
             } catch (e) {
@@ -416,15 +417,17 @@ export const AIService = {
         return `Subject: Weekly Kingdom Briefing\n\nWe are celebrating ${recentMilestonesCount} breakthroughs this week! Join us as we focus on ${topics[0] || 'Faith'}.`;
     },
 
-    processSentiment: async (userId: string, entryId: string, content: string, date: string) => {
+    processSentiment: async (userId: string, orgId: string, entryId: string, content: string, date: string) => {
         const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
         let category = "Seeking";
         let keywords = ["Growth"];
 
         if (apiKey && apiKey !== "YOUR_GEMINI_API_KEY") {
             try {
+                const aiModel = getAIModel();
+                if (!aiModel) throw new Error("AI Model not available");
                 const prompt = `Analyze the sentiment and key spiritual themes of this devotion entry: "${content}". Return JSON: {category: string, keywords: string[]}`;
-                const result = await model.generateContent(prompt);
+                const result = await aiModel.generateContent(prompt);
                 const response = await result.response;
                 const data = JSON.parse(response.text().replace(/```json|```/g, ""));
                 category = data.category;
@@ -437,6 +440,7 @@ export const AIService = {
         const { supabase } = await import("./supabase");
         await supabase.from('soap_sentiment_metrics').upsert({
             user_id: userId,
+            org_id: orgId,
             entry_id: entryId,
             date: date,
             emotion_category: category,
