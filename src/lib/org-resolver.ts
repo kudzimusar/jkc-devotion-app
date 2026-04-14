@@ -158,6 +158,41 @@ export async function resolveAdminOrgId(): Promise<{ orgId: string; role: string
 }
 
 /**
+ * SLUG RESOLVER
+ * Maps a church_slug to an org_id. Used by [church_slug] dynamic routes.
+ */
+export async function resolveOrgBySlug(slug: string): Promise<string | null> {
+  try {
+    const { data } = await supabase
+      .from('organizations')
+      .select('id')
+      .eq('church_slug', slug)
+      .eq('status', 'active')
+      .single();
+    return data?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * SLUG LOOKUP
+ * Returns the church_slug for a given org_id. Used by BaseAuth to build redirect URLs.
+ */
+export async function resolveSlugByOrgId(orgId: string): Promise<string | null> {
+  try {
+    const { data } = await supabase
+      .from('organizations')
+      .select('church_slug')
+      .eq('id', orgId)
+      .single();
+    return data?.church_slug ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Clears the public org cache (call on domain change or logout)
  */
 export function clearOrgCache() {
