@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, createContext, useContext } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 import { Loader2, Moon, Sun, Monitor, LogOut } from "lucide-react";
 import { AdminAuth, AdminRole } from "@/lib/admin-auth";
 import { supabase } from "@/lib/supabase";
@@ -120,8 +121,11 @@ export default function PastorHQLayout({ children }: { children: React.ReactNode
                         </div>
                     </nav>
 
-                    {/* Main Content Area */}
-                    <main className="pt-24 pb-12 px-8 max-w-[1400px] mx-auto">
+                    {/* Secondary Tab Navigation */}
+                    <PastorHQTabs />
+
+                    {/* Main Content Area — pt-36 = 64px nav + 44px tabs + spacing */}
+                    <main className="pt-36 pb-12 px-8 max-w-[1400px] mx-auto">
                         {children}
                     </main>
                 </div>
@@ -131,6 +135,40 @@ export default function PastorHQLayout({ children }: { children: React.ReactNode
 }
 
 import { useTheme } from "next-themes";
+
+function PastorHQTabs() {
+    const pathname = usePathname();
+    const tabs = [
+        { label: 'Dashboard', href: '/pastor-hq' },
+        { label: 'Inquiries', href: '/pastor-hq/inquiries' },
+        { label: 'Prayer Requests', href: '/pastor-hq/prayer-requests' },
+        { label: 'Settings', href: '/pastor-hq/settings' },
+    ];
+    return (
+        <div className="fixed top-16 left-0 right-0 z-40 bg-background/80 backdrop-blur border-b border-border px-8">
+            <div className="max-w-[1400px] mx-auto flex gap-6">
+                {tabs.map(tab => {
+                    const isActive = tab.href === '/pastor-hq'
+                        ? pathname === '/pastor-hq'
+                        : pathname.startsWith(tab.href);
+                    return (
+                        <Link
+                            key={tab.href}
+                            href={tab.href}
+                            className={`py-3 text-[11px] font-black uppercase tracking-widest border-b-2 transition-all ${
+                                isActive
+                                    ? 'border-violet-500 text-violet-600 dark:text-violet-400'
+                                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                            {tab.label}
+                        </Link>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
 
 function ThemeToggle() {
     const { theme, setTheme } = useTheme();

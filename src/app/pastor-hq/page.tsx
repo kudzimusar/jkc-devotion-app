@@ -8,13 +8,16 @@ import {
     Users, TrendingUp, DollarSign, Activity,
     ArrowUpRight, ArrowDownRight, MessageSquare,
     ShieldAlert, Mail, Calendar, Sparkles,
-    BarChart3, PieChart, LineChart, Loader2
+    BarChart3, PieChart, LineChart, Loader2,
+    UserPlus, Clock, Edit3
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import { getPastorDashboardData } from "@/lib/pastor-hq-actions";
 import { withRoleGuard } from "@/components/auth/withRoleGuard";
+import { PendingActionsCard } from "./components/PendingActionsCard";
+import { EmailComposer } from "./components/EmailComposer";
 
 const container = {
     hidden: { opacity: 0 },
@@ -35,6 +38,7 @@ function PastorHQDashboard() {
     const { userName, orgId } = usePastorCtx();
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [showComposer, setShowComposer] = useState(false);
 
     useEffect(() => {
         async function loadData() {
@@ -81,6 +85,17 @@ function PastorHQDashboard() {
                 </div>
             </header>
 
+            {/* Compose Broadcast */}
+            <div className="flex justify-end">
+                <button
+                    onClick={() => setShowComposer(true)}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-[11px] font-black uppercase tracking-widest shadow-lg shadow-violet-500/25 transition-all"
+                >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    Compose Broadcast
+                </button>
+            </div>
+
             {/* Panel 1: Church Pulse */}
             <section className="space-y-6">
                 <div className="flex items-center justify-between">
@@ -90,44 +105,62 @@ function PastorHQDashboard() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                    <PulseCard 
-                        label="Total Members" 
-                        value={data?.pulse.totalMembers.toLocaleString()} 
-                        trend={`+${data?.pulse.trends.members}`} 
-                        icon={Users} 
-                        trendUp={true} 
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <PulseCard
+                        label="Members"
+                        value={data?.pulse.totalMembers.toLocaleString()}
+                        trend={`+${data?.pulse.trends.members}`}
+                        icon={Users}
+                        trendUp={true}
                     />
-                    <PulseCard 
-                        label="New Seekers" 
-                        value={data?.pulse.newSeekers} 
-                        trend={`+${data?.pulse.trends.seekers}`} 
-                        icon={Sparkles} 
-                        trendUp={true} 
+                    <PulseCard
+                        label="Visitors"
+                        value={data?.pulse.newSeekers}
+                        trend={`+${data?.pulse.trends.seekers}`}
+                        icon={Sparkles}
+                        trendUp={true}
                     />
-                    <PulseCard 
-                        label="Weekly Attendance" 
-                        value={data?.pulse.weeklyAttendance} 
-                        trend={`${data?.pulse.trends.attendance}%`} 
-                        icon={Activity} 
-                        trendUp={data?.pulse.trends.attendance > 0} 
+                    <PulseCard
+                        label="Pending"
+                        value={data?.pulse.pendingMembers}
+                        trend="applications"
+                        icon={Clock}
+                        trendUp={false}
                     />
-                    <PulseCard 
-                        label="Online Reach" 
-                        value={data?.pulse.onlineReach.toLocaleString()} 
-                        trend={`+${data?.pulse.trends.reach}%`} 
-                        icon={Globe} 
-                        trendUp={true} 
+                    <PulseCard
+                        label="Volunteers"
+                        value={data?.pulse.volunteerApplications}
+                        trend="awaiting approval"
+                        icon={UserPlus}
+                        trendUp={false}
                     />
-                    <PulseCard 
-                        label="Retention Rate" 
-                        value={`${data?.pulse.retentionRate}%`} 
-                        trend={`+${data?.pulse.trends.retention}%`} 
-                        icon={TrendingUp} 
-                        trendUp={true} 
+                    <PulseCard
+                        label="Weekly Attendance"
+                        value={data?.pulse.weeklyAttendance}
+                        trend={`${data?.pulse.trends.attendance}%`}
+                        icon={Activity}
+                        trendUp={data?.pulse.trends.attendance > 0}
+                    />
+                    <PulseCard
+                        label="Retention"
+                        value={`${data?.pulse.retentionRate}%`}
+                        trend={`+${data?.pulse.trends.retention}%`}
+                        icon={TrendingUp}
+                        trendUp={true}
                     />
                 </div>
             </section>
+
+            {/* Pending Actions */}
+            {orgId && (
+                <section className="space-y-4">
+                    <div>
+                        <h3 className="text-xl font-black uppercase tracking-tight">Pending Actions</h3>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Items Requiring Attention</p>
+                    </div>
+                    <PendingActionsCard orgId={orgId} />
+                </section>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Panel 2: Financial Stewardship */}
@@ -213,12 +246,12 @@ function PastorHQDashboard() {
                     <Card className="rounded-[2.5rem] border-border bg-card/40 backdrop-blur-sm h-full overflow-hidden">
                         <CardContent className="p-0">
                             {[
-                                { label: "Member Messages", count: data?.correspondence.memberMessages, icon: MessageSquare, color: "bg-violet-500", href: "/shepherd/dashboard/" },
-                                { label: "Website Inquiries", count: data?.correspondence.websiteInquiries, icon: Mail, color: "bg-blue-500", href: "/shepherd/dashboard/" },
-                                { label: "Admin Direct", count: data?.correspondence.adminDirect, icon: Activity, color: "bg-emerald-500", href: "/shepherd/dashboard/settings/" },
-                                { label: "External (Gmail)", count: data?.correspondence.externalGmail, icon: Mail, color: "bg-red-500", href: "https://gmail.com" },
+                                { label: "Prayer Requests", count: data?.correspondence.memberMessages, icon: MessageSquare, color: "bg-violet-500", href: "/pastor-hq/prayer-requests" },
+                                { label: "Website Inquiries", count: data?.correspondence.websiteInquiries, icon: Mail, color: "bg-blue-500", href: "/pastor-hq/inquiries" },
+                                { label: "Admin Direct", count: data?.correspondence.adminDirect, icon: Activity, color: "bg-emerald-500", href: "/pastor-hq/inquiries" },
+                                { label: "Email Campaigns", count: data?.correspondence.externalGmail, icon: Mail, color: "bg-red-500", href: "/shepherd/dashboard/campaigns/" },
                             ].map((channel, i) => (
-                                <Link 
+                                <Link
                                     key={channel.label}
                                     href={channel.href.startsWith('http') ? channel.href : `${BP}${channel.href}`}
                                     className={`w-full flex items-center justify-between p-6 hover:bg-muted/50 transition-all border-b border-border last:border-0 ${i === 0 ? 'bg-muted/30' : ''}`}
@@ -283,6 +316,9 @@ function PastorHQDashboard() {
                     </Card>
                 </section>
             </div>
+            {showComposer && orgId && (
+                <EmailComposer orgId={orgId} onClose={() => setShowComposer(false)} />
+            )}
         </motion.div>
     );
 }

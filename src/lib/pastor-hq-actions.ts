@@ -93,6 +93,31 @@ export async function getPastorDashboardData(orgId?: string) {
     .eq('org_id', effectiveOrgId)
     .eq('membership_status', 'visitor');
 
+  const { count: pendingMembersCount } = await supabase
+    .from('profiles')
+    .select('*', { count: 'exact', head: true })
+    .eq('org_id', effectiveOrgId)
+    .eq('membership_status', 'pending');
+
+  const { count: volunteerAppsCount } = await supabase
+    .from('ministry_members')
+    .select('*', { count: 'exact', head: true })
+    .eq('org_id', effectiveOrgId)
+    .eq('status', 'pending');
+
+  const { count: adminDirectCount } = await supabase
+    .from('communication_campaigns')
+    .select('*', { count: 'exact', head: true })
+    .eq('org_id', effectiveOrgId)
+    .eq('audience_scope', 'admin_direct');
+
+  const { count: emailCampaignCount } = await supabase
+    .from('communication_campaigns')
+    .select('*', { count: 'exact', head: true })
+    .eq('org_id', effectiveOrgId)
+    .contains('channels', ['email'])
+    .neq('status', 'draft');
+
   // Church Overview — member growth trend (current vs prev month)
   const { data: churchOverview } = await supabase
     .from('vw_church_overview')
@@ -253,6 +278,8 @@ export async function getPastorDashboardData(orgId?: string) {
     pulse: {
       totalMembers: totalMembers || 0,
       newSeekers: newSeekers || 0,
+      pendingMembers: pendingMembersCount || 0,
+      volunteerApplications: volunteerAppsCount || 0,
       weeklyAttendance: attendanceTrends?.[0]?.total_attended || 0,
       onlineReach: currentOnlineReach,
       retentionRate,
@@ -283,8 +310,8 @@ export async function getPastorDashboardData(orgId?: string) {
     correspondence: {
       memberMessages: prayerCount || 0,
       websiteInquiries: websiteInquiries || 0,
-      adminDirect: 0,
-      externalGmail: 0
+      adminDirect: adminDirectCount || 0,
+      externalGmail: emailCampaignCount || 0
     },
     climate: {
         theme: climate?.dominant_theme || "Peace",
