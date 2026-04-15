@@ -1,6 +1,16 @@
 # Church OS — Claude Context File
 # Read this before doing anything. Do not explore the codebase unless asked.
 
+## Directories to NEVER read or search (token cost reduction)
+- `node_modules/` — 824 MB, never relevant
+- `.next/` — 2.1 GB build cache, never relevant
+- `out/` — static export output, never relevant
+- `dist/`, `scratch/`, `workspace/`, `legacy/`, `legacy_api/`
+- `*.pdf`, `*.docx`, `*.html` files in the root
+- `package-lock.json`, `tsconfig.tsbuildinfo`
+- Root-level `*.sql`, `*.js` fix scripts (phase1.sql, apply_rls_fix.js, etc.)
+- `mcp-dist/`, `mcp-output.log`, `build_log.txt`, `terminal_log.txt`
+
 ## What this project is
 **Church OS**: An enterprise-grade, multi-tenant church management SaaS designed for the global church ecosystem. This platform is owned and built by **Shadreck Kudzanai Musarurwa**, CEO of **Church OS PVT LTD**.
 Static export to GitHub Pages. Next.js + Supabase + Gemini AI.
