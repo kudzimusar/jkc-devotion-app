@@ -389,7 +389,7 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
                     form={<GroupForm groups={groups} onSubmit={(d: any) => submitForm('jkgroup', 'bible_study_group_requests', d, d)} loading={loading} session={user} />}
                   />
                   <Button 
-                    onClick={() => window.open('https://www.japankingdomchurch.com/give', '_blank')}
+                    onClick={() => window.open(`${basePath}/welcome/give/`, '_self')}
                     className="w-full h-16 rounded-2xl bg-[#059669] hover:bg-[#047857] text-white font-black text-xs tracking-[0.2em] shadow-lg group"
                   >
                     <Heart className="mr-3 w-4 h-4 group-hover:scale-125 transition-transform fill-current" /> GIVE TO THE KINGDOM
