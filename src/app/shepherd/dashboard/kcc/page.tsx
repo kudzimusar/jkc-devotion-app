@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { resolvePublicOrgId } from '@/lib/org-resolver';
-import { format, subDays } from 'date-fns';
+import { format } from 'date-fns';
 import {
   Zap, Users, Heart, UserPlus, Calendar, BookOpen,
   Mail, Clock, ExternalLink, Search, RefreshCw
@@ -89,18 +89,15 @@ export default function KCCDashboardPage() {
     }
   }
 
-  // Summary counts (last 7 days only)
-  const sevenDaysAgo = subDays(new Date(), 7);
-  const recentRecords = records.filter(r => r.created_at && new Date(r.created_at) >= sevenDaysAgo);
-
-  const total        = recentRecords.length;
-  const membershipCt = recentRecords.filter(r => r.visitor_intent === 'membership').length;
-  const prayerCt     = recentRecords.filter(r => r.visitor_intent === 'prayer').length;
-  const volunteerCt  = recentRecords.filter(r => r.visitor_intent === 'volunteer').length;
-  const eventCt      = recentRecords.filter(r => r.visitor_intent === 'event').length;
+  // Summary counts (all time)
+  const total        = records.length;
+  const membershipCt = records.filter(r => r.visitor_intent === 'membership').length;
+  const prayerCt     = records.filter(r => r.visitor_intent === 'prayer').length;
+  const volunteerCt  = records.filter(r => r.visitor_intent === 'volunteer').length;
+  const eventCt      = records.filter(r => r.visitor_intent === 'event').length;
 
   const summaryCards = [
-    { label: 'Total This Week', value: total,        icon: Zap,      color: 'text-violet-500' },
+    { label: 'Total Connections', value: total,        icon: Zap,      color: 'text-violet-500' },
     { label: 'Membership Apps', value: membershipCt, icon: Users,    color: 'text-violet-400' },
     { label: 'Prayer Requests', value: prayerCt,     icon: Heart,    color: 'text-blue-500'   },
     { label: 'Volunteers',      value: volunteerCt,  icon: UserPlus, color: 'text-emerald-500' },
@@ -153,7 +150,7 @@ export default function KCCDashboardPage() {
                   <Icon className={`w-4 h-4 ${card.color}`} />
                 </div>
                 <p className="text-2xl font-black text-foreground">{card.value}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">last 7 days</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">all time</p>
               </CardContent>
             </Card>
           );
