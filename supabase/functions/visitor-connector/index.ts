@@ -228,7 +228,7 @@ serve(async (req) => {
                   'api-key': brevoKey
                 },
                 body: JSON.stringify({
-                  sender: { name: 'Church OS | Kingdom Connect', email: 'info@kudzimusar.com' },
+                  sender: { name: 'Japan Kingdom Church', email: 'kudzimusar@gmail.com' },
                   to: toRecipients,
                   subject: `[Action Required] New ${intentLabel} — ${guestName}`,
                   htmlContent: `
@@ -254,6 +254,7 @@ serve(async (req) => {
                   `
                 })
               });
+              const leaderBrevoBody = await leaderBrevoRes.json();
               console.log(`[Router] Brevo leader alert: ${leaderBrevoRes.ok ? 'sent' : 'failed'} to ${toRecipients.length} leaders`);
               try {
                 await supabaseClient.from('kcc_email_log').insert({
@@ -263,7 +264,8 @@ serve(async (req) => {
                   recipient_type: 'leader',
                   subject: `[Action Required] New ${intentLabel} — ${guestName}`,
                   status: leaderBrevoRes.ok ? 'sent' : 'failed',
-                  error_message: leaderBrevoRes.ok ? null : JSON.stringify(await leaderBrevoRes.clone().json())
+                  brevo_message_id: leaderBrevoRes.ok ? (leaderBrevoBody?.messageId || null) : null,
+                  error_message: leaderBrevoRes.ok ? null : JSON.stringify(leaderBrevoBody)
                 });
               } catch (logErr) {
                 console.error('[EmailLog] leader log error:', logErr);
@@ -358,7 +360,7 @@ serve(async (req) => {
             'api-key': apiKey
           },
           body: JSON.stringify({
-            sender: { name: "Japan Kingdom Church", email: "info@kudzimusar.com" },
+            sender: { name: "Japan Kingdom Church", email: "kudzimusar@gmail.com" },
             to: [{ email: record.email, name: `${record.first_name} ${record.last_name || ''}`.trim() }],
             subject: subject,
             htmlContent: `
@@ -371,12 +373,13 @@ serve(async (req) => {
           })
         })
 
+        const guestBrevoBody = await brevoRes.json()
         const guestEmailStatus = brevoRes.ok ? 'sent' : 'failed'
-        const guestEmailError = brevoRes.ok ? null : JSON.stringify(await brevoRes.clone().json())
+        const guestEmailError = brevoRes.ok ? null : JSON.stringify(guestBrevoBody)
         if (!brevoRes.ok) {
           console.error('[Brevo Error]', guestEmailError)
         } else {
-          console.log('[Brevo Success]')
+          console.log('[Brevo Success] messageId:', guestBrevoBody?.messageId)
         }
         await supabaseClient.from('kcc_email_log').insert({
           org_id: orgId,
@@ -385,6 +388,7 @@ serve(async (req) => {
           recipient_type: 'guest',
           subject: subject,
           status: guestEmailStatus,
+          brevo_message_id: brevoRes.ok ? (guestBrevoBody?.messageId || null) : null,
           error_message: guestEmailError
         })
       } catch (e) {
