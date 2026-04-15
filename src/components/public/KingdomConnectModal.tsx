@@ -254,18 +254,12 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
             className="fixed inset-0 bg-black/80 backdrop-blur-md"
           />
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             className="relative w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden pointer-events-auto border border-white/10 font-['DM_Sans',sans-serif] grid grid-cols-1 md:grid-cols-5"
           >
-            <button
-              onClick={handleClose}
-              className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white hover:scale-110 transition-all"
-            >
-              <X className="w-5 h-5" />
-            </button>
 
             {/* LEFT PANEL */}
             <div className="md:col-span-2 bg-[#1B3A6B] p-6 md:p-10 flex flex-col items-center justify-center text-center space-y-6 md:space-y-8 relative overflow-hidden shrink-0">
@@ -288,6 +282,16 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
 
             {/* RIGHT PANEL */}
             <div className="md:col-span-3 bg-[#0f172a] flex flex-col overflow-y-auto max-h-[90vh]">
+              {/* STICKY CLOSE BAR — always visible regardless of scroll position */}
+              <div className="sticky top-0 z-[110] flex items-center justify-between bg-[#0f172a] px-4 py-3 border-b border-white/5">
+                <span className="text-xs font-black tracking-widest text-white/40 uppercase">Kingdom Connect</span>
+                <button
+                  onClick={handleClose}
+                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white hover:scale-110 transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             <div className="pt-12 pb-8 px-6 text-center space-y-6 bg-gradient-to-b from-[#0f1f3d] to-[#111827]">
               <div className="flex flex-col items-center gap-4">
                 <div className="w-16 h-16 bg-[#1b3a6b]/40 backdrop-blur-md rounded-2xl flex items-center justify-center rotate-3 shadow-xl border border-white/10">

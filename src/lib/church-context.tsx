@@ -53,12 +53,28 @@ export function ChurchProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (!slug) {
-      setIsLoading(false);
+      // Fallback for static deployments (e.g. GitHub Pages) where no [church_slug]
+      // route param exists. NEXT_PUBLIC_DEFAULT_ORG_ID is baked in at build time.
+      const fallbackOrgId = process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
+      if (fallbackOrgId) {
+        (async () => {
+          const { data } = await supabase
+            .from('organizations')
+            .select('*')
+            .eq('id', fallbackOrgId)
+            .eq('status', 'active')
+            .single();
+          console.log('Church OS [ChurchProvider] Fallback Org Data:', data);
+          setOrg(data ?? null);
+          setIsLoading(false);
+        })();
+      } else {
+        setIsLoading(false);
+      }
       return;
     }
 
     (async () => {
-      // Fetch everything to see available columns
       const { data } = await supabase
         .from('organizations')
         .select('*')

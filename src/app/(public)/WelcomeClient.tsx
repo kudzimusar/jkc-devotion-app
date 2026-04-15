@@ -17,8 +17,6 @@ import ConnectSection from '@/components/public/ConnectSection';
 import { FeedSection } from '@/components/feed/FeedSection';
 import MinistriesSection from '@/components/public/MinistriesSection';
 import TestimoniesSection from '@/components/public/TestimoniesSection';
-import InitialConnectModal from '@/components/public/InitialConnectModal';
-
 import { motion } from 'framer-motion';
 import { usePublicTheme } from '@/components/public/PublicThemeWrapper';
 
@@ -60,8 +58,6 @@ export default function WelcomeClient() {
 
   return (
     <div className="overflow-x-hidden" style={{ background: 'var(--background)' }}>
-      {/* ONBOARDING CRITICAL: Only shown to guests to encourage sign-ups */}
-      <InitialConnectModal user={user} />
       <HeroSection user={user} />
 
       {/* Impact stats bar — directly below hero */}
