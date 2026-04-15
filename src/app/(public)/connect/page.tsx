@@ -108,8 +108,8 @@ export default function KingdomConnectPage() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${org?.name || 'Kingdom'} Connect Card`,
-          text: `Connect with ${org?.name || 'our church'}`,
+          title: 'Kingdom Connect Card',
+          text: 'Connect with Japan Kingdom Church',
           url: connectUrl
         });
       } catch (err: any) {
