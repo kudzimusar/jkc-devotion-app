@@ -42,7 +42,7 @@ export async function logAIConversation(entry: LogEntry): Promise<string | null>
       tools_called: entry.toolsCalled,
       tool_results: entry.toolResults,
       tokens_used: entry.tokensUsed,
-      model_used: entry.modelUsed || 'gemini-3.1-flash',
+      model_used: entry.modelUsed || 'gemini-2.5-flash',
       escalated: entry.escalated || false,
       error_message: entry.errorMessage,
       created_at: new Date().toISOString()

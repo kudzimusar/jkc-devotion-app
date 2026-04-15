@@ -88,10 +88,10 @@ const getAIModel = (tools?: any[]) => {
     const key = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
     if (!key || key === "YOUR_GEMINI_API_KEY" || key.trim() === "") return null;
     
-    // Using gemini-3.1-flash - high-efficiency production model as of April 2026
+    // Using gemini-2.5-flash - high-efficiency production model as of April 2026
     const ai = new GoogleGenerativeAI(key);
     return ai.getGenerativeModel({ 
-        model: "gemini-3.1-flash",
+        model: "gemini-2.5-flash",
         tools: tools 
     });
 };
@@ -394,7 +394,7 @@ export const AIService = {
             toolsCalled,
             toolResults,
             errorMessage: errorMsg,
-            modelUsed: 'gemini-3.1-flash'
+            modelUsed: 'gemini-2.5-flash'
         }).catch(logErr => console.error("[AI SERVICE] Logging failed", logErr));
 
         return { text: finalResponse, logId: null };

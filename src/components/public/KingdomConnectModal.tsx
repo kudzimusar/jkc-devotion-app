@@ -69,6 +69,7 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
     setSource(via);
 
     resolvePublicOrgId().then(id => {
+      console.log('[KCC] resolvedOrgId:', id);
       setResolvedOrgId(id);
       if (id) fetchPublicData(id);
     });
@@ -83,7 +84,7 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [user, pathname]);
+  }, []);
 
   // LISTEN FOR CUSTOM TRIGGER (e.g., from Guest Attendance buttons)
   useEffect(() => {
@@ -147,6 +148,7 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
   };
 
   const submitForm = async (intent: string, childTable: string | null, data: any, childData: any) => {
+    console.log('[KCC] submitForm called, resolvedOrgId:', resolvedOrgId, 'intent:', intent);
     if (!resolvedOrgId) {
       toast.error("Connection error. Please refresh and try again.");
       setLoading(false);
