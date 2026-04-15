@@ -141,14 +141,17 @@ export function EmailComposer({
     try {
       const audiencePayload = getAudiencePayload();
 
-      // Step 1 — create draft campaign via coce-compose
+      // Step 1: Create campaign via coce-compose
+      // Pass subject as intent so it saves directly — no PATCH needed
       const { data: composeData, error: composeError } = await supabase.functions.invoke('coce-compose', {
         body: {
           org_id: orgId,
           intent: body,
+          subject_override: subject,
           campaign_type: 'newsletter',
           audience_scope: audiencePayload.audience_scope,
           target_id: audiencePayload.target_id || null,
+          audience_filter: audiencePayload.audience_filter || null,
           channels: ['email'],
           created_by: userId,
         },
@@ -158,25 +161,7 @@ export function EmailComposer({
       const campaignId = composeData?.campaign_id;
       if (!campaignId) throw new Error('No campaign ID returned from compose');
 
-      // Step 2 — patch with pastor's actual subject/body (overwrite AI draft)
-      const patchPayload: Record<string, unknown> = {
-        subject_en: subject,
-        body_en: body,
-        title: subject,
-        audience_scope: audiencePayload.audience_scope,
-      };
-      if (Object.keys(audiencePayload.audience_filter).length > 0) {
-        patchPayload.audience_filter = audiencePayload.audience_filter;
-      }
-
-      const { error: patchError } = await supabase
-        .from('communication_campaigns')
-        .update(patchPayload)
-        .eq('id', campaignId);
-
-      if (patchError) throw patchError;
-
-      // Step 3 — dispatch
+      // Step 2: Dispatch immediately
       const { error: dispatchError } = await supabase.functions.invoke('coce-dispatch', {
         body: { campaign_id: campaignId },
       });

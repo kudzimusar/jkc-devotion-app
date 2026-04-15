@@ -18,7 +18,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { org_id, intent, campaign_type, audience_scope, target_id, channels, scheduled_at, created_by } = await req.json();
+    const { org_id, intent, campaign_type, audience_scope, target_id, audience_filter, channels, scheduled_at, created_by, subject_override } = await req.json();
 
     if (!org_id || !intent || !campaign_type) {
       return new Response(JSON.stringify({ error: "Missing required fields: org_id, intent, campaign_type" }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 });
@@ -135,9 +135,9 @@ NO markdown. NO code blocks.`;
       .from("communication_campaigns")
       .insert({
         org_id,
-        title: draft.subject_en || `Draft: ${campaign_type}`,
+        title: subject_override || draft.subject_en || `Draft: ${campaign_type}`,
         campaign_type,
-        subject_en: draft.subject_en,
+        subject_en: subject_override || draft.subject_en,
         subject_ja: draft.subject_ja,
         body_en: draft.body_en,
         body_ja: draft.body_ja,
@@ -146,7 +146,7 @@ NO markdown. NO code blocks.`;
         ai_model_used: geminiKey ? "gemini-2.5-flash-preview-04-17" : null,
         ai_context_used: { health_metrics: healthMetrics, recent_attendance: recentAttendance },
         audience_scope: audience_scope ?? "org_wide",
-        audience_filter: target_id ? { target_id } : null,
+        audience_filter: audience_filter || (target_id ? { target_id } : null),
         channels: channels ?? ["email"],
         status: "draft",
         scheduled_at: scheduled_at ?? null,
