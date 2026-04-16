@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { PAGE_SIZE, DENOMINATIONS, COUNTRIES } from '@/lib/platform-constants';
+import { trackEvent, trackTimeOnPage } from '@/lib/analytics';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function getInitials(name: string): string {
@@ -170,6 +171,12 @@ function RegistryContent() {
     try { setBannerDismissed(sessionStorage.getItem('registry_banner_dismissed') === 'true'); } catch { /* noop */ }
   }, []);
 
+  useEffect(() => {
+    const startTime = Date.now();
+    trackEvent({ event_type: 'page_view', page_path: '/platform/registry/' });
+    return () => trackTimeOnPage('/platform/registry/', startTime);
+  }, []);
+
   const dismissBanner = () => {
     setBannerDismissed(true);
     try { sessionStorage.setItem('registry_banner_dismissed', 'true'); } catch { /* noop */ }
@@ -213,6 +220,7 @@ function RegistryContent() {
 
   // Load more (append)
   const handleLoadMore = async () => {
+    trackEvent({ event_type: 'load_more_click', page_path: '/platform/registry/' });
     setLoadingMore(true);
     const offset = loadedCountRef.current;
     let query = supabase
@@ -240,12 +248,18 @@ function RegistryContent() {
     setLoadingMore(false);
   };
 
-  // Debounce search input
   const handleInput = (val: string) => {
     setInputValue(val);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       setFilters(f => ({ ...f, q: val }));
+      if (val.trim().length > 1) {
+        trackEvent({
+          event_type: 'registry_search',
+          page_path: '/platform/registry/',
+          search_query: val.trim(),
+        });
+      }
     }, 300);
   };
 
@@ -337,7 +351,11 @@ function RegistryContent() {
                 {/* Denomination */}
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-[.2em] text-slate-500 mb-2">Denomination</label>
-                  <select value={filters.denomination} onChange={e => setFilters(f => ({ ...f, denomination: e.target.value }))} className={selectStyle}>
+                  <select value={filters.denomination} onChange={e => {
+                    const value = e.target.value;
+                    trackEvent({ event_type: 'filter_apply', page_path: '/platform/registry/', cta_label: `denomination:${value || 'all'}` });
+                    setFilters(f => ({ ...f, denomination: value }));
+                  }} className={selectStyle}>
                     <option value="">All Denominations</option>
                     {DENOMINATIONS.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
@@ -346,7 +364,11 @@ function RegistryContent() {
                 {/* Country */}
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-[.2em] text-slate-500 mb-2">Country</label>
-                  <select value={filters.country} onChange={e => setFilters(f => ({ ...f, country: e.target.value }))} className={selectStyle}>
+                  <select value={filters.country} onChange={e => {
+                    const value = e.target.value;
+                    trackEvent({ event_type: 'filter_apply', page_path: '/platform/registry/', cta_label: `country:${value || 'all'}` });
+                    setFilters(f => ({ ...f, country: value }));
+                  }} className={selectStyle}>
                     <option value="">All Countries</option>
                     {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
@@ -360,7 +382,10 @@ function RegistryContent() {
                   ].map(item => (
                     <label key={item.key} className="flex items-center gap-3 cursor-pointer group">
                       <div
-                        onClick={() => setFilters(f => ({ ...f, [item.key]: !f[item.key] }))}
+                        onClick={() => {
+                          trackEvent({ event_type: 'filter_apply', page_path: '/platform/registry/', cta_label: `${item.key}:${!filters[item.key]}` });
+                          setFilters(f => ({ ...f, [item.key]: !f[item.key] }));
+                        }}
                         className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors cursor-pointer ${filters[item.key] ? 'bg-emerald-500 border-emerald-500' : 'bg-white/5 border-white/20 hover:border-white/40'}`}
                       >
                         {filters[item.key] && <Check size={12} className="text-white" />}
@@ -405,7 +430,15 @@ function RegistryContent() {
                       <ChurchCard
                         key={`${church.slug}-${i}`}
                         church={church}
-                        onClick={() => router.push(`/platform/church/${church.slug}/`)}
+                        onClick={() => {
+                          trackEvent({
+                            event_type: 'search_result_click',
+                            page_path: '/platform/registry/',
+                            church_slug: church.slug,
+                            cta_label: church.name,
+                          });
+                          router.push(`/platform/church/${church.slug}/`);
+                        }}
                       />
                     ))}
                   </div>

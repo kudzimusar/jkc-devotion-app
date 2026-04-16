@@ -9,6 +9,7 @@ import {
   Facebook, Instagram, Twitter, Music2, Activity,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { trackEvent, trackTimeOnPage } from '@/lib/analytics';
 import { JKC_ORG_ID, JKC_SLUG } from '@/lib/platform-constants';
 
 // ─── Suppress unused import warnings for constants used in logic ──────────────
@@ -436,6 +437,11 @@ export default function ChurchProfilePage() {
   const [showJoinModal, setShowJoinModal] = useState(false);
 
   useEffect(() => {
+    const startTime = Date.now();
+    return () => trackTimeOnPage(`/platform/church/${slug}/`, startTime, slug as string);
+  }, [slug]);
+
+  useEffect(() => {
     if (!slug) return;
 
     const fetchData = async () => {
@@ -456,6 +462,13 @@ export default function ChurchProfilePage() {
       }
 
       setChurch(churchData as ChurchData);
+      if (churchData) {
+        trackEvent({
+          event_type: 'church_profile_view',
+          page_path: `/platform/church/${slug}/`,
+          church_slug: slug as string,
+        });
+      }
 
       // Step 2: Only if Church OS client with a valid org_id
       if (churchData.is_church_os_client && churchData.org_id) {
@@ -592,13 +605,27 @@ export default function ChurchProfilePage() {
       <div className="border-b border-white/[.06] bg-[#0a1628]/95 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex flex-wrap gap-3 items-center">
           <button
-            onClick={() => setShowVisitModal(true)}
+            onClick={() => {
+              trackEvent({
+                event_type: 'visit_modal_open',
+                page_path: `/platform/church/${slug}/`,
+                church_slug: slug as string,
+              });
+              setShowVisitModal(true);
+            }}
             className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-5 h-11 rounded-xl transition-colors text-sm shadow-lg shadow-emerald-500/20"
           >
             I Want to Visit
           </button>
           <button
-            onClick={() => setShowJoinModal(true)}
+            onClick={() => {
+              trackEvent({
+                event_type: 'join_modal_open',
+                page_path: `/platform/church/${slug}/`,
+                church_slug: slug as string,
+              });
+              setShowJoinModal(true);
+            }}
             className="inline-flex items-center gap-2 border border-white/20 text-white hover:bg-white/5 font-bold px-5 h-11 rounded-xl transition-colors text-sm"
           >
             Join Our Church
@@ -612,6 +639,12 @@ export default function ChurchProfilePage() {
           {church.is_church_os_client && socialMedia.youtube && (
             isLive ? (
               <a href={streamStatus?.stream_url ?? socialMedia.youtube} target="_blank" rel="noopener noreferrer"
+                onClick={() => trackEvent({
+                  event_type: 'video_play',
+                  page_path: `/platform/church/${slug}/`,
+                  church_slug: slug as string,
+                  cta_label: 'Watch Live Now',
+                })}
                 className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-bold px-5 h-11 rounded-xl transition-colors text-sm shadow-lg shadow-red-500/20">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
@@ -621,6 +654,12 @@ export default function ChurchProfilePage() {
               </a>
             ) : (
               <a href={socialMedia.youtube} target="_blank" rel="noopener noreferrer"
+                onClick={() => trackEvent({
+                  event_type: 'video_play',
+                  page_path: `/platform/church/${slug}/`,
+                  church_slug: slug as string,
+                  cta_label: 'Watch on YouTube',
+                })}
                 className="inline-flex items-center gap-2 bg-red-700/80 hover:bg-red-600 text-white font-bold px-5 h-11 rounded-xl transition-colors text-sm">
                 <Youtube size={16} /> Watch on YouTube
               </a>
@@ -786,6 +825,12 @@ export default function ChurchProfilePage() {
                     <p>{formatDate(s.date)}</p>
                   </div>
                   <a href={s.youtube_url} target="_blank" rel="noopener noreferrer"
+                    onClick={() => trackEvent({
+                      event_type: 'video_play',
+                      page_path: `/platform/church/${slug}/`,
+                      church_slug: slug as string,
+                      cta_label: 'Watch on YouTube',
+                    })}
                     className="mt-auto inline-flex items-center justify-center gap-2 bg-red-700/80 hover:bg-red-600 text-white font-bold px-4 h-10 rounded-xl transition-colors text-xs w-full">
                     <Play size={13} fill="currentColor" /> Watch Now
                   </a>

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Church, Users, Globe, Search, ArrowRight, HeartHandshake, Shield,
 } from 'lucide-react';
+import { trackEvent } from '@/lib/analytics';
 
 // ─── Pathway Config ───────────────────────────────────────────────────────────
 const PATHWAYS = [
@@ -17,7 +18,10 @@ const PATHWAYS = [
     desc: 'Claim or create your verified church profile. Begin the 5-step Celestial Onboarding Process and join The Global Church Registry.',
     badge: 'Verification Required · Typically 2–5 days',
     cta: 'Begin Church Registration',
-    onClick: (router: ReturnType<typeof useRouter>) => router.push('/onboarding/'),
+    onClick: (router: ReturnType<typeof useRouter>) => {
+      trackEvent({ event_type: 'register_pathway_click', page_path: '/platform/register/', cta_label: 'Register Sanctuary' });
+      router.push('/onboarding/');
+    },
   },
   {
     intent: 'member',
@@ -28,7 +32,10 @@ const PATHWAYS = [
     desc: "Find your church and access The Secret Place — devotionals, ChurchGPT, your Spiritual Milestone Ledger, and community connection.",
     badge: 'Free · Instant Access',
     cta: 'Create Member Profile',
-    onClick: (router: ReturnType<typeof useRouter>) => router.push('/app/jkc/welcome/'),
+    onClick: (router: ReturnType<typeof useRouter>) => {
+      trackEvent({ event_type: 'register_pathway_click', page_path: '/platform/register/', cta_label: 'Join as Member' });
+      router.push('/onboarding/signup/');
+    },
   },
   {
     intent: 'giving',
@@ -39,7 +46,10 @@ const PATHWAYS = [
     desc: 'Connect your organisation with verified ministries globally. Become a donor, apply for assistance, or sponsor a church plant.',
     badge: 'Verified · On-Chain Transparency',
     cta: 'Explore The Giving Bridge',
-    onClick: (router: ReturnType<typeof useRouter>) => router.push('/platform/giving/'),
+    onClick: (router: ReturnType<typeof useRouter>) => {
+      trackEvent({ event_type: 'register_pathway_click', page_path: '/platform/register/', cta_label: 'Giving Bridge' });
+      router.push('/platform/giving/');
+    },
   },
   {
     intent: 'explore',
@@ -50,7 +60,10 @@ const PATHWAYS = [
     desc: 'No account needed. Browse 784 verified sanctuaries, find churches near you, and see the global reach of the Church OS network.',
     badge: 'Public Access · No account required',
     cta: 'Open The Global Church Registry',
-    onClick: (router: ReturnType<typeof useRouter>) => router.push('/platform/registry/'),
+    onClick: (router: ReturnType<typeof useRouter>) => {
+      trackEvent({ event_type: 'register_pathway_click', page_path: '/platform/register/', cta_label: 'Browse Registry' });
+      router.push('/platform/registry/');
+    },
   },
 ] as const;
 
@@ -105,6 +118,10 @@ function RegisterContent() {
 
   // Map claim → church so claim intent highlights the church card
   const activeIntent = intentParam === 'claim' ? 'church' : intentParam;
+
+  React.useEffect(() => {
+    trackEvent({ event_type: 'page_view', page_path: '/platform/register/' });
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0a1628] text-white antialiased overflow-x-hidden">

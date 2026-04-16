@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Church, Shield, Users, Globe, ArrowRight } from 'lucide-react';
+import { trackEvent } from '@/lib/analytics';
 
 const PORTALS = [
   {
@@ -19,7 +20,7 @@ const PORTALS = [
     forLabel: 'FOR CHURCH MEMBERS',
     desc: 'Access The Secret Place, your devotion journal, ChurchGPT, and your Spiritual Milestone Ledger.',
     cta: 'Sign In as Member',
-    path: '/app/jkc/welcome/',
+    path: '/onboarding/signup/',
   },
   {
     icon: <Globe size={22} />,
@@ -59,6 +60,10 @@ const cMap: Record<PortalColour, { card: string; iconBg: string; iconText: strin
 
 export default function LoginPage() {
   const router = useRouter();
+
+  React.useEffect(() => {
+    trackEvent({ event_type: 'page_view', page_path: '/platform/login/' });
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0a1628] text-white antialiased flex flex-col">
@@ -118,7 +123,13 @@ export default function LoginPage() {
                     </div>
                     <p className="text-sm text-slate-400 leading-relaxed">{portal.desc}</p>
                     <button
-                      onClick={() => router.push(portal.path)}
+                      onClick={() => {
+                        let cta_label = 'Admin Login';
+                        if (portal.forLabel.includes('LEADER')) cta_label = 'Church Leader Login';
+                        else if (portal.forLabel.includes('MEMBER')) cta_label = 'Member Login';
+                        trackEvent({ event_type: 'login_portal_click', page_path: '/platform/login/', cta_label });
+                        router.push(portal.path);
+                      }}
                       className={`w-full h-11 rounded-xl font-bold transition-all text-sm ${c.btn}`}
                     >
                       {portal.cta}

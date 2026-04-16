@@ -7,6 +7,7 @@ import {
   Shield, ArrowRight, Activity, BarChart3,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { trackEvent, trackTimeOnPage } from '@/lib/analytics';
 import { JKC_ORG_ID } from '@/lib/platform-constants';
 
 // ─── Navbar ───────────────────────────────────────────────────────────────────
@@ -294,6 +295,12 @@ export default function WalkthroughPage() {
   const [metrics, setMetrics] = useState<any>(null);
 
   useEffect(() => {
+    const startTime = Date.now();
+    trackEvent({ event_type: 'page_view', page_path: '/platform/walkthrough/' });
+    return () => trackTimeOnPage('/platform/walkthrough/', startTime);
+  }, []);
+
+  useEffect(() => {
     const run = async () => {
       const { data } = await supabase
         .from('church_health_metrics')
@@ -336,7 +343,14 @@ export default function WalkthroughPage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex gap-1 overflow-x-auto scrollbar-none py-3">
             {TABS.map((t, i) => (
-              <button key={i} onClick={() => setActiveTab(i)}
+              <button key={i} onClick={() => {
+                trackEvent({
+                  event_type: 'walkthrough_tab',
+                  page_path: '/platform/walkthrough/',
+                  cta_label: t.label,
+                });
+                setActiveTab(i);
+              }}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all ${activeTab === i ? 'bg-white/[.06] text-white border border-white/10' : 'text-slate-500 hover:text-slate-300'}`}>
                 {t.icon} {t.label}
               </button>
@@ -381,7 +395,10 @@ export default function WalkthroughPage() {
           <blockquote className="text-3xl md:text-4xl font-black text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
             &ldquo;You&apos;ve seen the intelligence. Now claim your sanctuary.&rdquo;
           </blockquote>
-          <button onClick={() => router.push('/platform/register/?intent=church')}
+          <button onClick={() => {
+            trackEvent({ event_type: 'cta_click', page_path: '/platform/walkthrough/', cta_label: 'Begin Celestial Onboarding' });
+            router.push('/platform/register/?intent=church');
+          }}
             className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-8 h-14 rounded-xl transition-colors shadow-lg shadow-emerald-500/20 text-base">
             Begin Celestial Onboarding <ArrowRight size={18} />
           </button>

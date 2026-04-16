@@ -11,6 +11,7 @@ import {
   Star, Heart, Globe2, Activity, Award,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { trackEvent, trackTimeOnPage } from '@/lib/analytics';
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 const JKC_ORG_ID = 'fa547adf-f820-412f-9458-d6bade11517d';
@@ -232,12 +233,17 @@ const Navbar = () => {
 // SECTION 2 — HERO
 // ════════════════════════════════════════════════════════════════════════════
 
-const Hero = ({ registryCount, campaignTarget }: { registryCount: number; campaignTarget: string }) => {
+const Hero = ({ registryCount, campaignTarget, latestChurch }: { registryCount: number; campaignTarget: string; latestChurch: any }) => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = () => {
     const q = searchQuery.trim();
+    trackEvent({
+      event_type: 'registry_search',
+      page_path: '/platform/',
+      search_query: q || 'empty',
+    });
     router.push(q ? `/platform/registry/?q=${encodeURIComponent(q)}` : '/platform/registry/');
   };
 
@@ -305,12 +311,18 @@ const Hero = ({ registryCount, campaignTarget }: { registryCount: number; campai
               size="lg"
               variant="primary"
               className="group"
-              onClick={() => router.push('/platform/church/japan-kingdom-church-tokyo/')}
+              onClick={() => {
+                trackEvent({ event_type: 'cta_click', page_path: '/platform/', cta_label: 'Explore Featured Church' });
+                router.push('/platform/church/japan-kingdom-church-tokyo/');
+              }}
             >
               Explore Featured Church
               <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Btn>
-            <Btn size="lg" variant="outline" onClick={() => router.push('/platform/register/')}>
+            <Btn size="lg" variant="outline" onClick={() => {
+              trackEvent({ event_type: 'cta_click', page_path: '/platform/', cta_label: 'Start Your Journey' });
+              router.push('/platform/register/');
+            }}>
               Start Your Journey
             </Btn>
           </div>
@@ -333,6 +345,13 @@ const Hero = ({ registryCount, campaignTarget }: { registryCount: number; campai
                 Search Registry
               </Btn>
             </div>
+            {latestChurch && (
+              <p className="text-slate-600 text-xs mt-3 text-center">
+                <span className="text-emerald-500">●</span>{' '}
+                Latest addition: <span className="text-slate-400">{latestChurch.name}</span>
+                <span className="text-slate-600"> · {latestChurch.country}</span>
+              </p>
+            )}
           </div>
 
         </div>
@@ -1054,7 +1073,10 @@ const PhilanthropyBridge = () => {
             <Btn
               size="lg"
               className="bg-emerald-500 hover:bg-emerald-400 text-white"
-              onClick={() => router.push('/platform/giving/')}
+              onClick={() => {
+                trackEvent({ event_type: 'philanthropy_click', page_path: '/platform/', cta_label: 'Become a Verified Beneficiary' });
+                router.push('/platform/giving/');
+              }}
             >
               Become a Verified Beneficiary
             </Btn>
@@ -1185,7 +1207,10 @@ const Footer = () => {
                 <MessageSquare size={16} />
               </button>
               <button
-                onClick={() => router.push('/welcome/devotion/')}
+                onClick={() => {
+                  trackEvent({ event_type: 'devotion_click', page_path: '/platform/' });
+                  router.push('/welcome/devotion/');
+                }}
                 className="w-10 h-10 rounded-full bg-white/[.05] flex items-center justify-center text-slate-500 hover:bg-white/10 hover:text-white transition-all"
                 title="ChurchGPT"
               >
@@ -1275,6 +1300,42 @@ const Footer = () => {
   );
 };
 
+const ChurchGPTTeaser = () => {
+  const router = useRouter();
+  const [question, setQuestion] = useState('');
+  
+  return (
+    <section className="py-24 md:py-32 border-t border-white/[.06]">
+      <div className="max-w-4xl mx-auto px-6 text-center space-y-8">
+        <div className="space-y-4">
+          <Badge variant="indigo">Ask Church Intelligence Anything</Badge>
+          <h2 className="text-4xl md:text-5xl font-black text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+            Your AI. Trained on your church's DNA.
+          </h2>
+          <p className="text-slate-400 text-lg">One question, free. No account needed.</p>
+        </div>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          if(!question.trim()) return;
+          trackEvent({ event_type: 'cta_click', page_path: '/platform/', cta_label: 'ChurchGPT Teaser Ask' });
+          router.push(`/churchgpt/?q=${encodeURIComponent(question)}`);
+        }} className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
+          <input
+            type="text"
+            value={question}
+            onChange={e => setQuestion(e.target.value)}
+            placeholder="Ask anything — theology, growth, pastoral care..."
+            className="flex-1 h-12 px-5 rounded-xl bg-white/[.04] border border-white/10 text-white placeholder:text-slate-500 text-sm focus:outline-none focus:border-indigo-500/50 transition-colors"
+          />
+          <Btn variant="primary" size="lg" className="shrink-0 bg-indigo-600 hover:bg-indigo-500 shadow-indigo-500/20" type="submit">
+            Ask ChurchGPT →
+          </Btn>
+        </form>
+      </div>
+    </section>
+  );
+};
+
 // ════════════════════════════════════════════════════════════════════════════
 // MAIN PAGE EXPORT
 // ════════════════════════════════════════════════════════════════════════════
@@ -1286,10 +1347,17 @@ export default function PlatformPage() {
   const [featuredSermon, setFeaturedSermon] = useState<any>(null);
   const [healthMetrics, setHealthMetrics] = useState<any>(null);
   const [registryPreview, setRegistryPreview] = useState<any[]>([]);
+  const [latestChurch, setLatestChurch] = useState<any>(null);
+
+  useEffect(() => {
+    const startTime = Date.now();
+    trackEvent({ event_type: 'page_view', page_path: '/platform/' });
+    return () => trackTimeOnPage('/platform/', startTime);
+  }, []);
 
   useEffect(() => {
     const fetchAll = async () => {
-      const [jkcRes, countRes, statRes, sermonRes, metricsRes, previewRes] = await Promise.all([
+      const [jkcRes, countRes, statRes, sermonRes, metricsRes, previewRes, latestRes] = await Promise.all([
         supabase
           .from('church_registry')
           .select('name,slug,city,country,denomination,member_count,ministry_count,founding_year,pastor_name,cover_image_url,description,mission_statement,is_verified,is_church_os_client,org_id')
@@ -1327,6 +1395,13 @@ export default function PlatformPage() {
           .order('is_church_os_client', { ascending: false })
           .order('member_count', { ascending: false })
           .limit(6),
+        supabase
+          .from('church_registry')
+          .select('name, country, created_at')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single(),
       ]);
 
       if (jkcRes.data)                      setJkc(jkcRes.data);
@@ -1335,19 +1410,46 @@ export default function PlatformPage() {
       if (sermonRes.data)                   setFeaturedSermon(sermonRes.data);
       if (metricsRes.data)                  setHealthMetrics(metricsRes.data);
       if (previewRes.data?.length)          setRegistryPreview(previewRes.data);
+      if (latestRes.data)                   setLatestChurch(latestRes.data);
     };
 
     fetchAll();
   }, []);
 
+  const tickerItems = [
+    `📍 ${latestChurch?.name || 'A church'} just joined the registry`,
+    `✉️ ${registryCount} sanctuaries now verified`,
+    `🌍 25 countries in the Global Church Registry`,
+    `🤝 New visit request received — Japan`,
+    `📖 ChurchGPT active across ${registryCount} registered churches`,
+    `⚡ PIL running on ${registryCount} sanctuary profiles`,
+  ];
+
   return (
     <div className="min-h-screen bg-[#0a1628] text-white antialiased overflow-x-hidden selection:bg-emerald-500 selection:text-white">
+      <style>{`
+        @keyframes scroll {
+          0% { transform: translateX(100vw); }
+          100% { transform: translateX(-100%); }
+        }
+      `}</style>
       <Navbar />
       <main>
-        <Hero registryCount={registryCount} campaignTarget={campaignTarget} />
+        <Hero registryCount={registryCount} campaignTarget={campaignTarget} latestChurch={latestChurch} />
         <StatStrip registryCount={registryCount} />
+        <div className="border-b border-white/[.06] bg-white/[.015] py-2.5 overflow-hidden whitespace-nowrap text-xs font-medium text-slate-400">
+          <div className="inline-block animate-[scroll_30s_linear_infinite]">
+            {tickerItems.map((item, i) => (
+              <React.Fragment key={i}>
+                <span>{item}</span>
+                <span className="mx-6 text-emerald-500 font-bold">·</span>
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
         <InteractiveArcs />
         <FivePillars />
+        <ChurchGPTTeaser />
         <FeatureIntelligence healthMetrics={healthMetrics} />
         <FeaturedChurch jkc={jkc} featuredSermon={featuredSermon} />
         <RegistryPreview registryPreview={registryPreview} registryCount={registryCount} />
