@@ -53,7 +53,7 @@ export default function ReportsPage() {
                     City: m.city || '-',
                     Stage: m.growth_stage || 'visitor'
                 }));
-                exportToExcel(exportData, `JKC_Member_Directory_${timestamp}`, "Members");
+                exportToExcel(exportData, `Member_Directory_${timestamp}`, "Members");
             }
             else if (name === 'Attendance Summary') {
                 const { data } = await supabase
@@ -69,7 +69,7 @@ export default function ReportsPage() {
                     Attended: a.attended ? 'Yes' : 'No',
                     Notes: a.notes || '-'
                 }));
-                exportToPDF(exportData, `JKC_Attendance_Report_${timestamp}`, "Attendance Summary Report", ["Date", "Event", "Attended", "Notes"], ["Date", "Event", "Attended", "Notes"]);
+                exportToPDF(exportData, `Attendance_Report_${timestamp}`, "Attendance Summary Report", ["Date", "Event", "Attended", "Notes"], ["Date", "Event", "Attended", "Notes"]);
             }
             else if (name === 'Congregational Health Report') {
                 toast.info("Analyzing spiritual health metrics...");
@@ -99,7 +99,7 @@ export default function ReportsPage() {
                     'Growth Stage': p.growth_stage,
                     'Health Index': healthScore
                 }));
-                exportToExcel(exportData, `JKC_Health_Report_${timestamp}`, "Spiritual Health");
+                exportToExcel(exportData, `Health_Report_${timestamp}`, "Spiritual Health");
             }
 
             toast.success(`${name} exported successfully.`);

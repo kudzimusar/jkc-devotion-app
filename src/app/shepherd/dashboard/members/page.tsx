@@ -288,7 +288,7 @@ export default function MembersPage() {
 
     const exportDirectory = (format: 'csv' | 'xlsx' | 'pdf') => {
         const timestamp = new Date().toISOString().split('T')[0];
-        const filename = `JKC_Member_Directory_${timestamp}`;
+        const filename = `Member_Directory_${timestamp}`;
 
         const exportData = filtered.map((m: Member) => ({
             Name: m.name,

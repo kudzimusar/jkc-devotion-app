@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Flame, Eye, EyeOff, Mail, Lock, AlertCircle, Loader2, ShieldCheck, CheckCircle2, ArrowRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { basePath as BP } from "@/lib/utils";
+import { resolvePublicOrgId } from "@/lib/org-resolver";
 
 export type AuthDomain = 'corporate' | 'onboarding' | 'tenant' | 'member';
 export type SignupStep = 'email' | 'verification' | 'password' | 'success';
@@ -97,12 +98,11 @@ export const BaseSignup = ({
 
       // Auto-provision domain context based on authDomain
       if (authDomain === 'member') {
-        const JKC_ORG_ID = 'fa547adf-f820-412f-9458-d6bade11517d';
         const { error: memberError } = await supabase
           .from('member_profiles')
           .insert({
             identity_id: user.id,
-            org_id: JKC_ORG_ID
+            org_id: await resolvePublicOrgId()
           });
 
         if (memberError) {

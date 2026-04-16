@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const ORG_ID = Deno.env.get('DEFAULT_ORG_ID') ?? 'fa547adf-f820-412f-9458-d6bade11517d';
-const APP_URL = Deno.env.get('APP_URL') || 'http://localhost:3000/jkc-devotion-app';
+const APP_URL = Deno.env.get('NEXT_PUBLIC_APP_URL') || 'https://churchos-ai.website';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const CRON_SECRET = Deno.env.get('CRON_SECRET')!;

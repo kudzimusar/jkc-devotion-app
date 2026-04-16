@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { MapPin, Globe, XCircle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { resolvePublicOrgId } from '@/lib/org-resolver';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -25,8 +26,6 @@ function HeroCheckIn({ user }: { user: any }) {
   const dayOfWeek = jstNow.getDay(); // 0=Sun, 6=Sat
   const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Saturday OR Sunday
   const todayStr = format(jstNow, 'yyyy-MM-dd');
-
-  const JKC_ORG_ID = 'fa547adf-f820-412f-9458-d6bade11517d';
 
   useEffect(() => {
     // 1. Initialize Device ID for guests
@@ -73,7 +72,8 @@ function HeroCheckIn({ user }: { user: any }) {
    */
   const handleCheckIn = async (type: string) => {
     if (loading || checkedIn) return;
-    
+
+    const resolvedOrgId = await resolvePublicOrgId();
     // OPTIMISTIC UPDATE:
     setLoading(true);
     setSelected(type);
@@ -91,14 +91,14 @@ function HeroCheckIn({ user }: { user: any }) {
             user_id: user.id,
             event_date: todayStr,
             event_type: type === 'absent' ? 'absence' : (type === 'online' ? 'online' : 'sunday_service'),
-            org_id: JKC_ORG_ID, // Ensure org isolation
+            org_id: resolvedOrgId, // Ensure org isolation
             notes: `Checked in via hero: ${type}`
           }]),
           supabase.from('attendance_logs').upsert({
             user_id: user.id,
             service_date: todayStr,
             status: statusMap[type],
-            org_id: JKC_ORG_ID
+            org_id: resolvedOrgId
           }, { onConflict: 'user_id, service_date' })
         ]);
         
@@ -113,7 +113,7 @@ function HeroCheckIn({ user }: { user: any }) {
             device_id: deviceId,
             event_date: todayStr,
             event_type: type === 'absent' ? 'absence' : (type === 'online' ? 'online' : 'sunday_service'),
-            org_id: JKC_ORG_ID,
+            org_id: resolvedOrgId,
             notes: `Visitor check-in from device: ${deviceId}`
           }]),
           supabase.from('attendance_logs').insert({
@@ -121,7 +121,7 @@ function HeroCheckIn({ user }: { user: any }) {
             device_id: deviceId,
             service_date: todayStr,
             status: statusMap[type],
-            org_id: JKC_ORG_ID,
+            org_id: resolvedOrgId,
             metadata: { visitor: true, source: 'hero_checkin' }
           })
         ]);

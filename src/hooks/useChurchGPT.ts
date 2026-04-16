@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { JKC_ORG_ID } from '@/lib/org-resolver'
 
 export interface ChurchGPTMessage {
   id: string
@@ -34,7 +35,6 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
   const [currentConversation, setCurrentConversation] = useState<ChurchGPTConversation | null>(null)
 
   // Constants
-  const JKC_ORG_ID = 'fa547adf-f820-412f-9458-d6bade11517d'
   const GUEST_MESSAGES_KEY = 'churchgpt_guest_messages'
   const GUEST_COUNT_KEY = 'churchgpt_guest_count'
 

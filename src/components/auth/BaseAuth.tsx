@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Flame, Eye, EyeOff, Mail, Lock, AlertCircle, Loader2, ShieldCheck, Key, ArrowRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { basePath as BP } from "@/lib/utils";
-import { resolveSlugByOrgId } from "@/lib/org-resolver";
+import { resolveSlugByOrgId, resolvePublicOrgId } from "@/lib/org-resolver";
 
 export type AuthDomain = 'corporate' | 'onboarding' | 'tenant' | 'member';
 export type AuthSurface = 'console' | 'pastor-hq' | 'mission-control' | 'ministry' | 'profile' | 'onboarding';
@@ -104,13 +104,12 @@ export const BaseAuth = ({
               finalContexts = retryContexts || [];
             }
           } else if (authDomain === 'member') {
-            // For member domain, create entry with default org (JKC)
-            const JKC_ORG_ID = 'fa547adf-f820-412f-9458-d6bade11517d';
+            // For member domain, create entry with default org (resolved dynamically)
             const { error: memberError } = await supabase
               .from('member_profiles')
               .insert({
                 identity_id: data.user.id,
-                org_id: JKC_ORG_ID
+                org_id: await resolvePublicOrgId()
               });
             if (!memberError) {
               const { data: retryContexts } = await supabase

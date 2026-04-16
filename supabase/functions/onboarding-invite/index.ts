@@ -27,7 +27,7 @@ serve(async (req) => {
       }
     )
 
-    const siteUrl = Deno.env.get('NEXT_PUBLIC_SITE_URL') || 'https://kudzimusar.github.io/jkc-devotion-app'
+    const siteUrl = Deno.env.get('NEXT_PUBLIC_APP_URL') || 'https://churchos-ai.website'
     const inviteLink = `${siteUrl}/onboarding?invited=true&church=${encodeURIComponent(churchName || '')}`
 
     // Log invitation for analytics

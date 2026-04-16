@@ -241,7 +241,7 @@ serve(async (req) => {
                         <p style="color:#374151;margin:0 0 16px;">A new <strong>${intentLabel}</strong> has been submitted via the Kingdom Connect Card and requires your attention.</p>
                         ${submissionDetails}
                         <div style="margin-top:24px;text-align:center;">
-                          <a href="https://kudzimusar.github.io/jkc-devotion-app${mcLink}"
+                          <a href="${Deno.env.get('NEXT_PUBLIC_APP_URL') || 'https://churchos-ai.website'}${mcLink}"
                              style="background:#1b3a6b;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;">
                             View in Mission Control
                           </a>

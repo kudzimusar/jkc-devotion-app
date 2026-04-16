@@ -24,7 +24,7 @@ const communityImage = `${BP}/images/pastor/pastor-event.jpg`;
 
 const jkcChurchData = {
   id: "japan-kingdom-church-id",
-  name: "Japan Kingdom Church (JKC)",
+  name: "Kingdom Church Tokyo",
   pastor: "Pastor Marcel Jonte Gadsden",
   motto: "Making A Difference In Japan And Around The World Together!",
   missionStatement: "Building a strong Christian community that represents Christ to Japanese society.",
@@ -73,7 +73,7 @@ const jkcChurchData = {
     { title: "Faith in Action", date: "November 24, 2024", pastor: "Pastor Marcel Jonte Gadsden", scripture: "James 2:14-26" }
   ],
   upcomingEvents: [
-    { title: "Christmas Celebration Service", date: "Dec 24, 2024", time: "10:30 AM JST", ministry: "JKC Praise Music Ministry", location: "Main Sanctuary" },
+    { title: "Christmas Celebration Service", date: "Dec 24, 2024", time: "10:30 AM JST", ministry: "Praise Music Ministry", location: "Main Sanctuary" },
     { title: "New Year Prayer & Fasting", date: "Jan 1, 2025", time: "6:00 PM JST", ministry: "Prayer Ministry", location: "Fellowship Hall" }
   ]
 };
@@ -839,7 +839,7 @@ const PhilanthropyPage = ({ setPage }: { setPage: (p: string) => void }) => (
               {[
                 { from: "Donor-2882", to: "St. Peter's Global", amt: "$500", t: "Verified" },
                 { from: "Aid-Grant-33", to: "Zion Hill Sanctuary", amt: "$12,500", t: "Verified" },
-                { from: "Donor-1109", to: "Japan Kingdom Church", amt: "$2,000", t: "Verified" }
+                { from: "Donor-1109", to: "Kingdom Church Tokyo", amt: "$2,000", t: "Verified" }
               ].map((tx, i) => (
                 <div key={i} className="flex justify-between items-center py-4 border-b border-white/5">
                   <div>
@@ -858,7 +858,7 @@ const PhilanthropyPage = ({ setPage }: { setPage: (p: string) => void }) => (
 );
 
 /**
- * CHURCH PROFILE (JKC)
+ * CHURCH PROFILE (Sample Church)
  */
 
 const FeaturedChurchProfile = ({ setPage }: { setPage: (p: string) => void }) => {
@@ -887,7 +887,7 @@ const FeaturedChurchProfile = ({ setPage }: { setPage: (p: string) => void }) =>
             <div className="flex flex-wrap gap-8 mt-10 text-sm font-black uppercase tracking-widest text-emerald-100/60">
               <div className="flex items-center gap-2"><MapPin size={18} className="text-emerald-500" /> {church.address.split(',').slice(-2).join(',')}</div>
               <div className="flex items-center gap-2"><Users size={18} className="text-emerald-500" /> {church.memberCount} Members</div>
-              <div className="flex items-center gap-2 font-mono text-emerald-500">ID: #CP-JKC-2017</div>
+              <div className="flex items-center gap-2 font-mono text-emerald-500">ID: #CP-KCT-2017</div>
             </div>
           </div>
         </div>

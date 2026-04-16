@@ -44,12 +44,36 @@ export async function resolvePublicOrgId(): Promise<string | null> {
 
   const hostname = typeof window !== 'undefined' ? window.location.hostname : null;
 
-  // Short-circuit: github.io and localhost always serve JKC — no DB call needed
-  if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('github.io')) {
-    memoizedPublicOrgId = JKC_ORG_ID;
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem(ORG_CACHE_KEY, JSON.stringify({ orgId: JKC_ORG_ID, cachedAt: Date.now() }));
+  // Church OS platform subdomains — resolve to Church OS org record
+  const CHURCHOS_SUBDOMAINS = [
+    'churchos-ai.website',
+    'www.churchos-ai.website',
+    'app.churchos-ai.website',
+    'admin.churchos-ai.website',
+    'super.churchos-ai.website',
+    'ai.churchos-ai.website',
+    'onboard.churchos-ai.website',
+    'auth.churchos-ai.website',
+    'devotion.churchos-ai.website',
+  ];
+
+  if (hostname && CHURCHOS_SUBDOMAINS.includes(hostname)) {
+    const { data } = await supabase
+      .from('organizations')
+      .select('id')
+      .eq('domain', 'churchos-ai.website')
+      .single();
+    const resolvedId = data?.id ?? null;
+    if (resolvedId && typeof window !== 'undefined') {
+      memoizedPublicOrgId = resolvedId;
+      const toCache: CachedOrg = { orgId: resolvedId, cachedAt: Date.now() };
+      sessionStorage.setItem(ORG_CACHE_KEY, JSON.stringify(toCache));
     }
+    return resolvedId;
+  }
+
+  // localhost dev fallback — resolves to JKC for local testing
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return JKC_ORG_ID;
   }
 

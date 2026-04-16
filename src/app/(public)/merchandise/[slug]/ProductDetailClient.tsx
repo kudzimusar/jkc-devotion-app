@@ -142,7 +142,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                     subtitle: data.subtitle || "Kingdom Essentials for the Prophetic Age",
                     features: data.features || ["Divine protection and spiritual awareness", "Premium quality materials with symbolic significance", "Designed for the modern kingdom citizen", "Equipped for supernatural daily living"],
                     specifications: data.specifications || { "Material": "Prophetic Grade", "Origin": "Kingdom Design Lab", "Version": "2026 Release", "Quality": "Premium" },
-                    long_description: data.long_description || data.description || "This exclusive JKC Store product is designed to equip you for the vision. Every item in our collection is carefully curated to reflect the glory and excellence of the Kingdom of God, serving as a reminder of your divine purpose and identity."
+                    long_description: data.long_description || data.description || "This exclusive store product is designed to equip and inspire. Every item is carefully curated to reflect the values and vision of your church community."
                 };
                 setProduct(enriched);
             }

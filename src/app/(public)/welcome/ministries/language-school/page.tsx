@@ -549,7 +549,7 @@ NOTES: ${formData.message}
                         <select value={formData.heardAbout} onChange={e => setFormData({...formData, heardAbout: e.target.value})}
                             className="w-full rounded-2xl px-6 py-4 outline-none border bg-[var(--background)] text-[var(--foreground)] border-[var(--border)] appearance-none">
                             <option>Friend</option>
-                            <option>JKC member</option>
+                            <option>Church member</option>
                             <option>Social media</option>
                             <option>QR code</option>
                             <option>Google</option>

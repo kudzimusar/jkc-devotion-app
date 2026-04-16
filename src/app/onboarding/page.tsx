@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { RestorePrompt } from '@/components/ui/RestorePrompt';
 import { basePath as BP } from '@/lib/utils';
+import { resolvePublicOrgId } from '@/lib/org-resolver';
 
 const steps = ['Identity', 'DNA', 'Ministries', 'Plan'] as const;
 type Step = typeof steps[number];
@@ -41,8 +42,6 @@ const PROVISION_STEPS = [
     'Activating AI intelligence...',
     'Preparing for launch...',
 ];
-
-const JKC_ORG_ID = 'fa547adf-f820-412f-9458-d6bade11517d';
 
 export default function OnboardingPage() {
     const router = useRouter();
@@ -187,7 +186,7 @@ export default function OnboardingPage() {
         setHelpSending(true);
         try {
             await supabase.from('public_inquiries').insert({
-                org_id: JKC_ORG_ID,
+                org_id: await resolvePublicOrgId(),
                 visitor_intent: 'onboarding_support',
                 message: helpMessage,
                 email: contactEmail || undefined,
