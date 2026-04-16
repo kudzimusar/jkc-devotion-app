@@ -26,6 +26,7 @@ const NAV_ITEMS = [
     { label: "Giving & Finance", icon: DollarSign, path: "/finance" },
     { label: "Donation Log", icon: DollarSign, path: "/finance/giving-log" },
     { label: "Growth Intelligence", icon: TrendingUp, path: "/growth" },
+    { label: "Platform Intelligence", icon: Globe, path: "/platform" },
     { label: "AI Command Center", icon: Sparkles, path: "/ai" },
     { label: "Ministry Hub", icon: LayoutGrid, path: "/ministry-hub" },
     { label: "Ministry Comms", icon: Megaphone, path: "/ministries/announcements" },
