@@ -29,6 +29,7 @@ export function DraftReviewModal({ draftId, open, onClose, onApproved }: DraftRe
   const [saving, setSaving] = useState(false);
   const [approving, setApproving] = useState(false);
   const [rejecting, setRejecting] = useState(false);
+  const [sentState, setSentState] = useState<{ subject: string; recipients: number; sentAt: string } | null>(null);
 
   useEffect(() => {
     if (!open || !draftId) return;
@@ -69,9 +70,13 @@ export function DraftReviewModal({ draftId, open, onClose, onApproved }: DraftRe
     const result = await approveDraft(draftId);
     setApproving(false);
     if (result.success) {
-      toast.success('Draft approved and sent!');
+      setSentState({
+        subject: subjectEn,
+        recipients: draft?.estimated_recipients ?? 0,
+        sentAt: new Date().toLocaleString(),
+      });
       onApproved?.();
-      onClose();
+      setTimeout(() => onClose(), 2000);
     } else {
       toast.error(`Failed to send: ${result.error}`);
     }
@@ -127,7 +132,20 @@ export function DraftReviewModal({ draftId, open, onClose, onApproved }: DraftRe
             onClick={(e) => e.stopPropagation()}
             className="relative z-10 w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl"
           >
-            {loading ? (
+            {sentState ? (
+              <div className="flex flex-col items-center justify-center p-16 gap-6 text-center">
+                <div className="w-16 h-16 rounded-full bg-emerald-500/15 flex items-center justify-center">
+                  <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-lg font-black text-foreground">Sent successfully</h3>
+                  <p className="text-sm text-foreground/70 line-clamp-2">{sentState.subject}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {sentState.recipients} recipients · {sentState.sentAt}
+                  </p>
+                </div>
+              </div>
+            ) : loading ? (
               <div className="flex items-center justify-center p-16">
                 <Loader2 className="w-6 h-6 animate-spin text-violet-400" />
               </div>

@@ -64,6 +64,57 @@ export async function approveDraft(draftId: string): Promise<{ success: boolean;
     return { success: false, error: campErr?.message ?? 'Campaign insert failed' };
   }
 
+  // Resolve recipient emails and insert delivery rows
+  try {
+    const recipients: { member_id?: string; recipient_email: string }[] = [];
+
+    if (draft.audience_scope === 'individual' && draft.recipient_id) {
+      // Try member_communication_profiles first
+      const { data: mcp } = await supabaseAdmin
+        .from('member_communication_profiles')
+        .select('member_id, email')
+        .eq('member_id', draft.recipient_id)
+        .single();
+
+      if (mcp?.email) {
+        recipients.push({ member_id: draft.recipient_id, recipient_email: mcp.email });
+      } else {
+        // Fall back to auth user record
+        const { data: { user } } = await supabaseAdmin.auth.admin.getUserById(draft.recipient_id);
+        if (user?.email) {
+          recipients.push({ member_id: draft.recipient_id, recipient_email: user.email });
+        }
+      }
+    } else {
+      // Org-wide: gather all active communication profiles
+      const { data: profiles } = await supabaseAdmin
+        .from('member_communication_profiles')
+        .select('member_id, email')
+        .eq('org_id', draft.org_id)
+        .not('email', 'is', null);
+
+      for (const p of profiles ?? []) {
+        if (p.email) recipients.push({ member_id: p.member_id, recipient_email: p.email });
+      }
+    }
+
+    if (recipients.length > 0) {
+      await supabaseAdmin.from('communication_deliveries').insert(
+        recipients.map(r => ({
+          campaign_id: campaign.id,
+          org_id: draft.org_id,
+          member_id: r.member_id ?? null,
+          recipient_email: r.recipient_email,
+          channel: 'email',
+          status: 'pending',
+        }))
+      );
+    }
+  } catch (deliveryErr) {
+    // Non-fatal: deliveries are best-effort; dispatch still proceeds
+    console.warn('[approveDraft] delivery insert warning:', deliveryErr);
+  }
+
   // Fire coce-dispatch
   const dispatchRes = await fetch(`${SUPABASE_URL}/functions/v1/coce-dispatch`, {
     method: 'POST',

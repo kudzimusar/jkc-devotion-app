@@ -7,7 +7,7 @@ import { NewsletterTypeSelector } from './NewsletterTypeSelector';
 import { EmailComposer } from '@/app/pastor-hq/components/EmailComposer';
 import {
   Mail, MessageCircle, Smartphone, AlertTriangle, Loader2, Plus, BarChart3,
-  Globe, FileText, Inbox, ChevronDown,
+  Globe, FileText, Inbox, ChevronDown, Send, CheckCircle2, XCircle,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -77,6 +77,7 @@ export function CommsTab({
   const [newsletters, setNewsletters] = useState<any[]>([]);
   const [analytics, setAnalytics] = useState<any[]>([]);
   const [lineEvents, setLineEvents] = useState<any[]>([]);
+  const [sentCampaigns, setSentCampaigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [inboxFilter, setInboxFilter] = useState('All');
   const [accountFilter, setAccountFilter] = useState<string | null>(null); // null=All
@@ -168,6 +169,15 @@ export function CommsTab({
           .order('occurred_at', { ascending: false })
           .limit(10);
         setLineEvents(data ?? []);
+      } else if (tab === 'sent') {
+        const { data } = await supabase
+          .from('communication_campaigns')
+          .select('id, title, subject_en, sent_at, total_sent, status')
+          .eq('org_id', orgId)
+          .eq('status', 'sent')
+          .order('sent_at', { ascending: false })
+          .limit(50);
+        setSentCampaigns(data ?? []);
       } else if (tab === 'analytics') {
         const { data } = await supabase
           .from('v_campaign_engagement')
@@ -199,10 +209,11 @@ export function CommsTab({
   });
 
   const tabs = [
-    { key: 'inbox',       label: 'Inbox',       icon: Inbox,   show: true },
+    { key: 'inbox',       label: 'Inbox',       icon: Inbox,    show: true },
     { key: 'drafts',      label: 'Drafts',       icon: FileText, show: config?.show_drafts ?? userRole !== 'member' },
-    { key: 'newsletters', label: 'Newsletters',  icon: Mail,    show: config?.show_newsletters ?? false },
-    { key: 'social',      label: 'Social',       icon: Globe,   show: config?.show_social_media ?? false },
+    { key: 'sent',        label: 'Sent',         icon: Send,     show: config?.show_drafts ?? userRole !== 'member' },
+    { key: 'newsletters', label: 'Newsletters',  icon: Mail,     show: config?.show_newsletters ?? false },
+    { key: 'social',      label: 'Social',       icon: Globe,    show: config?.show_social_media ?? false },
     { key: 'analytics',   label: 'Analytics',    icon: BarChart3, show: config?.show_analytics ?? false },
   ].filter(t => t.show);
 
@@ -486,6 +497,40 @@ export function CommsTab({
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* ── SENT ── */}
+          {activeTab === 'sent' && (
+            <div className="space-y-2">
+              {sentCampaigns.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">No sent campaigns yet</p>
+              ) : sentCampaigns.map(camp => (
+                <div key={camp.id} className="flex items-center gap-4 px-4 py-3 rounded-xl border border-white/5 bg-white/3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-foreground truncate">
+                      {camp.subject_en ?? camp.title ?? '(No subject)'}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {camp.sent_at ? new Date(camp.sent_at).toLocaleString() : '—'}
+                    </p>
+                  </div>
+                  <div className="shrink-0 flex items-center gap-3">
+                    <span className="text-[10px] text-muted-foreground">
+                      <span className="font-bold text-foreground">{camp.total_sent ?? 0}</span> sent
+                    </span>
+                    {camp.status === 'sent' ? (
+                      <span className="flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">
+                        <CheckCircle2 className="w-2.5 h-2.5" /> Sent
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-[9px] font-black px-2 py-0.5 rounded-full bg-red-500/15 text-red-400">
+                        <XCircle className="w-2.5 h-2.5" /> {camp.status}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
