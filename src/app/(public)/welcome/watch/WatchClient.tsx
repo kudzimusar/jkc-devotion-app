@@ -70,28 +70,40 @@ export default function WatchClient() {
     if (!currentOrgId) return;
 
     const fetchSermons = async () => {
-      const { data } = await supabase
-        .from('public_sermons')
-        .select('*, assets:media_assets(*)')
-        .eq('org_id', currentOrgId)
-        .eq('status', 'published')
-        .order('date', { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from('public_sermons')
+          .select('*, assets:media_assets(*)')
+          .eq('org_id', currentOrgId)
+          .eq('status', 'published')
+          .order('date', { ascending: false });
 
-      setSermons(data || []);
-      const feat = data?.find((s: any) => s.is_featured);
-      if (feat) setActiveSermon(feat);
-      setLoading(false);
+        if (error) throw error;
+        setSermons(data || []);
+        const feat = data?.find((s: any) => s.is_featured) || data?.[0];
+        if (feat) setActiveSermon(feat);
+      } catch (err) {
+        console.error('[WatchClient] Failed to fetch sermons:', err);
+        setSermons([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     const checkLive = async () => {
-      const { data } = await supabase
-        .from('live_streams')
-        .select('*')
-        .eq('org_id', currentOrgId)
-        .eq('status', 'live')
-        .maybeSingle();
+      try {
+        const { data } = await supabase
+          .from('live_streams')
+          .select('*')
+          .eq('org_id', currentOrgId)
+          .eq('status', 'live')
+          .maybeSingle();
 
-      setLiveStream(data);
+        setLiveStream(data);
+      } catch (err) {
+        console.warn('[WatchClient] Live check failed (expected if API is throttled):', err);
+        setLiveStream(null);
+      }
     };
 
     fetchSermons();
@@ -565,7 +577,9 @@ export default function WatchClient() {
                             <PlayCircle className="text-white" size={32} />
                          </div>
                          <img 
-                           src={`https://img.youtube.com/vi/${getYouTubeID(s.youtube_url)}/mqdefault.jpg`} 
+                           src={getYouTubeID(s.youtube_url) 
+                             ? `https://img.youtube.com/vi/${getYouTubeID(s.youtube_url)}/mqdefault.jpg`
+                             : 'https://images.unsplash.com/photo-1544427928-c49cdfebf194?auto=format&fit=crop&q=80&w=400'} 
                            alt={s.title}
                            className="w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-opacity"
                          />
