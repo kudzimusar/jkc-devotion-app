@@ -212,7 +212,7 @@ export default function WatchClient() {
     setIsSubmittingResponse(false);
   };
 
-  const featured = sermons.find(s => s.is_featured);
+  const featured = sermons.find(s => s.is_featured) || sermons[0];
   const currentSermon = activeSermon || featured;
 
   // Sync interactions on sermon change
@@ -264,11 +264,29 @@ export default function WatchClient() {
      return (
        <div className="pt-32 min-h-screen flex items-center justify-center text-center px-6">
          <div className="space-y-6">
-           <h1 className="text-4xl font-black uppercase text-white/20 italic">No Organization Found</h1>
-           <p className="text-white/40 font-medium max-w-md mx-auto">We couldn't resolve the church context for this domain. Please check the URL or contact your administrator.</p>
+           {/* Fallback branding if org resolution fails completely */}
+           <h1 className="text-4xl font-black uppercase text-white/20 italic tracking-tighter">No Organization Found</h1>
+           <p className="text-white/40 font-medium max-w-md mx-auto leading-relaxed">
+             We couldn't resolve the church context for this domain. <br />
+             Please check the URL or contact your administrator.
+           </p>
+           <div className="pt-8">
+              <a href="/" className="text-[10px] font-black tracking-widest text-primary hover:text-white transition-colors uppercase">
+                Return to Home
+              </a>
+           </div>
          </div>
        </div>
      );
+   }
+
+   if (orgLoading) {
+      return (
+        <div className="pt-32 min-h-screen flex flex-col items-center justify-center text-center px-6 gap-6">
+          <div className="w-12 h-12 rounded-full border-4 border-white/5 border-t-primary animate-spin" />
+          <p className="text-[10px] font-black tracking-[0.4em] text-white/40 uppercase">Resolving Church Context...</p>
+        </div>
+      );
    }
 
    return (
@@ -347,7 +365,9 @@ export default function WatchClient() {
                     <div className="w-px h-12 bg-white/10 hidden md:block" />
                     <div className="flex flex-col group/meta">
                         <span className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-2 group-hover/meta:text-white/60 transition-colors">Released</span>
-                        <span className="text-xl font-black text-white/80 uppercase tracking-tighter">{format(new Date(currentSermon.date), 'MMMM dd, yyyy')}</span>
+                        <span className="text-xl font-black text-white/80 uppercase tracking-tighter">
+                          {currentSermon.date ? format(new Date(currentSermon.date), 'MMMM dd, yyyy') : 'Recently'}
+                        </span>
                     </div>
                     {currentSermon.scripture && (
                         <>

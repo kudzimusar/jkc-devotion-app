@@ -7,6 +7,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from './supabase';
+import { resolvePublicOrgId } from './org-resolver';
 
 export interface ChurchOrg {
   id: string;
@@ -52,44 +53,69 @@ export function ChurchProvider({ children }: { children: React.ReactNode }) {
       sessionStorage.setItem('church_os_church_slug', urlSlug);
     }
 
-    if (!slug) {
-      // Fallback for static deployments (e.g. GitHub Pages) where no [church_slug]
-      // route param exists. NEXT_PUBLIC_DEFAULT_ORG_ID is baked in at build time.
-      const fallbackOrgId = process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-      if (fallbackOrgId) {
-        (async () => {
+    const resolveContext = async () => {
+      setIsLoading(true);
+      try {
+        let resolvedId: string | null = null;
+
+        // ── 1. Resolve via Slug (URL or Session) ──
+        if (slug) {
+          const { data } = await supabase
+            .from('organizations')
+            .select('id')
+            .eq('church_slug', slug)
+            .eq('status', 'active')
+            .single();
+          resolvedId = data?.id ?? null;
+        }
+
+        // ── 2. Resolve via Domain (Hostname) ──
+        if (!resolvedId) {
+          resolvedId = await resolvePublicOrgId();
+        }
+
+        // ── 3. Fallback to build-time ENV ──
+        if (!resolvedId) {
+          resolvedId = process.env.NEXT_PUBLIC_DEFAULT_ORG_ID ?? null;
+        }
+
+        // ── Final Data Fetch ──
+        if (resolvedId) {
           const { data } = await supabase
             .from('organizations')
             .select('*')
-            .eq('id', fallbackOrgId)
+            .eq('id', resolvedId)
             .eq('status', 'active')
             .single();
-          console.log('Church OS [ChurchProvider] Fallback Org Data:', data);
+          
           setOrg(data ?? null);
-          setIsLoading(false);
-        })();
-      } else {
+          if (data) {
+             console.log('Church OS [ChurchProvider] Context Resolved:', data.name);
+             // Ensure session slug stays in sync with resolved domain org
+             if (typeof window !== 'undefined' && data.church_slug) {
+               sessionStorage.setItem('church_os_church_slug', data.church_slug);
+             }
+          }
+        } else {
+          setOrg(null);
+          console.warn('Church OS [ChurchProvider] No resolution path successful.');
+        }
+      } catch (err) {
+        console.error('Church OS [ChurchProvider] Resolution error:', err);
+        setOrg(null);
+      } finally {
         setIsLoading(false);
       }
-      return;
-    }
+    };
 
-    (async () => {
-      const { data } = await supabase
-        .from('organizations')
-        .select('*')
-        .eq('church_slug', slug)
-        .eq('status', 'active')
-        .single();
-
-      console.log('Church OS [ChurchProvider] Org Data:', data);
-      setOrg(data ?? null);
-      setIsLoading(false);
-    })();
+    resolveContext();
   }, [slug, urlSlug]);
 
+  // Ensure components get a valid slug even if resolution was domain-based
+  const contextSlug = slug ?? org?.church_slug ?? null;
+
   return (
-    <ChurchContext.Provider value={{ org, slug, isLoading }}>
+    <ChurchContext.Provider value={{ org, slug: contextSlug, isLoading }}>
       {children}
     </ChurchContext.Provider>
   );
