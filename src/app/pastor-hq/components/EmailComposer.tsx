@@ -24,6 +24,14 @@ interface MemberResult {
   email: string;
 }
 
+interface FromAccount {
+  id: string;
+  email_address: string;
+  display_name: string | null;
+  provider: string;
+  account_color: string | null;
+}
+
 interface EmailComposerProps {
   orgId: string;
   userId: string;
@@ -31,6 +39,8 @@ interface EmailComposerProps {
   recipientName?: string;
   context?: string;
   onClose: () => void;
+  /** When set, sends via the external account instead of Church OS (Brevo) */
+  fromAccount?: FromAccount | null;
 }
 
 export function EmailComposer({
@@ -40,6 +50,7 @@ export function EmailComposer({
   recipientName,
   context,
   onClose,
+  fromAccount,
 }: EmailComposerProps) {
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState('');
@@ -195,6 +206,51 @@ export function EmailComposer({
       return;
     }
 
+    // External account send path
+    if (fromAccount) {
+      setSending(true);
+      setError('');
+      try {
+        const toEmails = audienceType === 'individual' && selectedMember?.email
+          ? [selectedMember.email]
+          : recipientEmail
+          ? [recipientEmail]
+          : [];
+        if (toEmails.length === 0) {
+          setError('Please select a recipient.');
+          return;
+        }
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/email-send-from-account`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            },
+            body: JSON.stringify({
+              account_id: fromAccount.id,
+              to: toEmails,
+              subject,
+              body_text: body,
+              body_html: `<p>${body.replace(/\n/g, '<br>')}</p>`,
+            }),
+          }
+        );
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: res.statusText }));
+          throw new Error(err.error || 'Failed to send');
+        }
+        setSent(true);
+        setTimeout(onClose, 1500);
+      } catch (e: any) {
+        setError(e?.message || 'Failed to send via external account.');
+      } finally {
+        setSending(false);
+      }
+      return;
+    }
+
     // If we have a draft from AI, approve it
     if (draftId) {
       setSending(true);
@@ -278,7 +334,20 @@ export function EmailComposer({
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
             <h2 className="text-sm font-black uppercase tracking-tight">Compose Email</h2>
-            {recipientEmail && (
+            {fromAccount && (
+              <div className="flex items-center gap-1.5 mt-1">
+                <span
+                  className="w-2 h-2 rounded-full shrink-0"
+                  style={{ backgroundColor: fromAccount.account_color || '#94a3b8' }}
+                />
+                <p className="text-[10px] text-muted-foreground font-medium">
+                  Sending from {fromAccount.display_name
+                    ? `${fromAccount.display_name} (${fromAccount.email_address})`
+                    : fromAccount.email_address}
+                </p>
+              </div>
+            )}
+            {recipientEmail && !fromAccount && (
               <p className="text-[10px] text-muted-foreground font-medium mt-0.5">
                 To: {recipientName ? `${recipientName} (${recipientEmail})` : recipientEmail}
               </p>

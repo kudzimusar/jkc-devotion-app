@@ -74,11 +74,14 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
         return () => document.removeEventListener("mousedown", handler);
     }, []);
 
-    // Fetch unread inbound communications count
+    // Fetch unread count from both native comms and external email accounts
     useEffect(() => {
         const fetchCommsUnread = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session?.user) return;
+            const userId = session.user.id;
+
+            // Native Church OS inbound messages (with preview for dropdown)
             const { data: events } = await supabase
                 .from('communication_events')
                 .select('id, preview, occurred_at, ai_tone, direction, ai_summary')
@@ -86,8 +89,17 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                 .eq('read_at', null)
                 .order('occurred_at', { ascending: false })
                 .limit(5);
+
+            // External email accounts unread count
+            const { count: externalCount } = await supabase
+                .from('external_email_messages')
+                .select('id', { count: 'exact', head: true })
+                .eq('member_id', userId)
+                .eq('is_read', false)
+                .eq('is_trashed', false);
+
             setRecentEvents(events ?? []);
-            setCommsUnread(events?.length ?? 0);
+            setCommsUnread((events?.length ?? 0) + (externalCount ?? 0));
         };
         fetchCommsUnread();
         const interval = setInterval(fetchCommsUnread, 60000);
@@ -168,7 +180,7 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                                     <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Notifications</p>
                                     <div className="flex items-center gap-1.5">
                                         {alertCount > 0 && <Badge className="bg-red-500/20 text-red-400 border-0 text-[9px]">{alertCount} ALERT</Badge>}
-                                        {commsUnread > 0 && <Badge className="bg-violet-500/20 text-violet-400 border-0 text-[9px]">{commsUnread} MSG</Badge>}
+                                        {commsUnread > 0 && <Badge className="bg-violet-500/20 text-violet-400 border-0 text-[9px]">{commsUnread} UNREAD</Badge>}
                                     </div>
                                 </div>
 

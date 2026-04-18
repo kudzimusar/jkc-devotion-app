@@ -451,6 +451,25 @@ export function AdminSettingsPanel({ surface, role: myRole, userName, userId, or
                                             </div>
                                         </div>
 
+                                        {/* Email Accounts link — Part G */}
+                                        <a
+                                            href={surface === 'pastor-hq'
+                                                ? '/pastor-hq/settings/email-accounts'
+                                                : '/shepherd/dashboard/settings/email-accounts'}
+                                            className="flex items-center justify-between w-full px-5 py-4 rounded-[1.25rem] border border-border bg-muted/30 hover:bg-muted/50 transition-all group"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-9 h-9 rounded-xl bg-violet-500/10 flex items-center justify-center">
+                                                    <Mail className="w-4 h-4 text-violet-400" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-black text-foreground uppercase tracking-wider">Email Accounts</p>
+                                                    <p className="text-[10px] text-muted-foreground">Connect Gmail, Outlook, IMAP</p>
+                                                </div>
+                                            </div>
+                                            <span className="text-muted-foreground/30 group-hover:text-muted-foreground text-sm transition-colors">→</span>
+                                        </a>
+
                                         <Button onClick={() => AdminAuth.logoutAdmin()} variant="outline"
                                             className="w-full h-16 border-red-500/20 text-red-500 font-black rounded-[1.25rem] hover:bg-red-500/10 uppercase tracking-[0.2em] text-xs transition-all">
                                             Sign Out of {surface === 'pastor-hq' ? 'Pastor HQ' : 'Mission Control'}
