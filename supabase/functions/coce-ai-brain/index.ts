@@ -151,6 +151,8 @@ Return ONLY valid JSON (no markdown, no code blocks) with exactly these keys:
 
         if (geminiData?.error) {
           console.error("[coce-ai-brain] Gemini error:", JSON.stringify(geminiData.error));
+          aiResult.reasoning = `Gemini API error: ${geminiData.error?.message ?? JSON.stringify(geminiData.error)}`;
+          aiResult.confidence = 0;
         } else if (rawText) {
           const cleanJson = rawText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
           const parsed = JSON.parse(cleanJson);
