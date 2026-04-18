@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
 import { approveDraft, saveDraftEdits, rejectDraft } from '@/app/actions/comms-draft-actions';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle2, Save, XCircle, ChevronDown, ChevronUp, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { X, CheckCircle2, Save, XCircle, ChevronDown, ChevronUp, Code, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface DraftReviewModalProps {
@@ -19,7 +19,7 @@ export function DraftReviewModal({ draftId, open, onClose, onApproved }: DraftRe
   const [loading, setLoading] = useState(true);
   const [lang, setLang] = useState<'en' | 'ja'>('en');
   const [showReasoning, setShowReasoning] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
+  const [sourceMode, setSourceMode] = useState(false);
   const [subjectEn, setSubjectEn] = useState('');
   const [bodyEn, setBodyEn] = useState('');
   const [subjectJa, setSubjectJa] = useState('');
@@ -218,25 +218,39 @@ export function DraftReviewModal({ draftId, open, onClose, onApproved }: DraftRe
                     <div className="flex items-center justify-between">
                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Body</label>
                       <button
-                        onClick={() => setShowPreview(v => !v)}
-                        className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => setSourceMode(v => !v)}
+                        className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest transition-colors ${
+                          sourceMode ? 'text-violet-400 hover:text-violet-300' : 'text-muted-foreground hover:text-foreground'
+                        }`}
                       >
-                        {showPreview ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                        {showPreview ? 'Edit' : 'Preview'}
+                        <Code className="w-3 h-3" />
+                        {sourceMode ? 'Source' : 'Edit'}
                       </button>
                     </div>
-                    {showPreview ? (
-                      <div
-                        className="w-full min-h-[240px] p-4 rounded-xl bg-white text-gray-900 text-sm overflow-auto"
-                        dangerouslySetInnerHTML={{ __html: lang === 'en' ? bodyEn : bodyJa }}
-                      />
-                    ) : (
+                    {sourceMode ? (
+                      /* Source view — raw HTML for advanced users */
                       <textarea
                         value={lang === 'en' ? bodyEn : bodyJa}
                         onChange={e => lang === 'en' ? setBodyEn(e.target.value) : setBodyJa(e.target.value)}
                         rows={12}
                         className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm focus:outline-none focus:border-violet-500/50 transition-colors resize-y font-mono"
-                        placeholder="Email body (HTML allowed)…"
+                        placeholder="Email body (HTML)…"
+                      />
+                    ) : (
+                      /* Edit view — contentEditable so pastors see formatted text */
+                      <div
+                        key={lang}
+                        contentEditable
+                        suppressContentEditableWarning
+                        dangerouslySetInnerHTML={{ __html: lang === 'en' ? bodyEn : bodyJa }}
+                        onBlur={e => {
+                          const html = e.currentTarget.innerHTML;
+                          if (lang === 'en') setBodyEn(html);
+                          else setBodyJa(html);
+                        }}
+                        data-placeholder="Click to edit…"
+                        className={`w-full min-h-[240px] px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm focus:outline-none focus:border-violet-500/50 transition-colors overflow-auto prose prose-invert max-w-none
+                          empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/40 empty:before:pointer-events-none`}
                       />
                     )}
                   </div>
