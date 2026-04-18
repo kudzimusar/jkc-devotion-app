@@ -206,7 +206,7 @@ Write a 1-2 sentence reflection question that feels personal to their recent spi
 Return ONLY the question text, no JSON.`;
 
               const pRes = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=${geminiKey}`,
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
                 {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },

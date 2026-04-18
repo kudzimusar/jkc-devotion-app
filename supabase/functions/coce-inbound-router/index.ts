@@ -122,7 +122,7 @@ Return ONLY valid JSON (no markdown, no code blocks):
 
           try {
             const gemRes = await fetch(
-              `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=${geminiKey}`,
+              `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -231,7 +231,7 @@ Return ONLY valid JSON (no markdown, no code blocks):
             ai_confidence: aiConfidence,
             ai_urgency_score: aiUrgencyScore,
             ai_tone: aiTone,
-            ai_model_used: "gemini-2.5-flash-preview-04-17",
+            ai_model_used: "models/gemini-2.5-flash",
             review_status: "pending_review",
             estimated_recipients: 1,
           });
