@@ -8,8 +8,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { usePastorCtx } from '../pastor-context';
-import { InquiryList } from '../components/InquiryList';
-import { Mail, Search, RefreshCw, Loader2 } from 'lucide-react';
+import { Mail, Search, RefreshCw, Loader2, User } from 'lucide-react';
+import { format } from 'date-fns';
 
 
 export interface Inquiry {
@@ -141,7 +141,46 @@ function InquiriesPage() {
           </p>
         </div>
       ) : (
-        <InquiryList inquiries={filtered} orgId={orgId || ''} userId={userId || ''} onStatusChange={handleStatusChange} />
+        <div className="bg-card border border-border rounded-[2rem] overflow-hidden shadow-sm">
+          <div className="divide-y divide-border/50">
+            {filtered.map(inquiry => (
+              <div key={inquiry.id} className="p-6 hover:bg-muted/30 transition-colors">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                      <User className="w-4 h-4 text-blue-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">{inquiry.first_name} {inquiry.last_name}</h3>
+                      <p className="text-[10px] text-muted-foreground">{inquiry.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {inquiry.visitor_intent && (
+                      <span className="text-[8px] font-black px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20 uppercase tracking-widest">
+                        {inquiry.visitor_intent}
+                      </span>
+                    )}
+                    <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border ${
+                      inquiry.status === 'new' 
+                      ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
+                      : 'bg-muted text-muted-foreground border-border'
+                    }`}>
+                      {inquiry.status}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-xs text-foreground/70 line-clamp-2 italic mb-3">"{inquiry.message}"</p>
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-[9px] font-bold text-muted-foreground/40 uppercase">
+                    Received {format(new Date(inquiry.created_at), 'MMM dd, HH:mm')}
+                  </span>
+                  <a href={`mailto:${inquiry.email}`} className="text-[9px] font-black text-blue-500 uppercase hover:underline">Reply Now</a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

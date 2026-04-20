@@ -79,6 +79,15 @@ export default function InquiriesPage() {
                       <span className="text-[10px] font-bold text-muted-foreground/60 uppercase flex items-center gap-1">
                         <Clock className="w-2.5 h-2.5" /> {format(new Date(inquiry.created_at), 'MMM dd, yyyy')}
                       </span>
+                      {inquiry.visitor_type && (
+                        <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border ${
+                          inquiry.visitor_type === 'language_class' 
+                          ? 'bg-[var(--jkc-gold)]/10 text-[var(--jkc-gold)] border-[var(--jkc-gold)]/20' 
+                          : 'bg-primary/10 text-primary border-primary/20'
+                        }`}>
+                          {inquiry.visitor_type.replace('_', ' ')}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ChevronDown, Calendar, MapPin, Clock, BookOpen, User, Users, Languages, FileText, Download, CheckCircle2, ChevronRight, Loader2, Globe } from 'lucide-react';
-import { resolvePublicOrgId } from '@/lib/org-resolver';
+import { resolvePublicOrgId, JKC_ORG_ID } from '@/lib/org-resolver';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
@@ -33,7 +33,8 @@ PHONE: ${formData.phone}
 NOTES: ${formData.message}
     `.trim();
 
-    const orgId = await resolvePublicOrgId();
+    // For the pilot site, we explicitly route to JKC to avoid oragnizational siphoning
+    const orgId = JKC_ORG_ID;
 
     const { error } = await supabase
       .from('public_inquiries')
@@ -74,11 +75,12 @@ NOTES: ${formData.message}
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src="/jkc/images/language-school/hero.jpg" 
+            src="/images/language-school/hero.jpg" 
             alt="Japanese Language Class" 
-            className="w-full h-full object-cover opacity-40 brightness-50"
+            className="w-full h-full object-cover opacity-60 scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-slate-900/60 to-[var(--background)]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/95 via-slate-900/40 to-[var(--background)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(2,6,23,0.8)_100%)]" />
         </div>
         
         <div className="relative z-10 text-center px-6 max-w-5xl mx-auto space-y-6 pt-20">
@@ -125,14 +127,14 @@ NOTES: ${formData.message}
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-slate-800">
-               <img src="/jkc/images/language-school/img1.jpg" alt="Classroom environment" className="w-full h-full object-cover" />
+            <div className="aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-slate-800 shadow-2xl hover:scale-[1.02] transition-transform duration-500">
+               <img src="/images/language-school/img1.jpg" alt="Classroom environment" className="w-full h-full object-cover" />
             </div>
-            <div className="aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-slate-800">
-               <img src="/jkc/images/language-school/class1.jpg" alt="Students learning" className="w-full h-full object-cover" />
+            <div className="aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-slate-800 shadow-2xl hover:scale-[1.02] transition-transform duration-500">
+               <img src="/images/language-school/class1.jpg" alt="Students learning" className="w-full h-full object-cover" />
             </div>
-            <div className="aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-slate-800 hidden lg:block">
-               <img src="/jkc/images/language-school/class2.jpg" alt="Community gathering" className="w-full h-full object-cover" />
+            <div className="aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-slate-800 hidden lg:block shadow-2xl hover:scale-[1.02] transition-transform duration-500">
+               <img src="/images/language-school/class2.jpg" alt="Community gathering" className="w-full h-full object-cover" />
             </div>
           </div>
         </div>
