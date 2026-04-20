@@ -25,14 +25,42 @@ export default function KingdomClassDashboard() {
     async function fetchApplications() {
       if (!orgId) return;
       try {
-        const { data, error } = await supabase
+        // 1. Fetch from the new fragmented table
+        const { data: newData } = await supabase
           .from('kingdom_class_applications')
           .select('*')
-          .eq('org_id', orgId)
-          .order('created_at', { ascending: false });
+          .eq('org_id', orgId);
 
-        if (error) throw error;
-        setApplications(data || []);
+        // 2. Fetch/Fallback to legacy inquiries
+        const { data: legacyData } = await supabase
+          .from('public_inquiries')
+          .select('*')
+          .eq('org_id', orgId)
+          .eq('visitor_intent', 'language_class');
+
+        // 3. Unify the data streams
+        const unified = [
+          ...(newData || []),
+          ...(legacyData || []).map(inq => ({
+            id: inq.id,
+            full_name: inq.first_name,
+            email: inq.email,
+            phone: inq.phone,
+            track: inq.message?.match(/TRACK: (.*)/)?.[1] || 'General',
+            learning_level: inq.message?.match(/LEVEL: (.*)/)?.[1] || 'Beginner',
+            status: inq.status === 'analyzed' ? 'Accepted' : 'pending',
+            wants_online: inq.message?.toLowerCase().includes('wants online: yes'),
+            created_at: inq.created_at,
+            is_legacy: true
+          }))
+        ];
+
+        // Sort by dates
+        const sorted = unified.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+
+        setApplications(sorted);
       } catch (err) {
         console.error('Error fetching applications:', err);
       } finally {
