@@ -45,8 +45,10 @@ NOTES: ${formData.message}
         email: formData.email,
         phone: formData.phone,
         message: fullMessage,
-        visitor_type: 'language_class',
-        how_heard: formData.heardAbout.toLowerCase()
+        visitor_intent: 'language_class',
+        how_heard: formData.heardAbout.toLowerCase(),
+        preferred_language: 'EN',
+        status: 'new'
       }]);
 
     if (error) {
