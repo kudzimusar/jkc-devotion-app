@@ -6,8 +6,9 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Load environment variables from .env.local or .env
-config({ path: resolve(__dirname, '../.env.local'), override: true });
-config({ path: resolve(__dirname, '../.env'), override: true });
+const rootDir = resolve(__dirname, '..');
+config({ path: resolve(rootDir, '.env.local'), override: true });
+config({ path: resolve(rootDir, '.env'), override: true });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
