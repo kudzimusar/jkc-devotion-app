@@ -71,7 +71,7 @@ export function withRoleGuard<T extends object>(
                 // aal2 is only required when entering Pastor HQ from Mission Control (elevation).
                 if (['pastor', 'super_admin', 'owner'].includes(session.role)) {
                     let currentPath = pathname;
-                    while(currentPath.startsWith(BP)) {
+                    if (BP.length > 0 && currentPath.startsWith(BP)) {
                         currentPath = currentPath.substring(BP.length);
                     }
                     if (!currentPath.startsWith('/')) currentPath = '/' + currentPath;
