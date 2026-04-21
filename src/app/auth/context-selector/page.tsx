@@ -47,15 +47,22 @@ function ContextSelectorContent() {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('church_os_active_domain', context.auth_domain);
       sessionStorage.setItem('church_os_active_surface', context.auth_surface);
-      sessionStorage.removeItem('church_os_domain_session'); // Force refresh
-      // Direct selection from context page = no 2MFA elevation required
+      sessionStorage.removeItem('church_os_domain_session'); 
+
       if (context.auth_surface === 'pastor-hq') {
         sessionStorage.setItem('church_os_phq_direct', '1');
       } else {
         sessionStorage.removeItem('church_os_phq_direct');
       }
     }
-    router.push(DomainAuth.getSurfaceRoute(context.auth_surface));
+
+    // Handle dynamic routing for specific ministries
+    if (context.auth_surface === 'ministry' && context.role.includes(':')) {
+      const slug = context.role.split(':')[1];
+      router.push(`/ministry-dashboard/${slug}`);
+    } else {
+      router.push(DomainAuth.getSurfaceRoute(context.auth_surface));
+    }
   };
 
   const surfaceIcons: Record<string, any> = {
@@ -70,7 +77,7 @@ function ContextSelectorContent() {
 
   const surfaceLabels: Record<string, string> = {
     'console': 'Super Admin Console',
-    'pastor-hq': "Pastor's HQ",
+    'pastor-hq': "Pastor'S HQ",
     'mission-control': 'Mission Control',
     'ministry': 'Ministry Dashboard',
     'kingdom-class': 'Kingdom Class',
@@ -89,7 +96,17 @@ function ContextSelectorContent() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {contexts.map((ctx, idx) => {
             const Icon = surfaceIcons[ctx.auth_surface] || Shield;
-            const label = surfaceLabels[ctx.auth_surface] || ctx.auth_surface.replace(/-/g, ' ');
+            
+            // Refined Label logic for specific ministries
+            let label = surfaceLabels[ctx.auth_surface] || ctx.auth_surface.replace(/-/g, ' ');
+            let subLabel = `${ctx.auth_domain} • ${ctx.role}`;
+
+            if (ctx.auth_surface === 'ministry' && ctx.role.includes(':')) {
+              const [rolePart, slug] = ctx.role.split(':');
+              label = `${slug.replace(/-/g, ' ')} Ministry`;
+              subLabel = `${ctx.auth_domain} • ${rolePart.replace(/_/g, ' ')}`;
+            }
+
             return (
               <motion.button
                 key={idx}
@@ -104,7 +121,7 @@ function ContextSelectorContent() {
                 </div>
 
                 <h3 className="text-lg font-black text-white uppercase tracking-tight mb-1">{label}</h3>
-                <p className="text-sm text-white/40 font-medium capitalize mb-4">{ctx.auth_domain} • {ctx.role}</p>
+                <p className="text-sm text-white/40 font-medium capitalize mb-4">{subLabel}</p>
 
                 <div className="flex items-center gap-2 text-violet-400 group-hover:text-violet-300 transition-colors">
                   <span className="text-xs font-black uppercase tracking-widest">Enter Domain</span>

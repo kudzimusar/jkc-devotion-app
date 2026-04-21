@@ -27,32 +27,46 @@ export interface MinistrySession {
 export const MinistryAuth = {
     async getMinistrySession(slug: string): Promise<MinistrySession | null> {
         try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session?.user) return null;
+            const { data: { session: authSess } } = await supabase.auth.getSession();
+            if (!authSess?.user) return null;
 
-            // Run the exact query from the spec via Supabase JS client
-            const { data, error } = await supabase
-                .from('ministry_members')
-                .select(`
-                    ministry_role,
-                    ministry_id,
-                    org_id,
-                    ministries!inner(name, slug, color, icon, description, is_active, org_id)
-                `)
-                .eq('user_id', session.user.id)
+            // 1. SKELETON KEY: Check if user is an Admin/Shepherd/Owner/Pastor of the org
+            const { data: orgRoles } = await supabase
+                .from('org_members')
+                .select('role, org_id')
+                .eq('user_id', authSess.user.id)
+                .in('role', ['admin', 'shepherd', 'owner', 'pastor', 'super_admin', 'super-admin']);
+
+            const isAdmin = orgRoles && orgRoles.length > 0;
+
+            // 2. Resolve ministry info
+            const { data: ministry, error: minError } = await supabase
+                .from('ministries')
+                .select('*')
+                .eq('slug', slug)
                 .eq('is_active', true)
-                .eq('ministries.slug', slug)
-                .eq('ministries.is_active', true)
                 .maybeSingle();
 
-            if (error || !data) return null;
+            if (minError || !ministry) return null;
 
-            const ministry = Array.isArray(data.ministries) ? data.ministries[0] : (data.ministries as any);
+            // 3. Resolve user role in this ministry
+            const { data: memberData } = await supabase
+                .from('ministry_members')
+                .select('ministry_role')
+                .eq('user_id', authSess.user.id)
+                .eq('ministry_id', ministry.id)
+                .eq('is_active', true)
+                .maybeSingle();
+
+            // If user is Admin, they get "leader" rank automatically for the skeleton key
+            const effectiveRole = memberData?.ministry_role || (isAdmin ? 'leader' : null);
+
+            if (!effectiveRole) return null;
 
             return {
-                userId: session.user.id,
-                ministryRole: data.ministry_role as MinistryRole,
-                ministryId: data.ministry_id as string,
+                userId: authSess.user.id,
+                ministryRole: effectiveRole as MinistryRole,
+                ministryId: ministry.id as string,
                 orgId: ministry.org_id,
                 ministryName: ministry.name,
                 slug: ministry.slug,
@@ -61,7 +75,8 @@ export const MinistryAuth = {
                 description: ministry.description,
             };
 
-        } catch {
+        } catch (err) {
+            console.error('[MinistryAuth] Session error:', err);
             return null;
         }
     },
@@ -75,7 +90,7 @@ export const MinistryAuth = {
         
         if (!authSession?.user) {
             if (typeof window !== 'undefined') {
-                window.location.href = `${BP}/ministry/login/`;
+                 window.location.href = `${BP}/login/`;
             }
             throw new Error('Access denied: You are not logged in.');
         }
@@ -84,14 +99,15 @@ export const MinistryAuth = {
         
         if (!session) {
             if (typeof window !== 'undefined') {
-                window.location.href = `${BP}/ministry/login/`;
+                 // Try to redirect to context selector instead of a generic login
+                 window.location.href = `${BP}/auth/context-selector/?domain=tenant`;
             }
-            throw new Error('Access denied: You are not a member of this ministry.');
+            throw new Error('Access denied: You do not have permission for this ministry.');
         }
 
         if (!this.can(session.ministryRole, minimumRole)) {
              if (typeof window !== 'undefined') {
-                window.location.href = `${BP}/ministry/login/`;
+                window.location.href = `${BP}/auth/context-selector/?domain=tenant`;
             }
             throw new Error('Access denied: Insufficient role.');
         }
