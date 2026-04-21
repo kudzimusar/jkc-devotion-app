@@ -2,10 +2,11 @@
 import { supabase } from "@/lib/supabase";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { Music, Users, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Music, Users, CheckCircle2, AlertTriangle, ExternalLink } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { useAdminCtx } from "../Context";
 
@@ -13,6 +14,7 @@ const MINISTRY_COLORS: Record<string, string> = {
     worship: '#8b5cf6', youth: '#06b6d4', childrens: '#f87171',
     intercessory: '#fbbf24', evangelism: '#34d399', media: '#60a5fa',
     choir: '#f472b6', ushers: '#a78bfa', counseling: '#fb923c', missions: '#4ade80',
+    'language-school': '#3b82f6', 'kingdom-class': '#3b82f6'
 };
 
 const TOOLTIP_STYLE = {
@@ -22,6 +24,7 @@ const TOOLTIP_STYLE = {
 };
 
 export default function MinistriesPage() {
+    const [allMinistries, setAllMinistries] = useState<any[]>([]);
     const [members, setMembers] = useState<any[]>([]);
     const [candidates, setCandidates] = useState<any[]>([]);
     const [talentMatches, setTalentMatches] = useState<any[]>([]);
@@ -32,15 +35,16 @@ export default function MinistriesPage() {
     useEffect(() => {
         if (!orgId) return;
         const load = async () => {
-            const [rolesRes, skillsRes, talentRes] = await Promise.all([
+            const [ministriesRes, rolesRes, skillsRes, talentRes] = await Promise.all([
+                supabase.from('vw_ministry_hub').select('*').eq('org_id', orgId),
                 supabase.from('ministry_members').select('*').eq('org_id', orgId).eq('is_active', true),
                 supabase.from('member_skills').select('*, profiles(name, avatar_url, org_id)'),
                 supabase.from('vw_ministry_talent_match').select('*').eq('org_id', orgId).limit(40)
             ]);
 
-            // Filter skills/candidates by org_id (since profiles join might not filter outer query)
             const filteredCandidates = (skillsRes.data || []).filter((s: any) => s.profiles?.org_id === orgId);
 
+            setAllMinistries(ministriesRes.data || []);
             setMembers(rolesRes.data || []);
             setCandidates(filteredCandidates);
             setTalentMatches(talentRes.data || []);
@@ -49,17 +53,19 @@ export default function MinistriesPage() {
         load();
     }, [orgId]);
 
-    // Group by ministry
-    const byMinistry = members.reduce((acc: Record<string, any[]>, m) => {
-        if (!acc[m.ministry_name]) acc[m.ministry_name] = [];
-        acc[m.ministry_name].push(m);
-        return acc;
-    }, {});
-    const ministryList = Object.entries(byMinistry).map(([name, mems]) => ({ name, count: mems.length, members: mems }));
-    const chartData = ministryList.map(m => ({ name: m.name, count: m.count })).sort((a, b) => b.count - a.count);
+    // Build list including all ministries from the DB
+    const ministryList = allMinistries.map((m: any) => ({
+        id: m.id,
+        name: m.name,
+        slug: m.slug,
+        count: m.volunteer_count || 0,
+        members: members.filter(mem => mem.ministry_id === m.id || mem.ministry_name === m.name)
+    })).sort((a, b) => b.count - a.count);
 
-    // Derive staffing gaps from real data: ministries with fewer than 3 active members
-    const staffingGaps = ministryList.filter(m => m.count < 3).map(m => m.name);
+    const chartData = ministryList.filter(m => m.count > 0).map(m => ({ name: m.name, count: m.count }));
+
+    // Gaps are strictly defined as any ministry with less than 2 members.
+    const staffingGaps = ministryList.filter(m => m.count < 2).map(m => m.name);
 
     const handleInvite = async (candidate: any, ministryName: string) => {
         try {
@@ -71,7 +77,6 @@ export default function MinistriesPage() {
                 is_active: true
             });
             if (error) throw error;
-            // Optionally update state to show "Invited"
             alert(`Invitation sent to ${candidate.profiles?.name} for ${ministryName}`);
         } catch (e) {
             console.error("Invite Error:", e);
@@ -122,25 +127,31 @@ export default function MinistriesPage() {
                 {ministryList.map((ministry, i) => {
                     const isGap = staffingGaps.includes(ministry.name);
                     return (
-                        <motion.div
-                            key={ministry.name}
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.05 }}
-                            className={`bg-card border rounded-2xl p-4 shadow-sm transition-colors ${isGap ? 'border-red-500/20' : 'border-border'}`}
-                        >
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${MINISTRY_COLORS[ministry.name]}20` }}>
-                                    <Music className="w-4 h-4" style={{ color: MINISTRY_COLORS[ministry.name] || '#8b5cf6' }} />
+                        <Link key={ministry.name} href={ministry.slug === 'language-school' ? '/kingdom-class-control/' : `/ministry-dashboard/${ministry.slug || ministry.name.toLowerCase()}/`}>
+                            <motion.div
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.05 }}
+                                className={`bg-card border rounded-2xl p-4 shadow-sm transition-all hover:shadow-md hover:border-primary/50 group cursor-pointer ${isGap ? 'border-red-500/20' : 'border-border'}`}
+                            >
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="flex gap-2 items-center">
+                                        <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${MINISTRY_COLORS[ministry.name] || '#8b5cf6'}20` }}>
+                                            <Music className="w-4 h-4" style={{ color: MINISTRY_COLORS[ministry.name] || '#8b5cf6' }} />
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {isGap && <span className="text-[8px] font-black bg-red-500/10 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded-md uppercase">Needs Team</span>}
+                                        <ExternalLink className="w-3 h-3 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </div>
                                 </div>
-                                {isGap && <span className="text-[8px] font-black bg-red-500/10 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded-md uppercase">Needs Team</span>}
-                            </div>
-                            <p className="text-sm font-black text-foreground capitalize">{ministry.name}</p>
-                            <div className="flex items-center gap-1 mt-1">
-                                <Users className="w-3 h-3 text-muted-foreground" />
-                                <p className="text-[10px] text-muted-foreground/60">{ministry.count} members · {ministry.members[0]?.role_title || 'Team'}</p>
-                            </div>
-                        </motion.div>
+                                <p className="text-sm font-black text-foreground capitalize group-hover:text-primary transition-colors">{ministry.name}</p>
+                                <div className="flex items-center gap-1 mt-1">
+                                    <Users className="w-3 h-3 text-muted-foreground" />
+                                    <p className="text-[10px] text-muted-foreground/60">{ministry.count} volunteers · {isGap ? 'Critical' : 'Active'}</p>
+                                </div>
+                            </motion.div>
+                        </Link>
                     );
                 })}
                 {!loading && ministryList.length === 0 && (
