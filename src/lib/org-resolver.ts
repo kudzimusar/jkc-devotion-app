@@ -58,6 +58,23 @@ export async function resolvePublicOrgId(): Promise<string | null> {
   ];
 
   if (hostname && CHURCHOS_SUBDOMAINS.includes(hostname)) {
+    // CRITICAL: On admin subdomains, check if we have a tenant slug in the path or session first
+    const slugFromSession = typeof window !== 'undefined' ? sessionStorage.getItem('church_os_church_slug') : null;
+    if (slugFromSession && slugFromSession !== 'tenant' && slugFromSession !== 'onboarding') {
+      const { data: tenantData } = await supabase
+        .from('organizations')
+        .select('id')
+        .eq('church_slug', slugFromSession)
+        .eq('status', 'active')
+        .single();
+      
+      if (tenantData) {
+        memoizedPublicOrgId = tenantData.id;
+        return tenantData.id;
+      }
+    }
+
+    // Otherwise, fall back to Church OS Company identity
     const { data } = await supabase
       .from('organizations')
       .select('id')
