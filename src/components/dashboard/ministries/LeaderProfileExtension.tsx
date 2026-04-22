@@ -28,6 +28,7 @@ interface LeaderProfileExtensionProps {
 }
 
 export function LeaderProfileExtension({ isOpen, onClose }: LeaderProfileExtensionProps) {
+  const [profile, setProfile] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("Identity");
   const [milestones, setMilestones] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
