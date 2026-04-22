@@ -40,7 +40,10 @@ export default function MinistriesPage() {
                                <Search className="w-3.5 h-3.5 text-muted-foreground" />
                                <input placeholder="Search silos..." className="bg-transparent border-none text-xs font-bold outline-none w-32" />
                             </div>
-                            <Button className="rounded-2xl h-12 px-6 font-black text-xs tracking-widest uppercase shadow-xl shadow-primary/20 bg-primary hover:scale-[1.02] active:scale-95 transition-all">
+                            <Button 
+                              onClick={() => console.log('Add Silo Clicked')}
+                              className="rounded-2xl h-12 px-6 font-black text-xs tracking-widest uppercase shadow-xl shadow-primary/20 bg-primary hover:scale-[1.02] active:scale-95 transition-all relative z-20"
+                            >
                                 <Plus className="mr-2 h-4 w-4" /> Add Silo
                             </Button>
                         </div>
@@ -51,14 +54,17 @@ export default function MinistriesPage() {
                         <MetricCard label="System Health" value="89%" sub="Avg across silos" icon={<Zap className="text-amber-500" />} />
                         <MetricCard label="Active Leaders" value="34" sub="Departmental leads" icon={<Trophy className="text-primary" />} />
                         <MetricCard label="Live Pipelines" value="15/15" sub="Silo synchronization" icon={<Activity className="text-emerald-500" />} />
-                        <div className="bg-primary/5 border border-primary/20 rounded-[32px] p-6 flex flex-col justify-between">
-                            <p className="text-[9px] font-black text-primary/60 uppercase tracking-widest">Leadership Profile</p>
+                        <div className="bg-primary/5 border border-primary/20 rounded-[32px] p-6 flex flex-col justify-between relative z-20">
+                            <p className="text-[9px] font-black text-primary/60 uppercase tracking-widest px-1">Leadership Profile</p>
                             <button 
-                              onClick={() => setIsProfileOpen(true)}
-                              className="flex items-center justify-between group"
+                              onClick={() => {
+                                console.log('Opening Profile');
+                                setIsProfileOpen(true);
+                              }}
+                              className="flex items-center justify-between group relative z-30"
                             >
                                <span className="text-lg font-black text-primary tracking-tight">View Profile</span>
-                               <div className="w-8 h-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center group-hover:scale-110 transition-all">
+                               <div className="w-8 h-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center group-hover:scale-110 transition-all pointer-events-none">
                                   <LayoutGrid size={14} />
                                </div>
                             </button>
@@ -68,7 +74,7 @@ export default function MinistriesPage() {
                 )}
 
                 {/* MAIN CONTENT AREA */}
-                <div className="relative">
+                <div className="relative z-10">
                     {selectedMinistry ? (
                         <MinistryIntelligenceSilo 
                           ministryId={selectedMinistry.ministry_id}

@@ -48,13 +48,14 @@ export function MinistryHubGrid({ onSelect }: MinistryHubGridProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -4 }}
-            className="group relative cursor-pointer overflow-hidden rounded-[32px] border transition-all p-6"
+            className="group relative cursor-pointer overflow-hidden rounded-[32px] border transition-all p-6 z-10"
             style={{
               background: isH
                 ? `linear-gradient(145deg, rgba(${rgb},0.12), var(--card) 70%)`
                 : `linear-gradient(145deg, rgba(${rgb},0.06), var(--card) 70%)`,
               borderColor: isH ? `rgba(${rgb},0.4)` : 'var(--border)',
               boxShadow: isH ? `0 20px 40px rgba(${rgb},0.08)` : 'none',
+              pointerEvents: 'auto'
             }}
           >
             {/* Top accent line */}
