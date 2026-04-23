@@ -21,23 +21,36 @@ ADD COLUMN IF NOT EXISTS invitation_status text DEFAULT 'active', -- 'pending', 
 ADD COLUMN IF NOT EXISTS invitation_token text UNIQUE,
 ADD COLUMN IF NOT EXISTS invitation_sent_at timestamptz;
 
--- 3. INITIAL MINISTRIES SEEDING
-INSERT INTO public.ministries (name, slug, category) VALUES
-('Ushering', 'ushering', 'operations'),
-('Children''s Ministry', 'children', 'operations'),
-('Evangelism', 'evangelism', 'outreach'),
-('Worship Team', 'worship', 'pastoral'),
-('Prayer Team', 'prayer', 'pastoral')
-ON CONFLICT DO NOTHING;
+-- 3. INITIAL MINISTRIES SEEDING (wrapped in DO block to supply required org_id)
+DO $$
+DECLARE v_org_id uuid;
+BEGIN
+    SELECT id INTO v_org_id FROM public.organizations LIMIT 1;
+    IF v_org_id IS NOT NULL THEN
+        INSERT INTO public.ministries (org_id, name, slug, category) VALUES
+        (v_org_id, 'Ushering',           'ushering',  'operations'),
+        (v_org_id, 'Children''s Ministry','children',  'operations'),
+        (v_org_id, 'Evangelism',          'evangelism','outreach'),
+        (v_org_id, 'Worship Team',        'worship',   'pastoral'),
+        (v_org_id, 'Prayer Team',         'prayer',    'pastoral')
+        ON CONFLICT (org_id, slug) DO NOTHING;
+    END IF;
+END $$;
 
--- 4. INITIAL FORMS SEEDING (FOR MINISTRIES)
-INSERT INTO public.forms (name, description, category) 
-VALUES 
-('Usher Headcount Report', 'Official attendance tracking for services', 'operations'),
-('Child Check-In', 'Digital registration for children services', 'children'),
-('Evangelism Log', 'Capture outreach decisions and follow-up needs', 'evangelism'),
-('Weekly Ministry Report', 'Generic operational feedback for departmental leads', 'operations')
-ON CONFLICT (name) DO NOTHING;
+-- 4. INITIAL FORMS SEEDING (wrapped in DO block to supply required org_id and ministry columns)
+DO $$
+DECLARE v_org_id uuid;
+BEGIN
+    SELECT id INTO v_org_id FROM public.organizations LIMIT 1;
+    IF v_org_id IS NOT NULL THEN
+        INSERT INTO public.forms (org_id, name, description, ministry) VALUES
+        (v_org_id, 'Usher Headcount Report', 'Official attendance tracking for services', 'ushering'),
+        (v_org_id, 'Child Check-In',         'Digital registration for children services', 'children'),
+        (v_org_id, 'Evangelism Log',         'Capture outreach decisions and follow-up needs', 'evangelism'),
+        (v_org_id, 'Weekly Ministry Report', 'Generic operational feedback for departmental leads', 'operations')
+        ON CONFLICT DO NOTHING;
+    END IF;
+END $$;
 
 -- 5. RPC TO INVITE LEADER
 CREATE OR REPLACE FUNCTION public.invite_ministry_leader(
@@ -83,9 +96,9 @@ CREATE POLICY "Ministry leaders view relevant form submissions" ON public.form_s
     EXISTS (
         SELECT 1 FROM public.org_members om
         JOIN public.ministries m ON om.ministry_id = m.id
-        JOIN public.forms f ON f.category = m.category
-        WHERE om.user_id = auth.uid() 
-        AND (om.role IN ('admin', 'shepherd', 'owner', 'pastor') 
+        JOIN public.forms f ON f.ministry = m.slug
+        WHERE om.user_id = auth.uid()
+        AND (om.role IN ('admin', 'shepherd', 'owner', 'pastor')
              OR (om.role = 'ministry_leader' AND public.form_submissions.form_id = f.id))
     )
 );
