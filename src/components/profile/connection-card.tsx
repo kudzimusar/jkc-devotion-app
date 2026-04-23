@@ -74,6 +74,8 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
 
     const [ministryRoles, setMinistryRoles] = useState<any[]>([]);
     const [newMinistry, setNewMinistry] = useState("");
+    const [newMinistryId, setNewMinistryId] = useState<string | null>(null);
+    const [newMinistryRole, setNewMinistryRole] = useState("member");
     const [ministrySearchQuery, setMinistrySearchQuery] = useState('');
     const [ministrySearchResults, setMinistrySearchResults] = useState<any[]>([]);
     const [showMinistryDropdown, setShowMinistryDropdown] = useState(false);
@@ -360,12 +362,13 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
     };
 
     const handleAddMinistry = async () => {
-        if (!newMinistry || !profile || !profile.org_id) return;
+        if (!newMinistry || !newMinistryId || !profile || !profile.org_id) return;
         const payload = { 
             user_id: profile.id, 
             org_id: profile.org_id,
+            ministry_id: newMinistryId,
             ministry_name: newMinistry, 
-            ministry_role: 'Volunteer', 
+            ministry_role: newMinistryRole, 
             is_active: true 
         };
         const { data, error } = await supabase.from('ministry_members').insert(payload).select().single();
@@ -373,6 +376,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
         setMinistryRoles([...ministryRoles, { id: data?.id || Date.now(), role: newMinistry, status: 'ACTIVE' }]);
         AnalyticsService.logEvent(profile.id, 'ministry_role_updated', { ministry: newMinistry });
         setNewMinistry("");
+        setNewMinistryId(null);
         toast.success('Ministry role added!');
     }
 
@@ -849,6 +853,16 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                                     onFocus={() => ministrySearchResults.length > 0 && setShowMinistryDropdown(true)}
                                                     className="flex-1 glass border border-foreground/10 rounded-2xl h-10 px-4 text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-[var(--primary)]/40"
                                                 />
+                                                <select
+                                                    value={newMinistryRole}
+                                                    onChange={e => setNewMinistryRole(e.target.value)}
+                                                    className="w-28 h-10 rounded-2xl bg-foreground/5 border border-foreground/10 px-2 text-sm focus:ring-2 ring-[var(--primary)]/20 outline-none"
+                                                >
+                                                    <option value="leader">Leader</option>
+                                                    <option value="assistant">Assistant</option>
+                                                    <option value="volunteer">Volunteer</option>
+                                                    <option value="member">Member</option>
+                                                </select>
                                                 <Button
                                                     onClick={handleAddMinistry}
                                                     size="sm"
@@ -866,6 +880,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                                             type="button"
                                                             onClick={() => {
                                                                 setNewMinistry(m.name);
+                                                                setNewMinistryId(m.id);
                                                                 setMinistrySearchQuery(m.name);
                                                                 setShowMinistryDropdown(false);
                                                             }}

@@ -716,6 +716,19 @@ WHERE mm.is_active = true
 
 UNION ALL
 
+-- 5b. Ministry Hub (Admins/Shepherds/Pastors)
+-- Gives a general entry point to the ministry dashboard hub for oversight
+SELECT
+    user_id             AS identity_id,
+    'tenant'            AS auth_domain,
+    'ministry'          AS auth_surface,
+    'hub'               AS role,
+    org_id
+FROM public.org_members
+WHERE role IN ('admin', 'shepherd', 'owner', 'pastor', 'super_admin', 'super-admin')
+
+UNION ALL
+
 -- 6. Member Profile
 SELECT
     user_id       AS identity_id,
