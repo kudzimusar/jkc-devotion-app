@@ -117,272 +117,238 @@ export function MinistryIntelligenceSilo({
   const tag = intelligence.intelligence_tag || "OPERATIONAL";
 
   return (
-    <div className="space-y-6">
-      {/* Silo Top Navigation */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={onBack}
-            className="p-2 hover:bg-muted rounded-xl transition-colors border border-border bg-card shadow-sm"
-          >
-            <ArrowLeft className="w-4 h-4 text-muted-foreground" />
-          </button>
-          <div>
-            <h1 className="text-xl font-black text-foreground tracking-tight flex items-center gap-2">
-              <span className="opacity-40 font-medium">Ministry /</span> {intelligence.name}
-            </h1>
-            <div className="flex items-center gap-2 mt-0.5">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{tag}</p>
+    <div className="flex w-full -m-6 xl:-m-12 min-h-[calc(100vh+3rem)] bg-background">
+      {/* ── LEFT SIDEBAR ───────────────────────────────────────── */}
+      <div className="hidden lg:flex w-[264px] min-w-[264px] flex-col border-r border-border bg-card/20 min-h-screen sticky top-0 overflow-hidden">
+        <div className="w-full h-full flex flex-col overflow-y-auto no-scrollbar pt-8">
+          
+          {/* OPERATIONS */}
+          <div className="px-5 pb-4">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-4 pl-1">Operations</p>
+            <div className="space-y-1">
+              {getMinistryOps(ministrySlug).map(op => (
+                <OpItem 
+                  key={op.id}
+                  onClick={() => {
+                    if (op.id === 'report')      { setIsReportOpen(true); }
+                    else if (op.id === 'attendance') { setIsAttendanceOpen(true); }
+                    else if (op.id === 'events')  { window.open(`/ministry-dashboard/${ministrySlug}/events`, '_self'); }
+                    else if (op.id === 'team')    { window.open(`/ministry-dashboard/${ministrySlug}/team`, '_self'); }
+                    else if (op.id === 'analytics') { window.open(`/ministry-dashboard/${ministrySlug}/analytics`, '_self'); }
+                    else if (op.id === 'announcements') { setCommsTab('announcement'); }
+                    else if (op.id === 'manual' || op.id === 'runsheet' || op.id === 'pipeline' || op.id === 'roster' || op.id === 'sermon_hub' || op.id === 'setlists') {
+                      window.open(`/ministry-dashboard/${ministrySlug}/`, '_self');
+                    }
+                  }} 
+                  label={op.label} 
+                  sub={op.sub} 
+                  color={color}
+                />
+              ))}
             </div>
           </div>
-        </div>
-        <div className="flex items-center gap-3">
-           <button 
-            onClick={onOpenProfile}
-            className="flex items-center gap-2 px-3 py-2 bg-card border border-border rounded-xl hover:border-primary/50 transition-all group"
-           >
-             <div className="w-6 h-6 rounded-lg bg-primary/20 flex items-center justify-center text-[10px] font-black text-primary">K</div>
-             <div className="text-left">
-               <p className="text-[10px] font-black text-foreground leading-tight">MY PROFILE</p>
-               <p className="text-[8px] font-bold text-primary group-hover:text-primary/70 transition-colors">6 DAY STREAK →</p>
-             </div>
-           </button>
+          
+          {/* DIVIDER */}
+          <div className="mx-5 border-t border-border my-2" />
+          
+          {/* EMAILS */}
+          <div className="px-5 pb-8 flex-1 flex flex-col">
+            <div className="flex items-center justify-between mb-4 pl-1">
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Emails</p>
+              <button 
+                onClick={() => setIsBroadcastOpen(true)} 
+                className="text-[9px] font-black tracking-widest border px-2.5 py-1.5 rounded-lg transition-colors hover:bg-muted" 
+                style={{ color: color, borderColor: `${color}40`, backgroundColor: `${color}1A` }}
+              >
+                + COMPOSE
+              </button>
+            </div>
+            <div className="flex gap-1 mb-4">
+              {["ALL", "UNREAD", "CRISIS"].map(t => (
+                <button 
+                  key={t} 
+                  onClick={() => setCommsTab(t === 'ALL' ? 'ALL' : t === 'CRISIS' ? 'emergency' : 'unread')} 
+                  className="flex-1 py-1.5 rounded-md text-[9px] font-black uppercase transition-all"
+                  style={
+                    (commsTab === t || (t === 'ALL' && commsTab === 'ALL') || (t === 'CRISIS' && commsTab === 'emergency'))
+                      ? { color: color, backgroundColor: `${color}1A`, borderColor: `${color}40`, borderWidth: 1 }
+                      : { color: 'var(--muted-foreground)', backgroundColor: 'transparent', borderColor: 'var(--border)', borderWidth: 1 }
+                  }
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+            
+            <div className="flex-1 flex items-center justify-center bg-card border border-border rounded-xl p-5 text-center min-h-[100px]">
+               <p className="text-xs font-bold text-muted-foreground">
+                 No messages in {(commsTab === 'ALL' ? 'ALL' : commsTab === 'emergency' ? 'CRISIS' : 'UNREAD')}
+               </p>
+            </div>
+          </div>
+          
         </div>
       </div>
 
-      {/* ① MINISTRY HEALTH INTELLIGENCE */}
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <StatTile 
-            T={{ d: true }}
-            label="Health Score" 
-            value={intelligence.health_score ? `${intelligence.health_score}/100` : "72/100"} 
-            accent={color} 
-            note="↑ +12 since last month"
-            spark={[28, 31, 36, 29, 41, 38, 36, 39]}
-          />
-          {metrics.slice(0, 5).map((m) => (
-             <StatTile 
-              key={m.metric_key}
-              label={m.label} 
-              value={m.current_value !== null ? (m.unit === 'percentage' ? `${m.current_value}%` : m.current_value) : "—"} 
-              note={m.current_value === null ? "Waiting data" : `Target: ${m.target_value || "N/A"}`}
-              accent={m.current_value === null ? undefined : color}
-              alert={m.current_value === null}
-           />
-          ))}
-          {metrics.length === 0 && (
-             <>
-               <StatTile label="Avg Attendance" value="36.8" note="↑ Trending up" spark={[30,35,32,40,38]} />
-               <StatTile label="Team Capacity" value="18/25" note="7 new spots" />
-             </>
-          )}
-        </div>
-
-        {/* AI INSIGHTS PANEL */}
-        <div className="bg-card border border-border rounded-3xl p-6 flex flex-col relative overflow-hidden shadow-sm">
-           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl pointer-events-none" />
-           <div className="flex items-center gap-2 mb-6">
-             <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-primary" />
+      {/* ── MAIN CONTENT ───────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
+        
+        {/* TOP NAV */}
+        <div className="h-14 px-6 lg:px-10 flex items-center justify-between border-b border-border bg-background/80 backdrop-blur-xl sticky top-0 z-50">
+           <div className="flex items-center gap-4">
+             <button onClick={onBack} className="p-1.5 hover:bg-muted rounded-lg transition-colors text-muted-foreground">
+               <ArrowLeft className="w-4 h-4" />
+             </button>
+             <div className="flex items-center gap-2">
+               <h1 className="text-sm font-black text-foreground tracking-tight flex items-center gap-2">
+                 <span className="opacity-40 font-medium">Ministry /</span> {intelligence.name}
+               </h1>
              </div>
-             <p className="text-xs font-black text-foreground uppercase tracking-widest">AI Insights</p>
            </div>
            
-           <div className="space-y-4 flex-1">
-             {(intelligence.active_insights || [
-               { insight_type: 'success', content: 'Attendance grew 18% over 8 weeks. Submit a report to lock in this data.' },
-               { insight_type: 'warning', content: 'No report in 40 days. Health score capped at 72. Filing a report is high-leverage.' },
-               { insight_type: 'tip', content: 'Vocalist Rotation form inactive. Irregular rotation may impact sound consistency.' }
-             ]).map((ins: any, i: number) => (
-               <div key={i} className="flex gap-3 group">
-                 <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${
-                   ins.insight_type === 'warning' ? 'bg-amber-500' : 
-                   ins.insight_type === 'critical' ? 'bg-red-500' : 
-                   'bg-emerald-500'
-                 }`} />
-                 <p className="text-xs text-muted-foreground leading-relaxed group-hover:text-foreground transition-colors">
-                   {ins.content}
-                 </p>
+           <div className="flex items-center gap-3">
+             <div className="flex items-center gap-2">
+               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+               <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{tag}</p>
+             </div>
+             <div className="w-px h-4 bg-border mx-1" />
+             <button 
+              onClick={onOpenProfile}
+              className="flex items-center gap-2 px-2.5 py-1.5 bg-card border border-border rounded-lg hover:border-primary/50 transition-all group"
+             >
+               <div className="w-5 h-5 rounded-md bg-primary/20 flex items-center justify-center text-[9px] font-black text-primary">K</div>
+               <div className="text-left hidden sm:block">
+                 <p className="text-[9px] font-black text-foreground leading-none">MY PROFILE</p>
+                 <p className="text-[7px] font-bold text-primary group-hover:text-primary/70 transition-colors">6 DAY STREAK →</p>
                </div>
-             ))}
-           </div>
-
-           <div className="mt-8 pt-4 border-t border-border">
-             <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">Church OS Intelligence Layer</p>
+             </button>
            </div>
         </div>
-      </section>
 
-      {/* ② HERO SECTION */}
-      <section 
-        className="relative rounded-[32px] p-8 overflow-hidden border"
-        style={{
-          background: `linear-gradient(135deg, ${color}33 0%, ${color}1A 45%, transparent 100%)`,
-          borderColor: `${color}40`
-        }}
-      >
-        <div 
-           className="absolute -top-12 -right-8 w-72 h-72 rounded-full pointer-events-none" 
-           style={{ background: `radial-gradient(circle, ${color}26, transparent 70%)` }} 
-        />
-        <div className="relative flex flex-col lg:flex-row items-end justify-between gap-8">
-           <div className="max-w-xl">
-             <Badge className="bg-primary/20 text-primary border-0 mb-4 px-3 py-1 font-black text-[10px] tracking-widest">
-               {tag} · {intelligence.name.toUpperCase()}
-             </Badge>
-             <h2 className="text-5xl font-black text-foreground tracking-tighter mb-4 leading-none">
-               {intelligence.name}
-             </h2>
-             <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-                {intelligence.description || `Intelligence silo for the ${intelligence.name}. Track health, team engagement, and AI-driven growth metrics.`}
-             </p>
-             <div className="flex gap-2 flex-wrap">
-               <HeroStat label="TEAM" value={intelligence.team_count != null ? `${intelligence.team_count} members` : 'No data'} />
-               <HeroStat label="REPORTS THIS MONTH" value={intelligence.reports_this_month != null ? String(intelligence.reports_this_month) : '0'} />
-               <HeroStat label="STATUS" value={intelligence.health_score >= 60 ? "Active" : intelligence.health_score > 0 ? "At Risk" : "Pending"} />
-             </div>
-           </div>
+        {/* DASHBOARD CONTENT */}
+        <div className="flex-1 p-6 lg:p-10 space-y-8 max-w-6xl w-full">
            
-           <div className="flex flex-col items-center gap-4">
-              <CircleScore score={intelligence.health_score || 72} color={color} />
-              <div className="flex items-center gap-1 opacity-20">
-                 {[1,2,3,4,5,6].map(i => <div key={i} className="w-1.5 h-6 bg-primary rounded-full" />)}
-              </div>
+           <div className="flex items-center justify-between mb-2">
+             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Ministry Health Intelligence</p>
            </div>
-        </div>
-      </section>
 
-      {/* ③ OPERATIONS HUB */}
-      <section className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left Sidebar Ops */}
-        <div className="bg-card border border-border rounded-3xl p-4 h-fit">
-           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-4 px-2">Silo Operations</p>
-                      <div className="space-y-1">
-             {getMinistryOps(ministrySlug).map(op => (
-               <OpItem 
-                 key={op.id}
-                 onClick={() => {
-                   if (op.id === 'report')      { setIsReportOpen(true); }
-                   else if (op.id === 'attendance') { setIsAttendanceOpen(true); }
-                   else if (op.id === 'events')  { window.open(`/shepherd/dashboard/events`, '_self'); }
-                   else if (op.id === 'team')    { window.open(`/shepherd/dashboard/members`, '_self'); }
-                   else if (op.id === 'analytics') { window.open(`/shepherd/dashboard/analytics`, '_self'); }
-                   else if (op.id === 'announcements') { setCommsTab('announcement'); }
-                   else if (op.id === 'manual' || op.id === 'runsheet' || op.id === 'pipeline' || op.id === 'roster' || op.id === 'sermon_hub' || op.id === 'setlists') {
-                     window.open(`/shepherd/dashboard`, '_self');
-                   }
-                 }} 
-                 icon={op.icon} 
-                 label={op.label} 
-                 sub={op.sub} 
+           {/* ① KPI GRID */}
+           <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+             <div className="xl:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+               <StatTile 
+                 label="Health Score" 
+                 value={intelligence.health_score ? `${intelligence.health_score}/100` : "NO DATA"} 
+                 accent={color} 
+                 note={intelligence.trend_direction ? `Trending ${intelligence.trend_direction}` : "Submit a report to generate score"}
+                 spark={intelligence.health_score ? [28, 31, 36, 29, 41, 38, 36, intelligence.health_score] : null}
                />
-             ))}
-           </div>
-        </div>
-
-        {/* Internal Comms Center */}
-        <div className="lg:col-span-3 space-y-4">
-           <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground">Broadcast messages and team alerts</p>
-              </div>
-              {isLeader && (
-                <Button 
-                  onClick={() => setIsBroadcastOpen(true)}
-                  className="rounded-xl font-bold text-xs h-9" style={{ backgroundColor: color }}
-                >
-                  + NEW MESSAGE ▾
-                </Button>
-              )}
-           </div>
-           
-           <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-sm">
-             <div className="px-6 py-4 flex gap-2 border-bottom border-border overflow-x-auto no-scrollbar">
-                {[
-                   { key: "ALL",           label: "All" },
-                   { key: "broadcast",     label: "Broadcast" },
-                   { key: "all_volunteers",label: "Team" },
-                   { key: "emergency",     label: "Crisis" },
-                   { key: "announcement",  label: "Announcements" }
-                 ].map(({ key, label }) => (
-                  <button 
-                    key={key}
-                    onClick={() => setCommsTab(key)}
-                    className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all uppercase tracking-widest whitespace-nowrap ${
-                      commsTab === key ? 'bg-primary text-primary-foreground' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
+               <StatTile label="Team Size" value={intelligence.team_count || "0"} note="Active ministry members" />
+               <StatTile label="Total Reports" value={intelligence.reports_this_month != null ? String(intelligence.reports_this_month) : "0"} note="This month" />
+               <StatTile label="Status" value={!intelligence.health_score ? "NO DATA" : (intelligence.health_score < 50 ? "AT RISK" : intelligence.health_score >= 80 ? "EXCELLENT" : "STABLE")} alert={intelligence.health_score && intelligence.health_score < 50} note="Calculated by AI engine" />
              </div>
-             <div className="min-h-[300px] flex flex-col p-4 space-y-3 overflow-y-auto max-h-[500px]">
-                {messages.filter(m => commsTab === "ALL" || m.recipient_type === commsTab).map((msg, i) => (
-                  <div key={i} className="p-4 bg-muted/20 border border-border rounded-2xl group hover:border-primary/20 transition-all">
-                     <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-2">
-                           <Badge className={`text-[8px] font-black border-0 uppercase ${
-                             msg.recipient_type === 'emergency' ? 'bg-red-500/10 text-red-500' : 'bg-primary/10 text-primary'
-                           }`}>
-                             {msg.recipient_type === 'emergency' ? 'Crisis' : 'Team'}
-                           </Badge>
-                           <p className="text-xs font-black text-foreground">{msg.subject}</p>
-                        </div>
-                        <p className="text-[10px] text-muted-foreground/40 font-bold">{new Date(msg.created_at).toLocaleDateString()}</p>
-                     </div>
-                     <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{msg.body}</p>
-                     <div className="mt-3 pt-3 border-t border-border/50 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Sent by {msg.profiles?.full_name?.split(' ')[0] || 'Leader'}</p>
-                        <button className="text-[9px] font-black text-primary uppercase">Read More →</button>
-                     </div>
+
+             {/* AI INSIGHTS PANEL */}
+             <div className="bg-card border border-border rounded-xl p-6 flex flex-col relative shadow-sm">
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ backgroundColor: `${color}1A`, color: color }}>
+                     <Sparkles className="w-3 h-3" />
                   </div>
-                ))}
-                {messages.length === 0 && (
-                   <div className="h-64 flex flex-col items-center justify-center text-center p-8">
-                      <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center mb-4">
-                         <Mail className="w-5 h-5 text-muted-foreground/40" />
-                      </div>
-                      <p className="text-xs font-bold text-muted-foreground">No {commsTab.toLowerCase()} messages found</p>
-                      <p className="text-[10px] text-muted-foreground/50 mt-1 uppercase tracking-widest">Everything is current</p>
-                   </div>
-                )}
-             </div>
-           </div>
-        </div>
-      </section>
+                  <p className="text-[10px] font-black text-foreground uppercase tracking-widest">AI Insights</p>
+                </div>
+                
+                <div className="space-y-4 flex-1">
+                  {(intelligence.active_insights || [
+                    { insight_type: 'warning', content: 'No report in 40 days. Health score unavailable. Filing a report is your highest-leverage action.' },
+                    { insight_type: 'tip', content: 'Assign team members to begin tracking engagement metrics.' }
+                  ]).map((ins: any, i: number) => (
+                    <div key={i} className="flex gap-3 group">
+                      <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${
+                        ins.insight_type === 'warning' ? 'bg-amber-500' : 
+                        ins.insight_type === 'critical' ? 'bg-red-500' : 
+                        ins.insight_type === 'tip' ? 'bg-amber-500' : 
+                        'bg-emerald-500'
+                      }`} style={ins.insight_type === 'success' ? { backgroundColor: color } : undefined} />
+                      <p className="text-[11px] text-muted-foreground leading-relaxed group-hover:text-foreground transition-colors">
+                        {ins.content}
+                      </p>
+                    </div>
+                  ))}
+                </div>
 
-      {/* REPORTING MODAL */}
+                <div className="mt-8 pt-4 border-t border-border">
+                  <p className="text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest">Church OS Intelligence</p>
+                </div>
+             </div>
+           </section>
+
+           {/* ② HERO SECTION */}
+           <section className="bg-card border border-border rounded-2xl p-8 relative overflow-hidden shadow-sm" style={{ backgroundColor: `${color}05` }}>
+             <div className="absolute top-0 right-0 w-64 h-64 opacity-20 pointer-events-none" style={{ background: `radial-gradient(circle, ${color}, transparent 70%)`, filter: 'blur(40px)' }} />
+             
+             <div className="relative flex flex-col md:flex-row items-center md:items-start justify-between gap-8">
+                <div className="max-w-xl text-center md:text-left">
+                  <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: color }}>
+                    {tag} · {intelligence.name.toUpperCase()}
+                  </p>
+                  <h2 className="text-4xl md:text-5xl font-black text-foreground tracking-tight mb-4">
+                    {intelligence.name}
+                  </h2>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-8 max-w-lg mx-auto md:mx-0">
+                     {intelligence.description || `Intelligence silo for the ${intelligence.name}. Track health, team engagement, and AI-driven growth metrics.`}
+                  </p>
+                  <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                    <HeroStat label="TEAM" value={intelligence.team_count > 0 ? `${intelligence.team_count} MEMBERS` : 'NO DATA'} />
+                    <HeroStat label="REPORTS THIS MONTH" value={intelligence.reports_this_month != null ? String(intelligence.reports_this_month) : "0"} />
+                    <HeroStat label="STATUS" value={!intelligence.health_score ? "NO DATA" : (intelligence.health_score < 50 ? "AT RISK" : intelligence.health_score >= 80 ? "EXCELLENT" : "STABLE")} />
+                  </div>
+                </div>
+                
+                <div className="flex flex-col items-center gap-2">
+                   <CircleScore score={intelligence.health_score || 0} color={color} />
+                   <div className="flex items-end gap-1 h-6 opacity-30 mt-2">
+                      {[1,2,3,4,5,6,7,8,9,10,11].map(i => <div key={i} className="w-1.5 rounded-full" style={{ backgroundColor: color, height: `${Math.max(20, Math.random() * 100)}%` }} />)}
+                   </div>
+                </div>
+             </div>
+           </section>
+
+           {/* STATUS STRIP */}
+           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-card border border-border rounded-xl px-4 py-3 gap-2">
+              <div className="flex items-center gap-3">
+                 <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                 <div>
+                   <p className="text-xs font-bold text-foreground">Automation Active</p>
+                   <p className="text-[10px] text-muted-foreground">Real-time health score & Mission Control sync enabled</p>
+                 </div>
+              </div>
+              <div className="bg-muted/50 rounded-md px-3 py-1 self-start sm:self-auto">
+                 <p className="text-[9px] font-bold text-muted-foreground">Last sync: 3/12/2026</p>
+              </div>
+           </div>
+
+        </div>
+      </div>
+
+      {/* MODALS */}
       <MinistryReportModal 
          isOpen={isReportOpen}
-         onClose={() => {
-           setIsReportOpen(false);
-           loadSilo(); // Reload data when modal closes
-         }}
+         onClose={() => { setIsReportOpen(false); loadSilo(); }}
          ministryId={ministryId}
          ministryName={intelligence.name}
       />
-
-      {/* BROADCAST MODAL */}
       <MinistryBroadcastModal 
          isOpen={isBroadcastOpen}
-         onClose={() => {
-           setIsBroadcastOpen(false);
-           loadSilo();
-         }}
+         onClose={() => { setIsBroadcastOpen(false); loadSilo(); }}
          ministryId={ministryId}
          ministryName={intelligence.name}
       />
-
-      {/* QUICK ATTENDANCE MODAL */}
-       {isAttendanceOpen && (
+      {isAttendanceOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setIsAttendanceOpen(false)} />
           <div className="relative w-full max-w-md bg-card border border-border rounded-[32px] shadow-2xl p-8 space-y-6">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-[10px] font-black text-primary uppercase tracking-widest">{intelligence.name}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color }}>{intelligence.name}</p>
                 <h2 className="text-xl font-black text-foreground">Quick Attendance</h2>
               </div>
               <button onClick={() => setIsAttendanceOpen(false)} className="p-2 hover:bg-muted rounded-xl">
@@ -392,7 +358,7 @@ export function MinistryIntelligenceSilo({
             <QuickAttendanceForm 
               ministryId={ministryId} 
               ministryName={intelligence.name} 
-              color={intelligence.primary_color || '#8B5CF6'}
+              color={color}
               onClose={() => { setIsAttendanceOpen(false); loadSilo(); }} 
             />
           </div>
@@ -404,22 +370,22 @@ export function MinistryIntelligenceSilo({
 
 function StatTile({ label, value, note, accent, alert, spark }: any) {
   return (
-    <div className={`bg-card border p-5 rounded-3xl shadow-sm transition-all hover:shadow-md ${alert ? 'border-red-500/20' : 'border-border'}`}>
-      <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-3">{label}</p>
-      <div className="flex items-baseline gap-2">
-        <span className={`text-3xl font-black ${alert ? 'text-red-500' : 'text-foreground'}`} style={{ color: !alert && accent ? accent : undefined }}>
-          {value}
-        </span>
+    <div className="bg-card border border-border p-4 pb-3.5 rounded-xl flex flex-col" style={alert ? { backgroundColor: 'rgba(248,113,113,0.05)', borderColor: 'rgba(248,113,113,0.2)' } : {}}>
+      <p className="text-[10px] font-bold text-muted-foreground mb-2.5 uppercase tracking-widest">{label}</p>
+      <div className={`text-[26px] font-bold leading-none mb-2 ${alert ? 'text-red-500' : 'text-foreground'}`} style={!alert && accent ? { color: accent } : {}}>
+        {value}
       </div>
       {spark && (
-        <div className="mt-4 h-8 flex items-end gap-1 opacity-40">
-           {spark.map((v: number, i: number) => (
-             <div key={i} className="flex-1 bg-primary rounded-t-sm" style={{ height: `${(v/Math.max(...spark))*100}%` }} />
-           ))}
+        <div className="mt-auto pt-2">
+          <div className="flex items-end gap-1 h-6">
+             {spark.map((v: number, i: number) => (
+               <div key={i} className="flex-1 rounded-t-[2px]" style={{ backgroundColor: accent || '#8B5CF6', height: `${(v/Math.max(...spark))*100}%` }} />
+             ))}
+          </div>
         </div>
       )}
       {note && (
-        <p className={`text-[10px] font-bold mt-2 ${alert ? 'text-red-500/60' : 'text-muted-foreground/60'}`}>
+        <p className={`text-[11px] mt-auto pt-2 ${alert ? 'text-red-500' : spark ? 'text-emerald-500' : 'text-muted-foreground'}`}>
           {note}
         </p>
       )}
@@ -429,9 +395,9 @@ function StatTile({ label, value, note, accent, alert, spark }: any) {
 
 function HeroStat({ label, value }: any) {
   return (
-    <div className="bg-card/50 backdrop-blur-md border border-white/5 rounded-2xl px-5 py-3 shadow-inner">
+    <div className="bg-background border border-border rounded-xl px-4 py-2.5 shadow-sm text-center md:text-left">
        <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">{label}</p>
-       <p className="text-xs font-black text-foreground uppercase">{value}</p>
+       <p className="text-xs font-black text-foreground">{value}</p>
     </div>
   );
 }
@@ -440,33 +406,39 @@ function CircleScore({ score, color }: any) {
   const R = 36;
   const C = 2 * Math.PI * R;
   return (
-    <div className="relative w-28 h-28 flex flex-col items-center justify-center">
-       <svg className="absolute inset-0 -rotate-90 w-28 h-28">
-         <circle cx={56} cy={56} r={R} fill="none" stroke="currentColor" strokeWidth={6} className="text-muted/10" />
-         <circle 
-           cx={56} cy={56} r={R} fill="none" stroke={color} strokeWidth={6} strokeLinecap="round"
-           strokeDasharray={C} strokeDashoffset={C * (1 - score/100)}
-           className="transition-all duration-1000 ease-out"
-           style={{ filter: `drop-shadow(0 0 8px ${color}44)` }}
-         />
-       </svg>
-       <span className="text-3xl font-black text-foreground leading-none">{score}</span>
-       <span className="text-[8px] font-black text-muted-foreground mt-1 uppercase opacity-40">HEALTH</span>
+    <div className="relative flex flex-col items-center justify-center">
+       <div className="relative w-24 h-24">
+         <svg className="absolute inset-0 -rotate-90 w-24 h-24">
+           <circle cx={48} cy={48} r={R} fill="none" stroke="currentColor" strokeWidth={5} className="text-muted/20" />
+           <circle 
+             cx={48} cy={48} r={R} fill="none" stroke={color} strokeWidth={5} strokeLinecap="round"
+             strokeDasharray={C} strokeDashoffset={C * (1 - score/100)}
+             className="transition-all duration-1000 ease-out"
+             style={{ filter: `drop-shadow(0 0 6px ${color}66)` }}
+           />
+         </svg>
+         <div className="absolute inset-0 flex items-center justify-center flex-col">
+            <span className="text-3xl font-black text-foreground leading-none">{score}</span>
+            <span className="text-[8px] font-black text-muted-foreground uppercase">/100</span>
+         </div>
+       </div>
+       <span className="text-[8px] font-black text-muted-foreground mt-2 uppercase tracking-widest text-center opacity-60">SPIRITUAL<br/>ATMOSPHERE</span>
     </div>
   );
 }
 
-function OpItem({ icon, label, sub, onClick }: any) {
+function OpItem({ label, sub, onClick, color }: any) {
+  const sym = label.charAt(0).toUpperCase();
   return (
-    <button onClick={onClick} className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-muted/50 transition-all group text-left">
-       <div className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-all">
-          {React.cloneElement(icon, { size: 14 })}
+    <button onClick={onClick} className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted/50 transition-all group text-left">
+       <div className="w-8 h-8 rounded-lg bg-card border border-border flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 transition-all shadow-sm" style={{ color: color }}>
+          <span className="text-xs font-black">{sym}</span>
        </div>
-       <div className="flex-1 truncate">
-          <p className="text-xs font-black text-foreground leading-tight">{label}</p>
-          <p className="text-[9px] font-bold text-muted-foreground truncate">{sub}</p>
+       <div className="flex-1 min-w-0">
+          <p className="text-[11px] font-bold text-foreground leading-tight truncate">{label}</p>
+          <p className="text-[9px] text-muted-foreground truncate">{sub}</p>
        </div>
-       <ChevronRight className="w-3 h-3 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-all translate-x--2 group-hover:translate-x-0" />
+       <ChevronRight className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
     </button>
   );
 }

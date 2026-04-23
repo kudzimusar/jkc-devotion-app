@@ -24,16 +24,17 @@ export default function MinistryOverviewClient({ slug }: { slug: string }) {
 
     if (loading || !session) {
         return (
-            <div className="min-h-screen bg-[#080c14] flex flex-col items-center justify-center text-white gap-4">
-                <div className="w-10 h-10 border-4 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" />
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Syncing Intelligence Pipeline...</p>
+            <div className="min-h-screen bg-background flex flex-col items-center justify-center text-foreground gap-4">
+                <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Syncing Intelligence Pipeline...</p>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#080c14] text-white transition-all">
-            <div className="p-6 xl:p-12 max-w-[1600px] mx-auto">
+        <div className="min-h-[100vh] bg-background text-foreground transition-all">
+            {/* The Layout structure handles max-width and internal padding inside Silo */}
+            <div className="w-full h-full">
                 <MinistryIntelligenceSilo 
                     ministryId={session.ministryId}
                     ministrySlug={session.slug}
