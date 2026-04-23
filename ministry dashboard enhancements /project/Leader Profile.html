@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Church OS — Leader Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',sans-serif; min-height:100vh; -webkit-font-smoothing:antialiased; overflow:hidden; }
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(128,128,128,0.15); border-radius:99px; }
+input, select, textarea { font-family:'Inter',sans-serif; outline:none; }
+button { font-family:'Inter',sans-serif; cursor:pointer; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+// ── THEME ─────────────────────────────────────────────────
+function mkT(mode) {
+  const d = mode === 'dark';
+  return {
+    d,
+    bg:        d ? '#07091a'                  : '#f0f2f8',
+    bgSide:    d ? '#090c20'                  : '#e8eaf4',
+    bgCard:    d ? 'rgba(255,255,255,0.045)'  : '#ffffff',
+    bgTag:     d ? 'rgba(255,255,255,0.07)'   : 'rgba(0,0,0,0.055)',
+    bgInput:   d ? 'rgba(255,255,255,0.05)'   : 'rgba(0,0,0,0.04)',
+    bgRow:     d ? 'rgba(0,0,0,0.18)'         : 'rgba(0,0,0,0.03)',
+    border:    d ? 'rgba(255,255,255,0.08)'   : 'rgba(0,0,0,0.09)',
+    borderMid: d ? 'rgba(255,255,255,0.05)'   : 'rgba(0,0,0,0.05)',
+    t1:        d ? '#f8fafc'                  : '#0f172a',
+    t2:        d ? '#94a3b8'                  : '#475569',
+    t3:        d ? '#4d6080'                  : '#94a3b8',
+    lbl:       d ? '#3d4f6b'                  : '#8fa0ba',
+    alertBg:   d ? 'rgba(239,68,68,0.07)'     : 'rgba(239,68,68,0.06)',
+    alertBdr:  d ? 'rgba(239,68,68,0.25)'     : 'rgba(239,68,68,0.2)',
+    tblHead:   d ? 'rgba(255,255,255,0.03)'   : 'rgba(0,0,0,0.03)',
+  };
+}
+
+const GR = { fontFamily:"'Space Grotesk',sans-serif" };
+
+function Lbl({ c, s, children }) {
+  return <div style={{fontSize:10,fontWeight:600,letterSpacing:'0.12em',textTransform:'uppercase',color:c,...s}}>{children}</div>;
+}
+
+// ── TABS ──────────────────────────────────────────────────
+const MAIN_TABS = [
+  'Identity','Family & Households','Junior Church','Spiritual Journey',
+  'Ministry & Service','Pastoral Care','Attendance','Skills & Talents',
+  'Bible Study Groups','Giving & Tithe','Merchandise Orders','Messages',
+];
+const BOTTOM_TABS = ['Shortcuts','Daily Devotion','Sign Out'];
+const ICONS = {
+  'Identity':'◎','Family & Households':'⌂','Junior Church':'◑',
+  'Spiritual Journey':'✦','Ministry & Service':'◈','Pastoral Care':'♡',
+  'Attendance':'▦','Skills & Talents':'◆','Bible Study Groups':'⊕',
+  'Giving & Tithe':'◇','Merchandise Orders':'▤','Messages':'◷',
+  'Shortcuts':'⊹','Daily Devotion':'◉','Sign Out':'→',
+};
+
+// ── FORM ATOMS ────────────────────────────────────────────
+function FInput({ value, placeholder, type='text', T }) {
+  const [v,setV]=useState(value||'');
+  return <input
+    value={v} onChange={e=>setV(e.target.value)} placeholder={placeholder} type={type}
+    style={{width:'100%',background:T.bgInput,border:`1px solid ${T.border}`,borderRadius:10,
+      color:T.t1,padding:'10px 14px',fontSize:13,transition:'border-color 0.15s',}}
+    onFocus={e=>e.target.style.borderColor='rgba(139,92,246,0.5)'}
+    onBlur={e=>e.target.style.borderColor=T.border}
+  />;
+}
+function FSelect({ value, options, T }) {
+  const [v,setV]=useState(value||options[0]);
+  return <select value={v} onChange={e=>setV(e.target.value)}
+    style={{width:'100%',background:T.bgInput,border:`1px solid ${T.border}`,borderRadius:10,
+      color:T.t1,padding:'10px 14px',fontSize:13,appearance:'none',cursor:'pointer',
+      backgroundImage:'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'8\' viewBox=\'0 0 12 8\'%3E%3Cpath d=\'M1 1l5 5 5-5\' stroke=\'%2364748b\' fill=\'none\' strokeWidth=\'1.5\'/%3E%3C/svg%3E")',
+      backgroundRepeat:'no-repeat',backgroundPosition:'calc(100% - 14px) 50%',paddingRight:36,}}>
+    {options.map(o=><option key={o} style={{background:T.d?'#0f1628':'#fff',color:T.t1}}>{o}</option>)}
+  </select>;
+}
+function Field({ label, children, T }) {
+  return <div style={{display:'flex',flexDirection:'column',gap:7}}>
+    <Lbl c={T.lbl}>{label}</Lbl>
+    {children}
+  </div>;
+}
+
+// ── SPARKLINE ─────────────────────────────────────────────
+function Spark({ data, color, w=220, h=22 }) {
+  const mx=Math.max(...data),mn=Math.min(...data),rng=mx-mn||1;
+  const pts=data.map((v,i)=>`${(i/(data.length-1))*w},${h-((v-mn)/rng)*(h-4)-2}`).join(' ');
+  return <svg width={w} height={h}><polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/></svg>;
+}
+
+// ── ATT BARS ──────────────────────────────────────────────
+function AttBars({ data, T }) {
+  const mx=Math.max(...data.map(d=>d.v));
+  return <div style={{display:'flex',gap:5,alignItems:'flex-end',height:64}}>
+    {data.map((d,i)=><div key={i} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:5,flex:1}}>
+      <div style={{width:'100%',background:'rgba(139,92,246,0.25)',borderRadius:'3px 3px 0 0',height:Math.max(4,(d.v/mx)*50),transition:'height 0.3s'}}/>
+      <div style={{fontSize:9,color:T.lbl}}>{d.l}</div>
+    </div>)}
+  </div>;
+}
+
+// ── RING GAUGE ────────────────────────────────────────────
+function Ring({ score, color, size=52, stroke=4 }) {
+  const R=(size/2)-stroke,C=2*Math.PI*R;
+  return <div style={{position:'relative',width:size,height:size,flexShrink:0}}>
+    <svg width={size} height={size} style={{transform:'rotate(-90deg)'}}>
+      <circle cx={size/2} cy={size/2} r={R} fill="none" stroke="rgba(128,128,128,0.15)" strokeWidth={stroke}/>
+      <circle cx={size/2} cy={size/2} r={R} fill="none" stroke={color} strokeWidth={stroke}
+        strokeDasharray={C} strokeDashoffset={C*(1-score/100)} strokeLinecap="round"
+        style={{filter:`drop-shadow(0 0 4px ${color}88)`}}/>
+    </svg>
+    <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',...GR,fontSize:13,fontWeight:700}}>{score}</div>
+  </div>;
+}
+
+// ── STAT TILE ─────────────────────────────────────────────
+function Stat({ label, value, color, T }) {
+  return <div style={{background:T.bgCard,border:`1px solid ${T.border}`,borderRadius:12,padding:'16px',textAlign:'center'}}>
+    <div style={{...GR,fontSize:22,fontWeight:700,color:color||T.t1,marginBottom:4}}>{value}</div>
+    <Lbl c={T.lbl}>{label}</Lbl>
+  </div>;
+}
+
+// ── BADGE ─────────────────────────────────────────────────
+function Badge({ label, color, bg, border }) {
+  return <span style={{background:bg,border:`1px solid ${border}`,borderRadius:6,padding:'3px 10px',fontSize:9,fontWeight:700,color,letterSpacing:'0.1em'}}>{label}</span>;
+}
+
+// ── SIDEBAR PROFILE ───────────────────────────────────────
+function ProfileCard({ T, theme, setTheme }) {
+  const R=26,C=2*Math.PI*R;
+  const score=72;
+  return <div>
+    {/* Theme toggle strip */}
+    <div style={{display:'flex',justifyContent:'flex-end',padding:'12px 14px 0'}}>
+      <button onClick={()=>setTheme(t=>t==='dark'?'light':'dark')} style={{
+        background:T.bgTag,border:`1px solid ${T.border}`,borderRadius:8,
+        color:T.t2,padding:'5px 12px',fontSize:11,fontWeight:600,letterSpacing:'0.04em',
+        display:'flex',alignItems:'center',gap:5,
+      }}>{theme==='dark'?'☀️ Light':'🌙 Dark'}</button>
+    </div>
+
+    {/* Avatar */}
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'16px 20px 20px',borderBottom:`1px solid ${T.border}`}}>
+      <div style={{position:'relative',marginBottom:14}}>
+        <div style={{width:80,height:80,borderRadius:'50%',background:'linear-gradient(135deg,#4338CA,#7C3AED)',display:'flex',alignItems:'center',justifyContent:'center',...GR,fontSize:30,fontWeight:700,color:'#fff',border:'3px solid rgba(139,92,246,0.45)',boxShadow:'0 0 24px rgba(139,92,246,0.28)'}}>K</div>
+        <div style={{position:'absolute',bottom:2,right:2,width:14,height:14,borderRadius:'50%',background:'#10B981',border:'2px solid '+T.bgSide,boxShadow:'0 0 6px #10B981'}}/>
+      </div>
+      <div style={{...GR,fontSize:15,fontWeight:700,color:T.t1,textAlign:'center',lineHeight:1.3}}>Kudzanai Shadreck<br/>Musarurwa</div>
+      <div style={{fontSize:11,color:T.t3,marginTop:4}}>Local Assembly</div>
+      <div style={{display:'flex',gap:6,marginTop:12}}>
+        <Badge label="WORSHIP" color="#a78bfa" bg="rgba(139,92,246,0.18)" border="rgba(139,92,246,0.35)"/>
+        <Badge label="LEADER"  color="#34d399" bg="rgba(16,185,129,0.15)"  border="rgba(16,185,129,0.3)"/>
+      </div>
+    </div>
+
+    {/* Stats */}
+    <div style={{padding:'4px 20px',borderBottom:`1px solid ${T.border}`}}>
+      {[
+        ['Completed Days','15',T.t1],
+        ['Current Streak','2','#F59E0B'],
+        ['Member Since','2026-03-09',T.t1],
+        ['Spiritual Stage','Disciple',T.t1],
+        ['Ministry','Worship Ministry','#a78bfa'],
+        ['Role','Ministry Leader','#a78bfa'],
+      ].map(([l,v,c],i,arr)=>(
+        <div key={l} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'9px 0',borderBottom:i<arr.length-1?`1px solid ${T.borderMid}`:'none'}}>
+          <span style={{fontSize:12,color:T.t3}}>{l}</span>
+          <span style={{...GR,fontSize:12,fontWeight:600,color:c}}>{v}</span>
+        </div>
+      ))}
+    </div>
+
+    {/* Approved */}
+    <div style={{margin:'14px 16px',background:T.d?'rgba(139,92,246,0.1)':'rgba(139,92,246,0.08)',border:'1px solid rgba(139,92,246,0.25)',borderRadius:11,padding:'12px 16px',textAlign:'center'}}>
+      <Lbl c={T.lbl} s={{marginBottom:5}}>Approved Status</Lbl>
+      <div style={{...GR,fontSize:16,fontWeight:700,color:'#a78bfa'}}>Disciple</div>
+    </div>
+
+    {/* Ministry health */}
+    <div style={{padding:'4px 20px 16px',borderTop:`1px solid ${T.border}`}}>
+      <Lbl c={T.lbl} s={{paddingTop:12,marginBottom:12}}>Ministry Health</Lbl>
+      <div style={{display:'flex',alignItems:'center',gap:12}}>
+        <Ring score={72} color="#8B5CF6" size={56} stroke={4}/>
+        <div>
+          <div style={{...GR,fontSize:14,fontWeight:700,color:T.t1}}>72 / 100</div>
+          <div style={{fontSize:11,color:T.t3,marginTop:2}}>Worship Ministry<br/>↑ Improving</div>
+        </div>
+      </div>
+      <div style={{marginTop:10}}><Spark data={[28,31,36,29,41,38,36,39]} color="#8B5CF6"/></div>
+    </div>
+  </div>;
+}
+
+// ── SIDEBAR NAV ───────────────────────────────────────────
+function SideNav({ active, onSelect, T }) {
+  return <div style={{padding:'4px 12px 16px'}}>
+    <Lbl c={T.lbl} s={{padding:'4px 8px',marginBottom:6}}>Connection Card</Lbl>
+    {MAIN_TABS.map(t=>(
+      <button key={t} onClick={()=>onSelect(t)} style={{
+        display:'flex',alignItems:'center',gap:9,width:'100%',padding:'8px 10px',borderRadius:9,
+        background:active===t?(T.d?'rgba(139,92,246,0.16)':'rgba(139,92,246,0.1)'):'transparent',
+        border:`1px solid ${active===t?'rgba(139,92,246,0.28)':'transparent'}`,
+        color:active===t?'#a78bfa':T.t3,
+        fontSize:13,textAlign:'left',marginBottom:1,transition:'all 0.15s',
+      }}>
+        <span style={{fontSize:11,width:16,textAlign:'center',opacity:.7}}>{ICONS[t]}</span>
+        {t}
+      </button>
+    ))}
+    <div style={{margin:'10px 0 8px',borderTop:`1px solid ${T.borderMid}`}}/>
+    {BOTTOM_TABS.map(t=>(
+      <button key={t} onClick={()=>t==='Sign Out'&&alert('Signing out…')} style={{
+        display:'flex',alignItems:'center',gap:9,width:'100%',padding:'8px 10px',borderRadius:9,
+        background:'transparent',border:'1px solid transparent',
+        color:t==='Sign Out'?'#F87171':T.t3,
+        fontSize:13,textAlign:'left',marginBottom:1,transition:'all 0.15s',
+      }}>
+        <span style={{fontSize:11,width:16,textAlign:'center',opacity:.7}}>{ICONS[t]}</span>
+        {t}
+      </button>
+    ))}
+  </div>;
+}
+
+// ── TAB PANELS ────────────────────────────────────────────
+function TabIdentity({ T }) {
+  return <Pane icon="◎" title="Identity" sub="Structured personal data for Church analytics" T={T}>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:18}}>
+      <Field label="Full Name" T={T}><FInput value="Kudzanai Shadreck Musarurwa" T={T}/></Field>
+      <Field label="Gender" T={T}><FSelect value="Male" options={['Male','Female','Other']} T={T}/></Field>
+      <Field label="Phone Number" T={T}><FInput value="08081201356" T={T}/></Field>
+      <Field label="Date of Birth" T={T}><FInput value="1985/11/11" T={T}/></Field>
+      <Field label="Marital Status" T={T}><FSelect value="Married" options={['Single','Married','Widowed','Divorced']} T={T}/></Field>
+      <Field label="Country of Origin" T={T}><FInput value="Zimbabwe" T={T}/></Field>
+      <Field label="Preferred Language" T={T}><FSelect value="English" options={['English','Japanese','Shona','French','Spanish']} T={T}/></Field>
+      <Field label="Years in Japan" T={T}><FInput value="11" T={T}/></Field>
+    </div>
+    <Field label="Home Address" T={T}><FInput placeholder="Enter address…" T={T}/></Field>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:18}}>
+      <Field label="Emergency Contact" T={T}><FInput placeholder="Full name" T={T}/></Field>
+      <Field label="Emergency Phone" T={T}><FInput placeholder="Phone number" T={T}/></Field>
+    </div>
+    <SaveBtn/>
+  </Pane>;
+}
+
+function TabMinistry({ T }) {
+  const forms=[
+    {name:'Rehearsal Attendance',last:'40d ago',ok:false},
+    {name:'Setlist Tracker',last:'12d ago',ok:true},
+    {name:'Vocalist Rotation',last:'Never',ok:false},
+    {name:'Mic / Gear Health Log',last:'Never',ok:false},
+  ];
+  return <Pane icon="◈" title="Ministry & Service" sub="Your assignment, role, and form activity" T={T}>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+      {[['Ministry Assignment','Worship Ministry'],['Role','Ministry Leader'],['Director','Eri Kudo'],['Joined','2024-06-15']].map(([l,v])=>(
+        <div key={l} style={{background:T.bgCard,border:`1px solid ${T.border}`,borderRadius:12,padding:'15px 18px'}}>
+          <Lbl c={T.lbl} s={{marginBottom:7}}>{l}</Lbl>
+          <div style={{...GR,fontSize:15,fontWeight:600,color:T.t1}}>{v}</div>
+        </div>
+      ))}
+    </div>
+    <div>
+      <Lbl c={T.lbl} s={{marginBottom:12}}>Form Activity</Lbl>
+      <div style={{display:'flex',flexDirection:'column',gap:7}}>
+        {forms.map(f=>(
+          <div key={f.name} style={{background:T.bgCard,border:`1px solid ${T.border}`,borderRadius:11,padding:'13px 16px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <div style={{width:7,height:7,borderRadius:'50%',background:f.ok?'#10B981':'#F87171',boxShadow:`0 0 5px ${f.ok?'#10B981':'#F87171'}`}}/>
+              <span style={{fontSize:13,color:T.t1}}>{f.name}</span>
+            </div>
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <span style={{fontSize:11,color:f.ok?'#10B981':'#F87171'}}>{f.last}</span>
+              <button style={{background:'rgba(139,92,246,0.15)',border:'1px solid rgba(139,92,246,0.3)',borderRadius:7,color:'#a78bfa',padding:'5px 12px',fontSize:10,fontWeight:700,letterSpacing:'0.06em'}}>
+                SUBMIT
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10}}>
+      <Stat label="Total Services" value="124" color="#8B5CF6" T={T}/>
+      <Stat label="Hours Logged"   value="248" T={T}/>
+      <Stat label="Roles Held"     value="3"   T={T}/>
+    </div>
+  </Pane>;
+}
+
+function TabAttendance({ T }) {
+  const monthly=[{l:'J',v:3},{l:'F',v:4},{l:'M',v:3},{l:'A',v:4},{l:'M',v:5},{l:'J',v:4},{l:'J',v:3},{l:'A',v:5},{l:'S',v:4},{l:'O',v:4},{l:'N',v:3},{l:'D',v:4}];
+  const recent=[
+    {date:'Apr 20, 2026',service:'Sunday Service',ok:true},
+    {date:'Apr 13, 2026',service:'Sunday Service',ok:true},
+    {date:'Apr 6, 2026', service:'Sunday Service',ok:false},
+    {date:'Mar 30, 2026',service:'Sunday Service',ok:true},
+    {date:'Mar 23, 2026',service:'Mid-week',ok:true},
+    {date:'Mar 16, 2026',service:'Sunday Service',ok:true},
+  ];
+  return <Pane icon="▦" title="Attendance" sub="Your record across all services and events" T={T}>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10}}>
+      <Stat label="Attendance Rate" value="91%" color="#8B5CF6" T={T}/>
+      <Stat label="Services"        value="47"  T={T}/>
+      <Stat label="Absences"        value="5"   color="#F87171" T={T}/>
+      <Stat label="Streak"          value="6 wk" color="#10B981" T={T}/>
+    </div>
+    <div style={{background:T.bgCard,border:`1px solid ${T.border}`,borderRadius:12,padding:'18px 20px'}}>
+      <Lbl c={T.lbl} s={{marginBottom:14}}>Services Per Month — 2026</Lbl>
+      <AttBars data={monthly} T={T}/>
+    </div>
+    <div>
+      <Lbl c={T.lbl} s={{marginBottom:12}}>Recent Records</Lbl>
+      <div style={{background:T.bgCard,border:`1px solid ${T.border}`,borderRadius:12,overflow:'hidden'}}>
+        <table style={{width:'100%',borderCollapse:'collapse'}}>
+          <thead>
+            <tr style={{background:T.tblHead,borderBottom:`1px solid ${T.border}`}}>
+              {['Date','Service','Status'].map(h=><th key={h} style={{padding:'11px 16px',textAlign:'left'}}><Lbl c={T.lbl}>{h}</Lbl></th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {recent.map((r,i)=>(
+              <tr key={i} style={{borderBottom:i<recent.length-1?`1px solid ${T.borderMid}`:'none'}}>
+                <td style={{padding:'11px 16px',fontSize:13,color:T.t2}}>{r.date}</td>
+                <td style={{padding:'11px 16px',fontSize:13,color:T.t1}}>{r.service}</td>
+                <td style={{padding:'11px 16px'}}>
+                  <span style={{fontSize:9,fontWeight:700,letterSpacing:'0.08em',
+                    color:r.ok?'#10B981':'#F87171',
+                    background:r.ok?'rgba(16,185,129,0.12)':'rgba(248,113,113,0.12)',
+                    border:`1px solid ${r.ok?'rgba(16,185,129,0.3)':'rgba(248,113,113,0.3)'}`,
+                    borderRadius:5,padding:'3px 8px'}}>
+                    {r.ok?'PRESENT':'ABSENT'}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </Pane>;
+}
+
+function TabPastoral({ T }) {
+  const cases=[
+    {name:'Eri Kudo',    init:'E', type:'Counseling',    date:'Apr 10',ok:false},
+    {name:'Tanaka Yuki', init:'T', type:'Visitation',    date:'Mar 28',ok:true},
+    {name:'Suzuki Hana', init:'S', type:'Prayer Support',date:'Mar 15',ok:false},
+  ];
+  return <Pane icon="♡" title="Pastoral Care" sub="Member care, visitation, and counseling records" T={T}>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10}}>
+      <Stat label="Open Cases"      value="3" color="#F59E0B" T={T}/>
+      <Stat label="Closed This Mo." value="2" color="#10B981" T={T}/>
+      <Stat label="Prayer Requests" value="5" color="#8B5CF6" T={T}/>
+    </div>
+    <div>
+      <Lbl c={T.lbl} s={{marginBottom:12}}>Active Care Cases</Lbl>
+      <div style={{display:'flex',flexDirection:'column',gap:7}}>
+        {cases.map((c,i)=>(
+          <div key={i} style={{background:T.bgCard,border:`1px solid ${T.border}`,borderRadius:11,padding:'13px 16px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <div style={{display:'flex',alignItems:'center',gap:12}}>
+              <div style={{width:34,height:34,borderRadius:'50%',background:'rgba(139,92,246,0.18)',border:'1px solid rgba(139,92,246,0.3)',display:'flex',alignItems:'center',justifyContent:'center',...GR,fontSize:13,fontWeight:700,color:'#a78bfa'}}>{c.init}</div>
+              <div>
+                <div style={{fontSize:13,fontWeight:500,color:T.t1}}>{c.name}</div>
+                <div style={{fontSize:11,color:T.t3}}>{c.type} · {c.date}</div>
+              </div>
+            </div>
+            <span style={{fontSize:9,fontWeight:700,letterSpacing:'0.08em',
+              color:c.ok?'#10B981':'#F59E0B',
+              background:c.ok?'rgba(16,185,129,0.12)':'rgba(245,158,11,0.12)',
+              border:`1px solid ${c.ok?'rgba(16,185,129,0.3)':'rgba(245,158,11,0.3)'}`,
+              borderRadius:5,padding:'3px 9px'}}>
+              {c.ok?'CLOSED':'OPEN'}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+    <Field label="Pastoral Note" T={T}>
+      <textarea placeholder="Add a care note…" rows={4} style={{width:'100%',background:T.bgInput,border:`1px solid ${T.border}`,borderRadius:10,color:T.t1,padding:'10px 14px',fontSize:13,resize:'vertical',lineHeight:1.6}}/>
+    </Field>
+  </Pane>;
+}
+
+function TabMessages({ T }) {
+  const [tab,setTab]=useState('ALL');
+  return <Pane icon="◷" title="Messages" sub="Direct communications from leadership and members" T={T}>
+    <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
+      {['ALL','UNREAD','CRISIS','EMAIL','LINE','SMS'].map(t=>(
+        <button key={t} onClick={()=>setTab(t)} style={{
+          background:tab===t?'rgba(139,92,246,0.18)':T.bgTag,
+          border:`1px solid ${tab===t?'rgba(139,92,246,0.4)':T.border}`,
+          borderRadius:7,color:tab===t?'#a78bfa':T.t3,
+          padding:'6px 14px',fontSize:10,fontWeight:700,letterSpacing:'0.08em',
+        }}>{t}</button>
+      ))}
+    </div>
+    <div style={{background:T.bgCard,border:`1px solid ${T.border}`,borderRadius:12,padding:'52px',textAlign:'center',color:T.t3}}>
+      No messages in {tab}
+    </div>
+  </Pane>;
+}
+
+function TabGiving({ T }) {
+  const months=[{l:'J',v:5000},{l:'F',v:8000},{l:'M',v:6000},{l:'A',v:9000},{l:'M',v:7000},{l:'J',v:11000},{l:'J',v:8500},{l:'A',v:10000},{l:'S',v:7500},{l:'O',v:12000},{l:'N',v:9000},{l:'D',v:15000}];
+  const mx=Math.max(...months.map(m=>m.v));
+  return <Pane icon="◇" title="Giving & Tithe" sub="Stewardship record and giving history" T={T}>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10}}>
+      <Stat label="YTD Giving"     value="¥89k"  color="#8B5CF6" T={T}/>
+      <Stat label="Tithe Rate"     value="61%"   color="#10B981" T={T}/>
+      <Stat label="Giving Streak"  value="8 mo." color="#F59E0B" T={T}/>
+    </div>
+    <div style={{background:T.bgCard,border:`1px solid ${T.border}`,borderRadius:12,padding:'18px 20px'}}>
+      <Lbl c={T.lbl} s={{marginBottom:14}}>Monthly Giving — 2026</Lbl>
+      <div style={{display:'flex',gap:4,alignItems:'flex-end',height:72}}>
+        {months.map((m,i)=>(
+          <div key={i} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:5,flex:1}}>
+            <div style={{width:'100%',background:'rgba(139,92,246,0.25)',borderRadius:'3px 3px 0 0',height:Math.max(4,(m.v/mx)*56)}}/>
+            <div style={{fontSize:9,color:T.lbl}}>{m.l}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+    <div style={{background:T.bgCard,border:`1px solid ${T.border}`,borderRadius:12,overflow:'hidden'}}>
+      <div style={{padding:'12px 16px',borderBottom:`1px solid ${T.borderMid}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <Lbl c={T.lbl}>Recent Transactions</Lbl>
+        <span style={{fontSize:11,color:'#8B5CF6',fontWeight:600,cursor:'pointer'}}>View all →</span>
+      </div>
+      {[['Apr 20','Tithe','¥15,000','#10B981'],['Mar 30','Offering','¥5,000','#3B82F6'],['Mar 20','Tithe','¥15,000','#10B981'],['Feb 28','Tithe','¥15,000','#10B981']].map(([d,type,amt,c],i)=>(
+        <div key={i} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 16px',borderBottom:i<3?`1px solid ${T.borderMid}`:'none'}}>
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <div style={{width:8,height:8,borderRadius:'50%',background:c,boxShadow:`0 0 4px ${c}`}}/>
+            <div>
+              <div style={{fontSize:13,color:T.t1}}>{type}</div>
+              <div style={{fontSize:11,color:T.t3}}>{d}, 2026</div>
+            </div>
+          </div>
+          <div style={{...GR,fontSize:14,fontWeight:700,color:c}}>{amt}</div>
+        </div>
+      ))}
+    </div>
+  </Pane>;
+}
+
+function TabSpiritualJourney({ T }) {
+  const stages=['Seeker','Believer','Disciple','Leader','Equipper'];
+  const cur=3;
+  return <Pane icon="✦" title="Spiritual Journey" sub="Your discipleship stages and milestones" T={T}>
+    <div style={{background:T.bgCard,border:`1px solid ${T.border}`,borderRadius:12,padding:'22px 24px'}}>
+      <Lbl c={T.lbl} s={{marginBottom:18}}>Discipleship Pathway</Lbl>
+      <div style={{display:'flex',alignItems:'center',gap:0}}>
+        {stages.map((s,i)=>(
+          <React.Fragment key={s}>
+            <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,flex:1}}>
+              <div style={{
+                width:36,height:36,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',
+                background:i<=cur?'rgba(139,92,246,0.25)':T.bgTag,
+                border:`2px solid ${i<=cur?'rgba(139,92,246,0.6)':T.border}`,
+                ...GR,fontSize:13,fontWeight:700,
+                color:i<=cur?'#a78bfa':T.t3,
+                boxShadow:i===cur?'0 0 12px rgba(139,92,246,0.4)':'none',
+              }}>{i+1}</div>
+              <div style={{fontSize:10,fontWeight:i===cur?700:400,color:i===cur?'#a78bfa':i<cur?T.t2:T.t3,textAlign:'center',letterSpacing:'0.02em'}}>{s}</div>
+            </div>
+            {i<stages.length-1 && <div style={{flex:1,height:2,background:i<cur?'rgba(139,92,246,0.4)':T.borderMid,marginBottom:24,maxWidth:40}}/>}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+      {[['Salvation Date','2018-04-12'],['Baptism Date','2018-08-05'],['Discipleship Start','2019-01-20'],['Current Stage','Disciple']].map(([l,v])=>(
+        <div key={l} style={{background:T.bgCard,border:`1px solid ${T.border}`,borderRadius:11,padding:'14px 16px'}}>
+          <Lbl c={T.lbl} s={{marginBottom:7}}>{l}</Lbl>
+          <div style={{...GR,fontSize:14,fontWeight:600,color:T.t1}}>{v}</div>
+        </div>
+      ))}
+    </div>
+  </Pane>;
+}
+
+function TabPlaceholder({ tab, T }) {
+  return <Pane icon={ICONS[tab]||'◎'} title={tab} sub="This section is being configured for your profile." T={T}>
+    <div style={{background:T.bgCard,border:`1px dashed ${T.border}`,borderRadius:12,padding:'60px',textAlign:'center',color:T.t3,fontSize:13}}>
+      Coming soon
+    </div>
+  </Pane>;
+}
+
+// ── PANE WRAPPER ─────────────────────────────────────────
+function Pane({ icon, title, sub, children, T }) {
+  return <div style={{display:'flex',flexDirection:'column',gap:22}}>
+    <div>
+      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:5}}>
+        <span style={{fontSize:18,color:T.t3}}>{icon}</span>
+        <h2 style={{...GR,fontSize:22,fontWeight:700,color:T.t1}}>{title}</h2>
+      </div>
+      <p style={{fontSize:13,color:T.t3}}>{sub}</p>
+    </div>
+    {children}
+  </div>;
+}
+
+function SaveBtn() {
+  return <div>
+    <button style={{background:'#8B5CF6',border:'none',borderRadius:10,color:'#fff',padding:'11px 28px',fontSize:13,fontWeight:600,letterSpacing:'0.04em',...GR}}>
+      Save Changes
+    </button>
+  </div>;
+}
+
+// ── APP ───────────────────────────────────────────────────
+function App() {
+  const [tab,setTab]   = useState(()=>localStorage.getItem('profile_tab')||'Identity');
+  const [theme,setThemeRaw] = useState(()=>localStorage.getItem('profile_theme')||'dark');
+
+  const setTheme = v => { setThemeRaw(v); localStorage.setItem('profile_theme',v); };
+  const setTabSave = t => { setTab(t); localStorage.setItem('profile_tab',t); };
+
+  const T = mkT(theme);
+
+  useEffect(()=>{ document.body.style.background=T.bg; document.body.style.color=T.t1; },[theme]);
+
+  const content = () => {
+    switch(tab) {
+      case 'Identity':           return <TabIdentity T={T}/>;
+      case 'Ministry & Service': return <TabMinistry T={T}/>;
+      case 'Attendance':         return <TabAttendance T={T}/>;
+      case 'Pastoral Care':      return <TabPastoral T={T}/>;
+      case 'Messages':           return <TabMessages T={T}/>;
+      case 'Giving & Tithe':     return <TabGiving T={T}/>;
+      case 'Spiritual Journey':  return <TabSpiritualJourney T={T}/>;
+      default:                   return <TabPlaceholder tab={tab} T={T}/>;
+    }
+  };
+
+  return <div style={{height:'100vh',background:T.bg,color:T.t1,display:'flex',overflow:'hidden'}}>
+    {/* Left sidebar */}
+    <div style={{
+      width:264,flexShrink:0,borderRight:`1px solid ${T.border}`,
+      background:T.bgSide,overflowY:'auto',height:'100vh',
+    }}>
+      <ProfileCard T={T} theme={theme} setTheme={setTheme}/>
+      <SideNav active={tab} onSelect={setTabSave} T={T}/>
+    </div>
+
+    {/* Main */}
+    <div style={{flex:1,overflowY:'auto',height:'100vh'}}>
+      <div style={{maxWidth:820,padding:'36px 40px',margin:'0 auto'}}>
+        {content()}
+      </div>
+    </div>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

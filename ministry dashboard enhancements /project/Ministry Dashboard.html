@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Church OS — Ministry Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',sans-serif; min-height:100vh; -webkit-font-smoothing:antialiased; transition:background 0.3s; }
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(128,128,128,0.2); border-radius:99px; }
+button { font-family:'Inter',sans-serif; cursor:pointer; }
+* { transition: background-color 0.25s, border-color 0.25s, color 0.2s; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "density": "comfortable",
+  "showAI": true,
+  "theme": "dark"
+}/*EDITMODE-END*/;
+
+// ── THEME TOKENS ─────────────────────────────────────────
+function mk(mode) {
+  const d = mode === 'dark';
+  return {
+    d,
+    bg:          d ? '#07091a'                    : '#f0f2f9',
+    bgNav:       d ? 'rgba(7,9,26,0.94)'          : 'rgba(240,242,249,0.96)',
+    bgSide:      d ? '#090c20'                    : '#e6e9f5',
+    bgCard:      d ? 'rgba(255,255,255,0.045)'    : '#ffffff',
+    bgCardHov:   d ? 'rgba(255,255,255,0.08)'     : '#f4f6fd',
+    bgInput:     d ? 'rgba(255,255,255,0.05)'     : 'rgba(0,0,0,0.04)',
+    bgTag:       d ? 'rgba(255,255,255,0.07)'     : 'rgba(0,0,0,0.06)',
+    border:      d ? 'rgba(255,255,255,0.08)'     : 'rgba(0,0,0,0.08)',
+    borderMid:   d ? 'rgba(255,255,255,0.05)'     : 'rgba(0,0,0,0.05)',
+    t1:          d ? '#f8fafc'                    : '#0f172a',
+    t2:          d ? '#94a3b8'                    : '#475569',
+    t3:          d ? '#4d6080'                    : '#94a3b8',
+    lbl:         d ? '#3d4f6b'                    : '#8fa0ba',
+    alertBg:     d ? 'rgba(239,68,68,0.07)'       : 'rgba(239,68,68,0.06)',
+    alertBorder: d ? 'rgba(239,68,68,0.25)'       : 'rgba(239,68,68,0.18)',
+  };
+}
+
+// ── DATA ──────────────────────────────────────────────────
+const MINISTRIES = [
+  { id:'worship',     name:'Worship Ministry',      color:'#8B5CF6', g2:'#6D28D9', tag:'SOULFUL & TECH',         desc:'Sunday presence & technical arts orchestration',      stats:[{l:'Health',v:'72/100'},{l:'Attendance',v:'36'},{l:'Reports',v:'4'}] },
+  { id:'ushers',      name:'Ushering Ministry',     color:'#F59E0B', g2:'#D97706', tag:'PRECISE & SHARP',        desc:'Gatekeeping, crowd flow & first impressions',          stats:[{l:'Occupancy',v:'347'},{l:'Warmth',v:'8.4'},{l:'Incidents',v:'0'}] },
+  { id:'media',       name:'Media Ministry',        color:'#06B6D4', g2:'#0891B2', tag:'INDUSTRIAL & DARK',      desc:'Digital broadcast, livestream & historical logging',   stats:[{l:'Uptime',v:'99.2%'},{l:'Views',v:'1.2k'},{l:'Assets',v:'47'}] },
+  { id:'childrens',   name:"Children's Ministry",   color:'#F472B6', g2:'#DB2777', tag:'SOFT & PROTECTIVE',      desc:'Nurturing the next generation in a safe environment',  stats:[{l:'Safety',v:'98/100'},{l:'Children',v:'54'},{l:'Teachers',v:'8'}] },
+  { id:'youth',       name:'Youth Ministry',        color:'#EAB308', g2:'#CA8A04', tag:'VIBRANT & ACTIVE',       desc:'Empowering Gen Z believers in Tokyo',                  stats:[{l:'Events',v:'3'},{l:'Engaged',v:'89%'},{l:'At-Risk',v:'2'}] },
+  { id:'prayer',      name:'Prayer Ministry',       color:'#818CF8', g2:'#6366F1', tag:'ETHEREAL & CALM',        desc:'Spiritual warfare, intercession & crisis coverage',    stats:[{l:'Status',v:'Active'},{l:'Requests',v:'12'},{l:'Resolved',v:'9'}] },
+  { id:'pastoral',    name:'Pastoral Care',         color:'#10B981', g2:'#059669', tag:'TRUST & SECURITY',       desc:'Member wellness, visitation & counseling',             stats:[{l:'Wellbeing',v:'84/100'},{l:'Visits',v:'7'},{l:'Cases',v:'3'}] },
+  { id:'evangelism',  name:'Evangelism Ministry',   color:'#22C55E', g2:'#15803D', tag:'URGENT & BOLD',          desc:'Radical outreach & Gospel expansion in Tokyo',         stats:[{l:'Salvations',v:'14'},{l:'Contacts',v:'67'},{l:'Territory',v:'72%'}] },
+  { id:'language',    name:'Kingdom Language',      color:'#3B82F6', g2:'#1D4ED8', tag:'ACADEMIC & ELITE',       desc:'Academic mastery with Kingdom values',                 stats:[{l:'Students',v:'43'},{l:'Grade',v:'87%'},{l:'Retention',v:'94%'}] },
+  { id:'finance',     name:'Finance Ministry',      color:'#F59E0B', g2:'#10B981', tag:'CLEAN & SECURE',         desc:'Stewardship, budget management & giving health',       stats:[{l:'Runway',v:'8 mo.'},{l:'Tithe',v:'61%'},{l:'Expenses',v:'¥240k'}] },
+  { id:'hospitality', name:'Hospitality Ministry',  color:'#D97706', g2:'#92400E', tag:'WARM & INVITING',        desc:'Cultivating a welcoming community experience',         stats:[{l:'Inventory',v:'82%'},{l:'Volunteers',v:'11'},{l:'Satisfaction',v:'9.1'}] },
+  { id:'fellowship',  name:'Fellowship Circles',    color:'#14B8A6', g2:'#0D9488', tag:'ORGANIC & CONNECTED',    desc:'Small group health & member integration',              stats:[{l:'Groups',v:'9'},{l:'Connected',v:'68%'},{l:'Isolated',v:'34'}] },
+  { id:'missions',    name:'Missions Ministry',     color:'#60A5FA', g2:'#2563EB', tag:'GLOBAL & EXPANSIVE',     desc:'Global Gospel footprints & foreign support',           stats:[{l:'Nations',v:'6'},{l:'Missionaries',v:'4'},{l:'Budget',v:'¥80k'}] },
+  { id:'akiramenai',  name:'Akiramenai Outreach',   color:'#F87171', g2:'#DC2626', tag:'GRITTY & COMPASSIONATE', desc:'Homeless outreach & compassionate care in Tokyo',      stats:[{l:'Meals',v:'312'},{l:'Contacts',v:'89'},{l:'Stock',v:'Low ⚠'}] },
+  { id:'foodpantry',  name:'The Food Pantry',       color:'#84CC16', g2:'#4D7C0F', tag:'ORDERLY & FRESH',        desc:'Practical nourishment for vulnerable families',        stats:[{l:'Families',v:'47'},{l:'Stock',v:'76%'},{l:'Donations',v:'8'}] },
+];
+
+const WORSHIP_OPS = [
+  { sym:'M', label:'Submit Report',    sub:'Rehearsal attendance & resources' },
+  { sym:'A', label:'Quick Attendance', sub:'Log service headcounts' },
+  { sym:'C', label:'Ministry Events',  sub:'Manage retreats & outreach' },
+  { sym:'P', label:'Manage Team',      sub:'Assign roles & volunteers' },
+  { sym:'B', label:'Analytics',        sub:'View performance metrics' },
+  { sym:'N', label:'Announcements',    sub:'Messages from leadership' },
+];
+
+const ATT = [28,31,36,29,41,38,36,39];
+
+function rgb(h) { return `${parseInt(h.slice(1,3),16)},${parseInt(h.slice(3,5),16)},${parseInt(h.slice(5,7),16)}`; }
+
+// ── MICRO ────────────────────────────────────────────────
+const GR = { fontFamily:"'Space Grotesk',sans-serif" };
+
+function Lbl({ children, color, style }) {
+  return <div style={{fontFamily:'Inter',fontSize:10,fontWeight:600,letterSpacing:'0.12em',textTransform:'uppercase',color:color||'inherit',...style}}>{children}</div>;
+}
+
+function Spark({ data, color, w=90, h=26 }) {
+  const mx=Math.max(...data),mn=Math.min(...data),rng=mx-mn||1;
+  const pts=data.map((v,i)=>`${(i/(data.length-1))*w},${h-((v-mn)/rng)*(h-4)-2}`).join(' ');
+  return <svg width={w} height={h} style={{display:'block'}}><polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/></svg>;
+}
+
+function Waveform({ color }) {
+  const bars=[10,22,14,38,20,46,30,52,24,42,18,48,28,44,16,50,26,40,12,34];
+  return <svg width="180" height="56"><>{bars.map((h,i)=><rect key={i} x={i*9+1} y={(56-h)/2} width="6" height={h} rx="2.5" fill={color} opacity={.2+(i%3)*0.06}/>)}</></svg>;
+}
+
+function CircleScore({ score, color }) {
+  const R=36,C=2*Math.PI*R;
+  return <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:6}}>
+    <div style={{position:'relative',width:92,height:92}}>
+      <svg width="92" height="92" style={{transform:'rotate(-90deg)'}}>
+        <circle cx="46" cy="46" r={R} fill="none" stroke="rgba(128,128,128,0.15)" strokeWidth="5"/>
+        <circle cx="46" cy="46" r={R} fill="none" stroke={color} strokeWidth="5"
+          strokeDasharray={C} strokeDashoffset={C*(1-score/100)} strokeLinecap="round"
+          style={{filter:`drop-shadow(0 0 5px ${color}88)`}}/>
+      </svg>
+      <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+        <span style={{...GR,fontSize:22,fontWeight:700,lineHeight:1}}>{score}</span>
+        <span style={{fontSize:9,opacity:.5}}>/100</span>
+      </div>
+    </div>
+    <span style={{fontSize:9,letterSpacing:'0.1em',fontWeight:600,textTransform:'uppercase',opacity:.45,textAlign:'center',lineHeight:1.4}}>SPIRITUAL<br/>ATMOSPHERE</span>
+  </div>;
+}
+
+function StatTile({ label, value, note, accent, alert, spark, T }) {
+  return <div style={{
+    background: alert ? T.alertBg : T.bgCard,
+    border:`1px solid ${alert ? T.alertBorder : T.border}`,
+    borderRadius:12, padding:'16px 16px 14px',
+  }}>
+    <Lbl color={T.lbl} style={{marginBottom:10}}>{label}</Lbl>
+    <div style={{...GR,fontSize:26,fontWeight:700,color:accent||(alert?'#F87171':T.t1),lineHeight:1}}>{value}</div>
+    {spark && <div style={{marginTop:8}}><Spark data={spark} color={accent||'#8B5CF6'}/></div>}
+    {note && <div style={{fontSize:11,color:alert?'#F87171':spark?'#10B981':T.t3,marginTop:6}}>{note}</div>}
+  </div>;
+}
+
+// ── LEFT SIDEBAR ─────────────────────────────────────────
+function LeftSidebar({ open, color, T }) {
+  const [emailTab, setEmailTab] = useState('ALL');
+  const TABS = ['ALL','UNREAD','CRISIS'];
+  return (
+    <div style={{
+      width: open ? 264 : 0,
+      minWidth: open ? 264 : 0,
+      overflow: 'hidden',
+      transition: 'width 0.28s cubic-bezier(.4,0,.2,1), min-width 0.28s cubic-bezier(.4,0,.2,1)',
+      borderRight: `1px solid ${T.border}`,
+      background: T.bgSide,
+      display:'flex', flexDirection:'column',
+      height:'100%',
+    }}>
+      <div style={{width:264,height:'100%',display:'flex',flexDirection:'column',overflowY:'auto'}}>
+
+        {/* OPERATIONS */}
+        <div style={{padding:'20px 16px 4px'}}>
+          <Lbl color={T.lbl} style={{marginBottom:12,paddingLeft:4}}>Operations</Lbl>
+          {WORSHIP_OPS.map(op=>(
+            <SideOp key={op.label} op={op} color={color} T={T}/>
+          ))}
+        </div>
+
+        {/* DIVIDER */}
+        <div style={{margin:'8px 16px',borderTop:`1px solid ${T.borderMid}`}}/>
+
+        {/* EMAILS */}
+        <div style={{padding:'8px 16px 20px',flex:1,display:'flex',flexDirection:'column'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+            <Lbl color={T.lbl} style={{paddingLeft:4}}>Emails</Lbl>
+            <button style={{background:`rgba(${rgb(color)},0.18)`,border:`1px solid rgba(${rgb(color)},0.35)`,borderRadius:7,color:color,padding:'4px 10px',fontSize:10,fontWeight:700,letterSpacing:'0.06em'}}>
+              + COMPOSE
+            </button>
+          </div>
+          <div style={{display:'flex',gap:4,marginBottom:12}}>
+            {TABS.map(t=>(
+              <button key={t} onClick={()=>setEmailTab(t)} style={{
+                flex:1,background:emailTab===t?`rgba(${rgb(color)},0.18)`:'transparent',
+                border:`1px solid ${emailTab===t?`rgba(${rgb(color)},0.35)`:T.border}`,
+                borderRadius:6,color:emailTab===t?color:T.t3,
+                padding:'5px 0',fontSize:9,fontWeight:700,letterSpacing:'0.07em',
+              }}>{t}</button>
+            ))}
+          </div>
+          <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',color:T.t3,fontSize:12,background:T.bgCard,borderRadius:10,border:`1px solid ${T.border}`,padding:20,textAlign:'center',minHeight:80}}>
+            No messages in {emailTab}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+function SideOp({ op, color, T }) {
+  const [hov,setHov]=useState(false);
+  return <div
+    onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+    style={{
+      display:'flex',alignItems:'center',gap:10,padding:'9px 10px',borderRadius:10,
+      background: hov ? `rgba(${rgb(color)},0.12)` : 'transparent',
+      border:`1px solid ${hov?`rgba(${rgb(color)},0.25)`:'transparent'}`,
+      cursor:'pointer',marginBottom:2,transition:'all 0.15s',
+    }}>
+    <div style={{
+      width:30,height:30,borderRadius:8,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',
+      background: hov ? `rgba(${rgb(color)},0.2)` : T.bgTag,
+      border:`1px solid ${hov?`rgba(${rgb(color)},0.3)`:T.border}`,
+      ...GR,fontSize:12,fontWeight:700,color:hov?color:T.t3,transition:'all 0.15s',
+    }}>{op.sym}</div>
+    <div style={{flex:1,minWidth:0}}>
+      <div style={{fontSize:13,fontWeight:500,color:T.t1,lineHeight:1.2}}>{op.label}</div>
+      <div style={{fontSize:11,color:T.t3,marginTop:1,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{op.sub}</div>
+    </div>
+    <span style={{fontSize:12,color:T.t3,opacity:hov?1:0,transition:'opacity 0.15s'}}>→</span>
+  </div>;
+}
+
+// ── TOP NAV ───────────────────────────────────────────────
+function TopNav({ view, onBack, sidebarOpen, toggleSidebar, theme, setTheme, T }) {
+  return <div style={{
+    height:56,padding:'0 24px',display:'flex',alignItems:'center',justifyContent:'space-between',
+    borderBottom:`1px solid ${T.border}`,background:T.bgNav,
+    backdropFilter:'blur(20px)',position:'sticky',top:0,zIndex:50,flexShrink:0,
+  }}>
+    <div style={{display:'flex',alignItems:'center',gap:10}}>
+      {/* Sidebar toggle — only on dashboard */}
+      {view === 'worship' && (
+        <button onClick={toggleSidebar} style={{
+          width:34,height:34,borderRadius:9,background:sidebarOpen?`rgba(139,92,246,0.18)`:T.bgTag,
+          border:`1px solid ${sidebarOpen?'rgba(139,92,246,0.35)':T.border}`,
+          display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,
+          color:sidebarOpen?'#8B5CF6':T.t3,fontSize:14,
+        }} title="Toggle sidebar">
+          {sidebarOpen ? '←' : '☰'}
+        </button>
+      )}
+      <div style={{display:'flex',alignItems:'center',gap:8}}>
+        <div style={{width:28,height:28,borderRadius:8,background:'linear-gradient(135deg,#8B5CF6,#3B82F6)',display:'flex',alignItems:'center',justifyContent:'center',...GR,fontSize:12,fontWeight:800,color:'#fff'}}>C</div>
+        <span style={{...GR,fontWeight:700,fontSize:13,color:T.t1,letterSpacing:'-0.01em'}}>Church OS</span>
+      </div>
+      {view === 'worship' && <>
+        <span style={{color:T.border,margin:'0 4px',fontSize:18}}>|</span>
+        <button onClick={onBack} style={{background:T.bgTag,border:`1px solid ${T.border}`,borderRadius:8,color:T.t2,padding:'5px 12px',fontSize:11,fontWeight:600,letterSpacing:'0.06em'}}>
+          ← MY MINISTRIES
+        </button>
+        <span style={{fontSize:13,fontWeight:600,color:T.t1,...GR}}>Worship Ministry</span>
+      </>}
+    </div>
+    <div style={{display:'flex',alignItems:'center',gap:8}}>
+      {/* Theme toggle */}
+      <button onClick={()=>setTheme(t=>t==='dark'?'light':'dark')} style={{
+        background:T.bgTag,border:`1px solid ${T.border}`,borderRadius:9,
+        color:T.t2,padding:'6px 12px',fontSize:11,fontWeight:600,letterSpacing:'0.04em',
+        display:'flex',alignItems:'center',gap:5,
+      }}>
+        {theme==='dark'?'☀️ Light':'🌙 Dark'}
+      </button>
+      {view==='worship' && (
+        <div style={{background:`rgba(139,92,246,0.14)`,border:'1px solid rgba(139,92,246,0.32)',borderRadius:7,padding:'4px 12px',fontSize:10,fontWeight:700,color:'#8B5CF6',letterSpacing:'0.12em'}}>
+          LEADER
+        </div>
+      )}
+      <div style={{width:32,height:32,borderRadius:'50%',background:'linear-gradient(135deg,#4338CA,#7C3AED)',display:'flex',alignItems:'center',justifyContent:'center',...GR,fontSize:12,fontWeight:700,color:'#fff',border:`2px solid rgba(139,92,246,0.4)`}}>K</div>
+    </div>
+  </div>;
+}
+
+// ── MINISTRY HUB ──────────────────────────────────────────
+function MinistryHub({ onSelect, T }) {
+  const [hov,setHov]=useState(null);
+  return <div style={{overflowY:'auto',flex:1}}>
+    <div style={{padding:'48px 40px 28px'}}>
+      <Lbl color={T.lbl} style={{marginBottom:10}}>Ministry Intelligence Layer · Tue Apr 22, 2026</Lbl>
+      <h1 style={{...GR,fontSize:40,fontWeight:700,color:T.t1,letterSpacing:'-0.02em'}}>Your Ministries</h1>
+      <p style={{color:T.t3,marginTop:6,fontSize:14}}>15 active intelligence silos across all departments</p>
+    </div>
+    <div style={{padding:'0 40px 64px',display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:14}}>
+      {MINISTRIES.map(m=>{
+        const isH=hov===m.id;
+        return <div key={m.id}
+          onMouseEnter={()=>setHov(m.id)} onMouseLeave={()=>setHov(null)}
+          onClick={()=>m.id==='worship'&&onSelect(m.id)}
+          style={{
+            background: isH
+              ? `linear-gradient(145deg,rgba(${rgb(m.color)},0.14),${T.bgCardHov} 65%)`
+              : `linear-gradient(145deg,rgba(${rgb(m.color)},0.07),${T.bgCard} 65%)`,
+            border:`1px solid ${isH?`rgba(${rgb(m.color)},0.38)`:T.border}`,
+            borderRadius:18,padding:'22px 22px 18px',
+            cursor:m.id==='worship'?'pointer':'default',
+            transform:isH?'translateY(-2px)':'none',
+            boxShadow:isH?`0 10px 40px rgba(${rgb(m.color)},0.12)`:'none',
+            position:'relative',overflow:'hidden',
+          }}>
+          <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,${m.color},${m.g2})`,borderRadius:'18px 18px 0 0'}}/>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}>
+            <div>
+              <Lbl color={m.color} style={{marginBottom:6}}>{m.tag}</Lbl>
+              <div style={{...GR,fontSize:16,fontWeight:600,color:T.t1,lineHeight:1.25}}>{m.name}</div>
+            </div>
+            <div style={{background:`rgba(${rgb(m.color)},0.15)`,border:`1px solid rgba(${rgb(m.color)},0.3)`,borderRadius:6,padding:'3px 9px',fontSize:9,fontWeight:700,color:m.color,letterSpacing:'0.1em',flexShrink:0,marginTop:2}}>LEADER</div>
+          </div>
+          <p style={{fontSize:12.5,color:T.t3,lineHeight:1.55,marginBottom:14}}>{m.desc}</p>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6}}>
+            {m.stats.map((s,i)=><div key={i} style={{background:T.d?'rgba(0,0,0,0.2)':'rgba(0,0,0,0.04)',borderRadius:8,padding:'8px 10px'}}>
+              <div style={{...GR,fontSize:13,fontWeight:700,color:i===0?m.color:T.t1,marginBottom:2,lineHeight:1}}>{s.v}</div>
+              <div style={{fontSize:9,color:T.lbl,letterSpacing:'0.04em',textTransform:'uppercase'}}>{s.l}</div>
+            </div>)}
+          </div>
+          {m.id==='worship'&&<div style={{marginTop:12,fontSize:10,color:m.color,opacity:.65,textAlign:'right',letterSpacing:'0.05em'}}>OPEN DASHBOARD →</div>}
+        </div>;
+      })}
+    </div>
+  </div>;
+}
+
+// ── WORSHIP DASHBOARD ─────────────────────────────────────
+function WorshipDashboard({ tweaks, T }) {
+  const m = MINISTRIES[0];
+  const [commsTab, setCommsTab] = useState('ALL');
+  const COMMS_TABS = ['ALL','BROADCAST','TEAM','CRISIS','ANNOUNCEMENTS'];
+
+  return <div style={{overflowY:'auto',flex:1,padding:tweaks.density==='compact'?'24px 32px':'32px 36px',display:'flex',flexDirection:'column',gap:24}}>
+
+    {/* ① MINISTRY HEALTH INTELLIGENCE — top priority */}
+    <section>
+      <Lbl color={T.lbl} style={{marginBottom:14}}>Ministry Health Intelligence</Lbl>
+      <div style={{display:'grid',gridTemplateColumns:tweaks.showAI?'1fr 300px':'1fr',gap:18}}>
+        <div style={{display:'flex',flexDirection:'column',gap:10}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10}}>
+            <StatTile T={T} label="Health Score"   value="72/100" accent="#8B5CF6" note="↑ +12 since last month" spark={ATT}/>
+            <StatTile T={T} label="Avg Attendance"  value="36.75"  note="↑ Trending up" spark={ATT}/>
+            <StatTile T={T} label="Total Reports"   value="4"      note="This quarter"/>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10}}>
+            <StatTile T={T} label="Salvations"      value="0"      note="This month"/>
+            <StatTile T={T} label="Visitors"        value="0"      note="This month"/>
+            <StatTile T={T} label="Report Status"   value="40d ago" alert note="Days since last report"/>
+          </div>
+        </div>
+        {tweaks.showAI && (
+          <div style={{background:T.bgCard,border:`1px solid ${T.border}`,borderRadius:14,padding:'18px 20px',display:'flex',flexDirection:'column',gap:0}}>
+            <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:14}}>
+              <span style={{color:'#8B5CF6',fontSize:11}}>✦</span>
+              <Lbl color={T.lbl}>AI Insights</Lbl>
+            </div>
+            {[
+              ['#8B5CF6','Attendance grew 18% over 8 weeks. Submit a report to lock in this data for leadership review.'],
+              ['#F87171','No report in 40 days. Health score capped at 72. Filing a report is your highest-leverage action.'],
+              ['#F59E0B','Gear Health Log has zero entries. Equipment EOL risk is untracked — audit before next rehearsal.'],
+              ['#10B981','Vocalist Rotation form inactive. Irregular rotation may impact sound consistency over time.'],
+            ].map(([c,txt],i,arr)=>(
+              <div key={i} style={{display:'flex',gap:10,padding:'10px 0',borderBottom:i<arr.length-1?`1px solid ${T.borderMid}`:'none'}}>
+                <div style={{width:6,height:6,borderRadius:'50%',background:c,flexShrink:0,marginTop:4,boxShadow:`0 0 5px ${c}`}}/>
+                <p style={{fontSize:12,color:T.t2,lineHeight:1.6}}>{txt}</p>
+              </div>
+            ))}
+            <div style={{marginTop:'auto',paddingTop:12,borderTop:`1px solid ${T.borderMid}`}}>
+              <div style={{fontSize:10,color:T.t3,letterSpacing:'0.06em',textTransform:'uppercase'}}>Church OS Intelligence</div>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+
+    {/* ② HERO */}
+    <section style={{
+      background: T.d
+        ? 'linear-gradient(135deg,rgba(139,92,246,0.22) 0%,rgba(109,40,217,0.1) 45%,transparent 100%)'
+        : 'linear-gradient(135deg,rgba(139,92,246,0.1) 0%,rgba(139,92,246,0.04) 55%,transparent 100%)',
+      border:`1px solid rgba(139,92,246,${T.d?0.28:0.2})`,
+      borderRadius:20,padding:'32px 36px',position:'relative',overflow:'hidden',
+    }}>
+      <div style={{position:'absolute',top:-50,right:-30,width:280,height:280,background:'radial-gradient(circle,rgba(139,92,246,0.15),transparent 70%)',pointerEvents:'none'}}/>
+      <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',gap:20,flexWrap:'wrap',position:'relative'}}>
+        <div style={{flex:1,minWidth:280}}>
+          <Lbl color="#8B5CF6" style={{marginBottom:10}}>SOULFUL & TECH · WORSHIP MINISTRY</Lbl>
+          <h2 style={{...GR,fontSize:48,fontWeight:700,color:T.t1,letterSpacing:'-0.025em',lineHeight:1.0,marginBottom:10}}>Worship Ministry</h2>
+          <p style={{color:T.t2,fontSize:14,lineHeight:1.65,maxWidth:420}}>
+            Leading the congregation into God's presence through music and arts. Saturday evening rehearsals.
+            Director: <strong style={{color:T.d?'#c4b5fd':'#7C3AED',fontWeight:500}}>Eri Kudo</strong>
+          </p>
+          <div style={{display:'flex',gap:8,marginTop:18,flexWrap:'wrap'}}>
+            {[['NEXT REHEARSAL','Sat, Apr 26'],['LAST REPORT','40d ago'],['TEAM','18 members'],['SETLISTS','6 this mo.']].map(([l,v])=>(
+              <div key={l} style={{background:T.d?'rgba(0,0,0,0.3)':T.bgCard,borderRadius:10,padding:'10px 14px',border:`1px solid ${T.border}`}}>
+                <Lbl color={T.lbl} style={{marginBottom:4}}>{l}</Lbl>
+                <div style={{...GR,fontSize:13,fontWeight:600,color:T.t1}}>{v}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:10,flexShrink:0}}>
+          <CircleScore score={72} color="#8B5CF6"/>
+          <div style={{opacity:.5}}><Waveform color="#8B5CF6"/></div>
+        </div>
+      </div>
+    </section>
+
+    {/* ③ AUTOMATION STATUS */}
+    <div style={{background:T.bgCard,border:`1px solid ${T.border}`,borderRadius:12,padding:'14px 20px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+      <div style={{display:'flex',alignItems:'center',gap:12}}>
+        <div style={{position:'relative',width:10,height:10,flexShrink:0}}>
+          <div style={{width:10,height:10,borderRadius:'50%',background:'#10B981'}}/>
+          <div style={{position:'absolute',inset:-3,borderRadius:'50%',background:'rgba(16,185,129,0.3)',animation:'pulse 2s infinite'}}/>
+        </div>
+        <div>
+          <div style={{fontSize:13,fontWeight:500,color:T.t1}}>Automation Active</div>
+          <div style={{fontSize:11,color:T.t3}}>Real-time health score & Mission Control sync enabled</div>
+        </div>
+      </div>
+      <div style={{background:T.bgTag,border:`1px solid ${T.border}`,borderRadius:8,padding:'6px 14px',fontSize:11,color:T.t2}}>Last sync: 3/12/2026</div>
+    </div>
+
+    {/* ④ COMMUNICATIONS — standalone internal comms */}
+    <section>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+        <div>
+          <Lbl color={T.lbl} style={{marginBottom:4}}>Internal Communications</Lbl>
+          <p style={{fontSize:12,color:T.t3}}>Broadcast messages, team alerts & ministry-wide announcements</p>
+        </div>
+        <button style={{background:`rgba(${rgb(m.color)},0.16)`,border:`1px solid rgba(${rgb(m.color)},0.35)`,borderRadius:9,color:m.color,padding:'8px 18px',fontSize:12,fontWeight:700,letterSpacing:'0.05em'}}>
+          + NEW MESSAGE ▾
+        </button>
+      </div>
+      <div style={{background:T.bgCard,border:`1px solid ${T.border}`,borderRadius:16,overflow:'hidden'}}>
+        <div style={{padding:'14px 18px',display:'flex',gap:6,flexWrap:'wrap',borderBottom:`1px solid ${T.borderMid}`}}>
+          {COMMS_TABS.map(t=>(
+            <button key={t} onClick={()=>setCommsTab(t)} style={{
+              background:commsTab===t?`rgba(${rgb(m.color)},0.16)`:'transparent',
+              border:`1px solid ${commsTab===t?`rgba(${rgb(m.color)},0.35)`:T.border}`,
+              borderRadius:7,color:commsTab===t?m.color:T.t3,
+              padding:'5px 13px',fontSize:10,fontWeight:700,letterSpacing:'0.07em',
+            }}>{t}</button>
+          ))}
+        </div>
+        <div style={{padding:'48px 20px',textAlign:'center',color:T.t3,fontSize:13}}>
+          No {commsTab.toLowerCase()} messages found
+        </div>
+      </div>
+    </section>
+
+  </div>;
+}
+
+// ── TWEAKS ────────────────────────────────────────────────
+function TweaksPanel({ tweaks, setTweaks, theme, setTheme, T }) {
+  const set = (k,v) => {
+    setTweaks(p => { const n={...p,[k]:v}; window.parent.postMessage({type:'__edit_mode_set_keys',edits:{[k]:v}},'*'); return n; });
+  };
+  return <div style={{
+    position:'fixed',bottom:24,right:24,background:T.d?'#0b0f24':'#ffffff',
+    border:`1px solid ${T.border}`,borderRadius:16,padding:22,width:240,
+    zIndex:200,boxShadow:T.d?'0 24px 64px rgba(0,0,0,0.6)':'0 12px 48px rgba(0,0,0,0.12)',
+  }}>
+    <div style={{...GR,fontSize:13,fontWeight:600,color:T.t1,marginBottom:18}}>Tweaks</div>
+    <div style={{display:'flex',flexDirection:'column',gap:14}}>
+      <TRow label="Theme" T={T}>
+        <div style={{display:'flex',gap:4}}>
+          {['dark','light'].map(th=>(
+            <button key={th} onClick={()=>setTheme(th)} style={{
+              background:theme===th?'rgba(139,92,246,0.22)':T.bgTag,
+              border:`1px solid ${theme===th?'rgba(139,92,246,0.45)':T.border}`,
+              borderRadius:6,color:theme===th?'#a78bfa':T.t3,
+              padding:'4px 10px',fontSize:10,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',
+            }}>{th}</button>
+          ))}
+        </div>
+      </TRow>
+      <TRow label="Density" T={T}>
+        <div style={{display:'flex',gap:4}}>
+          {['comfortable','compact'].map(d=>(
+            <button key={d} onClick={()=>set('density',d)} style={{
+              background:tweaks.density===d?'rgba(139,92,246,0.22)':T.bgTag,
+              border:`1px solid ${tweaks.density===d?'rgba(139,92,246,0.45)':T.border}`,
+              borderRadius:6,color:tweaks.density===d?'#a78bfa':T.t3,
+              padding:'4px 8px',fontSize:9,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',
+            }}>{d}</button>
+          ))}
+        </div>
+      </TRow>
+      <TRow label="AI Insights" T={T}><Toggle v={tweaks.showAI} on={()=>set('showAI',!tweaks.showAI)}/></TRow>
+    </div>
+  </div>;
+}
+
+function TRow({ label, children, T }) {
+  return <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:10}}>
+    <span style={{fontSize:12,color:T.t2,flexShrink:0}}>{label}</span>
+    {children}
+  </div>;
+}
+
+function Toggle({ v, on }) {
+  return <div onClick={on} style={{width:36,height:20,borderRadius:10,background:v?'#8B5CF6':'rgba(128,128,128,0.2)',position:'relative',cursor:'pointer',flexShrink:0}}>
+    <div style={{position:'absolute',top:3,left:v?18:3,width:14,height:14,borderRadius:'50%',background:'#fff',boxShadow:'0 1px 3px rgba(0,0,0,0.3)',transition:'left 0.18s'}}/>
+  </div>;
+}
+
+// ── APP ───────────────────────────────────────────────────
+function App() {
+  const [view, setView]         = useState(()=>localStorage.getItem('cos_view')||'hub');
+  const [sidebarOpen, setSidebar]= useState(()=>localStorage.getItem('cos_sidebar')!=='false');
+  const [tweaksOpen, setTweaksOpen]= useState(false);
+  const [tweaks, setTweaks]     = useState(TWEAK_DEFAULTS);
+  const [theme, setThemeRaw]    = useState(()=>localStorage.getItem('cos_theme')||'dark');
+
+  const T = mk(theme);
+
+  const setTheme = v => { setThemeRaw(v); localStorage.setItem('cos_theme',v); };
+  const toggleSidebar = () => setSidebar(o=>{ localStorage.setItem('cos_sidebar',!o); return !o; });
+
+  useEffect(()=>{ localStorage.setItem('cos_view',view); }, [view]);
+  useEffect(()=>{
+    document.body.style.background = T.bg;
+    document.body.style.color = T.t1;
+  }, [theme]);
+  useEffect(()=>{
+    const h = e => {
+      if(e.data?.type==='__activate_edit_mode')   setTweaksOpen(true);
+      if(e.data?.type==='__deactivate_edit_mode') setTweaksOpen(false);
+    };
+    window.addEventListener('message',h);
+    window.parent.postMessage({type:'__edit_mode_available'},'*');
+    return ()=>window.removeEventListener('message',h);
+  },[]);
+
+  return <div style={{minHeight:'100vh',background:T.bg,color:T.t1,display:'flex',flexDirection:'column'}}>
+    <TopNav
+      view={view} onBack={()=>setView('hub')}
+      sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar}
+      theme={theme} setTheme={setTheme} T={T}
+    />
+    <div style={{display:'flex',flex:1,overflow:'hidden',height:'calc(100vh - 56px)'}}>
+      {view==='worship' && <LeftSidebar open={sidebarOpen} color="#8B5CF6" T={T}/>}
+      {view==='hub'
+        ? <MinistryHub onSelect={()=>setView('worship')} T={T}/>
+        : <WorshipDashboard tweaks={tweaks} T={T}/>
+      }
+    </div>
+    {tweaksOpen && <TweaksPanel tweaks={tweaks} setTweaks={setTweaks} theme={theme} setTheme={setTheme} T={T}/>}
+    <style>{`@keyframes pulse{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.7);opacity:0}}`}</style>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

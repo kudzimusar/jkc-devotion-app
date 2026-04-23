@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChurchGPT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #131110;
+  --bg2: #1a1815;
+  --bg3: #211f1c;
+  --border: rgba(255,255,255,0.07);
+  --text: #e8e2d9;
+  --text-muted: #7a7068;
+  --text-dim: #4a4540;
+  --accent: oklch(72% 0.14 65);
+  --accent2: oklch(72% 0.14 200);
+  --user-bubble: #252220;
+  --sidebar-w: 260px;
+  --r: 12px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100dvh;
+  display: flex;
+  overflow: hidden;
+  font-size: 15px;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.025; pointer-events: none; z-index: 1000;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; flex-shrink: 0;
+  transition: width 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.3s;
+  overflow: hidden;
+}
+.sidebar.collapsed { width: 0; opacity: 0; }
+.sidebar-inner {
+  width: var(--sidebar-w);
+  display: flex; flex-direction: column;
+  height: 100%; padding: 16px 12px; gap: 8px;
+}
+.logo {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 8px 14px;
+  border-bottom: 1px solid var(--border); margin-bottom: 4px;
+  cursor: pointer;
+}
+.logo:hover .logo-text { color: var(--accent); }
+.logo-mark {
+  width: 28px; height: 28px; background: var(--accent);
+  border-radius: 7px; display: flex; align-items: center; justify-content: center;
+  font-family: 'Playfair Display', serif; font-size: 14px;
+  color: #1a1408; font-weight: 400; flex-shrink: 0;
+}
+.logo-text {
+  font-family: 'Playfair Display', serif; font-size: 15px;
+  font-weight: 400; letter-spacing: 0.01em; color: var(--text);
+  transition: color 0.15s;
+}
+.new-chat-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 10px; border-radius: 8px;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text-muted); font-family: 'DM Sans', sans-serif;
+  font-size: 13px; cursor: pointer; transition: all 0.15s; width: 100%;
+}
+.new-chat-btn:hover { background: var(--bg3); color: var(--text); border-color: rgba(255,255,255,0.12); }
+.new-chat-btn svg { opacity: 0.5; }
+.new-chat-btn:hover svg { opacity: 1; }
+.section-label {
+  font-size: 10px; font-weight: 500; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-dim);
+  padding: 4px 10px; margin-top: 4px;
+}
+.conv-list { display: flex; flex-direction: column; gap: 1px; flex: 1; overflow-y: auto; }
+.conv-list::-webkit-scrollbar { width: 3px; }
+.conv-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.conv-item {
+  padding: 7px 10px; border-radius: 8px; cursor: pointer;
+  font-size: 13px; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: all 0.12s; border: 1px solid transparent;
+}
+.conv-item:hover { background: var(--bg3); color: var(--text); }
+.conv-item.active { background: var(--bg3); color: var(--text); border-color: var(--border); }
+.conv-item.active::before {
+  content: ''; display: inline-block; width: 4px; height: 4px;
+  background: var(--accent); border-radius: 50%;
+  margin-right: 8px; vertical-align: middle; margin-bottom: 2px;
+}
+.sidebar-footer {
+  border-top: 1px solid var(--border); padding-top: 10px;
+  display: flex; flex-direction: column; gap: 1px;
+}
+.sidebar-footer-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border-radius: 8px; cursor: pointer;
+  font-size: 13px; color: var(--text-muted); transition: all 0.12s;
+}
+.sidebar-footer-item:hover { background: var(--bg3); color: var(--text); }
+.sidebar-footer-item.active { background: var(--bg3); color: var(--accent); }
+
+/* ── MAIN ── */
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
+
+/* ── TOPBAR ── */
+.topbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px; border-bottom: 1px solid var(--border);
+  background: var(--bg); flex-shrink: 0;
+}
+.toggle-btn {
+  width: 32px; height: 32px; border-radius: 8px; border: none;
+  background: transparent; color: var(--text-muted); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s; flex-shrink: 0;
+}
+.toggle-btn:hover { background: var(--bg3); color: var(--text); }
+.model-selector {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 10px; border-radius: 8px; border: 1px solid var(--border);
+  background: transparent; color: var(--text-muted);
+  font-family: 'DM Sans', sans-serif; font-size: 13px;
+  cursor: pointer; transition: all 0.12s; position: relative;
+}
+.model-selector:hover { background: var(--bg3); color: var(--text); }
+.model-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.icon-btn {
+  width: 32px; height: 32px; border-radius: 8px; border: none;
+  background: transparent; color: var(--text-muted); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all 0.12s;
+}
+.icon-btn:hover { background: var(--bg3); color: var(--text); }
+.icon-btn.active { background: var(--bg3); color: var(--accent); }
+.avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 500; color: #1a1408; cursor: pointer;
+  transition: all 0.15s; border: 2px solid transparent;
+}
+.avatar:hover { border-color: var(--accent); }
+.avatar.active { border-color: var(--accent); }
+
+/* ── VIEWS ── */
+.view { display: none; flex: 1; flex-direction: column; min-height: 0; animation: fadeUp 0.25s ease both; }
+.view.active { display: flex; }
+
+/* ── CHAT VIEW ── */
+.messages-wrap {
+  flex: 1; overflow-y: auto; padding: 32px 0 20px; scroll-behavior: smooth;
+}
+.messages-wrap::-webkit-scrollbar { width: 4px; }
+.messages-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.messages-inner {
+  max-width: 720px; margin: 0 auto; padding: 0 24px;
+  display: flex; flex-direction: column; gap: 28px;
+}
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; min-height: calc(100dvh - 200px); text-align: center;
+  padding: 40px 24px; animation: fadeUp 0.5s ease both;
+}
+.empty-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(28px, 4vw, 42px); font-weight: 400;
+  color: var(--text); line-height: 1.2;
+}
+.empty-title em { font-style: italic; color: var(--accent); }
+.empty-sub { font-size: 14px; color: var(--text-muted); max-width: 400px; line-height: 1.6; }
+.suggestions {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 8px; margin-top: 16px; width: 100%; max-width: 560px;
+}
+.suggestion {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 16px; text-align: left; cursor: pointer;
+  transition: all 0.15s; color: var(--text-muted); font-size: 13px; line-height: 1.5;
+}
+.suggestion:hover { background: var(--bg3); border-color: rgba(255,255,255,0.12); color: var(--text); transform: translateY(-1px); }
+.suggestion strong { display: block; color: var(--accent); font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+.msg-row { display: flex; flex-direction: column; gap: 6px; animation: fadeUp 0.3s ease both; }
+.msg-row.user { align-items: flex-end; }
+.msg-row.assistant { align-items: flex-start; }
+.msg-label {
+  font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-dim); font-weight: 500; padding: 0 4px;
+  display: flex; align-items: center; gap: 6px;
+}
+.msg-label .dot { width: 4px; height: 4px; background: var(--accent); border-radius: 50%; }
+.msg-bubble { max-width: min(85%, 560px); line-height: 1.7; font-size: 15px; color: var(--text); }
+.user .msg-bubble {
+  background: var(--user-bubble); border: 1px solid var(--border);
+  border-radius: var(--r) var(--r) 4px var(--r); padding: 12px 16px;
+}
+.assistant .msg-bubble { color: var(--text); padding: 0 4px; }
+.msg-bubble p { margin: 0 0 10px; }
+.msg-bubble p:last-child { margin-bottom: 0; }
+.msg-bubble code {
+  font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  background: var(--bg3); border: 1px solid var(--border);
+  padding: 2px 6px; border-radius: 4px; color: var(--accent);
+}
+.msg-bubble pre {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px; overflow-x: auto; margin: 10px 0;
+}
+.msg-bubble pre code { background: none; border: none; padding: 0; color: var(--text); font-size: 13px; line-height: 1.6; }
+.msg-bubble strong { color: var(--accent); font-weight: 500; }
+.msg-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; padding: 0 4px; }
+.msg-row:hover .msg-actions { opacity: 1; }
+.msg-action {
+  width: 26px; height: 26px; border-radius: 6px; border: none;
+  background: transparent; color: var(--text-dim); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all 0.12s;
+}
+.msg-action:hover { background: var(--bg3); color: var(--text-muted); }
+.typing-indicator { display: flex; align-items: center; gap: 4px; padding: 14px 4px; }
+.typing-dot {
+  width: 5px; height: 5px; background: var(--text-muted); border-radius: 50%;
+  animation: typingBounce 1.2s infinite ease-in-out;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+.input-area { padding: 16px 24px 24px; background: var(--bg); flex-shrink: 0; }
+.input-box {
+  max-width: 720px; margin: 0 auto;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 14px; transition: border-color 0.2s; overflow: hidden;
+}
+.input-box:focus-within { border-color: rgba(255,255,255,0.15); box-shadow: 0 0 0 3px rgba(255,255,255,0.03); }
+.input-row { display: flex; align-items: flex-end; gap: 8px; padding: 12px 14px; }
+.input-field {
+  flex: 1; background: none; border: none; outline: none;
+  color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 15px; line-height: 1.6; resize: none;
+  max-height: 180px; min-height: 24px; overflow-y: auto; padding: 0;
+}
+.input-field::placeholder { color: var(--text-dim); }
+.input-toolbar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px 10px; border-top: 1px solid var(--border);
+}
+.attach-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 6px; border: none;
+  background: transparent; color: var(--text-muted);
+  font-family: 'DM Sans', sans-serif; font-size: 12px;
+  cursor: pointer; transition: all 0.12s;
+}
+.attach-btn:hover { background: var(--bg3); color: var(--text); }
+.spacer { flex: 1; }
+.send-btn {
+  width: 32px; height: 32px; border-radius: 8px; border: none;
+  background: var(--accent); color: #1a1408; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; flex-shrink: 0; opacity: 0.5;
+}
+.send-btn.active { opacity: 1; }
+.send-btn.active:hover { filter: brightness(1.1); transform: scale(1.05); }
+.input-hint { text-align: center; font-size: 11px; color: var(--text-dim); margin-top: 10px; }
+
+/* ── SETTINGS / ACCOUNT VIEWS ── */
+.page-view {
+  flex: 1; overflow-y: auto; padding: 48px 48px;
+}
+.page-view::-webkit-scrollbar { width: 4px; }
+.page-view::-webkit-scrollbar-thumb { background: var(--border); }
+.page-header { margin-bottom: 36px; }
+.page-title {
+  font-family: 'Playfair Display', serif; font-size: 28px;
+  font-weight: 400; color: var(--text); margin-bottom: 6px;
+}
+.page-title em { font-style: italic; color: var(--accent); }
+.page-sub { font-size: 14px; color: var(--text-muted); }
+.page-content { max-width: 680px; }
+
+/* Tabs */
+.tab-bar {
+  display: flex; gap: 2px; margin-bottom: 32px;
+  border-bottom: 1px solid var(--border); padding-bottom: 0;
+}
+.tab-btn {
+  padding: 8px 16px; font-size: 13px; font-family: 'DM Sans', sans-serif;
+  color: var(--text-muted); background: none; border: none;
+  cursor: pointer; transition: all 0.15s; border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-panel { display: none; animation: fadeUp 0.2s ease; }
+.tab-panel.active { display: block; }
+
+/* Setting rows */
+.setting-group { margin-bottom: 32px; }
+.setting-group-title {
+  font-size: 11px; font-weight: 500; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px;
+}
+.setting-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; margin-bottom: 4px; gap: 16px;
+}
+.setting-row:first-of-type { border-radius: 10px 10px 4px 4px; }
+.setting-row:last-of-type { border-radius: 4px 4px 10px 10px; margin-bottom: 0; }
+.setting-row:only-of-type { border-radius: 10px; }
+.setting-info { flex: 1; }
+.setting-label { font-size: 14px; color: var(--text); margin-bottom: 2px; }
+.setting-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+/* Toggle */
+.toggle {
+  width: 40px; height: 22px; background: var(--bg3);
+  border-radius: 11px; cursor: pointer; position: relative;
+  border: 1px solid var(--border); transition: background 0.2s; flex-shrink: 0;
+}
+.toggle.on { background: var(--accent); border-color: var(--accent); }
+.toggle::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 16px; height: 16px; background: var(--text-muted);
+  border-radius: 50%; transition: all 0.2s;
+}
+.toggle.on::after { left: 20px; background: #1a1408; }
+/* Select */
+.setting-select {
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text); padding: 6px 10px; border-radius: 8px;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer;
+  outline: none;
+}
+/* Input */
+.setting-input {
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text); padding: 7px 12px; border-radius: 8px;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none;
+  width: 200px; transition: border-color 0.15s;
+}
+.setting-input:focus { border-color: var(--accent); }
+
+/* Profile card */
+.profile-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 28px; display: flex;
+  align-items: center; gap: 24px; margin-bottom: 28px;
+}
+.profile-avatar-large {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 400; color: #1a1408;
+  font-family: 'Playfair Display', serif; flex-shrink: 0; cursor: pointer;
+  position: relative;
+}
+.profile-avatar-large:hover::after {
+  content: 'Change'; position: absolute; inset: 0; border-radius: 50%;
+  background: rgba(0,0,0,0.5); display: flex; align-items: center;
+  justify-content: center; font-family: 'DM Sans', sans-serif;
+  font-size: 11px; color: white;
+}
+.profile-info { flex: 1; }
+.profile-name { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--text); }
+.profile-role { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.profile-church { font-size: 12px; color: var(--accent); margin-top: 4px; font-style: italic; }
+.btn {
+  padding: 8px 16px; border-radius: 8px; font-family: 'DM Sans', sans-serif;
+  font-size: 13px; cursor: pointer; transition: all 0.15s; border: none;
+}
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+.btn-ghost:hover { background: var(--bg3); color: var(--text); }
+.btn-accent { background: var(--accent); color: #1a1408; font-weight: 500; }
+.btn-accent:hover { filter: brightness(1.1); }
+.btn-danger { background: transparent; border: 1px solid rgba(220,80,60,0.3); color: oklch(65% 0.14 20); }
+.btn-danger:hover { background: rgba(220,80,60,0.1); }
+
+/* Plan card */
+.plan-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 24px; margin-bottom: 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.plan-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 20px; font-size: 11px;
+  font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;
+}
+.plan-badge.pro { background: rgba(255,200,80,0.15); color: var(--accent); border: 1px solid rgba(255,200,80,0.2); }
+
+/* Stat grid */
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+.stat-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px;
+}
+.stat-value { font-family: 'Playfair Display', serif; font-size: 26px; color: var(--accent); }
+.stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+/* Danger zone */
+.danger-zone {
+  background: rgba(220,60,60,0.05); border: 1px solid rgba(220,60,60,0.15);
+  border-radius: 12px; padding: 20px;
+}
+.danger-title { font-size: 13px; color: oklch(65% 0.14 20); font-weight: 500; margin-bottom: 6px; }
+.danger-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5; }
+
+/* ── MODEL DROPDOWN ── */
+.model-dropdown {
+  position: absolute; top: calc(100% + 8px); left: 0;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 8px; min-width: 240px; z-index: 500;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4); display: none;
+  animation: fadeUp 0.15s ease;
+}
+.model-dropdown.open { display: block; }
+.model-option {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 8px; cursor: pointer;
+  transition: all 0.12s;
+}
+.model-option:hover { background: var(--bg3); }
+.model-option.selected { background: var(--bg3); }
+.model-option-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.model-option-info { flex: 1; }
+.model-option-name { font-size: 13px; color: var(--text); }
+.model-option-desc { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.model-option-check { color: var(--accent); opacity: 0; }
+.model-option.selected .model-option-check { opacity: 1; }
+
+/* ── SHARE MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px); z-index: 800;
+  display: none; align-items: center; justify-content: center;
+  animation: fadeIn 0.15s ease;
+}
+.modal-overlay.open { display: flex; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px; width: 480px;
+  max-width: calc(100vw - 32px);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  animation: fadeUp 0.2s ease;
+}
+.modal-title {
+  font-family: 'Playfair Display', serif; font-size: 20px;
+  color: var(--text); margin-bottom: 4px;
+}
+.modal-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+.share-link-row {
+  display: flex; gap: 8px; margin-bottom: 20px;
+}
+.share-link-input {
+  flex: 1; background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text-muted); padding: 9px 12px; border-radius: 8px;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; outline: none;
+}
+.share-options { display: flex; flex-direction: column; gap: 4px; margin-bottom: 24px; }
+.share-option {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.share-option-label { font-size: 13px; color: var(--text); }
+.share-option-desc { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; }
+.modal-close {
+  position: absolute; display: none; /* using footer close instead */
+}
+
+/* ── NOTIFICATIONS BADGE ── */
+.notif-badge {
+  width: 6px; height: 6px; background: var(--accent); border-radius: 50%;
+  position: absolute; top: 6px; right: 6px;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+@media (max-width: 640px) {
+  .sidebar { display: none; }
+  .suggestions { grid-template-columns: 1fr; }
+  .messages-inner { padding: 0 14px; }
+  .input-area { padding: 10px 14px 18px; }
+  .page-view { padding: 24px 20px; }
+  .stat-grid { grid-template-columns: repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-inner">
+    <div class="logo" onclick="navigate('chat')">
+      <div class="logo-mark">✝</div>
+      <div class="logo-text">ChurchGPT</div>
+    </div>
+
+    <button class="new-chat-btn" onclick="navigate('chat');clearChat()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New conversation
+    </button>
+
+    <div class="section-label">Today</div>
+    <div class="conv-list">
+      <div class="conv-item active" onclick="loadConv(this,'Sunday sermon planning','Let\'s plan this Sunday\'s sermon. I\'m preaching on John 15:1–8, the Vine and Branches.')">Sunday sermon planning</div>
+      <div class="conv-item" onclick="loadConv(this,'Member attendance trends','Can you summarize the attendance trends for the past 3 months?')">Member attendance trends</div>
+      <div class="conv-item" onclick="loadConv(this,'Budget allocation Q2','Help me think through Q2 budget priorities for our church.')">Budget allocation Q2</div>
+    </div>
+
+    <div class="section-label">This week</div>
+    <div class="conv-list" style="flex:0">
+      <div class="conv-item" onclick="loadConv(this,'Youth group event ideas','What are some engaging event ideas for our youth group this month?')">Youth group event ideas</div>
+      <div class="conv-item" onclick="loadConv(this,'Volunteer coordination','We need help coordinating volunteers for the upcoming community outreach.')">Volunteer coordination</div>
+      <div class="conv-item" onclick="loadConv(this,'Newsletter draft April','Please draft an April newsletter for our congregation.')">Newsletter draft April</div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-item" id="nav-settings" onclick="navigate('settings')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Settings
+      </div>
+      <div class="sidebar-footer-item" id="nav-account" onclick="navigate('account')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Account
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <button class="toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><path d="M21 3H14M21 9H14M21 15H14M21 21H14"/></svg>
+    </button>
+    <div style="position:relative">
+      <button class="model-selector" id="modelBtn" onclick="toggleModelDropdown()">
+        <div class="model-dot"></div>
+        <span id="modelName">ChurchGPT · Shepherd</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="model-dropdown" id="modelDropdown">
+        <div class="model-option selected" onclick="selectModel('Shepherd','For general ministry & pastoral guidance','oklch(72% 0.14 65)')">
+          <div class="model-option-dot" style="background:oklch(72% 0.14 65)"></div>
+          <div class="model-option-info">
+            <div class="model-option-name">Shepherd</div>
+            <div class="model-option-desc">For general ministry & pastoral guidance</div>
+          </div>
+          <svg class="model-option-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="model-option" onclick="selectModel('Scribe','Writing, sermons & communications','oklch(72% 0.14 200)')">
+          <div class="model-option-dot" style="background:oklch(72% 0.14 200)"></div>
+          <div class="model-option-info">
+            <div class="model-option-name">Scribe</div>
+            <div class="model-option-desc">Writing, sermons & communications</div>
+          </div>
+          <svg class="model-option-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="model-option" onclick="selectModel('Steward','Finance, operations & administration','oklch(72% 0.14 130)')">
+          <div class="model-option-dot" style="background:oklch(72% 0.14 130)"></div>
+          <div class="model-option-info">
+            <div class="model-option-name">Steward</div>
+            <div class="model-option-desc">Finance, operations & administration</div>
+          </div>
+          <svg class="model-option-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="icon-btn" id="shareBtn" title="Share conversation" onclick="openShare()" style="position:relative">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </button>
+      <div class="avatar" id="avatarBtn" onclick="navigate('account')" title="View profile">JD</div>
+    </div>
+  </div>
+
+  <!-- ── CHAT VIEW ── -->
+  <div class="view active" id="view-chat">
+    <div class="messages-wrap" id="messagesWrap">
+      <div class="messages-inner" id="messages">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-title">How can I <em>serve</em><br>you today?</div>
+          <p class="empty-sub">Ask me anything about your congregation, sermons, events, finances, or ministry operations.</p>
+          <div class="suggestions">
+            <div class="suggestion" onclick="useSuggestion(this)"><strong>Plan Sunday's sermon</strong>Get an outline, scripture references, and talking points</div>
+            <div class="suggestion" onclick="useSuggestion(this)"><strong>Summarize giving trends</strong>Review tithing patterns from the past quarter</div>
+            <div class="suggestion" onclick="useSuggestion(this)"><strong>Draft a newsletter</strong>Write this week's announcement email to members</div>
+            <div class="suggestion" onclick="useSuggestion(this)"><strong>Volunteer schedule gaps</strong>Find which Sunday roles still need to be filled</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="input-area">
+      <div class="input-box">
+        <div class="input-row">
+          <textarea class="input-field" id="inputField" placeholder="Ask anything…" rows="1"
+            onkeydown="handleKey(event)" oninput="handleInput(this)"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+          </button>
+        </div>
+        <div class="input-toolbar">
+          <button class="attach-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>Attach</button>
+          <button class="attach-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Member data</button>
+          <div class="spacer"></div>
+        </div>
+      </div>
+      <div class="input-hint">ChurchGPT · Shepherd may make mistakes. Always verify important information.</div>
+    </div>
+  </div>
+
+  <!-- ── SETTINGS VIEW ── -->
+  <div class="view" id="view-settings">
+    <div class="page-view">
+      <div class="page-content">
+        <div class="page-header">
+          <div class="page-title">Settings</div>
+          <div class="page-sub">Manage your ChurchGPT preferences and integrations.</div>
+        </div>
+        <div class="tab-bar">
+          <button class="tab-btn active" onclick="switchTab('settings','general',this)">General</button>
+          <button class="tab-btn" onclick="switchTab('settings','appearance',this)">Appearance</button>
+          <button class="tab-btn" onclick="switchTab('settings','notifications',this)">Notifications</button>
+          <button class="tab-btn" onclick="switchTab('settings','integrations',this)">Integrations</button>
+          <button class="tab-btn" onclick="switchTab('settings','privacy',this)">Privacy</button>
+        </div>
+
+        <!-- General -->
+        <div class="tab-panel active" id="settings-tab-general">
+          <div class="setting-group">
+            <div class="setting-group-title">Language & Region</div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Language</div><div class="setting-desc">Interface and response language</div></div>
+              <select class="setting-select"><option>English (US)</option><option>English (UK)</option><option>Spanish</option><option>French</option><option>Portuguese</option></select>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Timezone</div><div class="setting-desc">Used for scheduling and reminders</div></div>
+              <select class="setting-select"><option>UTC−05:00 Eastern</option><option>UTC−06:00 Central</option><option>UTC−07:00 Mountain</option><option>UTC−08:00 Pacific</option></select>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Date format</div></div>
+              <select class="setting-select"><option>MM/DD/YYYY</option><option>DD/MM/YYYY</option><option>YYYY-MM-DD</option></select>
+            </div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-group-title">Chat Behavior</div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Auto-save conversations</div><div class="setting-desc">Save all conversations automatically to history</div></div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Send with Enter</div><div class="setting-desc">Press Enter to send; Shift+Enter for new line</div></div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Show typing indicator</div><div class="setting-desc">Show animated dots while Shepherd is thinking</div></div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Scripture reference style</div><div class="setting-desc">Preferred Bible translation for responses</div></div>
+              <select class="setting-select"><option>ESV</option><option>NIV</option><option>KJV</option><option>NKJV</option><option>NLT</option><option>NASB</option></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Appearance -->
+        <div class="tab-panel" id="settings-tab-appearance">
+          <div class="setting-group">
+            <div class="setting-group-title">Theme</div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Color scheme</div><div class="setting-desc">Choose your preferred interface theme</div></div>
+              <select class="setting-select" onchange="if(this.value==='Light'){tweaks.theme='light'}else{tweaks.theme='dark'};applyTweaks()">
+                <option>Dark</option><option>Light</option>
+              </select>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Accent color</div><div class="setting-desc">Primary highlight color throughout the app</div></div>
+              <div style="display:flex;gap:6px">
+                <div onclick="tweaks.accent='amber';applyTweaks()" title="Amber" style="width:22px;height:22px;border-radius:5px;background:oklch(72% 0.14 65);cursor:pointer;border:2px solid transparent" class="accent-swatch"></div>
+                <div onclick="tweaks.accent='teal';applyTweaks()" title="Teal" style="width:22px;height:22px;border-radius:5px;background:oklch(72% 0.14 180);cursor:pointer;border:2px solid transparent" class="accent-swatch"></div>
+                <div onclick="tweaks.accent='rose';applyTweaks()" title="Rose" style="width:22px;height:22px;border-radius:5px;background:oklch(72% 0.14 10);cursor:pointer;border:2px solid transparent" class="accent-swatch"></div>
+                <div onclick="tweaks.accent='violet';applyTweaks()" title="Violet" style="width:22px;height:22px;border-radius:5px;background:oklch(72% 0.14 290);cursor:pointer;border:2px solid transparent" class="accent-swatch"></div>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Font size</div><div class="setting-desc">Base text size across the interface</div></div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <input type="range" min="13" max="18" step="1" value="15" style="width:100px;accent-color:var(--accent)"
+                  oninput="tweaks.fontSize=+this.value;applyTweaks()">
+                <span style="font-size:12px;color:var(--text-muted);width:28px">15px</span>
+              </div>
+            </div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-group-title">Sidebar</div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Show sidebar by default</div></div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Compact conversation list</div></div>
+              <div class="toggle" onclick="this.classList.toggle('on')"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="tab-panel" id="settings-tab-notifications">
+          <div class="setting-group">
+            <div class="setting-group-title">Email Notifications</div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Weekly digest</div><div class="setting-desc">Summary of your ChurchGPT activity each Monday</div></div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">New feature announcements</div><div class="setting-desc">Be first to know about new capabilities</div></div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Sermon reminders</div><div class="setting-desc">Reminder emails 3 days before planned sermons</div></div>
+              <div class="toggle" onclick="this.classList.toggle('on')"></div>
+            </div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-group-title">In-App Alerts</div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Usage limit warnings</div><div class="setting-desc">Alert when approaching monthly message limit</div></div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Volunteer schedule alerts</div><div class="setting-desc">Notify when open slots need to be filled</div></div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Integrations -->
+        <div class="tab-panel" id="settings-tab-integrations">
+          <div class="setting-group">
+            <div class="setting-group-title">Connected Services</div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Planning Center</div><div class="setting-desc">Sync members, teams, and service plans</div></div>
+              <button class="btn btn-accent" style="font-size:12px;padding:6px 14px">Connect</button>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Church Community Builder</div><div class="setting-desc">Import congregation data and giving records</div></div>
+              <button class="btn btn-accent" style="font-size:12px;padding:6px 14px">Connect</button>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Breeze ChMS</div><div class="setting-desc">People, attendance, and contributions</div></div>
+              <button class="btn btn-ghost" style="font-size:12px;padding:6px 14px;color:oklch(65% 0.1 140);border-color:oklch(65% 0.1 140)">Connected ✓</button>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Google Workspace</div><div class="setting-desc">Calendar events and document access</div></div>
+              <button class="btn btn-ghost" style="font-size:12px;padding:6px 14px;color:oklch(65% 0.1 140);border-color:oklch(65% 0.1 140)">Connected ✓</button>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Mailchimp</div><div class="setting-desc">Send newsletters directly from ChurchGPT</div></div>
+              <button class="btn btn-accent" style="font-size:12px;padding:6px 14px">Connect</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Privacy -->
+        <div class="tab-panel" id="settings-tab-privacy">
+          <div class="setting-group">
+            <div class="setting-group-title">Data & Privacy</div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Use conversations to improve AI</div><div class="setting-desc">Help improve Shepherd by sharing anonymized conversation data</div></div>
+              <div class="toggle" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Conversation memory</div><div class="setting-desc">Allow Shepherd to remember context across conversations</div></div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Two-factor authentication</div><div class="setting-desc">Require verification code on login</div></div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-group-title">Data Export</div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Export all conversations</div><div class="setting-desc">Download a copy of your full conversation history</div></div>
+              <button class="btn btn-ghost" style="font-size:12px;padding:6px 14px">Export</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ACCOUNT VIEW ── -->
+  <div class="view" id="view-account">
+    <div class="page-view">
+      <div class="page-content">
+        <div class="page-header">
+          <div class="page-title">Your <em>Account</em></div>
+          <div class="page-sub">Manage your profile, church details, and subscription.</div>
+        </div>
+
+        <div class="tab-bar">
+          <button class="tab-btn active" onclick="switchTab('account','profile',this)">Profile</button>
+          <button class="tab-btn" onclick="switchTab('account','church',this)">Church</button>
+          <button class="tab-btn" onclick="switchTab('account','subscription',this)">Subscription</button>
+          <button class="tab-btn" onclick="switchTab('account','security',this)">Security</button>
+        </div>
+
+        <!-- Profile tab -->
+        <div class="tab-panel active" id="account-tab-profile">
+          <div class="profile-card">
+            <div class="profile-avatar-large">JD</div>
+            <div class="profile-info">
+              <div class="profile-name">John Doe</div>
+              <div class="profile-role">Senior Pastor</div>
+              <div class="profile-church">Grace Community Church</div>
+            </div>
+            <button class="btn btn-ghost">Edit photo</button>
+          </div>
+          <div class="setting-group">
+            <div class="setting-group-title">Personal Information</div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Full name</div></div>
+              <input class="setting-input" value="John Doe">
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Email address</div></div>
+              <input class="setting-input" value="pastor@gracecommunity.org">
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Role / Title</div></div>
+              <input class="setting-input" value="Senior Pastor">
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Phone</div></div>
+              <input class="setting-input" value="+1 (555) 012-3456">
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button class="btn btn-accent">Save changes</button>
+            <button class="btn btn-ghost">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Church tab -->
+        <div class="tab-panel" id="account-tab-church">
+          <div class="stat-grid">
+            <div class="stat-card"><div class="stat-value">847</div><div class="stat-label">Active members</div></div>
+            <div class="stat-card"><div class="stat-value">12</div><div class="stat-label">Ministry teams</div></div>
+            <div class="stat-card"><div class="stat-value">94%</div><div class="stat-label">Avg. attendance rate</div></div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-group-title">Church Details</div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Church name</div></div>
+              <input class="setting-input" value="Grace Community Church">
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Denomination</div></div>
+              <select class="setting-select"><option>Non-denominational</option><option>Baptist</option><option>Methodist</option><option>Presbyterian</option><option>Lutheran</option><option>Catholic</option><option>Pentecostal</option></select>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Founded</div></div>
+              <input class="setting-input" value="1987">
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Address</div></div>
+              <input class="setting-input" value="1200 Faith Ave, Nashville, TN">
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Website</div></div>
+              <input class="setting-input" value="gracecommunity.org">
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button class="btn btn-accent">Save changes</button>
+          </div>
+        </div>
+
+        <!-- Subscription tab -->
+        <div class="tab-panel" id="account-tab-subscription">
+          <div class="plan-card">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                <div style="font-size:16px;color:var(--text);font-weight:500">Pro Ministry Plan</div>
+                <div class="plan-badge pro">● Active</div>
+              </div>
+              <div style="font-size:13px;color:var(--text-muted);line-height:1.6">Unlimited conversations · 3 AI models · Integrations · Priority support</div>
+              <div style="font-size:12px;color:var(--text-dim);margin-top:6px">Renews May 21, 2026 · $49/month</div>
+            </div>
+            <button class="btn btn-ghost">Manage plan</button>
+          </div>
+          <div class="setting-group">
+            <div class="setting-group-title">Usage This Month</div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Messages sent</div></div>
+              <div style="font-size:13px;color:var(--text-muted)">1,204 <span style="color:var(--text-dim)">/ unlimited</span></div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Documents attached</div></div>
+              <div style="font-size:13px;color:var(--text-muted)">38 <span style="color:var(--text-dim)">/ unlimited</span></div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Active team members</div></div>
+              <div style="font-size:13px;color:var(--text-muted)">4 <span style="color:var(--text-dim)">/ 10 seats</span></div>
+            </div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-group-title">Billing</div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Payment method</div><div class="setting-desc">Visa ending in 4242</div></div>
+              <button class="btn btn-ghost" style="font-size:12px;padding:6px 14px">Update</button>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Billing email</div><div class="setting-desc">admin@gracecommunity.org</div></div>
+              <button class="btn btn-ghost" style="font-size:12px;padding:6px 14px">Change</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security tab -->
+        <div class="tab-panel" id="account-tab-security">
+          <div class="setting-group">
+            <div class="setting-group-title">Password</div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Current password</div></div>
+              <input class="setting-input" type="password" placeholder="••••••••">
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">New password</div></div>
+              <input class="setting-input" type="password" placeholder="New password">
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Confirm new password</div></div>
+              <input class="setting-input" type="password" placeholder="Confirm">
+            </div>
+          </div>
+          <div style="margin-bottom:28px">
+            <button class="btn btn-accent">Update password</button>
+          </div>
+          <div class="setting-group">
+            <div class="setting-group-title">Sessions</div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">MacBook Pro · Nashville, TN</div><div class="setting-desc">Active now · Chrome 124</div></div>
+              <div style="font-size:11px;color:oklch(65% 0.1 140)">Current</div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">iPhone 15 Pro · Nashville, TN</div><div class="setting-desc">2 hours ago · Safari</div></div>
+              <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px">Revoke</button>
+            </div>
+          </div>
+          <div class="danger-zone">
+            <div class="danger-title">Danger Zone</div>
+            <div class="danger-desc">Permanently delete your ChurchGPT account and all associated data. This action cannot be undone.</div>
+            <button class="btn btn-danger">Delete account</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ── SHARE MODAL ── -->
+<div class="modal-overlay" id="shareModal" onclick="if(event.target===this)closeShare()">
+  <div class="modal">
+    <div class="modal-title">Share conversation</div>
+    <div class="modal-sub">Anyone with the link can view this conversation.</div>
+    <div class="share-link-row">
+      <input class="share-link-input" id="shareLinkInput" value="https://churchgpt.app/share/conv_abc123" readonly>
+      <button class="btn btn-accent" onclick="copyShareLink()">Copy</button>
+    </div>
+    <div class="share-options">
+      <div class="share-option">
+        <div><div class="share-option-label">Anyone with the link</div><div class="share-option-desc">Viewers can read but not reply</div></div>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="share-option">
+        <div><div class="share-option-label">Include member data</div><div class="share-option-desc">Share congregation details referenced in this conversation</div></div>
+        <div class="toggle" onclick="this.classList.toggle('on')"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeShare()">Cancel</button>
+      <button class="btn btn-accent" onclick="closeShare()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TWEAKS PANEL ── -->
+<div id="tweaksPanel" style="display:none; position:fixed; bottom:90px; right:20px; background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:16px; width:220px; flex-direction:column; gap:12px; z-index:999; box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+  <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);font-weight:500;">Tweaks</div>
+  <div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">Theme</div>
+    <div style="display:flex;gap:6px;">
+      <button onclick="tweaks.theme='dark';applyTweaks();window.parent.postMessage({type:'__edit_mode_set_keys',edits:{theme:'dark'}},'*')" style="flex:1;padding:5px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:12px;cursor:pointer;">Dark</button>
+      <button onclick="tweaks.theme='light';applyTweaks();window.parent.postMessage({type:'__edit_mode_set_keys',edits:{theme:'light'}},'*')" style="flex:1;padding:5px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:12px;cursor:pointer;">Light</button>
+    </div>
+  </div>
+  <div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">Accent color</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;">
+      <div onclick="tweaks.accent='amber';applyTweaks()" title="Amber" style="height:22px;border-radius:5px;background:oklch(72% 0.14 65);cursor:pointer;"></div>
+      <div onclick="tweaks.accent='teal';applyTweaks()" title="Teal" style="height:22px;border-radius:5px;background:oklch(72% 0.14 180);cursor:pointer;"></div>
+      <div onclick="tweaks.accent='rose';applyTweaks()" title="Rose" style="height:22px;border-radius:5px;background:oklch(72% 0.14 10);cursor:pointer;"></div>
+      <div onclick="tweaks.accent='violet';applyTweaks()" title="Violet" style="height:22px;border-radius:5px;background:oklch(72% 0.14 290);cursor:pointer;"></div>
+    </div>
+  </div>
+  <div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">Font size: <span id="fsLabel">15</span>px</div>
+    <input type="range" min="13" max="18" step="1" value="15" style="width:100%;accent-color:var(--accent);"
+      oninput="tweaks.fontSize=+this.value;document.getElementById('fsLabel').textContent=this.value;applyTweaks()">
+  </div>
+</div>
+
+<script>
+// ── ROUTER ──────────────────────────────────────
+let currentView = localStorage.getItem('cgpt_view') || 'chat';
+
+function navigate(view) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  document.querySelectorAll('.sidebar-footer-item').forEach(i => i.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + view);
+  if (navEl) navEl.classList.add('active');
+  document.getElementById('avatarBtn').classList.toggle('active', view === 'account');
+  currentView = view;
+  localStorage.setItem('cgpt_view', view);
+  // Update topbar context
+  const shareBtn = document.getElementById('shareBtn');
+  shareBtn.style.opacity = view === 'chat' ? '1' : '0.4';
+  shareBtn.style.pointerEvents = view === 'chat' ? '' : 'none';
+}
+
+// Init
+navigate(currentView);
+
+// ── TABS ────────────────────────────────────────
+function switchTab(section, tab, btn) {
+  const panels = document.querySelectorAll(`#view-${section} .tab-panel`);
+  panels.forEach(p => p.classList.remove('active'));
+  const target = document.getElementById(`${section}-tab-${tab}`);
+  if (target) target.classList.add('active');
+  btn.closest('.tab-bar').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── SIDEBAR ─────────────────────────────────────
+let sidebarOpen = true;
+function toggleSidebar() {
+  sidebarOpen = !sidebarOpen;
+  document.getElementById('sidebar').classList.toggle('collapsed', !sidebarOpen);
+}
+
+// ── CONVERSATIONS ────────────────────────────────
+function loadConv(el, title, prompt) {
+  document.querySelectorAll('.conv-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  navigate('chat');
+  clearChat();
+  // Pre-load a sample exchange
+  setTimeout(() => {
+    addMessage('user', escapeHtml(prompt));
+    const typing = addTyping();
+    setTimeout(() => {
+      typing.remove();
+      const replies = {
+        'Sunday sermon planning': `<p>Great passage! John 15:1–8 — the Vine and Branches — is rich with discipleship and fruitfulness themes.</p><p><strong>Suggested outline:</strong></p><p style="padding-left:16px">· <strong>Opening:</strong> The vinedresser's intimate work — God prunes what He loves<br>· <strong>Part 1:</strong> "I am the Vine" — identity rooted in relationship, not performance<br>· <strong>Part 2:</strong> Abide or wither — the cost of disconnection<br>· <strong>Part 3:</strong> Bearing much fruit — what kingdom fruitfulness looks like practically</p><p><strong>Key scriptures:</strong> Psalm 80:8–11, Isaiah 5:1–7, Galatians 5:22–23</p><p>Would you like me to expand any section, or draft the opening illustration?</p>`,
+        'Member attendance trends': `<p>Based on your congregation data, here's a summary of the past 3 months:</p><p style="padding-left:16px">· <strong>February:</strong> 712 avg. (↑ 4% vs. Jan)<br>· <strong>March:</strong> 798 avg. (↑ 12% — Easter season boost)<br>· <strong>April:</strong> 741 avg. (↓ 7% — post-Easter normalization, typical)</p><p>Your <strong>small group attendance</strong> is up 18% year-over-year, which is a strong indicator of deeper engagement beyond Sunday services.</p><p>Would you like me to identify which services are underperforming, or generate a report for your elder board?</p>`,
+        'Budget allocation Q2': `<p>Happy to help you think through Q2 priorities. Based on typical church budget frameworks and your ministry focus areas, here are some considerations:</p><p style="padding-left:16px">· <strong>Missions (10–15%):</strong> Consider frontloading summer mission trip commitments<br>· <strong>Staffing (40–45%):</strong> Review part-time worship team hours ahead of summer programming<br>· <strong>Facilities (15%):</strong> HVAC service before summer heat is cost-effective now<br>· <strong>Community outreach (10%):</strong> Q2 is ideal for neighborhood events as weather improves</p><p>Would you like me to create a draft Q2 budget spreadsheet, or help you prepare talking points for your finance committee?</p>`
+      };
+      const reply = Object.entries(replies).find(([k]) => prompt.includes(k.split(' ')[0]));
+      addMessage('assistant', formatResponse(reply ? reply[1] : `I'd be happy to help with that. Let me pull up the relevant information for you.`));
+    }, 1200);
+  }, 200);
+}
+
+// ── MODEL DROPDOWN ───────────────────────────────
+let modelDropdownOpen = false;
+function toggleModelDropdown() {
+  modelDropdownOpen = !modelDropdownOpen;
+  document.getElementById('modelDropdown').classList.toggle('open', modelDropdownOpen);
+}
+function selectModel(name, desc, color) {
+  document.getElementById('modelName').textContent = `ChurchGPT · ${name}`;
+  document.querySelector('.model-dot').style.background = color;
+  document.querySelectorAll('.model-option').forEach(o => {
+    o.classList.toggle('selected', o.querySelector('.model-option-name').textContent === name);
+  });
+  modelDropdownOpen = false;
+  document.getElementById('modelDropdown').classList.remove('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.model-selector') && !e.target.closest('.model-dropdown')) {
+    document.getElementById('modelDropdown').classList.remove('open');
+    modelDropdownOpen = false;
+  }
+});
+
+// ── SHARE MODAL ──────────────────────────────────
+function openShare() { document.getElementById('shareModal').classList.add('open'); }
+function closeShare() { document.getElementById('shareModal').classList.remove('open'); }
+function copyShareLink() {
+  const inp = document.getElementById('shareLinkInput');
+  navigator.clipboard.writeText(inp.value).catch(() => {});
+  const btn = inp.nextElementSibling;
+  const orig = btn.textContent;
+  btn.textContent = 'Copied!';
+  setTimeout(() => btn.textContent = orig, 1500);
+}
+
+// ── CHAT ─────────────────────────────────────────
+let isResponding = false;
+function handleInput(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 180) + 'px';
+  document.getElementById('sendBtn').classList.toggle('active', el.value.trim().length > 0);
+}
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+function clearChat() {
+  const msgs = document.getElementById('messages');
+  msgs.innerHTML = '';
+  const empty = document.createElement('div');
+  empty.className = 'empty-state'; empty.id = 'emptyState';
+  empty.innerHTML = `<div class="empty-title">How can I <em>serve</em><br>you today?</div><p class="empty-sub">Ask me anything about your congregation, sermons, events, finances, or ministry operations.</p><div class="suggestions"><div class="suggestion" onclick="useSuggestion(this)"><strong>Plan Sunday's sermon</strong>Get an outline, scripture references, and talking points</div><div class="suggestion" onclick="useSuggestion(this)"><strong>Summarize giving trends</strong>Review tithing patterns from the past quarter</div><div class="suggestion" onclick="useSuggestion(this)"><strong>Draft a newsletter</strong>Write this week's announcement email to members</div><div class="suggestion" onclick="useSuggestion(this)"><strong>Volunteer schedule gaps</strong>Find which Sunday roles still need to be filled</div></div>`;
+  msgs.appendChild(empty);
+}
+function useSuggestion(el) {
+  const strong = el.querySelector('strong');
+  if (strong) { const f = document.getElementById('inputField'); f.value = strong.textContent; handleInput(f); sendMessage(); }
+}
+function addMessage(role, html) {
+  const empty = document.getElementById('emptyState');
+  if (empty) empty.remove();
+  const msgs = document.getElementById('messages');
+  const row = document.createElement('div');
+  row.className = `msg-row ${role}`;
+  const isUser = role === 'user';
+  row.innerHTML = `<div class="msg-label">${isUser ? '<div class="dot"></div> You' : '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Shepherd'}</div><div class="msg-bubble">${html}</div><div class="msg-actions">${isUser ? '' : `<button class="msg-action" title="Copy" onclick="copyMsg(this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button><button class="msg-action" title="Good response"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></button><button class="msg-action" title="Regenerate"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.36"/></svg></button>`}</div>`;
+  msgs.appendChild(row);
+  scrollToBottom();
+  return row;
+}
+function addTyping() {
+  const empty = document.getElementById('emptyState');
+  if (empty) empty.remove();
+  const msgs = document.getElementById('messages');
+  const row = document.createElement('div');
+  row.className = 'msg-row assistant'; row.id = 'typingRow';
+  row.innerHTML = `<div class="msg-label"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Shepherd</div><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+  msgs.appendChild(row);
+  scrollToBottom();
+  return row;
+}
+function scrollToBottom() { const w = document.getElementById('messagesWrap'); w.scrollTop = w.scrollHeight; }
+function copyMsg(btn) {
+  navigator.clipboard.writeText(btn.closest('.msg-row').querySelector('.msg-bubble').innerText).catch(()=>{});
+  btn.style.color = 'var(--accent)';
+  setTimeout(() => btn.style.color = '', 1000);
+}
+async function sendMessage() {
+  const field = document.getElementById('inputField');
+  const text = field.value.trim();
+  if (!text || isResponding) return;
+  isResponding = true;
+  field.value = ''; field.style.height = 'auto';
+  document.getElementById('sendBtn').classList.remove('active');
+  addMessage('user', escapeHtml(text));
+  const typingRow = addTyping();
+  const allMessages = [];
+  document.querySelectorAll('.msg-row').forEach(row => {
+    const bubble = row.querySelector('.msg-bubble');
+    if (bubble) allMessages.push({ role: row.classList.contains('user') ? 'user' : 'assistant', content: bubble.innerText });
+  });
+  try {
+    const response = await window.claude.complete({
+      messages: [{ role: 'user', content: `You are Shepherd, the AI assistant built into ChurchGPT — a church management platform. You help pastors, administrators, and church leaders with sermon planning, congregation management, event coordination, volunteer scheduling, ministry finances, and communications. Be warm, knowledgeable, and pastoral in tone. Keep responses concise and practical.\n\n${allMessages.map(m => `${m.role}: ${m.content}`).join('\n\n')}` }]
+    });
+    typingRow.remove();
+    addMessage('assistant', formatResponse(response));
+  } catch(err) {
+    typingRow.remove();
+    addMessage('assistant', `<p style="color:var(--text-muted)">I'm having trouble connecting right now. Please try again.</p>`);
+  }
+  isResponding = false;
+}
+function escapeHtml(text) {
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+function formatResponse(text) {
+  return text
+    .replace(/```([\s\S]*?)```/g,'<pre><code>$1</code></pre>')
+    .replace(/`([^`]+)`/g,'<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g,'<em>$1</em>')
+    .replace(/^### (.+)$/gm,'<p><strong style="font-size:14px;letter-spacing:.04em;text-transform:uppercase;color:var(--text-muted)">$1</strong></p>')
+    .replace(/^## (.+)$/gm,'<p style="font-family:\'Playfair Display\',serif;font-size:19px;margin:4px 0">$1</p>')
+    .replace(/^# (.+)$/gm,'<p style="font-family:\'Playfair Display\',serif;font-size:22px;margin:4px 0">$1</p>')
+    .replace(/^\d+\. (.+)$/gm,'<p style="padding-left:16px">• $1</p>')
+    .replace(/^[-*] (.+)$/gm,'<p style="padding-left:16px">· $1</p>')
+    .replace(/\n{2,}/g,'</p><p>').replace(/\n/g,'<br>').replace(/^(.+)$/,'<p>$1</p>');
+}
+
+// ── TWEAKS ───────────────────────────────────────
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "light",
+  "accent": "amber",
+  "fontSize": 15,
+  "density": "comfortable"
+}/*EDITMODE-END*/;
+let tweaks = { ...TWEAK_DEFAULTS };
+window.addEventListener('message', e => {
+  if (e.data?.type === '__activate_edit_mode') document.getElementById('tweaksPanel').style.display = 'flex';
+  if (e.data?.type === '__deactivate_edit_mode') document.getElementById('tweaksPanel').style.display = 'none';
+});
+window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+function applyTweaks() {
+  const root = document.documentElement;
+  const accents = { amber:'oklch(72% 0.14 65)', teal:'oklch(72% 0.14 180)', rose:'oklch(72% 0.14 10)', violet:'oklch(72% 0.14 290)' };
+  root.style.setProperty('--accent', accents[tweaks.accent] || accents.amber);
+  root.style.setProperty('--bg', tweaks.theme==='light' ? '#f5f2ee' : '#131110');
+  root.style.setProperty('--bg2', tweaks.theme==='light' ? '#ede9e4' : '#1a1815');
+  root.style.setProperty('--bg3', tweaks.theme==='light' ? '#e3dfd9' : '#211f1c');
+  root.style.setProperty('--text', tweaks.theme==='light' ? '#2a1f10' : '#e8e2d9');
+  root.style.setProperty('--text-muted', tweaks.theme==='light' ? '#7a6e65' : '#7a7068');
+  root.style.setProperty('--text-dim', tweaks.theme==='light' ? '#a09085' : '#4a4540');
+  root.style.setProperty('--user-bubble', tweaks.theme==='light' ? '#e5e0d9' : '#252220');
+  root.style.setProperty('--border', tweaks.theme==='light' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.07)');
+  document.body.style.fontSize = tweaks.fontSize + 'px';
+}
+applyTweaks();
+</script>
+</body>
+</html>
