@@ -93,7 +93,7 @@ export class ShopService {
     // Spread metadata into the main object for convenience
     return (data || []).map(p => ({
         ...p,
-        images: p.images?.map((img: string) => img.replace(/^\/jkc\/images\//, '/images/')) || [],
+        images: p.images?.map((img: string) => img.replace(/^\/(jkc|jkc-devotion-app)\/images\//, '/images/')) || [],
         ...(p.metadata || {}),
         metadata: p.metadata // Keep original
     })) as Merchandise[];
@@ -116,7 +116,7 @@ export class ShopService {
     // Spread metadata into the main object
     return {
         ...data,
-        images: data.images?.map((img: string) => img.replace(/^\/jkc\/images\//, '/images/')) || [],
+        images: data.images?.map((img: string) => img.replace(/^\/(jkc|jkc-devotion-app)\/images\//, '/images/')) || [],
         ...(data.metadata || {}),
         metadata: data.metadata
     } as Merchandise;
@@ -305,7 +305,7 @@ export class ShopService {
     if (error) throw error;
     return (data || []).map(item => {
         if (item.product && item.product.images) {
-            item.product.images = item.product.images.map((img: string) => img.replace(/^\/jkc\/images\//, '/images/'));
+            item.product.images = item.product.images.map((img: string) => img.replace(/^\/(jkc|jkc-devotion-app)\/images\//, '/images/'));
         }
         return item;
     });
