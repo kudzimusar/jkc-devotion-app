@@ -1,20 +1,13 @@
-export async function generateStaticParams() {
-    return [
-        { slug: 'worship' },
-        { slug: 'ushers' },
-        { slug: 'childrens' },
-        { slug: 'youth' },
-        { slug: 'evangelism' },
-        { slug: 'prayer' },
-        { slug: 'media' },
-        { slug: 'hospitality' },
-        { slug: 'fellowship' },
-        { slug: 'finance' },
-        { slug: 'missions' },
-        { slug: 'pastoral' },
-    ];
+import { MINISTRY_SLUGS } from '@/lib/ministries';
+
+export function generateStaticParams() {
+    return MINISTRY_SLUGS.map(slug => ({ slug }));
 }
 
-export default function MinistryLayout({ children }: { children: React.ReactNode }) {
-    return <>{children}</>;
+export default function MinistrySlugLayout({ children }: { children: React.ReactNode }) {
+    return (
+        <div style={{ padding: 0, margin: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            {children}
+        </div>
+    );
 }

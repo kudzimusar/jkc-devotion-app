@@ -32,17 +32,14 @@ export default function MinistryOverviewClient({ slug }: { slug: string }) {
     }
 
     return (
-        <div className="min-h-[100vh] bg-background text-foreground transition-all">
-            {/* The Layout structure handles max-width and internal padding inside Silo */}
-            <div className="w-full h-full">
-                <MinistryIntelligenceSilo 
-                    ministryId={session.ministryId}
-                    ministrySlug={session.slug}
-                    onBack={() => router.push('/ministry-dashboard/')}
-                    onOpenProfile={() => setIsProfileOpen(true)}
-                    forcedRole={session.ministryRole}
-                />
-            </div>
+        <div className="bg-background text-foreground">
+            <MinistryIntelligenceSilo
+                ministryId={session.ministryId}
+                ministrySlug={session.slug}
+                onBack={() => router.push('/ministry-dashboard/')}
+                onOpenProfile={() => setIsProfileOpen(true)}
+                forcedRole={session.ministryRole}
+            />
 
             <LeaderProfileExtension 
                 isOpen={isProfileOpen}
