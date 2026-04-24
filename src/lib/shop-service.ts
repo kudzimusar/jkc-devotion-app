@@ -93,6 +93,7 @@ export class ShopService {
     // Spread metadata into the main object for convenience
     return (data || []).map(p => ({
         ...p,
+        images: p.images?.map((img: string) => img.replace(/^\/jkc\/images\//, '/images/')) || [],
         ...(p.metadata || {}),
         metadata: p.metadata // Keep original
     })) as Merchandise[];
@@ -115,6 +116,7 @@ export class ShopService {
     // Spread metadata into the main object
     return {
         ...data,
+        images: data.images?.map((img: string) => img.replace(/^\/jkc\/images\//, '/images/')) || [],
         ...(data.metadata || {}),
         metadata: data.metadata
     } as Merchandise;
@@ -155,7 +157,17 @@ export class ShopService {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data as MerchandiseOrder[];
+    return (data || []).map(order => {
+        if (order.items) {
+            order.items = order.items.map((item: any) => {
+                if (item.product && item.product.images) {
+                    item.product.images = item.product.images.map((img: string) => img.replace(/^\/jkc\/images\//, '/images/'));
+                }
+                return item;
+            });
+        }
+        return order;
+    }) as MerchandiseOrder[];
   }
 
   /**
@@ -169,7 +181,17 @@ export class ShopService {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data as MerchandiseOrder[];
+    return (data || []).map(order => {
+        if (order.items) {
+            order.items = order.items.map((item: any) => {
+                if (item.product && item.product.images) {
+                    item.product.images = item.product.images.map((img: string) => img.replace(/^\/jkc\/images\//, '/images/'));
+                }
+                return item;
+            });
+        }
+        return order;
+    }) as MerchandiseOrder[];
   }
 
   /**
@@ -281,7 +303,12 @@ export class ShopService {
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return data;
+    return (data || []).map(item => {
+        if (item.product && item.product.images) {
+            item.product.images = item.product.images.map((img: string) => img.replace(/^\/jkc\/images\//, '/images/'));
+        }
+        return item;
+    });
   }
 
   static async syncCart(userId: string, localItems: any[]) {
