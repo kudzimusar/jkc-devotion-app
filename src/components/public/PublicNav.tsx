@@ -112,17 +112,15 @@ export default function PublicNav() {
    */
   const handleSignOut = async () => {
     try {
-        // Capture slug before clearing session
-        const currentSlug = slug ?? sessionStorage.getItem('church_os_church_slug');
+        // Capture current path before clearing session — user stays on the same
+        // client website page rather than being sent to the member login screen.
+        const currentPath = window.location.pathname;
         await supabase.auth.signOut();
         setUser(null);
         setIsDropdownOpen(false);
         sessionStorage.clear();
         toast.success('Signed out successfully');
-        const base = window.location.pathname.startsWith('/jkc') ? '/jkc' : '';
-        window.location.href = currentSlug
-          ? `${base}/${currentSlug}/member/login`
-          : `${base}/member/login`;
+        window.location.href = currentPath;
     } catch (e) {
         toast.error('Error signing out');
     }

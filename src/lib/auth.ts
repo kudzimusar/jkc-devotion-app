@@ -156,17 +156,17 @@ export const Auth = {
     // Logout
     async logout() {
         _userPromise = null; // clear in-memory cache
+        // Capture current path before clearing session — user stays within the
+        // current client website instead of being sent to the member login page.
+        const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/';
         await supabase.auth.signOut();
-        let loginPath = `${BP}/member/login`;
         if (typeof window !== 'undefined') {
-            const churchSlug = sessionStorage.getItem('church_os_church_slug');
-            if (churchSlug) loginPath = `/${churchSlug}/member/login`;
             Object.keys(localStorage).forEach(key => {
                 if (key.startsWith('sb-')) localStorage.removeItem(key);
             });
             sessionStorage.clear();
+            window.location.replace(currentPath);
         }
-        window.location.replace(loginPath); // replace = no back-button return to stale session
     },
 
     // Update profile
