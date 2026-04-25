@@ -157,10 +157,9 @@ export default function GiveClient() {
   return (
     <div className="min-h-screen selection:bg-[var(--primary)] selection:text-white bg-gradient-to-b from-muted/60 via-background to-background">
       {/* Hero Section */}
-      <section data-section="give-hero" className="relative h-[70vh] flex items-center justify-center overflow-hidden">
+      <section data-section="give-hero" className="relative h-[55vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[var(--primary)]/10 blur-[160px] rounded-full" />
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-black/20" />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-[var(--primary)]/10 blur-[160px] rounded-full" />
         </div>
 
         <div className="relative z-10 text-center space-y-8 px-6 max-w-4xl mx-auto">
@@ -176,7 +175,7 @@ export default function GiveClient() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 }}
-            className="text-6xl md:text-8xl font-black italic font-serif leading-none"
+            className="text-5xl md:text-7xl font-black italic font-serif leading-none"
           >
             Make a <span className="text-[var(--secondary)]">Difference</span> <br />
             <span className="text-foreground/80 font-sans normal-case text-4xl md:text-6xl tracking-tight italic">in Japan Together</span>
@@ -267,7 +266,7 @@ export default function GiveClient() {
 
       {/* Give with Card Section */}
       <section data-section="give-card" className="max-w-2xl mx-auto px-6 py-12">
-        <div className="glass rounded-3xl border border-[var(--primary)]/20 p-8 space-y-6">
+        <div className="bg-card rounded-2xl border border-border p-7 space-y-5">
           <div className="space-y-2">
             <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] uppercase">Instant</p>
             <h2 className="text-3xl font-black flex items-center gap-3">
@@ -357,7 +356,7 @@ export default function GiveClient() {
         </div>
       </section>
 
-      <div className="max-w-screen-xl mx-auto px-6 pb-32 space-y-40">
+      <div className="max-w-screen-xl mx-auto px-6 pb-20 space-y-20">
 
         {/* Method 1: Tithe.ly */}
         <section id="online" data-section="give-online" className="grid lg:grid-cols-2 gap-16 items-center">
@@ -372,7 +371,7 @@ export default function GiveClient() {
             </div>
             
             {/* USD -> JPY Chart */}
-            <div className="glass rounded-3xl p-8 border border-[var(--primary)]/10 bg-[var(--primary)]/5 space-y-6">
+            <div className="bg-card rounded-2xl p-6 border border-border space-y-5">
                <div className="flex items-center justify-between">
                   <span className="text-[10px] font-black tracking-widest text-[var(--primary)]/40 uppercase">Conversion Guide</span>
                   <div className="flex items-center gap-2 text-emerald-600">
@@ -403,18 +402,18 @@ export default function GiveClient() {
 
           <div className="relative group">
             <div className="absolute inset-0 bg-[var(--primary)] blur-3xl opacity-10 group-hover:opacity-20 transition-opacity" />
-            <div className="relative glass rounded-[3rem] p-12 border border-[var(--primary)]/10 bg-card shadow-2xl overflow-hidden">
-               <div className="w-20 h-20 rounded-full bg-[var(--primary)]/10 flex items-center justify-center mx-auto text-[var(--primary)]">
-                  <DollarSign className="w-10 h-10" />
+            <div className="relative bg-card rounded-2xl p-8 border border-border shadow-lg overflow-hidden space-y-5">
+               <div className="w-14 h-14 rounded-full bg-[var(--primary)]/10 flex items-center justify-center mx-auto text-[var(--primary)]">
+                  <DollarSign className="w-7 h-7" />
                </div>
-               <div className="space-y-2">
-                 <h3 className="text-2xl font-black text-foreground">GIVE ONLINE NOW</h3>
+               <div className="space-y-1 text-center">
+                 <h3 className="text-xl font-black text-foreground">GIVE ONLINE NOW</h3>
                  <p className="text-muted-foreground text-sm font-medium">Official giving portal for Japan Kingdom Church</p>
                </div>
-               <a 
-                 href="https://tithe.ly/give_new/www/#/tithely/give-one-time/4010992" 
-                 target="_blank" 
-                 className="block w-full bg-[var(--primary)] text-white font-black py-6 rounded-2xl text-sm tracking-[0.3em] shadow-xl shadow-[var(--primary)]/20 hover:scale-105 active:scale-95 transition-all text-center"
+               <a
+                 href="https://tithe.ly/give_new/www/#/tithely/give-one-time/4010992"
+                 target="_blank"
+                 className="block w-full bg-[var(--primary)] text-white font-black py-4 rounded-xl text-sm tracking-[0.3em] shadow-md hover:scale-105 active:scale-95 transition-all text-center"
                >
                  GIVE VIA TITHE.LY →
                </a>
@@ -431,7 +430,7 @@ export default function GiveClient() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Cash App */}
-            <div className="glass rounded-[2rem] p-10 border border-[var(--primary)]/10 bg-card/80 space-y-6 hover:border-emerald-500/30 transition-all group">
+            <div className="bg-card rounded-2xl p-7 border border-border space-y-5 hover:border-emerald-500/30 transition-all group">
               <div className="w-12 h-12 text-emerald-600">
                 <CashAppIcon />
               </div>
@@ -461,7 +460,7 @@ export default function GiveClient() {
             </div>
 
             {/* Zelle */}
-            <div className="glass rounded-[2rem] p-10 border border-[var(--primary)]/10 bg-card/80 space-y-6 hover:border-violet-500/30 transition-all group">
+            <div className="bg-card rounded-2xl p-7 border border-border space-y-5 hover:border-violet-500/30 transition-all group">
               <div className="w-12 h-12 text-violet-600">
                 <ZelleIcon />
               </div>
@@ -496,7 +495,7 @@ export default function GiveClient() {
             </div>
 
             {/* Wells Fargo */}
-            <div className="glass rounded-[2rem] p-10 border border-[var(--primary)]/10 bg-card/80 space-y-6 hover:border-amber-600/30 transition-all group">
+            <div className="bg-card rounded-2xl p-7 border border-border space-y-5 hover:border-amber-600/30 transition-all group">
               <Landmark className="w-10 h-10 text-amber-600" />
               <div className="space-y-1">
                 <h3 className="text-xl font-black text-foreground">Wells Fargo</h3>
@@ -539,36 +538,36 @@ export default function GiveClient() {
         </section>
 
         {/* Method 5 & 6: PayPal */}
-        <section data-section="give-paypal" className="grid md:grid-cols-2 gap-8">
+        <section data-section="give-paypal" className="grid md:grid-cols-2 gap-6">
            {/* Church PayPal */}
-           <div className="glass rounded-[2.5rem] p-12 border border-blue-600/10 bg-blue-600/[0.05] flex flex-col items-center text-center space-y-6 group">
-              <div className="w-20 h-20 rounded-full bg-blue-600/10 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+           <div className="bg-card rounded-2xl p-7 border border-border flex flex-col items-center text-center space-y-4 group hover:border-blue-500/30 transition-all">
+              <div className="w-12 h-12 rounded-full bg-blue-600/10 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
                 <PayPalIcon />
               </div>
-              <div className="space-y-2">
-                <h3 className="text-2xl font-black text-foreground">General Fund</h3>
-                <p className="text-muted-foreground text-sm font-medium">Standard PayPal missions giving</p>
+              <div className="space-y-1">
+                <h3 className="text-lg font-black text-foreground">General Fund</h3>
+                <p className="text-muted-foreground text-xs font-medium">Standard PayPal missions giving</p>
               </div>
-              <a href="https://www.paypal.com/paypalme/japankingdombuilders" target="_blank" className="bg-blue-600 text-white font-black px-12 py-5 rounded-full text-[10px] tracking-[0.2em] hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20">GIVE VIA PAYPAL</a>
+              <a href="https://www.paypal.com/paypalme/japankingdombuilders" target="_blank" className="w-full bg-blue-600 text-white font-black py-3 rounded-xl text-[10px] tracking-[0.2em] hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20 text-center">GIVE VIA PAYPAL</a>
            </div>
 
            {/* Personal Love Offering */}
-           <div className="glass rounded-[2.5rem] p-12 border border-pink-600/10 bg-pink-600/[0.05] flex flex-col items-center text-center space-y-6 group">
-              <div className="w-20 h-20 rounded-full bg-pink-600/10 flex items-center justify-center text-pink-600 group-hover:scale-110 transition-transform">
-                <Heart className="w-10 h-10" />
+           <div className="bg-card rounded-2xl p-7 border border-border flex flex-col items-center text-center space-y-4 group hover:border-pink-500/30 transition-all">
+              <div className="w-12 h-12 rounded-full bg-pink-600/10 flex items-center justify-center text-pink-600 group-hover:scale-110 transition-transform">
+                <Heart className="w-6 h-6" />
               </div>
-              <div className="space-y-2">
-                <h3 className="text-2xl font-black text-foreground">Pastor Love Offering</h3>
-                <p className="text-muted-foreground text-sm font-medium">Personal appreciation for the Pastor & Family</p>
+              <div className="space-y-1">
+                <h3 className="text-lg font-black text-foreground">Pastor Love Offering</h3>
+                <p className="text-muted-foreground text-xs font-medium">Personal appreciation for the Pastor & Family</p>
               </div>
-              <a href="https://www.paypal.com/paypalme/pastormarcelsfamily" target="_blank" className="bg-pink-600 text-white font-black px-12 py-5 rounded-full text-[10px] tracking-[0.2em] hover:bg-pink-700 transition-all shadow-xl shadow-pink-500/20">SEND LOVE OFFERING</a>
+              <a href="https://www.paypal.com/paypalme/pastormarcelsfamily" target="_blank" className="w-full bg-pink-600 text-white font-black py-3 rounded-xl text-[10px] tracking-[0.2em] hover:bg-pink-700 transition-all shadow-md shadow-pink-500/20 text-center">SEND LOVE OFFERING</a>
            </div>
         </section>
 
         {/* Method 7: MUFG Japan */}
-        <section data-section="give-domestic" className="relative overflow-hidden glass rounded-[4rem] border border-[var(--primary)]/10 bg-card">
+        <section data-section="give-domestic" className="relative overflow-hidden bg-card rounded-3xl border border-border">
            <div className="absolute top-0 right-0 w-96 h-96 bg-red-600/5 blur-[120px] rounded-full -mr-48 -mt-48" />
-           <div className="p-12 md:p-20 relative z-10 grid lg:grid-cols-5 gap-16 items-center">
+           <div className="p-8 md:p-12 relative z-10 grid lg:grid-cols-5 gap-10 items-center">
               <div className="lg:col-span-2 space-y-8">
                  <div className="space-y-2">
                    <p className="text-[10px] font-black tracking-[0.4em] text-red-600 uppercase">Local Transfer (Japan)</p>
@@ -623,7 +622,7 @@ export default function GiveClient() {
               <div 
                 key={i} 
                 id={card.title.toLowerCase()}
-                className="glass rounded-3xl p-8 border border-[var(--primary)]/10 bg-card/80 space-y-4 hover:border-[var(--primary)]/30 transition-all group shadow-sm hover:shadow-md"
+                className="bg-card rounded-2xl p-6 border border-border space-y-4 hover:border-[var(--primary)]/30 transition-all group shadow-sm hover:shadow-md"
               >
                 <div className="w-12 h-12 rounded-2xl bg-[var(--primary)]/5 flex items-center justify-center text-[var(--primary)]/40 group-hover:text-[var(--primary)] group-hover:bg-[var(--primary)]/10 transition-all">
                    <card.icon className="w-6 h-6" />
@@ -640,7 +639,7 @@ export default function GiveClient() {
         {/* Monthly Partner */}
         <section data-section="give-partner" className="relative">
            <div className="absolute inset-0 bg-gradient-to-r from-[var(--primary)] to-indigo-600 rounded-[4rem] blur-[100px] opacity-10" />
-           <div className="relative glass rounded-[4rem] border border-[var(--primary)]/10 bg-card p-12 md:p-24 text-center space-y-10 overflow-hidden shadow-2xl">
+           <div className="relative bg-card rounded-3xl border border-border p-8 md:p-14 text-center space-y-8 overflow-hidden shadow-lg">
               <div className="space-y-4 relative z-10">
                 <p className="text-[10px] font-black tracking-[0.5em] text-[var(--primary)] uppercase">Legacy Building</p>
                 <h2 className="text-4xl md:text-7xl font-black text-foreground">Become a <span className="font-serif italic font-medium text-[var(--secondary)]">Monthly Partner</span></h2>
