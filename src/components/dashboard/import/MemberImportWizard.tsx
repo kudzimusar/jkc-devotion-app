@@ -689,6 +689,10 @@ export function MemberImportWizard({
 
   // ── File selected → create job row ─────────────────────────────────────
   const handleFileSelected = async (f: File) => {
+    if (!ACCEPTED_TYPES[f.type]) {
+      toast.error("Unsupported file type. Please upload a CSV, XLSX, PDF, JPG, or PNG.");
+      return;
+    }
     // 10MB check
     if (f.size > 10 * 1024 * 1024) {
       toast.warning("File is larger than 10MB. Processing may take longer.");
@@ -729,7 +733,7 @@ export function MemberImportWizard({
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
       const type = ACCEPTED_TYPES[file.type] ?? file.name.split(".").pop() ?? "txt";
 
-      const isBinary = ["pdf", "docx", "doc", "image/jpeg", "image/png", "image/webp"].includes(type);
+      const isBinary = ["pdf", "jpg", "png"].includes(type);
       let body: Record<string, any> = {
         job_id: jobId,
         org_id: orgId,
