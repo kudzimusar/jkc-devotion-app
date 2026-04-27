@@ -14,6 +14,7 @@ import { useAutoSave } from '@/hooks/useAutoSave';
 import { RestorePrompt } from '@/components/ui/RestorePrompt';
 import { basePath as BP } from '@/lib/utils';
 import { resolvePublicOrgId } from '@/lib/org-resolver';
+import { MemberImportWizard } from '@/components/dashboard/import/MemberImportWizard';
 
 const steps = ['Identity', 'DNA', 'Ministries', 'Plan'] as const;
 type Step = typeof steps[number];
@@ -78,6 +79,9 @@ export default function OnboardingPage() {
     const [showHelp, setShowHelp] = useState(false);
     const [helpMessage, setHelpMessage] = useState('');
     const [helpSending, setHelpSending] = useState(false);
+
+    // Import State
+    const [showImport, setShowImport] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -341,9 +345,10 @@ export default function OnboardingPage() {
                 }
                 const newOrgId = result.org_id || result.id || null;
                 setProvisionedOrgId(newOrgId);
-                // Let animation finish (step 5 at 6000ms), then go to billing at 6500ms
+                // Let animation finish, then show the Import Wizard
                 setTimeout(() => {
-                    handlePlanSelect(tier, newOrgId);
+                    setLoading(false);
+                    setShowImport(true);
                 }, 6500);
             } else {
                 clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4);
@@ -432,6 +437,34 @@ export default function OnboardingPage() {
                         })}
                     </div>
                 </motion.div>
+            </div>
+        );
+    }
+
+    if (showImport && provisionedOrgId) {
+        return (
+            <div className="fixed inset-0 bg-[#0c0e12] z-50 flex flex-col items-center justify-center p-6 overflow-y-auto">
+                <div className="w-full max-w-2xl bg-[#171a1f] border border-[#46484d]/30 rounded-3xl overflow-hidden shadow-2xl">
+                    <MemberImportWizard
+                        orgId={provisionedOrgId}
+                        onComplete={() => {
+                            // Already handled inside wizard, user will click "Done" which calls onClose
+                        }}
+                        onClose={() => {
+                            setShowImport(false);
+                            handlePlanSelect(tier, provisionedOrgId);
+                        }}
+                    />
+                </div>
+                <button
+                    onClick={() => {
+                        setShowImport(false);
+                        handlePlanSelect(tier, provisionedOrgId);
+                    }}
+                    className="mt-6 text-[#aaabb0] hover:text-[#f6f6fc] text-xs font-bold uppercase tracking-[0.2em] transition-all"
+                >
+                    Skip for now & continue to billing
+                </button>
             </div>
         );
     }
