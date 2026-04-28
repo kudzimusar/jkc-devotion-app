@@ -200,6 +200,47 @@ serve(async (req) => {
       }
     }
 
+    // ── ChurchGPT billing events ─────────────────────────────────────────────
+    const churchGPTEventMap: Record<string, string> = {
+      "customer.subscription.created":         "subscription.created",
+      "customer.subscription.updated":         "subscription.updated",
+      "customer.subscription.deleted":         "subscription.cancelled",
+      "invoice.payment_succeeded":             "payment.succeeded",
+      "invoice.payment_failed":                "payment.failed",
+      "customer.subscription.trial_will_end":  "trial.ending",
+    };
+
+    const churchOSEventType = churchGPTEventMap[event.type];
+    if (churchOSEventType) {
+      const obj = event.data.object as any;
+      const orgId = obj.metadata?.org_id ?? obj.subscription_details?.metadata?.org_id ?? null;
+      const planName = obj.metadata?.plan_name ?? null;
+
+      if (orgId) {
+        const amount = (obj.amount_paid ?? obj.plan?.amount ?? 0) / 100;
+        const periodEnd = obj.current_period_end
+          ? new Date(obj.current_period_end * 1000).toISOString()
+          : null;
+
+        const { error: billingError } = await supabaseAdmin.rpc("apply_subscription_event", {
+          p_stripe_event_id:        event.id,
+          p_event_type:             churchOSEventType,
+          p_org_id:                 orgId,
+          p_plan_name:              planName,
+          p_amount_usd:             amount,
+          p_stripe_customer_id:     obj.customer ?? null,
+          p_stripe_subscription_id: obj.id ?? obj.subscription ?? null,
+          p_stripe_price_id:        obj.plan?.id ?? null,
+          p_period_end:             periodEnd,
+          p_metadata:               JSON.stringify(obj),
+        });
+
+        if (billingError) {
+          console.error("apply_subscription_event error:", billingError);
+        }
+      }
+    }
+
     return new Response(JSON.stringify({ received: true }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

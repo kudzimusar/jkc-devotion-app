@@ -55,6 +55,45 @@ serve(async (req) => {
       });
     }
 
+    // ChurchGPT SaaS subscription flow
+    if (body.type === 'churchgpt_subscription') {
+      const { plan_name, org_id: subOrgId, user_email, return_url } = body;
+      if (!plan_name || !subOrgId) throw new Error("plan_name and org_id are required");
+
+      const priceMap: Record<string, string> = {
+        lite:       body.stripe_price_id_lite       ?? Deno.env.get("STRIPE_PRICE_LITE")       ?? "",
+        pro:        body.stripe_price_id_pro        ?? Deno.env.get("STRIPE_PRICE_PRO")        ?? "",
+        enterprise: body.stripe_price_id_enterprise ?? Deno.env.get("STRIPE_PRICE_ENTERPRISE") ?? "",
+      };
+
+      const stripePriceId = priceMap[plan_name];
+      if (!stripePriceId) throw new Error(`No Stripe price ID configured for plan: ${plan_name}`);
+
+      const session = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        customer_email: user_email ?? undefined,
+        line_items: [{ price: stripePriceId, quantity: 1 }],
+        success_url: `https://ai.churchos-ai.website/churchgpt/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `https://ai.churchos-ai.website/churchgpt/upgrade/`,
+        subscription_data: {
+          metadata: {
+            org_id:    subOrgId,
+            plan_name: plan_name,
+          },
+          trial_period_days: plan_name === 'lite' ? 14 : 0,
+        },
+        metadata: {
+          org_id:    subOrgId,
+          plan_name: plan_name,
+          platform:  "church_os",
+        },
+      });
+
+      return new Response(JSON.stringify({ url: session.url }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // existing cart logic continues below...
     const { cart, orgId, customerEmail, shippingDetails } = body;
 

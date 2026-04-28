@@ -59,7 +59,7 @@ This layer operates through two critical **Offices of Authority** that bridge th
 
 ### Layer 3: The Digital Sanctuary (The Member Hub)
 *High-Engagement Spiritual Environment*
-- **ChurchGPT**: Multi-modal AI theological companion with "Identity Hardening."
+- **ChurchGPT**: Multi-modal AI theological companion with "Identity Hardening," quota-gated multi-model routing (Gemini, Claude, GPT-4o mini, Kimi/Moonshot), tiered access (Guest/Starter/Lite/Pro/Enterprise), Stripe billing integration, and real-time upgrade flow.
 - **SOAP Devotion**: Interactive journaling with sentiment sync to the PIL layer.
 - **Growth Milestone Sync**: Unified tracking of salvation, baptism, and leadership milestones.
 - **Junior Church**: Integrated guardian surveillance and child check-in security.

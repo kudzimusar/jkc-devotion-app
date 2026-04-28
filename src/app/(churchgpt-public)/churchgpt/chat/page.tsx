@@ -41,18 +41,25 @@ export default function ChurchGPTAuthenticatedChat() {
     }
   }, [router, supabase])
 
-  const { 
-    messages, 
-    isLoading, 
-    error, 
-    sendMessage, 
+  const {
+    messages,
+    isLoading,
+    error,
+    sendMessage,
     clearConversation,
     conversations,
     conversationId,
     currentConversation,
     loadMessages,
     deleteConversation,
-    renameConversation
+    renameConversation,
+    quotaState,
+    upgradeModal,
+    setUpgradeModal,
+    selectedModel,
+    setSelectedModel,
+    availableModels,
+    isPro,
   } = useChurchGPT(sessionType)
 
   useEffect(() => {
@@ -243,18 +250,74 @@ export default function ChurchGPTAuthenticatedChat() {
         </main>
 
         <footer className="bg-gradient-to-t from-[#fafafa] via-[#fafafa]/95 to-transparent pt-4 pb-4 px-4 shrink-0">
-          <div className="max-w-3xl mx-auto flex flex-col items-center">
-            <ChurchGPTInput 
-              onSend={(msg, sType, att) => sendMessage(msg, sType, att)} 
+          <div className="max-w-3xl mx-auto flex flex-col items-center gap-2">
+            {/* Pro model selector */}
+            {isPro && availableModels.length > 0 && (
+              <div className="self-end">
+                <select
+                  value={selectedModel ?? ''}
+                  onChange={(e) => setSelectedModel(e.target.value || null)}
+                  className="text-xs border border-gray-200 rounded-lg px-2 py-1 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#0f1f3d]"
+                >
+                  <option value="">Auto (default model)</option>
+                  {availableModels.map((m: any) => (
+                    <option key={m.model_id} value={m.model_id}>{m.display_name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <ChurchGPTInput
+              onSend={(msg, sType, att) => sendMessage(msg, sType, att)}
               disabled={isLoading}
               sessionType={sessionType}
               setSessionType={setSessionType}
             />
-            <p className="text-center mt-4 text-[10px] text-gray-400 font-medium tracking-wide">
-              ChurchGPT can make mistakes · <span className="font-bold text-[#0f1f3d]/50 italic">Ephesians 4:15</span>
-            </p>
+
+            <div className="flex flex-col items-center gap-1 w-full">
+              {/* Quota bar for non-unlimited plans */}
+              {quotaState && quotaState.limit > 0 && quotaState.limit < 999999 && (
+                <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                  <div className="w-24 h-1 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#D4AF37] rounded-full"
+                      style={{ width: `${Math.min((quotaState.used / quotaState.limit) * 100, 100)}%` }}
+                    />
+                  </div>
+                  <span>{quotaState.remaining} messages remaining</span>
+                </div>
+              )}
+              <p className="text-center text-[10px] text-gray-400 font-medium tracking-wide">
+                ChurchGPT can make mistakes · <span className="font-bold text-[#0f1f3d]/50 italic">Ephesians 4:15</span>
+              </p>
+            </div>
           </div>
         </footer>
+
+        {/* Upgrade modal */}
+        {upgradeModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative animate-in zoom-in-95 duration-200">
+              <button
+                onClick={() => setUpgradeModal(null)}
+                className="absolute top-4 right-4 p-1 text-slate-400 hover:text-slate-700 rounded-lg"
+              >
+                ✕
+              </button>
+              <div className="text-center mb-6">
+                <div className="text-3xl mb-3">✟</div>
+                <h2 className="text-xl font-bold text-[#0f1f3d] mb-2">Monthly limit reached</h2>
+                <p className="text-sm text-slate-600 leading-relaxed">{upgradeModal.message}</p>
+              </div>
+              <a
+                href="/churchgpt/upgrade"
+                className="block w-full py-3 px-4 bg-[#D4AF37] text-[#0f1f3d] text-sm font-bold text-center rounded-xl hover:bg-[#c9a227] transition-colors"
+              >
+                View upgrade options
+              </a>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

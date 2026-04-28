@@ -33,7 +33,7 @@ export function PublicChurchGPTAuth({ mode }: PublicChurchGPTAuthProps) {
 
     try {
       if (mode === 'signup') {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -44,6 +44,22 @@ export function PublicChurchGPTAuth({ mode }: PublicChurchGPTAuthProps) {
           }
         })
         if (error) throw error
+
+        // Merge guest session fingerprint → user account
+        const fingerprint = localStorage.getItem('cgpt_fp')
+        if (fingerprint && signUpData.user?.id) {
+          await supabase
+            .from('churchgpt_guest_sessions')
+            .update({
+              converted_user_id: signUpData.user.id,
+              converted_at: new Date().toISOString()
+            })
+            .eq('fingerprint', fingerprint)
+          // Clear guest state so the new account starts clean
+          localStorage.removeItem('cgpt_fp')
+          localStorage.removeItem('churchgpt_guest_messages')
+          localStorage.setItem('churchgpt_guest_count', '0')
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,

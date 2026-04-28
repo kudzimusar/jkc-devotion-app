@@ -1,30 +1,32 @@
 'use client'
 
 import { useState, useRef, useEffect } from "react"
+import Link from "next/link"
 import { useChurchGPT } from "@/hooks/useChurchGPT"
 import { ChurchGPTMessage } from "@/components/churchgpt/ChurchGPTMessage"
 import { ChurchGPTInput } from "@/components/churchgpt/ChurchGPTInput"
 import { ChurchGPTSuggestions } from "@/components/churchgpt/ChurchGPTSuggestions"
 import { GuestPrompt } from "./GuestPrompt"
+import { X, ArrowUpRight } from "lucide-react"
 
 export function PublicChurchGPTChat() {
   const [sessionType, setSessionType] = useState('general')
   const [guestCount, setGuestCount] = useState(0)
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  const { 
-    messages, 
-    isLoading, 
-    error, 
-    sendMessage
+  const {
+    messages,
+    isLoading,
+    error,
+    sendMessage,
+    quotaState,
+    upgradeModal,
+    setUpgradeModal,
   } = useChurchGPT(sessionType, undefined, undefined, true)
 
   useEffect(() => {
-    // Initial guest count
     const count = parseInt(localStorage.getItem('churchgpt_guest_count') || '0')
     setGuestCount(count)
-
-    // Listen for storage changes (to sync guest count)
     const handleStorage = () => {
       setGuestCount(parseInt(localStorage.getItem('churchgpt_guest_count') || '0'))
     }
@@ -32,23 +34,34 @@ export function PublicChurchGPTChat() {
     return () => window.removeEventListener('storage', handleStorage)
   }, [])
 
-  // Update guest count when messages change
   useEffect(() => {
     const count = parseInt(localStorage.getItem('churchgpt_guest_count') || '0')
     setGuestCount(count)
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // Sync guestCount from quotaState when available
+  useEffect(() => {
+    if (quotaState?.used !== undefined) setGuestCount(quotaState.used)
+  }, [quotaState])
+
   const showSoftPrompt = guestCount === 5 || guestCount === 6
   const showHardPrompt = guestCount >= 7
-  const isInputDisabled = showHardPrompt || isLoading
+  const isInputDisabled = showHardPrompt || !!upgradeModal || isLoading
+
+  const GUEST_LIMIT = 7
+  const guestRemaining = Math.max(0, GUEST_LIMIT - guestCount)
 
   return (
     <div className="flex flex-col h-[70vh] bg-white border-t border-slate-100">
-      {/* Banner */}
+      {/* Guest banner */}
       <div className="bg-slate-50 border-b border-slate-100 py-2 px-4 text-center">
         <p className="text-xs text-slate-500 font-medium tracking-wide leading-relaxed">
-          You&apos;re chatting as a guest · <a href="/churchgpt/signup" className="text-[#0f1f3d] font-bold hover:underline decoration-[#D4AF37] decoration-2 underline-offset-2">Sign up</a> to save your conversation history
+          You&apos;re chatting as a guest ·{" "}
+          <Link href="/churchgpt/signup" className="text-[#0f1f3d] font-bold hover:underline decoration-[#D4AF37] decoration-2 underline-offset-2">
+            Sign up
+          </Link>{" "}
+          to save your conversation history
         </p>
       </div>
 
@@ -79,18 +92,35 @@ export function PublicChurchGPTChat() {
       </main>
 
       <footer className="bg-white border-t border-slate-50 py-6 px-4 shrink-0 shadow-[0_-4px_24px_-12px_rgba(15,31,61,0.1)]">
-        <div className="max-w-3xl mx-auto flex flex-col items-center">
-          <ChurchGPTInput 
-            onSend={(msg, sType) => sendMessage(msg, sType)} 
+        <div className="max-w-3xl mx-auto flex flex-col items-center gap-3">
+          <ChurchGPTInput
+            onSend={(msg, sType) => sendMessage(msg, sType)}
             disabled={isInputDisabled}
             sessionType={sessionType}
             setSessionType={setSessionType}
           />
-          <div className="mt-4 flex flex-col items-center gap-1">
+
+          {/* Quota bar */}
+          <div className="w-full flex flex-col items-center gap-1">
             {guestCount >= 3 && (
-              <p className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-[0.15em] mb-1">
-                {guestCount} of 7 guest messages used
-              </p>
+              <>
+                <p className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-[0.15em]">
+                  {guestCount} of {GUEST_LIMIT} guest messages used
+                </p>
+                {guestCount < GUEST_LIMIT && (
+                  <div className="w-48 h-1 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#D4AF37] rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min((guestCount / GUEST_LIMIT) * 100, 100)}%` }}
+                    />
+                  </div>
+                )}
+                {guestRemaining <= 2 && guestCount < GUEST_LIMIT && (
+                  <Link href="/churchgpt/upgrade" className="text-[10px] font-bold text-[#0f1f3d] hover:underline underline-offset-2 flex items-center gap-1">
+                    Running low — sign up free for 50 msgs/month <ArrowUpRight className="w-3 h-3" />
+                  </Link>
+                )}
+              </>
             )}
             <p className="text-center text-[10px] text-slate-400 font-medium tracking-wide">
               ChurchGPT can make mistakes · <span className="font-bold text-[#0f1f3d]/40 italic">Ephesians 4:15</span>
@@ -98,6 +128,67 @@ export function PublicChurchGPTChat() {
           </div>
         </div>
       </footer>
+
+      {/* Upgrade modal */}
+      {upgradeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative animate-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setUpgradeModal(null)}
+              className="absolute top-4 right-4 p-1 text-slate-400 hover:text-slate-700 rounded-lg"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-center mb-6">
+              <div className="text-3xl mb-3">✟</div>
+              <h2 className="text-xl font-bold text-[#0f1f3d] mb-2">
+                {upgradeModal.reason === 'guest_limit_reached'
+                  ? 'Guest limit reached'
+                  : upgradeModal.reason === 'user_quota_exceeded'
+                  ? 'Monthly limit reached'
+                  : 'Church plan limit reached'}
+              </h2>
+              <p className="text-sm text-slate-600 leading-relaxed">{upgradeModal.message}</p>
+            </div>
+
+            <div className="space-y-3">
+              {upgradeModal.reason === 'guest_limit_reached' && (
+                <>
+                  <Link
+                    href="/churchgpt/signup"
+                    className="block w-full py-3 px-4 bg-[#0f1f3d] text-white text-sm font-bold text-center rounded-xl hover:bg-[#1b3a6b] transition-colors"
+                  >
+                    Sign up free — 50 messages/month
+                  </Link>
+                  <Link
+                    href="/churchgpt/upgrade"
+                    className="block w-full py-3 px-4 border border-[#D4AF37] text-[#0f1f3d] text-sm font-bold text-center rounded-xl hover:bg-[#D4AF37]/10 transition-colors"
+                  >
+                    See all plans <ArrowUpRight className="inline w-4 h-4" />
+                  </Link>
+                </>
+              )}
+              {upgradeModal.reason === 'user_quota_exceeded' && (
+                <Link
+                  href="/churchgpt/upgrade"
+                  className="block w-full py-3 px-4 bg-[#D4AF37] text-[#0f1f3d] text-sm font-bold text-center rounded-xl hover:bg-[#c9a227] transition-colors"
+                >
+                  Upgrade to Lite — $29/month, 500 messages
+                </Link>
+              )}
+              {upgradeModal.reason === 'org_quota_exceeded' && (
+                <Link
+                  href="/churchgpt/upgrade"
+                  className="block w-full py-3 px-4 bg-[#0f1f3d] text-white text-sm font-bold text-center rounded-xl hover:bg-[#1b3a6b] transition-colors"
+                >
+                  View upgrade options
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
