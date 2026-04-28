@@ -2,103 +2,75 @@
 
 import { ChurchGPTMessage as IChurchGPTMessage } from "@/hooks/useChurchGPT"
 import ReactMarkdown from 'react-markdown'
-import { Card } from "@/components/ui/card"
-import { Copy, RefreshCw } from "lucide-react"
+import { Copy } from "lucide-react"
+
+function safeContent(raw: string): string {
+  if (!raw) return ''
+  if (raw.trimStart().startsWith('{')) {
+    try {
+      const parsed = JSON.parse(raw)
+      if (typeof parsed?.reply === 'string') return parsed.reply
+    } catch {}
+  }
+  return raw
+}
 
 export function ChurchGPTMessage({ message }: { message: IChurchGPTMessage }) {
   const isUser = message.role === 'user'
-  
-  const isStreaming = message.content === '' && !isUser
-
-  // Detect Scripture: Book Chapter:Verse, Book Chapter:Verse-Verse
-  const scriptureRegex = /([1-3]?\s?[A-Za-z]+)\s+(\d+):(\d+)(?:-(\d+))?/g;
+  const content = safeContent(message.content)
+  const isThinking = content === '' && !isUser
 
   return (
-    <div className={`flex w-full mb-8 group ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className={`flex max-w-[85%] relative ${isUser ? 'flex-row-reverse' : 'flex-row items-start'}`}>
-        {!isUser && (
-          <div className="flex-shrink-0 mr-4 mt-2">
-            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[#1b3a6b] text-[#f5a623] shadow-md border border-white/10">
-              <span className="text-xl font-bold">✟</span>
-            </div>
+    <div className={`cgpt-msg-row ${isUser ? 'cgpt-user' : 'cgpt-assistant'}`}>
+      {/* Label */}
+      <div className="cgpt-msg-label">
+        {!isUser && <span className="cgpt-dot" />}
+        <span>{isUser ? 'You' : 'ChurchGPT'}</span>
+      </div>
+
+      {/* Bubble */}
+      <div className={`cgpt-msg-bubble ${isUser ? 'cgpt-bubble-user' : 'cgpt-bubble-assistant'}`}>
+        {message.attachment && (
+          <div className="cgpt-attachment">
+            {message.attachment.mimeType.startsWith('image/') ? (
+              <img
+                src={`data:${message.attachment.mimeType};base64,${message.attachment.data}`}
+                alt="Attachment"
+                className="cgpt-attachment-img"
+              />
+            ) : (
+              <div className="cgpt-attachment-file">
+                📄 {message.attachment.name || 'File'}
+              </div>
+            )}
           </div>
         )}
-        
-        <div className="flex flex-col space-y-2">
-          <Card className={`px-5 py-4 ${
-            isUser 
-              ? 'bg-[#1b3a6b] text-white border-transparent shadow-md' 
-              : 'bg-white text-gray-800 border-[#ebebeb] shadow-sm'
-          }`} style={{ borderRadius: isUser ? "18px 18px 4px 18px" : "4px 18px 18px 18px" }}>
-            
-            {message.attachment && (
-              <div className="mb-3 overflow-hidden rounded-lg border border-white/10">
-                {message.attachment.mimeType.startsWith('image/') ? (
-                  <img 
-                    src={`data:${message.attachment.mimeType};base64,${message.attachment.data}`} 
-                    alt="Attachment" 
-                    className="max-w-full h-auto object-contain max-h-[300px]"
-                  />
-                ) : (
-                  <div className="bg-gray-100 p-3 flex items-center space-x-2">
-                    <span className="text-xs font-bold text-[#1b3a6b]">📄 {message.attachment.name || 'File'}</span>
-                  </div>
-                )}
-              </div>
-            )}
 
-            {message.content === '' && !isUser ? (
-              <div className="flex items-center space-x-1.5 h-6">
-                <div className="w-1.5 h-4 bg-[#f5a623] animate-pulse" />
-              </div>
-            ) : (
-              <div className={`prose prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-[#f5f5f5] prose-pre:text-gray-800 prose-pre:font-mono prose-pre:p-4 prose-pre:rounded-xl prose-strong:text-inherit font-sans text-[15px]`}>
-                <ReactMarkdown
-                  components={{
-                    p: ({ children }) => {
-                      if (typeof children === 'string') {
-                        // Check for scripture references and style them if possible via simple manipulation, 
-                        // though normally we'd do a custom renderer for full control.
-                        return <p>{children}</p>
-                      }
-                      return <p>{children}</p>
-                    },
-                    code: ({ className, children }) => {
-                      const isInline = !className?.includes('language-')
-                      return isInline 
-                        ? <code className="bg-gray-100 px-1 rounded text-[#1b3a6b]">{children}</code>
-                        : <pre className="bg-[#f5f5f5] p-4 rounded-xl overflow-x-auto my-4 text-xs font-mono shadow-inner border border-gray-100">{children}</pre>
-                    }
-                  }}
-                >
-                  {message.content}
-                </ReactMarkdown>
-                {/* Visual Streaming Cursor */}
-                {isStreaming && (
-                   <span className="ml-1 inline-block w-1.5 h-4 bg-[#f5a623] animate-pulse align-middle" />
-                )}
-              </div>
-            )}
-          </Card>
-
-          {/* Message Actions */}
-          {!isUser && message.content !== '' && (
-            <div className="flex items-center space-x-3 mt-1 opacity-0 group-hover:opacity-100 transition-opacity ml-1">
-              <button 
-                onClick={() => navigator.clipboard.writeText(message.content)}
-                className="flex items-center space-x-1.5 text-[10px] font-bold text-gray-400 hover:text-[#1b3a6b] transition-colors bg-gray-100/50 px-2 py-1 rounded"
-              >
-                <Copy className="w-3 h-3" />
-                <span>COPY</span>
-              </button>
-              <button className="flex items-center space-x-1.5 text-[10px] font-bold text-gray-400 hover:text-[#1b3a6b] transition-colors bg-gray-100/50 px-2 py-1 rounded">
-                <RefreshCw className="w-3 h-3" />
-                <span>REGENERATE</span>
-              </button>
-            </div>
-          )}
-        </div>
+        {isThinking ? (
+          <div className="cgpt-typing">
+            <span className="cgpt-typing-dot" />
+            <span className="cgpt-typing-dot" />
+            <span className="cgpt-typing-dot" />
+          </div>
+        ) : (
+          <div className="cgpt-prose">
+            <ReactMarkdown>{content}</ReactMarkdown>
+          </div>
+        )}
       </div>
+
+      {/* Actions */}
+      {!isUser && content !== '' && (
+        <div className="cgpt-msg-actions">
+          <button
+            onClick={() => navigator.clipboard.writeText(content)}
+            className="cgpt-action-btn"
+            title="Copy"
+          >
+            <Copy size={13} />
+          </button>
+        </div>
+      )}
     </div>
   )
 }

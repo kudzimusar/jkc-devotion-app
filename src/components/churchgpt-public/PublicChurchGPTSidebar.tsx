@@ -1,19 +1,12 @@
 'use client'
 
 import { useState, useMemo } from "react"
-import { 
-  Plus, 
-  Search, 
-  MessageSquare, 
-  Trash2, 
-  LogOut, 
-  ChevronLeft, 
-  ChevronRight
-} from "lucide-react"
+import { Plus, Trash2, Settings, User, LogOut } from "lucide-react"
 import { ChurchGPTConversation } from "@/hooks/useChurchGPT"
 import { isToday, isYesterday, isThisWeek } from "date-fns"
 import { useRouter } from "next/navigation"
 import { createBrowserClient } from "@supabase/ssr"
+import Link from "next/link"
 
 interface PublicChurchGPTSidebarProps {
   conversations: ChurchGPTConversation[]
@@ -34,7 +27,6 @@ export function PublicChurchGPTSidebar({
   isLoading = false,
   user
 }: PublicChurchGPTSidebarProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const router = useRouter()
   const supabase = createBrowserClient(
@@ -47,170 +39,92 @@ export function PublicChurchGPTSidebar({
     router.push('/churchgpt')
   }
 
+  const initials = (user?.email ?? 'U').slice(0, 2).toUpperCase()
+
   const groupedConversations = useMemo(() => {
-    const filtered = conversations.filter(c => 
+    const filtered = conversations.filter(c =>
       c.title?.toLowerCase().includes(searchQuery.toLowerCase())
     )
-
     const groups: Record<string, ChurchGPTConversation[]> = {
-      Today: [],
-      Yesterday: [],
-      "This Week": [],
-      Older: []
+      Today: [], Yesterday: [], 'This Week': [], Older: []
     }
-
     filtered.forEach(convo => {
-      const date = new Date(convo.updated_at)
-      if (isToday(date)) groups.Today.push(convo)
-      else if (isYesterday(date)) groups.Yesterday.push(convo)
-      else if (isThisWeek(date)) groups["This Week"].push(convo)
+      const d = new Date(convo.updated_at)
+      if (isToday(d)) groups.Today.push(convo)
+      else if (isYesterday(d)) groups.Yesterday.push(convo)
+      else if (isThisWeek(d)) groups['This Week'].push(convo)
       else groups.Older.push(convo)
     })
-
-    return Object.entries(groups).filter(([_, items]) => items.length > 0)
+    return Object.entries(groups).filter(([, items]) => items.length > 0)
   }, [conversations, searchQuery])
 
-  if (isCollapsed) {
-    return (
-      <aside className="w-16 flex-shrink-0 bg-[#0f1f3d] flex flex-col items-center py-4 transition-all duration-300 border-r border-white/5">
-        <button 
-          onClick={() => setIsCollapsed(false)}
-          className="p-2 text-white/60 hover:text-white mb-6"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </button>
-        <div className="text-[#D4AF37] text-xl font-bold mb-8">✟</div>
-        <button 
-          onClick={onNewChat}
-          className="w-10 h-10 flex items-center justify-center bg-[#1b3a6b] text-white rounded-lg hover:bg-[#2a4d8a] mb-4"
-        >
-          <Plus className="w-5 h-5 text-[#D4AF37]" />
-        </button>
-        <div className="flex-1 overflow-y-auto w-full flex flex-col items-center space-y-4">
-          {conversations.slice(0, 5).map(c => (
-            <div 
-              key={c.id}
-              onClick={() => onSelect(c.id)}
-              className={`w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer transition-all ${
-                activeId === c.id ? "bg-[#D4AF37]/20 border-l-2 border-[#D4AF37]" : "hover:bg-white/5"
-              }`}
-            >
-              <MessageSquare className="w-4 h-4 text-white/60" />
-            </div>
-          ))}
-        </div>
-        <div className="mt-auto pt-4 border-t border-white/5 w-full flex flex-col items-center space-y-4">
-          <LogOut 
-            className="w-5 h-5 text-white/40 hover:text-white/80 cursor-pointer" 
-            onClick={handleSignOut}
-          />
-          <div className="w-8 h-8 rounded-full bg-[#1b3a6b] flex items-center justify-center text-[10px] font-bold text-white border border-white/10 uppercase">
-            {user?.email?.charAt(0) || "U"}
-          </div>
-        </div>
-      </aside>
-    )
-  }
-
   return (
-    <aside className="w-[280px] flex-shrink-0 bg-[#0f1f3d] flex flex-col h-full overflow-hidden transition-all duration-300">
-      <div className="p-4 flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <span className="text-[#D4AF37] text-xl font-bold">✟</span>
-          <h1 className="text-white text-lg tracking-tight font-serif" style={{ fontFamily: 'Georgia, serif' }}>ChurchGPT</h1>
-        </div>
-        <button 
-          onClick={() => setIsCollapsed(true)}
-          className="p-1.5 text-white/40 hover:text-white transition-colors"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
+    <aside className="cgpt-sidebar">
+      {/* Logo */}
+      <div className="cgpt-sidebar-logo">
+        <div className="cgpt-logo-mark">✝</div>
+        <span className="cgpt-logo-text">ChurchGPT</span>
       </div>
 
-      <div className="px-4 mb-4">
+      {/* New conversation */}
+      <div className="cgpt-sidebar-section">
         <button
           onClick={onNewChat}
           disabled={isLoading}
-          className="w-full h-11 flex items-center justify-center space-x-2 bg-[#1b3a6b] hover:bg-[#23457a] text-white rounded-lg transition-all border border-white/5 shadow-lg group"
+          className="cgpt-new-btn"
         >
-          <Plus className="w-4 h-4 text-[#D4AF37] group-hover:scale-110 transition-transform" />
-          <span className="text-sm font-medium">New Chat</span>
+          <Plus size={14} strokeWidth={2} />
+          New conversation
         </button>
       </div>
 
-      <div className="px-4 mb-6">
-        <div className="relative group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 group-focus-within:text-[#D4AF37] transition-colors" />
-          <input
-            type="text"
-            placeholder="Search chats..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-9 bg-white/5 border border-white/10 rounded-md pl-9 pr-3 text-xs text-white placeholder-white/30 focus:outline-none focus:border-[#D4AF37]/50 focus:bg-white/10 transition-all font-sans"
-          />
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-2 space-y-6 scrollbar-hide pb-4">
+      {/* Conversation list */}
+      <div className="cgpt-conv-scroll">
         {groupedConversations.map(([group, items]) => (
-          <div key={group} className="space-y-1.5">
-            <h3 className="px-3 text-[10px] font-bold text-white/30 uppercase tracking-widest leading-none mb-2">
-              {group}
-            </h3>
-            {items.map((convo) => (
+          <div key={group} className="cgpt-conv-group">
+            <div className="cgpt-conv-group-label">{group.toUpperCase()}</div>
+            {items.map(convo => (
               <div
                 key={convo.id}
-                className={`group relative flex items-center p-2.5 rounded-lg cursor-pointer transition-all ${
-                  activeId === convo.id
-                    ? "bg-[#D4AF37]/15 border-l-[3px] border-[#D4AF37] shadow-inner"
-                    : "hover:bg-white/5 border-l-[3px] border-transparent"
-                }`}
+                className={`cgpt-conv-item ${activeId === convo.id ? 'active' : ''}`}
                 onClick={() => onSelect(convo.id)}
               >
-                <MessageSquare className={`w-3.5 h-3.5 mr-3 flex-shrink-0 ${
-                  activeId === convo.id ? "text-[#D4AF37]" : "text-white/40"
-                }`} />
-                
-                <span className={`text-[13px] truncate flex-1 leading-tight font-sans ${
-                  activeId === convo.id ? "text-[#e8e8e8] font-medium" : "text-white/60"
-                }`}>
-                  {convo.title || "New Conversation"}
-                </span>
-
+                <span className="cgpt-conv-title">{convo.title || 'New Conversation'}</span>
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onDelete(convo.id)
-                  }}
-                  className="opacity-0 group-hover:opacity-100 p-1 text-white/30 hover:text-red-400 transition-all"
+                  onClick={e => { e.stopPropagation(); onDelete(convo.id) }}
+                  className="cgpt-conv-delete"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 size={12} />
                 </button>
               </div>
             ))}
           </div>
         ))}
+        {conversations.length === 0 && (
+          <div className="cgpt-conv-empty">No conversations yet</div>
+        )}
       </div>
 
-      <div className="p-4 bg-black/20 border-t border-white/5 flex items-center justify-between">
-        <div className="flex items-center space-x-3 overflow-hidden">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1b3a6b] to-[#2a4d8a] flex items-center justify-center text-white text-[10px] font-bold border border-white/20 shrink-0">
-            {user?.email?.charAt(0) || "U"}
+      {/* Footer nav */}
+      <div className="cgpt-sidebar-footer">
+        <Link href="/churchgpt/settings" className="cgpt-footer-item">
+          <Settings size={15} strokeWidth={1.8} />
+          Settings
+        </Link>
+        <Link href="/churchgpt/account" className="cgpt-footer-item">
+          <User size={15} strokeWidth={1.8} />
+          Account
+        </Link>
+        <div className="cgpt-sidebar-user">
+          <div className="cgpt-user-avatar">{initials}</div>
+          <div className="cgpt-user-info">
+            <span className="cgpt-user-email">{user?.email?.split('@')[0] ?? 'User'}</span>
+            <span className="cgpt-user-sub">ChurchGPT</span>
           </div>
-          <div className="min-w-0">
-            <p className="text-xs font-bold text-[#e8e8e8] truncate">
-              {user?.email?.split('@')[0] || "User"}
-            </p>
-            <p className="text-[10px] text-white/40 truncate">ChurchGPT Companion</p>
-          </div>
+          <button onClick={handleSignOut} className="cgpt-signout" title="Sign out">
+            <LogOut size={14} strokeWidth={1.8} />
+          </button>
         </div>
-        <button 
-          className="p-1.5 text-white/30 hover:text-white transition-colors"
-          onClick={handleSignOut}
-          title="Sign Out"
-        >
-          <LogOut className="w-4 h-4" />
-        </button>
       </div>
     </aside>
   )

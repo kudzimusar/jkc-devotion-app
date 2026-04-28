@@ -7,17 +7,35 @@ import { useChurchGPT } from "@/hooks/useChurchGPT"
 import { ChurchGPTMessage } from "@/components/churchgpt/ChurchGPTMessage"
 import { ChurchGPTInput } from "@/components/churchgpt/ChurchGPTInput"
 import { PublicChurchGPTSidebar } from "@/components/churchgpt-public/PublicChurchGPTSidebar"
-import { Menu, Search, MoreVertical, Edit2, Loader2, Trash2, Plus } from "lucide-react"
+import { Loader2, PanelLeft, Share2, X } from "lucide-react"
+import Link from "next/link"
+
+const SESSION_MODES = [
+  { id: 'general',     label: 'Shepherd',    desc: 'General ministry & pastoral guidance',    color: 'oklch(72% 0.14 65)' },
+  { id: 'devotional',  label: 'Devotional',  desc: 'Scripture reflections & quiet time',      color: 'oklch(72% 0.14 200)' },
+  { id: 'prayer',      label: 'Prayer',      desc: 'Guided intercession & prayer writing',    color: 'oklch(72% 0.14 130)' },
+  { id: 'bible-study', label: 'Bible Study', desc: 'Exegesis & deep Scripture study',         color: 'oklch(72% 0.14 290)' },
+  { id: 'apologetics', label: 'Apologetics', desc: 'Defending the faith intellectually',      color: 'oklch(72% 0.14 10)' },
+  { id: 'pastoral',    label: 'Pastoral',    desc: 'Compassionate care & support',            color: 'oklch(72% 0.14 65)' },
+  { id: 'admin',       label: 'Admin',       desc: 'Church operations & planning',            color: 'oklch(72% 0.14 180)' },
+]
+
+const SUGGESTIONS = [
+  { title: "Plan Sunday's sermon",     body: "Get an outline, scripture references, and talking points" },
+  { title: "Study a Bible passage",    body: "Dive deep into context, meaning and application" },
+  { title: "Write a prayer",           body: "Craft a prayer for your congregation or a personal need" },
+  { title: "Apologetics question",     body: "Get help defending the faith with clarity and grace" },
+]
 
 export default function ChurchGPTAuthenticatedChat() {
   const router = useRouter()
   const [sessionType, setSessionType] = useState('general')
   const [user, setUser] = useState<any>(null)
   const [authLoading, setAuthLoading] = useState(true)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
-  const [isEditingTitle, setIsEditingTitle] = useState(false)
-  const [editedTitle, setEditedTitle] = useState("New Chat")
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [modelDropdownOpen, setModelDropdownOpen] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,241 +43,168 @@ export default function ChurchGPTAuthenticatedChat() {
   )
 
   useEffect(() => {
-    async function checkAuth() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/churchgpt/login')
-        return
-      }
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) { router.push('/churchgpt/login'); return }
       setUser(user)
       setAuthLoading(false)
-    }
-    checkAuth()
+    })
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) setSidebarOpen(false)
+  }, [])
 
-    if (window.innerWidth < 1024) {
-      setIsSidebarOpen(false)
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setModelDropdownOpen(false)
+      }
     }
-  }, [router, supabase])
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   const {
-    messages,
-    isLoading,
-    error,
-    sendMessage,
-    clearConversation,
-    conversations,
-    conversationId,
-    currentConversation,
-    loadMessages,
-    deleteConversation,
-    renameConversation,
-    quotaState,
-    upgradeModal,
-    setUpgradeModal,
-    selectedModel,
-    setSelectedModel,
-    availableModels,
-    isPro,
+    messages, isLoading, error, sendMessage, clearConversation,
+    conversations, conversationId, loadMessages, deleteConversation,
+    quotaState, upgradeModal, setUpgradeModal, selectedModel, setSelectedModel,
+    availableModels, isPro,
   } = useChurchGPT(sessionType)
-
-  useEffect(() => {
-    if (currentConversation) {
-      setEditedTitle(currentConversation.title || "New Chat")
-    }
-  }, [currentConversation])
-
-  const handleRename = async () => {
-    if (conversationId && editedTitle.trim()) {
-      await renameConversation(conversationId, editedTitle)
-      setIsEditingTitle(false)
-    }
-  }
-
-  const handleDelete = async () => {
-    if (conversationId && window.confirm("Are you sure you want to delete this conversation?")) {
-      await deleteConversation(conversationId)
-    }
-  }
-
-  useEffect(() => {
-    if (currentConversation?.session_type) {
-      setSessionType(currentConversation.session_type)
-    }
-  }, [currentConversation])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  const activeMode = SESSION_MODES.find(m => m.id === sessionType) ?? SESSION_MODES[0]
+
   if (authLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#0f1f3d]">
-        <Loader2 className="w-12 h-12 animate-spin text-[#D4AF37]" />
+      <div className="cgpt-loading-screen">
+        <Loader2 className="cgpt-loader" />
       </div>
     )
   }
 
+  const initials = (user?.email ?? 'U').slice(0, 2).toUpperCase()
+
   return (
-    <div className="relative flex h-screen overflow-hidden bg-[#fafafa]">
-      {/* Sidebar - Contained Drawer on Mobile, Flex Child on Desktop */}
-      <div className={`
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
-        lg:translate-x-0 absolute lg:relative z-40 h-full 
-        transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none
-      `}>
-        <PublicChurchGPTSidebar 
+    <div className="cgpt-shell">
+      {/* ── Sidebar ── */}
+      <div className={`cgpt-sidebar-wrap ${sidebarOpen ? '' : 'cgpt-sidebar-hidden'}`}>
+        <PublicChurchGPTSidebar
           conversations={conversations}
           activeId={conversationId}
-          onSelect={(id) => {
-            loadMessages(id)
-            if (window.innerWidth < 1024) setIsSidebarOpen(false)
-          }}
+          onSelect={(id) => { loadMessages(id); if (window.innerWidth < 1024) setSidebarOpen(false) }}
           onDelete={deleteConversation}
-          onNewChat={() => {
-            clearConversation()
-            if (window.innerWidth < 1024) setIsSidebarOpen(false)
-          }}
+          onNewChat={() => { clearConversation(); if (window.innerWidth < 1024) setSidebarOpen(false) }}
           isLoading={isLoading}
           user={user}
         />
-        {isSidebarOpen && (
-          <div 
-            className="fixed inset-0 bg-black/40 z-[-1] lg:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          />
-        )}
       </div>
+      {sidebarOpen && (
+        <div className="cgpt-sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+      )}
 
-      {/* Main Container */}
-      <div className="flex-1 flex flex-col h-full min-w-0 bg-[#fafafa]">
-        <header className="sticky top-0 z-10 flex items-center justify-between px-6 py-3 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm shrink-0">
-          <div className="flex items-center space-x-4 min-w-0">
-            <button 
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-all"
-            >
-              <Menu className="w-5 h-5 text-gray-500" />
-            </button>
-            <div className="flex items-center space-x-2 truncate">
-              {isEditingTitle && conversationId ? (
-                <input
-                  type="text"
-                  value={editedTitle}
-                  onChange={(e) => setEditedTitle(e.target.value)}
-                  onBlur={handleRename}
-                  onKeyDown={(e) => e.key === 'Enter' && handleRename()}
-                  autoFocus
-                  className="text-sm font-bold text-[#0f1f3d] bg-gray-50 border-none focus:ring-0 rounded p-1 w-full max-w-[200px]"
-                />
-              ) : (
-                <div 
-                  className={`flex items-center space-x-2 ${conversationId ? 'cursor-pointer group' : ''}`}
-                  onClick={() => conversationId && setIsEditingTitle(true)}
-                >
-                  <h1 className="text-sm font-bold text-[#0f1f3d] leading-tight truncate">
-                    {currentConversation?.title || "New Chat"}
-                  </h1>
-                  {conversationId && <Edit2 className="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />}
-                </div>
-              )}
-              <span className="text-xs font-medium text-gray-300">•</span>
-              <p className="text-[11px] text-[#D4AF37] font-bold uppercase tracking-widest">
-                {sessionType}
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <button 
-              onClick={() => {
-                clearConversation()
-              }}
-              className="p-2 text-gray-400 hover:text-[#1b3a6b] hover:bg-gray-100 rounded-lg transition-all"
-              title="New Chat"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-            <button 
-              className="p-2 text-gray-400 hover:text-[#1b3a6b] hover:bg-gray-100 rounded-lg transition-all hidden sm:block"
-              onClick={() => setIsSidebarOpen(true)}
-            >
-              <Search className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={handleDelete}
-              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-              title="Delete conversation"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-            <div className="relative group/menu">
-              <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all">
-                <MoreVertical className="w-4 h-4" />
-              </button>
-              <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-[60] py-1 overflow-hidden">
-                <button 
-                  onClick={() => setIsEditingTitle(true)}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-600 hover:bg-gray-50 flex items-center space-x-2"
-                >
-                  <Edit2 className="w-3.5 h-3.5" />
-                  <span>Rename Chat</span>
-                </button>
-                <button 
-                  onClick={handleDelete}
-                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>Delete Chat</span>
-                </button>
-                <div className="h-px bg-gray-100 my-1" />
-                <button 
-                  onClick={() => {
-                    clearConversation()
-                    setIsSidebarOpen(false)
-                  }}
-                  className="w-full px-4 py-2 text-left text-sm text-[#1b3a6b] hover:bg-gray-50 font-medium"
-                >
-                  New Chat
-                </button>
-              </div>
-            </div>
-          </div>
-        </header>
+      {/* ── Main ── */}
+      <div className="cgpt-main">
+        {/* Topbar */}
+        <div className="cgpt-topbar">
+          <button className="cgpt-icon-btn" onClick={() => setSidebarOpen(v => !v)} title="Toggle sidebar">
+            <PanelLeft size={16} />
+          </button>
 
-        <main className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar">
-          <div className="max-w-3xl mx-auto space-y-6">
-            {messages.length === 0 ? (
-               <div className="h-full flex flex-col items-center justify-center pt-20 text-center space-y-4">
-                  <span className="text-4xl">✟</span>
-                  <p className="text-slate-400 font-medium">How can I help you today?</p>
-               </div>
-            ) : (
-              <div className="space-y-6">
-                {messages.map(msg => (
-                  <ChurchGPTMessage key={msg.id} message={msg} />
+          {/* Model selector */}
+          <div className="cgpt-model-selector-wrap" ref={dropdownRef}>
+            <button
+              className="cgpt-model-selector"
+              onClick={() => setModelDropdownOpen(v => !v)}
+            >
+              <span className="cgpt-model-dot" style={{ background: activeMode.color }} />
+              <span>ChurchGPT · {activeMode.label}</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+
+            {modelDropdownOpen && (
+              <div className="cgpt-model-dropdown">
+                {SESSION_MODES.map(mode => (
+                  <button
+                    key={mode.id}
+                    className={`cgpt-model-option ${sessionType === mode.id ? 'selected' : ''}`}
+                    onClick={() => { setSessionType(mode.id); setModelDropdownOpen(false) }}
+                  >
+                    <span className="cgpt-model-option-dot" style={{ background: mode.color }} />
+                    <div className="cgpt-model-option-info">
+                      <span className="cgpt-model-option-name">{mode.label}</span>
+                      <span className="cgpt-model-option-desc">{mode.desc}</span>
+                    </div>
+                    {sessionType === mode.id && (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                  </button>
                 ))}
               </div>
             )}
-            {error && (
-              <div className="mt-8 p-4 text-xs font-medium text-red-700 bg-red-100/50 border border-red-200 rounded-xl text-center shadow-sm max-w-lg mx-auto">
-                {error}
-              </div>
-            )}
-            <div ref={bottomRef} className="h-10 shrink-0" />
           </div>
-        </main>
 
-        <footer className="bg-gradient-to-t from-[#fafafa] via-[#fafafa]/95 to-transparent pt-4 pb-4 px-4 shrink-0">
-          <div className="max-w-3xl mx-auto flex flex-col items-center gap-2">
-            {/* Pro model selector */}
+          <div className="cgpt-topbar-right">
+            <button className="cgpt-icon-btn" title="Share">
+              <Share2 size={15} />
+            </button>
+            <Link href="/churchgpt/account" className="cgpt-avatar" title="Account">
+              {initials}
+            </Link>
+          </div>
+        </div>
+
+        {/* Messages area */}
+        <div className="cgpt-messages-wrap">
+          <div className="cgpt-messages-inner">
+            {messages.length === 0 ? (
+              <div className="cgpt-empty-state">
+                <h1 className="cgpt-empty-title">
+                  How can I <em>serve</em><br />you today?
+                </h1>
+                <p className="cgpt-empty-sub">
+                  Ask me anything about Scripture, ministry, your congregation, or your walk with God.
+                </p>
+                <div className="cgpt-suggestions">
+                  {SUGGESTIONS.map(s => (
+                    <button
+                      key={s.title}
+                      className="cgpt-suggestion"
+                      onClick={() => sendMessage(s.title, sessionType)}
+                    >
+                      <strong>{s.title}</strong>
+                      {s.body}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              messages.map(msg => <ChurchGPTMessage key={msg.id} message={msg} />)
+            )}
+
+            {error && (
+              <div className="cgpt-error-banner">{error}</div>
+            )}
+            <div ref={bottomRef} />
+          </div>
+        </div>
+
+        {/* Input area */}
+        <div className="cgpt-input-area">
+          <div className="cgpt-input-inner">
+            {/* Pro model override */}
             {isPro && availableModels.length > 0 && (
-              <div className="self-end">
+              <div className="cgpt-model-override">
                 <select
                   value={selectedModel ?? ''}
-                  onChange={(e) => setSelectedModel(e.target.value || null)}
-                  className="text-xs border border-gray-200 rounded-lg px-2 py-1 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#0f1f3d]"
+                  onChange={e => setSelectedModel(e.target.value || null)}
+                  className="cgpt-model-override-select"
                 >
-                  <option value="">Auto (default model)</option>
+                  <option value="">Auto model</option>
                   {availableModels.map((m: any) => (
                     <option key={m.model_id} value={m.model_id}>{m.display_name}</option>
                   ))}
@@ -274,51 +219,42 @@ export default function ChurchGPTAuthenticatedChat() {
               setSessionType={setSessionType}
             />
 
-            <div className="flex flex-col items-center gap-1 w-full">
-              {/* Quota bar for non-unlimited plans */}
+            <div className="cgpt-input-footer">
               {quotaState && quotaState.limit > 0 && quotaState.limit < 999999 && (
-                <div className="flex items-center gap-2 text-[10px] text-gray-400">
-                  <div className="w-24 h-1 bg-gray-100 rounded-full overflow-hidden">
+                <div className="cgpt-quota-row">
+                  <div className="cgpt-quota-bar">
                     <div
-                      className="h-full bg-[#D4AF37] rounded-full"
+                      className="cgpt-quota-fill"
                       style={{ width: `${Math.min((quotaState.used / quotaState.limit) * 100, 100)}%` }}
                     />
                   </div>
                   <span>{quotaState.remaining} messages remaining</span>
                 </div>
               )}
-              <p className="text-center text-[10px] text-gray-400 font-medium tracking-wide">
-                ChurchGPT can make mistakes · <span className="font-bold text-[#0f1f3d]/50 italic">Ephesians 4:15</span>
+              <p className="cgpt-footer-hint">
+                ChurchGPT · {activeMode.label} may make mistakes. Always verify important information.
               </p>
             </div>
           </div>
-        </footer>
-
-        {/* Upgrade modal */}
-        {upgradeModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative animate-in zoom-in-95 duration-200">
-              <button
-                onClick={() => setUpgradeModal(null)}
-                className="absolute top-4 right-4 p-1 text-slate-400 hover:text-slate-700 rounded-lg"
-              >
-                ✕
-              </button>
-              <div className="text-center mb-6">
-                <div className="text-3xl mb-3">✟</div>
-                <h2 className="text-xl font-bold text-[#0f1f3d] mb-2">Monthly limit reached</h2>
-                <p className="text-sm text-slate-600 leading-relaxed">{upgradeModal.message}</p>
-              </div>
-              <a
-                href="/churchgpt/upgrade"
-                className="block w-full py-3 px-4 bg-[#D4AF37] text-[#0f1f3d] text-sm font-bold text-center rounded-xl hover:bg-[#c9a227] transition-colors"
-              >
-                View upgrade options
-              </a>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
+
+      {/* Upgrade modal */}
+      {upgradeModal && (
+        <div className="cgpt-modal-overlay" onClick={() => setUpgradeModal(null)}>
+          <div className="cgpt-modal" onClick={e => e.stopPropagation()}>
+            <button className="cgpt-modal-close" onClick={() => setUpgradeModal(null)}>
+              <X size={16} />
+            </button>
+            <div className="cgpt-modal-icon">✝</div>
+            <h2 className="cgpt-modal-title">Monthly limit reached</h2>
+            <p className="cgpt-modal-body">{upgradeModal.message}</p>
+            <Link href="/churchgpt/upgrade" className="cgpt-modal-cta">
+              View upgrade options
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

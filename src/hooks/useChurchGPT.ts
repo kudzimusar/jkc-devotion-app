@@ -344,7 +344,13 @@ export function useChurchGPT(
       if (!res.ok) throw new Error(`ChurchGPT request failed: ${res.status}`)
 
       const data = await res.json()
-      const reply: string = data.reply ?? ''
+      // Guard: if reply field is missing but the response object itself got
+      // stringified and stored as content (old streaming bundle receiving new JSON),
+      // extract the reply from the string.
+      let reply: string = data.reply ?? ''
+      if (!reply && typeof data === 'string') {
+        try { reply = (JSON.parse(data) as any).reply ?? '' } catch {}
+      }
 
       // Update assistant message with reply
       setMessages(prev => prev.map(m =>
