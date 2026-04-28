@@ -136,7 +136,10 @@ async function selectModel(tier: string, preference: string | null, supabase: an
 
 async function callGemini(modelId: string, messages: any[], systemPrompt: string) {
   const apiKey = Deno.env.get('GEMINI_API_KEY')
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`
+  if (!apiKey) throw new Error('GEMINI_API_KEY secret is not set on this Edge Function')
+  // Strip any 'models/' prefix — the REST URL already includes '/models/'
+  const cleanModelId = modelId.replace(/^models\//, '')
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModelId}:generateContent?key=${apiKey}`
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -159,6 +162,7 @@ async function callGemini(modelId: string, messages: any[], systemPrompt: string
 
 async function callClaude(modelId: string, messages: any[], systemPrompt: string) {
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY')
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY secret is not set on this Edge Function')
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -186,6 +190,7 @@ async function callOpenAICompat(model: any, messages: any[], systemPrompt: strin
   const apiKey = isKimi
     ? Deno.env.get('KIMI_API_KEY')
     : Deno.env.get('OPENAI_API_KEY')
+  if (!apiKey) throw new Error(`${isKimi ? 'KIMI_API_KEY' : 'OPENAI_API_KEY'} secret is not set on this Edge Function`)
   const baseUrl = isKimi
     ? 'https://api.moonshot.cn/v1'
     : 'https://api.openai.com/v1'
@@ -214,12 +219,21 @@ async function callOpenAICompat(model: any, messages: any[], systemPrompt: strin
 }
 
 async function callModel(model: any, messages: any[], systemPrompt: string) {
-  switch (model.provider) {
-    case 'google':    return callGemini(model.model_id, messages, systemPrompt)
-    case 'anthropic': return callClaude(model.model_id, messages, systemPrompt)
-    case 'openai':
-    case 'moonshot':  return callOpenAICompat(model, messages, systemPrompt)
-    default:          return callGemini('gemini-2.5-flash', messages, systemPrompt)
+  try {
+    switch (model.provider) {
+      case 'google':    return await callGemini(model.model_id, messages, systemPrompt)
+      case 'anthropic': return await callClaude(model.model_id, messages, systemPrompt)
+      case 'openai':
+      case 'moonshot':  return await callOpenAICompat(model, messages, systemPrompt)
+      default:          return await callGemini('gemini-2.5-flash', messages, systemPrompt)
+    }
+  } catch (err: any) {
+    // If a non-Gemini provider fails (e.g. missing API key), fall back to Gemini
+    if (model.provider !== 'google') {
+      console.warn(`[ChurchGPT] Provider ${model.provider} failed (${err.message}), falling back to Gemini`)
+      return callGemini('gemini-2.5-flash', messages, systemPrompt)
+    }
+    throw err
   }
 }
 
@@ -262,6 +276,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('[ChurchGPT] Request received', req.method)
+
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -269,6 +285,7 @@ serve(async (req) => {
 
     // ── 1. Parse body ────────────────────────────────────────────────────────
     const payload = await req.json()
+    console.log('[ChurchGPT] Body parsed, message length:', (payload?.message ?? payload?.messages?.[payload?.messages?.length-1]?.content ?? '').length)
     const {
       message,
       messages: legacyMessages,
@@ -298,17 +315,20 @@ serve(async (req) => {
     let detectedContext: string = bodyContext ?? 'public'
 
     if (authHeader.startsWith('Bearer ')) {
-      const token = authHeader.replace('Bearer ', '')
-      // Try to verify JWT — if it's the anon key, getUser returns null user
-      const userClient = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-        { global: { headers: { Authorization: authHeader } } }
-      )
-      const { data: { user } } = await userClient.auth.getUser()
-      if (user) {
-        userId = user.id
-        detectedContext = bodyContext ?? 'platform'
+      try {
+        const userClient = createClient(
+          Deno.env.get('SUPABASE_URL') ?? '',
+          Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+          { global: { headers: { Authorization: authHeader } } }
+        )
+        const { data: { user } } = await userClient.auth.getUser()
+        if (user) {
+          userId = user.id
+          detectedContext = bodyContext ?? 'platform'
+        }
+      } catch (authErr: any) {
+        console.warn('[ChurchGPT] auth.getUser() threw:', authErr.message)
+        // Treat as guest — continue
       }
     }
 
