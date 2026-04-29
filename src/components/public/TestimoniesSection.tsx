@@ -95,10 +95,10 @@ export default function TestimoniesSection() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-xl font-black leading-tight line-clamp-2" style={{ color: 'var(--footer-fg)' }}>
+                  <h3 className="text-xl font-black leading-tight line-clamp-2" style={{ color: 'var(--card-foreground)' }}>
                     {t.name}
                   </h3>
-                  <p className="text-sm line-clamp-3" style={{ color: 'var(--footer-muted)' }}>
+                  <p className="text-sm line-clamp-3" style={{ color: 'var(--foreground)', opacity: 0.6 }}>
                     {t.description}
                   </p>
                 </div>
