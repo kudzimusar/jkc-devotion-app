@@ -180,9 +180,9 @@ export default function ChurchGPTLandingPage() {
                       <>
                         <div
                           className="cgpt-lp-ai-text"
-                          dangerouslySetInnerHTML={{ __html: msg.content.replace(/\n/g, '<br/>') }}
+                          dangerouslySetInnerHTML={{ __html: safeContent(msg.content).replace(/\n/g, '<br/>') }}
                         />
-                        <CopyBtn text={msg.content} />
+                        <CopyBtn text={safeContent(msg.content)} />
                       </>
                     ) : (
                       <div className="cgpt-lp-typing"><span/><span/><span/></div>
@@ -260,6 +260,18 @@ export default function ChurchGPTLandingPage() {
       </section>
     </div>
   )
+}
+
+function safeContent(raw: string): string {
+  if (!raw) return ''
+  const trimmed = raw.trimStart()
+  if (trimmed.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (typeof parsed?.reply === 'string') return parsed.reply
+    } catch {}
+  }
+  return raw
 }
 
 function CopyBtn({ text }: { text: string }) {

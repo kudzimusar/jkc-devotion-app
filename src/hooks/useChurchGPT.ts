@@ -344,12 +344,17 @@ export function useChurchGPT(
       if (!res.ok) throw new Error(`ChurchGPT request failed: ${res.status}`)
 
       const data = await res.json()
-      // Guard: if reply field is missing but the response object itself got
-      // stringified and stored as content (old streaming bundle receiving new JSON),
-      // extract the reply from the string.
       let reply: string = data.reply ?? ''
+      // Guard 1: response body itself is a double-encoded JSON string
       if (!reply && typeof data === 'string') {
         try { reply = (JSON.parse(data) as any).reply ?? '' } catch {}
+      }
+      // Guard 2: reply field contains the full JSON envelope (gateway wrapping bug)
+      if (reply && reply.trimStart().startsWith('{')) {
+        try {
+          const inner = JSON.parse(reply)
+          if (typeof inner?.reply === 'string') reply = inner.reply
+        } catch {}
       }
 
       // Update assistant message with reply
