@@ -1,13 +1,16 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { createBrowserClient } from '@supabase/ssr'
 import { useChurchGPT } from '@/hooks/useChurchGPT'
 
 const MODES = ['GENERAL', 'PRAYER', 'SCRIPTURE', 'SERMON PREP', 'COUNSELLING']
 const MODES_SESSION = ['general', 'prayer', 'scripture', 'sermon', 'counselling']
 
 export default function ChurchGPTLandingPage() {
+  const router = useRouter()
   const chatRef = useRef<HTMLElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const messagesWrapRef = useRef<HTMLDivElement>(null)
@@ -15,6 +18,17 @@ export default function ChurchGPTLandingPage() {
   const [input, setInput] = useState('')
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const isDark = theme === 'dark'
+
+  // Redirect authenticated users to the full chat page (has DB persistence + sidebar)
+  useEffect(() => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) router.replace('/churchgpt/chat')
+    })
+  }, [])
 
   const sessionType = MODES_SESSION[modeIdx]
   const { messages, isLoading, sendMessage, upgradeModal } = useChurchGPT(

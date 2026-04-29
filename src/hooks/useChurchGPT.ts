@@ -132,18 +132,25 @@ export function useChurchGPT(
   const loadConversations = useCallback(async () => {
     if (isGuest) return
     try {
-      if (!resolvedOrgId) return
-      const { data, error } = await supabase
+      // ChurchGPT-only subscribers have no org_id — scope by user_id alone
+      let query = supabase
         .from('churchgpt_conversations')
         .select('*')
-        .eq('org_id', resolvedOrgId)
         .order('updated_at', { ascending: false })
+      if (resolvedOrgId) {
+        query = query.eq('org_id', resolvedOrgId)
+      } else if (resolvedUserId) {
+        query = query.eq('user_id', resolvedUserId)
+      } else {
+        return
+      }
+      const { data, error } = await query
       if (error) throw error
       setConversations(data || [])
     } catch (err) {
       console.error('Error loading conversations:', err)
     }
-  }, [resolvedOrgId, isGuest])
+  }, [resolvedOrgId, resolvedUserId, isGuest])
 
   const loadMessages = useCallback(async (convoId: string) => {
     if (isGuest || !convoId) return
@@ -216,13 +223,15 @@ export function useChurchGPT(
 
   const createConversation = async (title: string, sType: string) => {
     if (isGuest) return null
-    if (!resolvedUserId || !resolvedOrgId) {
-      console.warn('[useChurchGPT] Could not create conversation: Missing user or orgId', { user: resolvedUserId, orgId: resolvedOrgId })
+    if (!resolvedUserId) {
+      console.warn('[useChurchGPT] Could not create conversation: Missing user_id')
       return null
     }
+    const row: Record<string, any> = { user_id: resolvedUserId, title, session_type: sType }
+    if (resolvedOrgId) row.org_id = resolvedOrgId
     const { data, error } = await supabase
       .from('churchgpt_conversations')
-      .insert({ user_id: resolvedUserId, org_id: resolvedOrgId, title, session_type: sType })
+      .insert(row)
       .select()
       .single()
     if (error) {
@@ -409,8 +418,8 @@ export function useChurchGPT(
   }, [isGuest])
 
   useEffect(() => {
-    if (resolvedOrgId && !isGuest) loadConversations()
-  }, [resolvedOrgId, loadConversations, isGuest])
+    if (!isGuest && (resolvedOrgId || resolvedUserId)) loadConversations()
+  }, [resolvedOrgId, resolvedUserId, loadConversations, isGuest])
 
   useEffect(() => {
     if (isGuest && messages.length > 0) {
