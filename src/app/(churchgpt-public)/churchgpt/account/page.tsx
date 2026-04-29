@@ -4,8 +4,9 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { createBrowserClient } from "@supabase/ssr"
 import { PublicChurchGPTSidebar } from "@/components/churchgpt-public/PublicChurchGPTSidebar"
-import { PanelLeft, Loader2, CheckCircle2, AlertCircle } from "lucide-react"
+import { PanelLeft, Loader2, CheckCircle2, AlertCircle, Sun, Moon } from "lucide-react"
 import Link from "next/link"
+import { useCGPTTheme } from "@/hooks/useCGPTTheme"
 
 export default function ChurchGPTAccountPage() {
   const router = useRouter()
@@ -28,6 +29,7 @@ export default function ChurchGPTAccountPage() {
   const [newPwd, setNewPwd] = useState('')
   const [confirmPwd, setConfirmPwd] = useState('')
   const [pwdMsg, setPwdMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const { theme, toggle: toggleTheme } = useCGPTTheme()
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -42,12 +44,12 @@ export default function ChurchGPTAccountPage() {
 
       const { data: prof } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, name, role, phone, org_id, email')
         .eq('id', user.id)
         .maybeSingle()
       if (prof) {
         setProfile(prof)
-        setFullName(prof.full_name ?? prof.name ?? '')
+        setFullName(prof.name ?? '')
         setRoleTitle(prof.role ?? '')
         setPhone(prof.phone ?? '')
       }
@@ -82,7 +84,7 @@ export default function ChurchGPTAccountPage() {
     setSaveMsg(null)
     const { error } = await supabase
       .from('profiles')
-      .update({ full_name: fullName, role: roleTitle, phone })
+      .update({ name: fullName, role: roleTitle, phone })
       .eq('id', user.id)
     setSaving(false)
     setSaveMsg(error ? { ok: false, text: error.message } : { ok: true, text: 'Profile saved.' })
@@ -115,12 +117,13 @@ export default function ChurchGPTAccountPage() {
   }
 
   const initials = (fullName || user?.email || 'U').slice(0, 2).toUpperCase()
+  const displayName = fullName || user?.email?.split('@')[0] || 'User'
   const planName: string = (subscription as any)?.company_plans?.name ?? 'Starter'
 
   const tabs = ['Profile', 'Church', 'Subscription', 'Security']
 
   return (
-    <div className="cgpt-page-shell">
+    <div className={`cgpt-page-shell ${theme === 'light' ? 'cgpt-light' : ''}`}>
       <div className={`cgpt-sidebar-wrap ${sidebarOpen ? '' : 'cgpt-sidebar-hidden'}`}>
         <PublicChurchGPTSidebar
           conversations={[]}
@@ -141,6 +144,10 @@ export default function ChurchGPTAccountPage() {
             <PanelLeft size={16} />
           </button>
           <span style={{ fontSize: 14, color: 'var(--cgpt-muted)', fontFamily: 'var(--cgpt-font-sans)' }}>Account</span>
+          <div style={{ flex: 1 }} />
+          <button className="cgpt-icon-btn" onClick={toggleTheme} title="Toggle theme">
+            {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+          </button>
         </div>
 
         <div className="cgpt-page-content">
@@ -167,7 +174,7 @@ export default function ChurchGPTAccountPage() {
               <div className="cgpt-profile-card">
                 <div className="cgpt-profile-avatar">{initials}</div>
                 <div>
-                  <div className="cgpt-profile-name">{fullName || user?.email?.split('@')[0] || 'User'}</div>
+                  <div className="cgpt-profile-name">{displayName}</div>
                   <div className="cgpt-profile-role">{roleTitle || 'ChurchGPT Member'}</div>
                   {org && <div className="cgpt-profile-church">{org.name}</div>}
                 </div>
@@ -222,7 +229,7 @@ export default function ChurchGPTAccountPage() {
                   {saving ? 'Saving…' : 'Save changes'}
                 </button>
                 <button className="cgpt-btn cgpt-btn-ghost" onClick={() => {
-                  setFullName(profile?.full_name ?? profile?.name ?? '')
+                  setFullName(profile?.name ?? '')
                   setRoleTitle(profile?.role ?? '')
                   setPhone(profile?.phone ?? '')
                 }}>

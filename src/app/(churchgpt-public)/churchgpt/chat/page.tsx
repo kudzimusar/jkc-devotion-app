@@ -7,8 +7,9 @@ import { useChurchGPT } from "@/hooks/useChurchGPT"
 import { ChurchGPTMessage } from "@/components/churchgpt/ChurchGPTMessage"
 import { ChurchGPTInput } from "@/components/churchgpt/ChurchGPTInput"
 import { PublicChurchGPTSidebar } from "@/components/churchgpt-public/PublicChurchGPTSidebar"
-import { Loader2, PanelLeft, Share2, X } from "lucide-react"
+import { Loader2, PanelLeft, Share2, X, Sun, Moon } from "lucide-react"
 import Link from "next/link"
+import { useCGPTTheme } from "@/hooks/useCGPTTheme"
 
 const SESSION_MODES = [
   { id: 'general',     label: 'Shepherd',    desc: 'General ministry & pastoral guidance',    color: 'oklch(72% 0.14 65)' },
@@ -36,6 +37,7 @@ export default function ChurchGPTAuthenticatedChat() {
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const { theme, toggle: toggleTheme } = useCGPTTheme()
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -86,7 +88,7 @@ export default function ChurchGPTAuthenticatedChat() {
   const initials = (user?.email ?? 'U').slice(0, 2).toUpperCase()
 
   return (
-    <div className="cgpt-shell">
+    <div className={`cgpt-shell ${theme === 'light' ? 'cgpt-light' : ''}`}>
       {/* ── Sidebar ── */}
       <div className={`cgpt-sidebar-wrap ${sidebarOpen ? '' : 'cgpt-sidebar-hidden'}`}>
         <PublicChurchGPTSidebar
@@ -149,6 +151,9 @@ export default function ChurchGPTAuthenticatedChat() {
           </div>
 
           <div className="cgpt-topbar-right">
+            <button className="cgpt-icon-btn" onClick={toggleTheme} title="Toggle theme">
+              {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+            </button>
             <button className="cgpt-icon-btn" title="Share">
               <Share2 size={15} />
             </button>

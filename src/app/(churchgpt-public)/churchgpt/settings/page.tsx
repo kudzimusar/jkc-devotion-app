@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { createBrowserClient } from "@supabase/ssr"
 import { PublicChurchGPTSidebar } from "@/components/churchgpt-public/PublicChurchGPTSidebar"
-import { PanelLeft, Loader2 } from "lucide-react"
+import { PanelLeft, Loader2, Sun, Moon } from "lucide-react"
+import { useCGPTTheme } from "@/hooks/useCGPTTheme"
 
 const PREF_KEY = 'cgpt_prefs'
 
@@ -23,6 +24,7 @@ export default function ChurchGPTSettingsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activeTab, setActiveTab] = useState('general')
   const [prefs, setPrefs] = useState<Record<string, any>>({})
+  const { theme, toggle: toggleTheme } = useCGPTTheme()
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -67,7 +69,7 @@ export default function ChurchGPTSettingsPage() {
   const tabs = ['General', 'Appearance', 'Notifications', 'Integrations', 'Privacy']
 
   return (
-    <div className="cgpt-page-shell">
+    <div className={`cgpt-page-shell ${theme === 'light' ? 'cgpt-light' : ''}`}>
       <div className={`cgpt-sidebar-wrap ${sidebarOpen ? '' : 'cgpt-sidebar-hidden'}`}>
         <PublicChurchGPTSidebar
           conversations={[]}
@@ -88,6 +90,10 @@ export default function ChurchGPTSettingsPage() {
             <PanelLeft size={16} />
           </button>
           <span style={{ fontSize: 14, color: 'var(--cgpt-muted)', fontFamily: 'var(--cgpt-font-sans)' }}>Settings</span>
+          <div style={{ flex: 1 }} />
+          <button className="cgpt-icon-btn" onClick={toggleTheme} title="Toggle theme">
+            {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+          </button>
         </div>
 
         <div className="cgpt-page-content">
