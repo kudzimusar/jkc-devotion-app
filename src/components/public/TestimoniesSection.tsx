@@ -76,9 +76,9 @@ export default function TestimoniesSection() {
         </div>
 
         <div className="flex gap-8 overflow-x-auto px-6 pb-12 no-scrollbar scroll-snap-x-mandatory snap-x">
-          {testimonies.map((t) => (
+          {testimonies.map((testimony) => (
             <div
-              key={t.id}
+              key={testimony.id}
               className="flex-none w-[380px] rounded-[2rem] p-6 space-y-6 snap-start transition-all group border flex flex-col justify-between"
               style={{
                 background: 'var(--card)',
@@ -89,26 +89,26 @@ export default function TestimoniesSection() {
               <div className="space-y-6">
                 <div className="aspect-video bg-black rounded-2xl border border-white/5 relative overflow-hidden shadow-lg">
                   <iframe
-                    src={t.youtube_url?.replace('watch?v=', 'embed/')}
+                    src={testimony.youtube_url?.replace('watch?v=', 'embed/')}
                     className="absolute inset-0 w-full h-full"
                     allowFullScreen
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    title={t.name}
+                    title={testimony.name}
                     loading="lazy"
                   />
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-xl font-black leading-tight line-clamp-2" style={{ color: 'var(--card-foreground)' }}>
-                    {t.name}
+                    {testimony.name}
                   </h3>
                   <p className="text-sm line-clamp-3" style={{ color: 'var(--foreground)', opacity: 0.6 }}>
-                    {t.description}
+                    {testimony.description}
                   </p>
                 </div>
               </div>
               <div className="pt-4 border-t border-white/5">
                 <a
-                  href={t.youtube_url}
+                  href={testimony.youtube_url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-[10px] font-black tracking-[0.2em] uppercase transition-all hover:gap-3"

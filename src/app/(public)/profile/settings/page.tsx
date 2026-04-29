@@ -151,24 +151,24 @@ export default function SettingsHub() {
                                     <div className="space-y-4">
                                         <h3 className="text-xl font-black">{t(lang, 'settings_theme_heading')}</h3>
                                         <div className="flex flex-wrap gap-4">
-                                            {['light', 'dark', 'system'].map(t => (
+                                            {['light', 'dark', 'system'].map(th => (
                                                 <button
-                                                    key={t}
+                                                    key={th}
                                                     onClick={() => {
-                                                        setTheme(t);
+                                                        setTheme(th);
                                                         const root = document.documentElement;
                                                         root.classList.remove("light", "dark");
-                                                        if (t === "system") {
+                                                        if (th === "system") {
                                                             const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
                                                             root.classList.add(systemTheme);
                                                         } else {
-                                                            root.classList.add(t);
+                                                            root.classList.add(th);
                                                         }
-                                                        toast.success(`Theme set to ${t}`);
+                                                        toast.success(`Theme set to ${th}`);
                                                     }}
-                                                    className={`px-6 py-4 rounded-xl border-2 font-bold capitalize transition-all ${theme === t ? 'border-[var(--primary)] bg-[var(--primary)]/5 text-[var(--primary)]' : 'border-foreground/10 hover:border-foreground/20'}`}
+                                                    className={`px-6 py-4 rounded-xl border-2 font-bold capitalize transition-all ${theme === th ? 'border-[var(--primary)] bg-[var(--primary)]/5 text-[var(--primary)]' : 'border-foreground/10 hover:border-foreground/20'}`}
                                                 >
-                                                    {t}
+                                                    {th}
                                                 </button>
                                             ))}
                                         </div>
