@@ -129,7 +129,7 @@ export function useChurchGPT(
       .select('model_id, display_name, is_available, is_user_selectable')
       .eq('is_available', true)
       .eq('is_user_selectable', true)
-      .then(({ data }) => { if (data) setAvailableModels(data) })
+      .then((res: any) => { if (res?.data) setAvailableModels(res.data) })
   }, [isPro])
 
   const loadConversations = useCallback(async () => {
