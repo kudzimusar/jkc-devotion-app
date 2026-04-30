@@ -35,7 +35,8 @@ export default function ChurchGPTAccountPage() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+      const res: any = await supabase.auth.getUser()
+      const user = res?.data?.user
       if (!user) { router.push('/churchgpt/login'); return }
       setUser(user)
 
@@ -59,15 +60,15 @@ export default function ChurchGPTAccountPage() {
           .eq('id', orgId)
           .maybeSingle()
         if (orgData) setOrg(orgData)
-
-        const { data: sub } = await supabase
-          .from('organization_subscriptions')
-          .select('status, plan_id, company_plans(name)')
-          .eq('org_id', orgId)
-          .eq('status', 'active')
-          .maybeSingle()
-        if (sub) setSubscription(sub)
       }
+
+      // Read ChurchGPT-specific subscription from churchgpt_users
+      const { data: cgptUser } = await supabase
+        .from('churchgpt_users')
+        .select('subscription_tier, quota_used, quota_limit, subscription_status')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      if (cgptUser) setSubscription(cgptUser)
 
       setLoading(false)
     }
@@ -115,7 +116,15 @@ export default function ChurchGPTAccountPage() {
 
   const initials = (fullName || user?.email || 'U').slice(0, 2).toUpperCase()
   const displayName = fullName || user?.email?.split('@')[0] || 'User'
-  const planName: string = (subscription as any)?.company_plans?.name ?? 'Starter'
+  const TIER_LABELS: Record<string, string> = {
+    enterprise: 'Enterprise',
+    pro: 'Pro',
+    lite: 'Lite',
+    starter: 'Starter',
+    guest: 'Guest',
+  }
+  const rawTier: string = (subscription as any)?.subscription_tier ?? 'starter'
+  const planName: string = TIER_LABELS[rawTier] ?? rawTier
 
   const tabs = ['Profile', 'Church', 'Subscription', 'Security']
 
@@ -288,11 +297,11 @@ export default function ChurchGPTAccountPage() {
                   background: 'rgba(255,200,80,0.15)', color: 'var(--cgpt-accent)',
                   border: '1px solid rgba(255,200,80,0.2)'
                 }}>
-                  {subscription ? 'Active' : 'Free tier'}
+                  {(subscription as any)?.subscription_status === 'active' ? 'Active' : 'Free tier'}
                 </span>
               </div>
 
-              {planName.toLowerCase() !== 'enterprise' && (
+              {rawTier !== 'enterprise' && (
                 <Link href="/churchgpt/upgrade" className="cgpt-modal-cta" style={{ display: 'inline-block', marginBottom: 16 }}>
                   Upgrade your plan
                 </Link>
