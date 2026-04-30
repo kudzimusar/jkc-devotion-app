@@ -72,7 +72,7 @@ export default function ChurchGPTSettingsPage() {
         <PublicChurchGPTSidebar
           conversations={[]}
           activeId={null}
-          onSelect={() => {}}
+          onSelect={(id) => router.push(`/churchgpt/chat?load=${id}`)}
           onDelete={() => {}}
           onNewChat={() => router.push('/churchgpt/chat')}
           user={user}

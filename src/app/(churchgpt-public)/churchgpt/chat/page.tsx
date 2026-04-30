@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { getChurchGPTSupabaseClient } from "@/lib/churchgpt/supabase-client"
 import { useChurchGPT } from "@/hooks/useChurchGPT"
 import { ChurchGPTMessage } from "@/components/churchgpt/ChurchGPTMessage"
@@ -50,6 +50,7 @@ const SUGGESTIONS = [
 
 export default function ChurchGPTAuthenticatedChat() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [sessionType, setSessionType] = useState('general')
   const [user, setUser] = useState<any>(null)
   const [authLoading, setAuthLoading] = useState(true)
@@ -119,6 +120,16 @@ export default function ChurchGPTAuthenticatedChat() {
     quotaState, upgradeModal, setUpgradeModal, selectedModel, setSelectedModel,
     availableModels, isPro,
   } = useChurchGPT(sessionType)
+
+  // Auto-load conversation when coming back from Account/Settings via ?load=
+  useEffect(() => {
+    const loadId = searchParams?.get('load')
+    if (loadId && !authLoading) {
+      loadMessages(loadId)
+      // Clean up the URL without reloading
+      router.replace('/churchgpt/chat')
+    }
+  }, [authLoading, searchParams])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })

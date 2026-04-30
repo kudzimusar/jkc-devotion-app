@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Plus, Trash2, Settings, User, LogOut } from "lucide-react"
 import { ChurchGPTConversation } from "@/hooks/useChurchGPT"
 import { isToday, isYesterday, isThisWeek } from "date-fns"
@@ -19,7 +19,7 @@ interface PublicChurchGPTSidebarProps {
 }
 
 export function PublicChurchGPTSidebar({
-  conversations,
+  conversations: conversationsProp,
   activeId,
   onSelect,
   onDelete,
@@ -28,8 +28,29 @@ export function PublicChurchGPTSidebar({
   user
 }: PublicChurchGPTSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("")
+  const [selfConversations, setSelfConversations] = useState<ChurchGPTConversation[]>([])
   const router = useRouter()
   const supabase = getChurchGPTSupabaseClient()
+
+  // When the sidebar is rendered on pages that pass no conversations (e.g. Account, Settings),
+  // load them directly so history is always visible.
+  useEffect(() => {
+    if (conversationsProp.length > 0) return  // already provided by parent
+    const load = async () => {
+      const res: any = await supabase.auth.getUser()
+      const uid = res?.data?.user?.id
+      if (!uid) return
+      const { data } = await supabase
+        .from('churchgpt_conversations')
+        .select('*')
+        .eq('user_id', uid)
+        .order('updated_at', { ascending: false })
+      if (data) setSelfConversations(data)
+    }
+    load()
+  }, [conversationsProp.length])
+
+  const conversations = conversationsProp.length > 0 ? conversationsProp : selfConversations
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -57,11 +78,11 @@ export function PublicChurchGPTSidebar({
 
   return (
     <aside className="cgpt-sidebar">
-      {/* Logo */}
-      <div className="cgpt-sidebar-logo">
+      {/* Logo — clicking navigates back to the main chat */}
+      <Link href="/churchgpt/chat" className="cgpt-sidebar-logo" style={{ textDecoration: 'none', cursor: 'pointer' }}>
         <div className="cgpt-logo-mark">✝</div>
         <span className="cgpt-logo-text">ChurchGPT</span>
-      </div>
+      </Link>
 
       {/* New conversation */}
       <div className="cgpt-sidebar-section">
