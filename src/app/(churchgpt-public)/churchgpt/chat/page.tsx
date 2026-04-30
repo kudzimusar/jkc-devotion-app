@@ -11,6 +11,26 @@ import { Loader2, PanelLeft, Share2, X, Sun, Moon } from "lucide-react"
 import Link from "next/link"
 import { useCGPTTheme } from "@/hooks/useCGPTTheme"
 
+// ── Analytics helpers ────────────────────────────────────────────────────────
+function genSessionId() {
+  return `cgpt_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+}
+function getDevice() {
+  if (typeof window === 'undefined') return 'unknown'
+  const ua = navigator.userAgent
+  if (/Mobi|Android/i.test(ua)) return 'mobile'
+  if (/Tablet|iPad/i.test(ua)) return 'tablet'
+  return 'desktop'
+}
+async function trackSession(payload: Record<string, any>) {
+  try {
+    await fetch('/api/analytics/churchgpt-track', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+  } catch { /* fire-and-forget */ }
+}
+
 const SESSION_MODES = [
   { id: 'general',     label: 'Shepherd',    desc: 'General ministry & pastoral guidance',    color: 'oklch(72% 0.14 65)' },
   { id: 'devotional',  label: 'Devotional',  desc: 'Scripture reflections & quiet time',      color: 'oklch(72% 0.14 200)' },
@@ -38,6 +58,10 @@ export default function ChurchGPTAuthenticatedChat() {
   const bottomRef = useRef<HTMLDivElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const { theme, toggle: toggleTheme } = useCGPTTheme()
+  // Analytics refs
+  const sessionIdRef = useRef<string>(genSessionId())
+  const sessionStartRef = useRef<number>(Date.now())
+  const messagesSentRef = useRef<number>(0)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -49,8 +73,35 @@ export default function ChurchGPTAuthenticatedChat() {
       if (!user) { router.push('/churchgpt/login'); return }
       setUser(user)
       setAuthLoading(false)
+      // Fire page_view session start
+      trackSession({
+        session_id: sessionIdRef.current,
+        user_id: user.id,
+        subscription_tier: 'starter', // will be enriched from churchgpt_users in future
+        session_type: 'general',
+        page_path: '/churchgpt/chat/',
+        started_at: new Date(sessionStartRef.current).toISOString(),
+        device_type: getDevice(),
+        referrer: typeof document !== 'undefined' ? document.referrer : null,
+        is_authenticated: true,
+      })
     })
     if (typeof window !== 'undefined' && window.innerWidth < 1024) setSidebarOpen(false)
+
+    // Session end tracking on page unload
+    const handleEnd = () => {
+      const elapsed = Math.round((Date.now() - sessionStartRef.current) / 1000)
+      trackSession({
+        session_id: sessionIdRef.current,
+        ended_at: new Date().toISOString(),
+        time_on_page_seconds: elapsed,
+        messages_sent: messagesSentRef.current,
+        session_type: sessionType,
+      })
+    }
+    window.addEventListener('beforeunload', handleEnd)
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') handleEnd() })
+    return () => window.removeEventListener('beforeunload', handleEnd)
   }, [])
 
   // Close dropdown on outside click
