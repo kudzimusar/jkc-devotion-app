@@ -49,7 +49,6 @@ export async function GET(req: NextRequest) {
       kpisRes,
       guestRes,
       interactionsRes,
-      conversationsRes,
       sessionAnalyticsRes,
       recentActivityRes,
     ] = await Promise.all([
@@ -71,26 +70,13 @@ export async function GET(req: NextRequest) {
         .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false }),
 
-      // 5. Conversation growth over time (last 30 days)
-      service.rpc('exec_sql', {
-        sql: `
-          SELECT
-            DATE_TRUNC('day', created_at) AS day,
-            COUNT(*) AS conversations
-          FROM churchgpt_conversations
-          WHERE created_at >= NOW() - INTERVAL '30 days'
-          GROUP BY day
-          ORDER BY day
-        `
-      }).catch(() => ({ data: null, error: null })),
-
-      // 6. Session analytics
+      // 5. Session analytics
       service.from('churchgpt_session_analytics')
         .select('subscription_tier, session_type, time_on_page_seconds, messages_sent, tokens_used, started_at, device_type')
         .order('started_at', { ascending: false })
         .limit(500),
 
-      // 7. Recent interactions (last 7 days by day)
+      // 6. Recent interactions (last 7 days by day)
       service.from('churchgpt_interactions')
         .select('created_at, session_type, message_count')
         .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
