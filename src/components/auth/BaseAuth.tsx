@@ -37,6 +37,8 @@ export const BaseAuth = ({
   const [error, setError] = useState<string | null>(null);
   const [contextHint, setContextHint] = useState<null | 'single' | 'multi'>(null);
   const [hintLoading, setHintLoading] = useState(false);
+  const [recoveryLoading, setRecoveryLoading] = useState(false);
+  const [recoverySent, setRecoverySent] = useState(false);
 
   const handleEmailBlur = async () => {
     if (!email || !email.includes('@')) return;
@@ -53,6 +55,26 @@ export const BaseAuth = ({
       // Silent fail — never block login
     } finally {
       setHintLoading(false);
+    }
+  };
+
+  const handleRecovery = async () => {
+    if (!email || !email.includes('@')) {
+      setError('Enter your identity email above before requesting recovery.');
+      return;
+    }
+    setRecoveryLoading(true);
+    setError(null);
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+      if (resetError) throw resetError;
+      setRecoverySent(true);
+    } catch (err: any) {
+      setError(err.message || 'Recovery request failed.');
+    } finally {
+      setRecoveryLoading(false);
     }
   };
 
@@ -376,12 +398,14 @@ export const BaseAuth = ({
                   Secure Node: {typeof window !== 'undefined' ? window.location.hostname : 'Cloud'}
                 </span>
               </div>
-              <button 
+              <button
                 type="button"
-                className="text-[10px] font-black text-white/30 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"
+                onClick={handleRecovery}
+                disabled={recoveryLoading || recoverySent}
+                className="text-[10px] font-black text-white/30 hover:text-white/60 disabled:opacity-50 uppercase tracking-widest transition-colors flex items-center gap-1.5"
               >
                 <Key className="w-3 h-3" />
-                Recovery
+                {recoverySent ? 'Email Sent' : recoveryLoading ? 'Sending...' : 'Recovery'}
               </button>
             </div>
           )}

@@ -1060,36 +1060,46 @@ export function MemberImportWizard({
     }
   };
 
-  // ── Execute import ──────────────────────────────────────────────────────
+  // ── Execute import (server-side via edge function) ──────────────────────
   const handleImport = async () => {
-    if (!parseResult || !jobId || !file) return;
+    if (!jobId) return;
     setBusy(true);
     setStep("import");
     setImportProgress(0);
     try {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-      const { imported, skipped, visitors } = await executeImport(
-        parseResult.members,
-        parseResult.families ?? [],
-        orgId,
-        orgName,
-        churchSlug,
-        jobId,
-        file.name,
-        importMode,
-        defaultMinistryId,
-        ministries,
-        supabaseUrl,
-        supabaseAnonKey,
-        (p) => setImportProgress(Math.min(p, 99)),
-      );
-      setImportedCount(imported);
-      setVisitorsCount(visitors);
-      setSkippedCount(skipped);
+
+      setImportProgress(20);
+
+      const resp = await fetch(`${supabaseUrl}/functions/v1/member-import-ai`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${supabaseAnonKey}`,
+          "apikey": supabaseAnonKey,
+        },
+        body: JSON.stringify({
+          action: "execute",
+          job_id: jobId,
+          org_id: orgId,
+          import_mode: importMode,
+        }),
+      });
+
+      setImportProgress(90);
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(err.error ?? "Import failed");
+      }
+
+      const result = await resp.json();
+      setImportedCount(result.imported ?? 0);
+      setSkippedCount(result.skipped ?? 0);
       setImportProgress(100);
       setStep("import");
-      onComplete?.(imported + visitors);
+      onComplete?.(result.imported ?? 0);
     } catch (err: any) {
       toast.error(err.message ?? "Import failed");
     } finally {

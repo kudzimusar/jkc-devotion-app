@@ -47,13 +47,15 @@ export default function NewHereSection() {
               </p>
             </div>
             <div className="pt-8">
-              <Link
-                href="/welcome/visit"
+              <a
+                href="https://calendly.com/visitjkc/service"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-full text-center inline-block px-8 py-4 rounded-2xl text-[10px] font-black tracking-[0.2em] uppercase transition-all hover:scale-[1.02]"
                 style={{ background: 'var(--jkc-gold)', color: 'var(--jkc-navy)' }}
               >
                 {lang === 'ja' ? '来訪を計画する' : 'PLAN MY VISIT'}
-              </Link>
+              </a>
             </div>
           </div>
 
@@ -82,12 +84,12 @@ export default function NewHereSection() {
               </p>
             </div>
             <div className="pt-8">
-              <button
-                onClick={() => document.getElementById('connect')?.scrollIntoView({ behavior: 'smooth' })}
+              <Link
+                href="/connect"
                 className="w-full text-center inline-block px-8 py-4 rounded-2xl text-[10px] font-black tracking-[0.2em] uppercase transition-all bg-white/10 hover:bg-[var(--jkc-gold)] hover:text-[var(--jkc-navy)] text-white border border-white/10"
               >
                 {lang === 'ja' ? 'デジタル連絡カード' : 'DIGITAL CONNECT CARD'}
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -117,7 +119,7 @@ export default function NewHereSection() {
             </div>
             <div className="pt-8">
               <Link
-                href="/welcome/devotion"
+                href="/profile"
                 className="w-full text-center inline-block px-8 py-4 rounded-2xl text-[10px] font-black tracking-[0.2em] uppercase transition-all hover:scale-[1.02]"
                 style={{ background: '#1e293b', color: 'white' }}
               >

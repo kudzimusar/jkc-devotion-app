@@ -42,3 +42,15 @@ next-env.d.ts
 
 # credentials
 google-credentials.json
+
+# supabase
+supabase/.temp/
+
+# data & docs
+*.xlsx
+*.csv
+*.html
+
+# ai/ide
+.claude/
+
