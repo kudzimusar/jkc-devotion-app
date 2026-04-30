@@ -149,7 +149,7 @@ async function callGemini(modelId: string, messages: any[], systemPrompt: string
         role: m.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: m.content }]
       })),
-      generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
+      generationConfig: { temperature: 0.7, maxOutputTokens: 4096 }
     })
   })
   const data = await res.json()
@@ -172,7 +172,7 @@ async function callClaude(modelId: string, messages: any[], systemPrompt: string
     },
     body: JSON.stringify({
       model: modelId,
-      max_tokens: 1024,
+      max_tokens: 4096,
       system: systemPrompt,
       messages: messages.map((m: any) => ({ role: m.role, content: m.content }))
     })
@@ -207,7 +207,7 @@ async function callOpenAICompat(model: any, messages: any[], systemPrompt: strin
         { role: 'system', content: systemPrompt },
         ...messages.map((m: any) => ({ role: m.role, content: m.content }))
       ],
-      max_tokens: 1024
+      max_tokens: 4096
     })
   })
   const data = await res.json()

@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
+import { getChurchGPTSupabaseClient } from '@/lib/churchgpt/supabase-client'
 
 export type CGPTIntelligence = {
   subscribers: any[]
@@ -20,10 +20,7 @@ export function useCGPTIntelligence() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const supabase = getChurchGPTSupabaseClient()
 
   const load = useCallback(async () => {
     setLoading(true)

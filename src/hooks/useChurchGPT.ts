@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { getChurchGPTSupabaseClient } from '@/lib/churchgpt/supabase-client'
 import { JKC_ORG_ID } from '@/lib/org-resolver'
 
 export interface ChurchGPTMessage {
@@ -66,6 +66,7 @@ export function useChurchGPT(
   memberProfile?: any,
   isGuest: boolean = false
 ) {
+  const supabase = getChurchGPTSupabaseClient()
   const [userId, setUserId] = useState<string | null>(null)
   const [orgIdState, setOrgIdState] = useState<string | null>(null)
   const [profile, setProfile] = useState<any>(null)
