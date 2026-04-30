@@ -41,12 +41,12 @@ export async function POST(req: NextRequest) {
     
     // Initialize model
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.5-flash-preview-04-17',
       systemInstruction: systemPrompt,
       generationConfig: {
-        temperature: 0.7,
-        topP: 0.9,
-        maxOutputTokens: 1200,  // was 2048 — reduce to force concise responses
+        temperature: 0.75,
+        topP: 0.95,
+        maxOutputTokens: 8192,  // sufficient for full theological responses
       }
     })
     
