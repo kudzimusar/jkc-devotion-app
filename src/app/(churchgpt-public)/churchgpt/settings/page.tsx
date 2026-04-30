@@ -29,7 +29,8 @@ export default function ChurchGPTSettingsPage() {
   const supabase = getChurchGPTSupabaseClient()
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then((res: any) => {
+      const user = res?.data?.user
       if (!user) { router.push('/churchgpt/login'); return }
       setUser(user)
       setPrefs(loadPrefs())

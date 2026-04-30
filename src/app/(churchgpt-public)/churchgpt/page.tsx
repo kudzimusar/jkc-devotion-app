@@ -22,7 +22,8 @@ export default function ChurchGPTLandingPage() {
   // Redirect authenticated users to the full chat page (has DB persistence + sidebar)
   useEffect(() => {
     const supabase = getChurchGPTSupabaseClient()
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then((res: any) => {
+      const user = res?.data?.user
       if (user) router.replace('/churchgpt/chat')
     })
   }, [])

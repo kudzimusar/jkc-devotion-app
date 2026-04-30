@@ -15,8 +15,8 @@ export function ConnectModalProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     // Check initial session
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
+    supabase.auth.getUser().then((res: any) => {
+      setUser(res?.data?.user);
       setLoading(false);
     });
 
