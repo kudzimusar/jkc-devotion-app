@@ -94,12 +94,16 @@ async function sha256(message: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
-function getUpgradeMessage(reason: string, tier: string): string {
+function getUpgradeMessage(reason: string, tier: string, context: string): string {
   if (reason === 'guest_limit_reached')
-    return "You've used your 7 free messages. Sign up free for 50 messages/month, or subscribe for full church access."
+    return "You've used your 7 free messages. Sign up free for 50 messages/month, or subscribe for full access."
   if (reason === 'user_quota_exceeded' && tier === 'starter')
-    return "You've used your 50 free messages this month. Upgrade to Lite for 500 messages and church data access."
-  return "Your church has reached its monthly message limit. Upgrade your plan to continue."
+    return "You've used your 50 free messages this month. Upgrade to Lite for 500 messages and full access."
+  
+  if (context === 'church' || context === 'platform') {
+    return "Your church has reached its monthly message limit. Upgrade your plan to continue."
+  }
+  return "You have reached your monthly message limit. Upgrade your plan to continue."
 }
 
 // ─── Model Router ─────────────────────────────────────────────────────────────
@@ -360,7 +364,7 @@ serve(async (req) => {
           used: guestResult.count,
           limit: guestResult.limit,
           upgrade_url: 'https://ai.churchos-ai.website/churchgpt/upgrade/',
-          message: getUpgradeMessage(guestResult.reason ?? 'guest_limit_reached', 'guest')
+          message: getUpgradeMessage(guestResult.reason ?? 'guest_limit_reached', 'guest', detectedContext)
         }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
       }
     } else {
@@ -380,7 +384,7 @@ serve(async (req) => {
           used: quotaResult.used,
           limit: quotaResult.limit,
           upgrade_url: 'https://ai.churchos-ai.website/churchgpt/upgrade/',
-          message: getUpgradeMessage(quotaResult.reason, quotaResult.tier)
+          message: getUpgradeMessage(quotaResult.reason, quotaResult.tier, detectedContext)
         }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
       }
     }
