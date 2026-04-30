@@ -103,17 +103,19 @@ export function useChurchGPT(
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
+      setUserId(user.id)
+
       const { data: profileData } = await supabase
         .from('profiles')
         .select('id, name, role, org_id')
         .eq('id', user.id)
         .single()
 
-      if (!profileData) return
-
-      setUserId(user.id)
-      setOrgIdState(profileData.org_id)
-      setProfile(profileData)
+      if (profileData) {
+        setOrgIdState(profileData.org_id)
+        setProfile(profileData)
+      }
+      
       loadConversations()
     }
     init()
@@ -137,13 +139,11 @@ export function useChurchGPT(
       let query = supabase
         .from('churchgpt_conversations')
         .select('*')
+        .eq('user_id', resolvedUserId)
         .order('updated_at', { ascending: false })
+        
       if (resolvedOrgId) {
         query = query.eq('org_id', resolvedOrgId)
-      } else if (resolvedUserId) {
-        query = query.eq('user_id', resolvedUserId)
-      } else {
-        return
       }
       const { data, error } = await query
       if (error) throw error
