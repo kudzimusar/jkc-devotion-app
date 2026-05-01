@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChurchGPT — Temporarily Unavailable</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background-color: #0f1f3d;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 480px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 48px 40px;
+      text-align: center;
+    }
+
+    /* Cross SVG icon */
+    .cross {
+      display: inline-block;
+      margin-bottom: 28px;
+    }
+
+    .label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #D4AF37;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 16px;
+      color: #ffffff;
+    }
+
+    .message {
+      font-size: 14px;
+      line-height: 1.7;
+      color: rgba(255, 255, 255, 0.55);
+      margin-bottom: 32px;
+    }
+
+    .verse {
+      font-size: 13px;
+      font-style: italic;
+      color: #D4AF37;
+      opacity: 0.9;
+      margin-bottom: 36px;
+      line-height: 1.6;
+    }
+
+    .verse cite {
+      display: block;
+      font-style: normal;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      margin-top: 6px;
+      opacity: 0.7;
+    }
+
+    .divider {
+      width: 40px;
+      height: 1px;
+      background: rgba(212, 175, 55, 0.3);
+      margin: 0 auto 36px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: #D4AF37;
+      color: #0f1f3d;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      border-radius: 12px;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s;
+      margin-bottom: 14px;
+      width: 100%;
+    }
+
+    .btn:hover { background: #c9a227; }
+
+    .btn-outline {
+      display: inline-block;
+      padding: 12px 32px;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 12px;
+      text-decoration: none;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      width: 100%;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .btn-outline:hover {
+      border-color: rgba(255, 255, 255, 0.25);
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .ray-id {
+      margin-top: 28px;
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.2);
+      letter-spacing: 0.05em;
+    }
+
+    /* Status dots */
+    .status-row {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 36px;
+    }
+
+    .status-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .dot {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dot-green {
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.4);
+    }
+
+    .dot-red {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+
+    .dot-green span { color: #4ade80; font-size: 16px; }
+    .dot-red span   { color: #f87171; font-size: 16px; }
+
+    .status-label { color: rgba(255,255,255,0.35); }
+    .status-value-ok  { color: #4ade80; font-weight: 700; }
+    .status-value-err { color: #f87171; font-weight: 700; }
+
+    footer {
+      margin-top: 40px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.18);
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+
+    footer a {
+      color: rgba(255, 255, 255, 0.3);
+      text-decoration: none;
+    }
+
+    footer a:hover { color: #D4AF37; }
+
+    @media (max-width: 520px) {
+      .card { padding: 36px 24px; }
+      h1 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+
+    <!-- Cross logo -->
+    <div class="cross">
+      <svg width="52" height="52" viewBox="0 0 24 24" fill="none"
+           stroke="#D4AF37" stroke-width="1.4"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2v20M7 8h10"/>
+      </svg>
+    </div>
+
+    <p class="label">ChurchGPT · Church OS</p>
+
+    <h1>We'll be right<br />back with you</h1>
+
+    <p class="message">
+      Our servers are temporarily unavailable. We&rsquo;re aware of
+      the issue and are working to restore service. Please try again
+      in a few minutes.
+    </p>
+
+    <!-- Status indicators -->
+    <div class="status-row">
+      <div class="status-item">
+        <div class="dot dot-green"><span>✓</span></div>
+        <span class="status-label">Cloudflare</span>
+        <span class="status-value-ok">Working</span>
+      </div>
+      <div class="status-item">
+        <div class="dot dot-red"><span>✕</span></div>
+        <span class="status-label">Host</span>
+        <span class="status-value-err">Error</span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Scripture -->
+    <p class="verse">
+      &ldquo;Be still, and know that I am God.&rdquo;
+      <cite>— Psalm 46:10</cite>
+    </p>
+
+    <!-- Actions -->
+    <button class="btn" onclick="window.location.reload()">
+      Try again
+    </button>
+    <a href="mailto:hello@churchos-ai.website" class="btn-outline">
+      Contact support
+    </a>
+
+    <!-- Cloudflare Ray ID for support tickets -->
+    <p class="ray-id">Reference: ::RAY_ID:: &nbsp;·&nbsp; ::CLIENT_IP::</p>
+
+  </div>
+
+  <footer>
+    <p>
+      &copy; 2026 Church OS PVT LTD &nbsp;&middot;&nbsp;
+      <a href="https://ai.churchos-ai.website/churchgpt">ChurchGPT</a>
+      &nbsp;&middot;&nbsp;
+      <a href="mailto:hello@churchos-ai.website">Support</a>
+    </p>
+  </footer>
+
+</body>
+</html>
