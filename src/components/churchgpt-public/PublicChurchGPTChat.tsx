@@ -83,8 +83,43 @@ export function PublicChurchGPTChat() {
           {showHardPrompt && <GuestPrompt variant="hard" />}
 
           {error && (
-            <div className="mt-8 p-4 text-xs font-semibold text-red-700 bg-red-50 border border-red-100 rounded-2xl text-center shadow-sm max-w-lg mx-auto">
-              {error}
+            <div className="mt-8 max-w-lg mx-auto">
+              {error === 'service_unavailable' ? (
+                <div className="p-6 bg-[#0f1f3d]/5 border border-[#0f1f3d]/10 rounded-2xl text-center space-y-3">
+                  <div className="text-2xl">✟</div>
+                  <p className="text-sm font-bold text-[#0f1f3d]">ChurchGPT is temporarily unreachable</p>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Our servers appear to be offline or unreachable right now.
+                    Please check your connection and try again in a moment.
+                    <br />
+                    <span className="italic text-[#D4AF37] font-medium">"Be still, and know that I am God." — Psalm 46:10</span>
+                  </p>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="text-xs font-bold text-[#0f1f3d] border border-[#0f1f3d]/20 px-4 py-2 rounded-lg hover:bg-[#0f1f3d]/5 transition-colors"
+                  >
+                    Refresh and try again
+                  </button>
+                </div>
+              ) : error === 'timeout' ? (
+                <div className="p-6 bg-amber-50 border border-amber-100 rounded-2xl text-center space-y-3">
+                  <div className="text-2xl">⏳</div>
+                  <p className="text-sm font-bold text-amber-800">Response took too long</p>
+                  <p className="text-xs text-amber-700 leading-relaxed">
+                    ChurchGPT is taking longer than expected to respond — this sometimes happens
+                    under heavy load. Please try sending your message again.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-6 bg-[#0f1f3d]/5 border border-[#0f1f3d]/10 rounded-2xl text-center space-y-3">
+                  <div className="text-2xl">✟</div>
+                  <p className="text-sm font-bold text-[#0f1f3d]">Something went wrong on our end</p>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    ChurchGPT encountered an error processing your message.
+                    Our team has been notified. Please try again in a few moments.
+                  </p>
+                </div>
+              )}
             </div>
           )}
           <div ref={bottomRef} className="h-4" />

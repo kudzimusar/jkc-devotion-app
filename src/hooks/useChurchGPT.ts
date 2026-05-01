@@ -313,26 +313,40 @@ export function useChurchGPT(
 
       const CHURCHGPT_ENDPOINT = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/churchgpt-gateway`
 
-      const res = await fetch(CHURCHGPT_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30_000)
+
+      let res: Response
+      try {
+        res = await fetch(CHURCHGPT_ENDPOINT, {
+          method: 'POST',
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json',
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {
+              Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
+            })
+          },
+          body: JSON.stringify({
+            message: content,
+            history: newMessages.slice(0, -1).map(m => ({ role: m.role, content: m.content })),
+            conversation_id: currentConvoId ?? null,
+            org_id: isGuest ? null : (resolvedOrgId ?? null),
+            model_preference: isPro ? (selectedModel ?? null) : null,
+            context,
+            sessionType: activeSessionType,
+            memberProfile: isGuest ? null : (memberProfile || profile),
+            fingerprint,
           })
-        },
-        body: JSON.stringify({
-          message: content,
-          history: newMessages.slice(0, -1).map(m => ({ role: m.role, content: m.content })),
-          conversation_id: currentConvoId ?? null,
-          org_id: isGuest ? null : (resolvedOrgId ?? null),
-          model_preference: isPro ? (selectedModel ?? null) : null,
-          context,
-          sessionType: activeSessionType,
-          memberProfile: isGuest ? null : (memberProfile || profile),
-          fingerprint,
         })
-      })
+      } catch (fetchErr: any) {
+        clearTimeout(timeoutId)
+        setMessages(prev => prev.filter(m => m.id !== assistantMessage.id))
+        const isTimeout = fetchErr?.name === 'AbortError'
+        setError(isTimeout ? 'timeout' : 'service_unavailable')
+        return
+      }
+      clearTimeout(timeoutId)
 
       // ── 429 quota exceeded ─────────────────────────────────────────────────
       if (res.status === 429) {
@@ -351,7 +365,11 @@ export function useChurchGPT(
         return
       }
 
-      if (!res.ok) throw new Error(`ChurchGPT request failed: ${res.status}`)
+      if (!res.ok) {
+        setMessages(prev => prev.filter(m => m.id !== assistantMessage.id))
+        setError(res.status >= 500 ? 'server_error' : 'server_error')
+        return
+      }
 
       const data = await res.json()
       let reply: string = data.reply ?? ''
@@ -400,7 +418,7 @@ export function useChurchGPT(
       }
     } catch (err) {
       console.error(err)
-      setError('Something went wrong. Please try again.')
+      setError('server_error')
     } finally {
       setIsLoading(false)
     }

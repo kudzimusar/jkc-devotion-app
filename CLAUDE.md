@@ -13,15 +13,24 @@
 
 ## What this project is
 **Church OS**: An enterprise-grade, multi-tenant church management SaaS designed for the global church ecosystem. This platform is owned and built by **Shadreck Kudzanai Musarurwa**, CEO of **Church OS PVT LTD**.
-Static export to GitHub Pages. Next.js + Supabase + Gemini AI.
+Deployed on **Vercel**. Next.js + Supabase + Gemini AI.
+
+## Hosting & Infrastructure
+- **Frontend**: Vercel (NOT GitHub Pages — that is old and no longer accurate)
+- **Backend / AI**: Supabase Edge Functions (Deno)
+- **CDN / DNS**: Cloudflare sits in front of ai.churchos-ai.website
+- **Inbound messaging**: Cloudflare Email Routing → Brevo inbound webhook → `coce-inbound-router` Edge Function
+- **Outbound messaging**: Brevo SMTP/API → dispatched by `coce-dispatch` Edge Function
+- **Payments**: Stripe (via `stripe-checkout` and `stripe-webhook` Edge Functions)
 
 ## Critical architecture rules
-- Static export = NO Server Actions in production, NO supabaseAdmin on client
+- Vercel deployment = Server Actions ARE available, but still avoid supabaseAdmin on client components
 - Mission Control / admin pages: use supabaseAdmin (server-side only)
 - Member app / client components: use regular supabase client with RLS
 - Edge Functions use GEMINI_API_KEY (never NEXT_PUBLIC_GEMINI_API_KEY)
 - prophetic_insights and ai_ministry_insights are separate tables — never union them
-- generateStaticParams required in every dynamic route layout
+- generateStaticParams required in every dynamic route layout (still needed for pre-rendering)
+- `out/` directory is no longer used — Vercel builds from `.next/` directly
 
 ## JKC org ID
 fa547adf-f820-412f-9458-d6bade11517d
