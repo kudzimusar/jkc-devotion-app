@@ -145,12 +145,9 @@ const BRANDED_ERROR_PAGE = `<!DOCTYPE html>
 </head>
 <body>
   <div class="card">
-    <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
-         stroke="#D4AF37" stroke-width="1.4"
-         stroke-linecap="round" stroke-linejoin="round"
-         style="margin-bottom:24px">
-      <path d="M12 2v20M7 8h10"/>
-    </svg>
+    <img src="https://ai.churchos-ai.website/churchgpt-logo.png"
+         alt="ChurchGPT" width="80"
+         style="display:block;margin:0 auto 24px;width:80px;height:auto;filter:brightness(0) invert(1);" />
 
     <p class="label">ChurchGPT &nbsp;·&nbsp; Church OS</p>
     <h1>We&rsquo;ll be right<br />back with you</h1>

@@ -55,6 +55,17 @@ export function PublicChurchGPTAuth({ mode }: PublicChurchGPTAuthProps) {
               source: 'churchgpt_public',
             }, { onConflict: 'user_id', ignoreDuplicates: true })
 
+          // Send welcome email (fire-and-forget — don't block the signup flow)
+          fetch(
+            `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/churchgpt-welcome`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json',
+                Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}` },
+              body: JSON.stringify({ user_id: signUpData.user.id }),
+            }
+          ).catch(() => { /* silent — email failure must not block signup */ })
+
           // Merge guest session fingerprint → user account
           const fingerprint = localStorage.getItem('cgpt_fp')
           if (fingerprint) {
