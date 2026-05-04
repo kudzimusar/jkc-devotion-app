@@ -102,9 +102,7 @@ export function PublicChurchGPTAuth({ mode }: PublicChurchGPTAuthProps) {
       <Card className="w-full max-w-[400px] p-10 bg-white border-0 shadow-2xl space-y-10 animate-in zoom-in-95 duration-500">
         {/* Logo */}
         <div className="flex flex-col items-center space-y-3">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2v20M7 8h10" />
-          </svg>
+          <img src="/cgpt-icons/icon-96x96.png" alt="ChurchGPT" width="56" height="56" className="rounded-xl" />
           <div className="text-center">
             <h1 className="text-3xl font-serif text-[#0f1f3d] tracking-tight">ChurchGPT</h1>
             <p className="text-slate-400 text-sm font-medium tracking-wide">

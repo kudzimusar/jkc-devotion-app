@@ -17,9 +17,7 @@ export function ChurchGPTWidget() {
             <polyline points="6 9 12 15 18 9"></polyline>
           </svg>
         ) : (
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f5a623" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-             <path d="M12 2v20M8 8h8" />
-          </svg>
+          <img src="/cgpt-icons/icon-48x48.png" alt="ChurchGPT" width="30" height="30" />
         )}
       </button>
 

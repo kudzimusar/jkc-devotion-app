@@ -13,9 +13,7 @@ export function PublicChurchGPTHero() {
       <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in slide-in-from-top-6 duration-1000">
         {/* Logo */}
         <div className="flex flex-col items-center space-y-2">
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2v20M7 8h10" />
-          </svg>
+          <img src="/cgpt-icons/icon-128x128.png" alt="ChurchGPT" width="80" height="80" className="rounded-xl" />
           <h1 className="text-5xl md:text-7xl font-serif text-white tracking-tight">
             ChurchGPT
           </h1>
