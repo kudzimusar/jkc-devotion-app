@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter } from "next/navigation"
 import { getChurchGPTSupabaseClient } from "@/lib/churchgpt/supabase-client"
 import { PublicChurchGPTSidebar } from "@/components/churchgpt-public/PublicChurchGPTSidebar"
+import { useChurchGPT } from "@/hooks/useChurchGPT"
 import { PanelLeft, Loader2, Sun, Moon } from "lucide-react"
 import { useCGPTTheme } from "@/hooks/useCGPTTheme"
 
@@ -17,7 +18,7 @@ function savePrefs(prefs: Record<string, any>) {
   localStorage.setItem(PREF_KEY, JSON.stringify(prefs))
 }
 
-export default function ChurchGPTSettingsPage() {
+function SettingsContent() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -25,6 +26,7 @@ export default function ChurchGPTSettingsPage() {
   const [activeTab, setActiveTab] = useState('general')
   const [prefs, setPrefs] = useState<Record<string, any>>({})
   const { theme, toggle: toggleTheme } = useCGPTTheme()
+  const { conversations, deleteConversation } = useChurchGPT()
 
   const supabase = getChurchGPTSupabaseClient()
 
@@ -70,10 +72,10 @@ export default function ChurchGPTSettingsPage() {
     <div className={`cgpt-page-shell ${theme === 'light' ? 'cgpt-light' : ''}`}>
       <div className={`cgpt-sidebar-wrap ${sidebarOpen ? '' : 'cgpt-sidebar-hidden'}`}>
         <PublicChurchGPTSidebar
-          conversations={[]}
+          conversations={conversations}
           activeId={null}
           onSelect={(id) => router.push(`/churchgpt/chat?load=${id}`)}
-          onDelete={() => {}}
+          onDelete={deleteConversation}
           onNewChat={() => router.push('/churchgpt/chat')}
           user={user}
         />
@@ -326,5 +328,13 @@ export default function ChurchGPTSettingsPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ChurchGPTSettingsPage() {
+  return (
+    <Suspense fallback={<div className="cgpt-loading-screen"><Loader2 className="cgpt-loader" /></div>}>
+      <SettingsContent />
+    </Suspense>
   )
 }

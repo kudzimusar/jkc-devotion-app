@@ -86,7 +86,7 @@ export function PublicChurchGPTChat() {
             <div className="mt-8 max-w-lg mx-auto">
               {error === 'service_unavailable' ? (
                 <div className="p-6 bg-[#0f1f3d]/5 border border-[#0f1f3d]/10 rounded-2xl text-center space-y-3">
-                  <div className="text-2xl">✟</div>
+                  <img src="/cgpt-icons/icon-128x128.png" alt="ChurchGPT" className="w-12 h-12 mx-auto mb-4" />
                   <p className="text-sm font-bold text-[#0f1f3d]">ChurchGPT is temporarily unreachable</p>
                   <p className="text-xs text-slate-500 leading-relaxed">
                     Our servers appear to be offline or unreachable right now.
@@ -112,7 +112,7 @@ export function PublicChurchGPTChat() {
                 </div>
               ) : (
                 <div className="p-6 bg-[#0f1f3d]/5 border border-[#0f1f3d]/10 rounded-2xl text-center space-y-3">
-                  <div className="text-2xl">✟</div>
+                  <img src="/cgpt-icons/icon-128x128.png" alt="ChurchGPT" className="w-12 h-12 mx-auto mb-4" />
                   <p className="text-sm font-bold text-[#0f1f3d]">Something went wrong on our end</p>
                   <p className="text-xs text-slate-500 leading-relaxed">
                     ChurchGPT encountered an error processing your message.
@@ -176,13 +176,15 @@ export function PublicChurchGPTChat() {
             </button>
 
             <div className="text-center mb-6">
-              <div className="text-3xl mb-3">✟</div>
+              <div className="mb-4">
+                <img src="/cgpt-icons/icon-128x128.png" alt="ChurchGPT" className="w-16 h-16 mx-auto" />
+              </div>
               <h2 className="text-xl font-bold text-[#0f1f3d] mb-2">
                 {upgradeModal.reason === 'guest_limit_reached'
                   ? 'Guest limit reached'
                   : upgradeModal.reason === 'user_quota_exceeded'
                   ? 'Monthly limit reached'
-                  : 'Church plan limit reached'}
+                  : 'Account limit reached'}
               </h2>
               <p className="text-sm text-slate-600 leading-relaxed">{upgradeModal.message}</p>
             </div>

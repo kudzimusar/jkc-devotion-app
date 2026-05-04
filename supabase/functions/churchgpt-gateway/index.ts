@@ -134,10 +134,10 @@ function getUpgradeMessage(reason: string, tier: string, context: string): strin
   if (reason === 'user_quota_exceeded' && tier === 'starter')
     return "You've used your 50 free messages this month. Upgrade to Lite for 500 messages and full access."
   
-  if (context === 'church' || context === 'platform') {
+  if (context === 'church') {
     return "Your church has reached its monthly message limit. Upgrade your plan to continue."
   }
-  return "You have reached your monthly message limit. Upgrade your plan to continue."
+  return "Your account has reached its monthly message limit. Upgrade your plan to continue."
 }
 
 // ─── Model Router ─────────────────────────────────────────────────────────────

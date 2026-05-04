@@ -219,7 +219,8 @@ export function MinistryIntelligenceSilo({
             className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-lg text-[10px] font-bold text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all no-underline"
             style={{ textDecoration: "none" }}
           >
-            ✝ ChurchGPT
+            <img src="/cgpt-icons/icon-128x128.png" alt="" className="w-3.5 h-3.5 rounded-sm" />
+            ChurchGPT
           </a>
           <button
             onClick={onOpenProfile}

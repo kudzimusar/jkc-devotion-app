@@ -64,12 +64,7 @@ export default function ChurchGPTLandingPage() {
       {/* NAV */}
       <nav className="cgpt-lp-nav">
         <a href="#" className="cgpt-lp-nav-logo">
-          <span className="cgpt-lp-nav-cross">
-            <svg width="18" height="22" viewBox="0 0 20 24" fill="none">
-              <rect x="8.5" y="0" width="3" height="24" fill="currentColor" rx="1.5"/>
-              <rect x="0" y="7" width="20" height="3" fill="currentColor" rx="1.5"/>
-            </svg>
-          </span>
+          <img src="/cgpt-icons/icon-128x128.png" alt="ChurchGPT" className="cgpt-lp-nav-icon" />
           <span className="cgpt-lp-nav-brand">ChurchGPT</span>
         </a>
         <div className="cgpt-lp-nav-actions">
@@ -92,10 +87,7 @@ export default function ChurchGPTLandingPage() {
       <section className="cgpt-lp-hero">
         <div className="cgpt-lp-hero-inner">
           <div className="cgpt-lp-hero-cross">
-            <svg className="cgpt-lp-cross-svg" width="52" height="62" viewBox="0 0 52 62" fill="none">
-              <rect x="21.5" y="0" width="9" height="62" fill="#C99B30" rx="4"/>
-              <rect x="0" y="18" width="52" height="9" fill="#C99B30" rx="4"/>
-            </svg>
+            <img src="/cgpt-icons/icon-512x512.png" alt="ChurchGPT" className="cgpt-lp-hero-icon" />
           </div>
 
           <div className="cgpt-lp-eyebrow">
@@ -156,7 +148,9 @@ export default function ChurchGPTLandingPage() {
             {/* Welcome message shown when no conversation yet */}
             {messages.length === 0 && (
               <div className="cgpt-lp-msg-ai">
-                <div className="cgpt-lp-ai-avatar">✝</div>
+                <div className="cgpt-lp-ai-avatar">
+                  <img src="/cgpt-icons/icon-128x128.png" alt="AI" className="w-full h-full rounded-md" />
+                </div>
                 <div className="cgpt-lp-ai-body">
                   <div className="cgpt-lp-ai-label">ChurchGPT</div>
                   <div className="cgpt-lp-ai-text">
@@ -185,7 +179,9 @@ export default function ChurchGPTLandingPage() {
                 </div>
               ) : (
                 <div key={msg.id} className="cgpt-lp-msg-ai">
-                  <div className="cgpt-lp-ai-avatar">✝</div>
+                  <div className="cgpt-lp-ai-avatar">
+                  <img src="/cgpt-icons/icon-128x128.png" alt="AI" className="w-full h-full rounded-md" />
+                </div>
                   <div className="cgpt-lp-ai-body">
                     <div className="cgpt-lp-ai-label">ChurchGPT</div>
                     {msg.content ? (
@@ -207,7 +203,9 @@ export default function ChurchGPTLandingPage() {
             {/* Typing indicator */}
             {isLoading && messages.length > 0 && messages[messages.length - 1]?.role === 'user' && (
               <div className="cgpt-lp-msg-ai">
-                <div className="cgpt-lp-ai-avatar">✝</div>
+                <div className="cgpt-lp-ai-avatar">
+                  <img src="/cgpt-icons/icon-128x128.png" alt="AI" className="w-full h-full rounded-md" />
+                </div>
                 <div className="cgpt-lp-ai-body">
                   <div className="cgpt-lp-ai-label">ChurchGPT</div>
                   <div className="cgpt-lp-typing"><span/><span/><span/></div>

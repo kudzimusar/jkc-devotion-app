@@ -1,14 +1,15 @@
 'use client'
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter } from "next/navigation"
 import { getChurchGPTSupabaseClient } from "@/lib/churchgpt/supabase-client"
 import { PublicChurchGPTSidebar } from "@/components/churchgpt-public/PublicChurchGPTSidebar"
+import { useChurchGPT } from "@/hooks/useChurchGPT"
 import { PanelLeft, Loader2, CheckCircle2, AlertCircle, Sun, Moon } from "lucide-react"
 import Link from "next/link"
 import { useCGPTTheme } from "@/hooks/useCGPTTheme"
 
-export default function ChurchGPTAccountPage() {
+function AccountContent() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
@@ -30,6 +31,7 @@ export default function ChurchGPTAccountPage() {
   const [confirmPwd, setConfirmPwd] = useState('')
   const [pwdMsg, setPwdMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const { theme, toggle: toggleTheme } = useCGPTTheme()
+  const { conversations, deleteConversation } = useChurchGPT()
 
   const supabase = getChurchGPTSupabaseClient()
 
@@ -132,10 +134,10 @@ export default function ChurchGPTAccountPage() {
     <div className={`cgpt-page-shell ${theme === 'light' ? 'cgpt-light' : ''}`}>
       <div className={`cgpt-sidebar-wrap ${sidebarOpen ? '' : 'cgpt-sidebar-hidden'}`}>
         <PublicChurchGPTSidebar
-          conversations={[]}
+          conversations={conversations}
           activeId={null}
           onSelect={(id) => router.push(`/churchgpt/chat?load=${id}`)}
-          onDelete={() => {}}
+          onDelete={deleteConversation}
           onNewChat={() => router.push('/churchgpt/chat')}
           user={user}
         />
@@ -371,5 +373,13 @@ export default function ChurchGPTAccountPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ChurchGPTAccountPage() {
+  return (
+    <Suspense fallback={<div className="cgpt-loading-screen"><Loader2 className="cgpt-loader" /></div>}>
+      <AccountContent />
+    </Suspense>
   )
 }

@@ -50,7 +50,6 @@ const SUGGESTIONS = [
 
 function ChurchGPTAuthenticatedChat() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [sessionType, setSessionType] = useState('general')
   const [user, setUser] = useState<any>(null)
   const [authLoading, setAuthLoading] = useState(true)
@@ -121,15 +120,6 @@ function ChurchGPTAuthenticatedChat() {
     availableModels, isPro,
   } = useChurchGPT(sessionType)
 
-  // Auto-load conversation when coming back from Account/Settings via ?load=
-  useEffect(() => {
-    const loadId = searchParams?.get('load')
-    if (loadId && !authLoading) {
-      loadMessages(loadId)
-      // Clean up the URL without reloading
-      router.replace('/churchgpt/chat')
-    }
-  }, [authLoading, searchParams])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -164,6 +154,7 @@ function ChurchGPTAuthenticatedChat() {
       {sidebarOpen && (
         <div className="cgpt-sidebar-overlay" onClick={() => setSidebarOpen(false)} />
       )}
+      <ConversationHandler authLoading={authLoading} loadMessages={loadMessages} />
 
       {/* ── Main ── */}
       <div className="cgpt-main">
@@ -311,7 +302,9 @@ function ChurchGPTAuthenticatedChat() {
             <button className="cgpt-modal-close" onClick={() => setUpgradeModal(null)}>
               <X size={16} />
             </button>
-            <div className="cgpt-modal-icon">✝</div>
+            <div className="cgpt-modal-icon">
+              <img src="/cgpt-icons/icon-128x128.png" alt="ChurchGPT" className="w-12 h-12 mx-auto" />
+            </div>
             <h2 className="cgpt-modal-title">Monthly limit reached</h2>
             <p className="cgpt-modal-body">{upgradeModal.message}</p>
             <Link href="/churchgpt/upgrade" className="cgpt-modal-cta">
@@ -322,6 +315,22 @@ function ChurchGPTAuthenticatedChat() {
       )}
     </div>
   )
+}
+
+function ConversationHandler({ authLoading, loadMessages }: { authLoading: boolean, loadMessages: (id: string) => void }) {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  useEffect(() => {
+    const loadId = searchParams?.get('load')
+    if (loadId && !authLoading) {
+      loadMessages(loadId)
+      // Clean up the URL without reloading
+      router.replace('/churchgpt/chat')
+    }
+  }, [authLoading, searchParams, loadMessages, router])
+
+  return null
 }
 
 export default function ChurchGPTChatPage() {

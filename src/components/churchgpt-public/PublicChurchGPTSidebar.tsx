@@ -80,7 +80,7 @@ export function PublicChurchGPTSidebar({
     <aside className="cgpt-sidebar">
       {/* Logo — clicking navigates back to the main chat */}
       <Link href="/churchgpt/chat" className="cgpt-sidebar-logo" style={{ textDecoration: 'none', cursor: 'pointer' }}>
-        <div className="cgpt-logo-mark">✝</div>
+        <img src="/cgpt-icons/icon-128x128.png" alt="ChurchGPT" className="w-8 h-8 mr-2 rounded-lg" />
         <span className="cgpt-logo-text">ChurchGPT</span>
       </Link>
 

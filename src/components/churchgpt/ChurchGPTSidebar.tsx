@@ -70,7 +70,9 @@ export function ChurchGPTSidebar({
         >
           <ChevronRight className="w-5 h-5" />
         </button>
-        <div className="text-[#D4AF37] text-xl font-bold mb-8">✟</div>
+        <div className="mb-8">
+          <img src="/cgpt-icons/icon-128x128.png" alt="ChurchGPT" className="w-8 h-8 rounded-md" />
+        </div>
         <button 
           onClick={onNewChat}
           className="w-10 h-10 flex items-center justify-center bg-[#1b3a6b] text-white rounded-lg hover:bg-[#2a4d8a] mb-4"
@@ -111,7 +113,7 @@ export function ChurchGPTSidebar({
       {/* Top Header */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <span className="text-[#D4AF37] text-xl font-bold">✟</span>
+          <img src="/cgpt-icons/icon-128x128.png" alt="ChurchGPT" className="w-8 h-8 rounded-md" />
           <h1 className="text-white text-lg tracking-tight" style={{ fontFamily: 'Georgia, serif' }}>ChurchGPT</h1>
         </div>
         <button 

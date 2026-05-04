@@ -16,14 +16,12 @@ export function GuestPrompt({ variant, onContinue }: GuestPromptProps) {
     <div className="flex justify-center my-8 w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
       <Card className="w-full max-w-md p-8 border-2 border-[#0f1f3d] bg-white shadow-xl text-center space-y-6">
         <div className="flex justify-center">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 3v18M8 8h8" />
-          </svg>
+          <img src="/cgpt-icons/icon-128x128.png" alt="ChurchGPT" className="w-16 h-16" />
         </div>
 
         <div className="space-y-2">
           <h3 className="text-xl font-serif text-[#0f1f3d]">
-            {isSoft ? "✟ You've been chatting for a bit." : "✟ You've reached the guest limit."}
+            {isSoft ? "You've been chatting for a bit." : "You've reached the guest limit."}
           </h3>
           <p className="text-slate-600">
             {isSoft 

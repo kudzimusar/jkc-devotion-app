@@ -17,8 +17,8 @@ export function ChurchGPTSuggestions({ onSelect }: ChurchGPTSuggestionsProps) {
   return (
     <div className="flex flex-col items-center justify-center p-8 max-w-2xl mx-auto flex-1 min-h-[400px]">
       <div className="text-center mb-8 space-y-2">
-        <div className="text-[#f5a623] mb-4 flex justify-center">
-          <span className="text-4xl drop-shadow-sm">✟</span>
+        <div className="mb-4 flex justify-center">
+          <img src="/cgpt-icons/icon-128x128.png" alt="ChurchGPT" className="w-16 h-16" />
         </div>
         <h2 
           className="text-3xl font-bold text-[#1b3a6b]" 
