@@ -137,7 +137,13 @@ export function ChurchGPTInput({ onSend, disabled, sessionType, setSessionType, 
           <Paperclip size={12} />
           Attach
         </button>
-        <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          onChange={handleFileChange}
+          accept="image/*,.pdf,.doc,.docx,.txt,.md,.csv,.xlsx,.xls,.pptx"
+        />
 
         <select
           value={sessionType}

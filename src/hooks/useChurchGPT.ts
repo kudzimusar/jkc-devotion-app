@@ -312,6 +312,36 @@ export function useChurchGPT(
       // Get guest fingerprint
       const fingerprint = isGuest ? await getOrCreateFingerprint() : null
 
+      // ── Attachment pre-processing ─────────────────────────────────────────
+      // Images and PDFs go to Gemini as inline data; all other formats get
+      // converted to text first so the model can read them.
+      let gatewayAttachment: { data: string; mimeType: string } | undefined
+      let attachmentText = ''
+
+      if (attachment) {
+        const isInlineType =
+          attachment.mimeType.startsWith('image/') ||
+          attachment.mimeType === 'application/pdf'
+
+        if (isInlineType) {
+          gatewayAttachment = { data: attachment.data, mimeType: attachment.mimeType }
+        } else {
+          try {
+            const convRes = await fetch('/api/read-attachment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ data: attachment.data, mimeType: attachment.mimeType, name: attachment.name }),
+            })
+            if (convRes.ok) {
+              const { text } = await convRes.json()
+              if (text) attachmentText = `\n\n[Attached file: ${attachment.name ?? 'document'}]\n${text}`
+            }
+          } catch {
+            // silently skip — don't block the message
+          }
+        }
+      }
+
       const CHURCHGPT_ENDPOINT = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/churchgpt-gateway`
 
       const controller = new AbortController()
@@ -329,7 +359,7 @@ export function useChurchGPT(
             })
           },
           body: JSON.stringify({
-            message: content,
+            message: content + attachmentText,
             history: newMessages.slice(0, -1).map(m => ({ role: m.role, content: m.content })),
             conversation_id: currentConvoId ?? null,
             org_id: isGuest ? null : (resolvedOrgId ?? null),
@@ -338,6 +368,7 @@ export function useChurchGPT(
             sessionType: activeSessionType,
             memberProfile: isGuest ? null : (memberProfile || profile),
             fingerprint,
+            ...(gatewayAttachment ? { attachment: gatewayAttachment } : {}),
           })
         })
       } catch (fetchErr: any) {

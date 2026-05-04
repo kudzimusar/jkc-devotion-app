@@ -5,6 +5,8 @@ import { supabase } from "@/lib/supabase"
 import { useAdminCtx } from "../Context"
 import { FileText, Download, Trash2, Loader2, BookOpen, Calendar, Users, HandCoins, Mic2, Music, Baby, Shield } from "lucide-react"
 
+type DownloadFormat = 'pdf' | 'docx' | 'txt'
+
 interface ChurchDocument {
   id: string
   mode: string
@@ -52,7 +54,7 @@ export default function DocumentsPage() {
   const { orgId } = useAdminCtx()
   const [documents, setDocuments] = useState<ChurchDocument[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const [downloading, setDownloading] = useState<{ id: string; fmt: DownloadFormat } | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [orgName, setOrgName] = useState('')
 
@@ -74,35 +76,37 @@ export default function DocumentsPage() {
     setIsLoading(false)
   }
 
-  async function handleDownload(doc: ChurchDocument) {
-    setDownloadingId(doc.id)
+  async function handleDownload(doc: ChurchDocument, fmt: DownloadFormat) {
+    setDownloading({ id: doc.id, fmt })
     try {
-      // Prefer stored PDF URL; fall back to regenerating
-      if (doc.pdf_url) {
+      const slug = doc.title.replace(/\s+/g, '-').toLowerCase()
+      // For PDF, prefer the stored URL if no specific regeneration is needed
+      if (fmt === 'pdf' && doc.pdf_url) {
         const a = document.createElement('a')
         a.href = doc.pdf_url
-        a.download = `${doc.title.replace(/\s+/g, '-').toLowerCase()}.pdf`
+        a.download = `${slug}.pdf`
         a.target = '_blank'
         a.click()
-      } else if (doc.document_data) {
-        const res = await fetch('/api/generate-document', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ document_data: doc.document_data, org_name: orgName }),
-        })
-        if (!res.ok) throw new Error('Generation failed')
-        const blob = await res.blob()
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `${doc.title.replace(/\s+/g, '-').toLowerCase()}.pdf`
-        a.click()
-        URL.revokeObjectURL(url)
+        return
       }
+      if (!doc.document_data) return
+      const res = await fetch('/api/generate-document', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ document_data: doc.document_data, org_name: orgName, format: fmt }),
+      })
+      if (!res.ok) throw new Error('Generation failed')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${slug}.${fmt}`
+      a.click()
+      URL.revokeObjectURL(url)
     } catch (err) {
       console.error('[Documents] Download failed', err)
     } finally {
-      setDownloadingId(null)
+      setDownloading(null)
     }
   }
 
@@ -175,18 +179,25 @@ export default function DocumentsPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => handleDownload(doc)}
-                    disabled={downloadingId === doc.id}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0f1f3d] text-white text-xs font-semibold hover:bg-[#1b3a6b] transition-colors disabled:opacity-60"
-                    title="Download PDF"
-                  >
-                    {downloadingId === doc.id
-                      ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      : <Download className="w-3.5 h-3.5" />}
-                    Download
-                  </button>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {(['docx', 'pdf', 'txt'] as DownloadFormat[]).map(fmt => {
+                    const isThis = downloading?.id === doc.id && downloading?.fmt === fmt
+                    const isBusy = downloading?.id === doc.id && downloading?.fmt !== fmt
+                    return (
+                      <button
+                        key={fmt}
+                        onClick={() => handleDownload(doc, fmt)}
+                        disabled={isThis || isBusy}
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#0f1f3d] text-white text-[11px] font-bold hover:bg-[#1b3a6b] transition-colors disabled:opacity-50"
+                        title={`Download ${fmt.toUpperCase()}`}
+                      >
+                        {isThis
+                          ? <Loader2 className="w-3 h-3 animate-spin" />
+                          : <Download className="w-3 h-3" />}
+                        {fmt.toUpperCase()}
+                      </button>
+                    )
+                  })}
                   <button
                     onClick={() => handleDelete(doc.id)}
                     disabled={deletingId === doc.id}

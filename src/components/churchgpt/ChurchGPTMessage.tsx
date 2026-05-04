@@ -4,7 +4,9 @@ import { ChurchGPTMessage as IChurchGPTMessage } from "@/hooks/useChurchGPT"
 import { getChurchGPTSupabaseClient } from "@/lib/churchgpt/supabase-client"
 import { getDocumentTitle, getDocumentBadge } from "@/lib/pdf/ChurchGPTPDF"
 import { Copy, Check, FileText, Download, CloudUpload, CheckCircle, Loader2 } from "lucide-react"
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef } from "react"
+
+type DownloadFormat = 'pdf' | 'docx' | 'txt'
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import type { Components } from "react-markdown"
@@ -133,35 +135,36 @@ function DocumentActionBar({ documentData, orgId, orgName }: {
   orgId?: string | null
   orgName?: string
 }) {
-  const [isDownloading, setIsDownloading] = useState(false)
+  const [downloadingFormat, setDownloadingFormat] = useState<DownloadFormat | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [savedToMC, setSavedToMC] = useState(false)
 
-  async function generatePDF(): Promise<Blob | null> {
+  async function fetchDocument(fmt: DownloadFormat): Promise<Blob | null> {
     const res = await fetch('/api/generate-document', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ document_data: documentData, org_name: orgName || 'Church OS' }),
+      body: JSON.stringify({ document_data: documentData, org_name: orgName || 'Church OS', format: fmt }),
     })
     if (!res.ok) return null
     return res.blob()
   }
 
-  const handleDownload = useCallback(async () => {
-    setIsDownloading(true)
+  const handleDownload = useCallback(async (fmt: DownloadFormat) => {
+    setDownloadingFormat(fmt)
     try {
-      const blob = await generatePDF()
+      const blob = await fetchDocument(fmt)
       if (!blob) return
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${getDocumentTitle(documentData).replace(/\s+/g, '-').toLowerCase()}.pdf`
+      const slug = getDocumentTitle(documentData).replace(/\s+/g, '-').toLowerCase()
+      a.download = `${slug}.${fmt}`
       a.click()
       URL.revokeObjectURL(url)
     } catch (err) {
       console.error('[DocumentActionBar] Download failed', err)
     } finally {
-      setIsDownloading(false)
+      setDownloadingFormat(null)
     }
   }, [documentData, orgName])
 
@@ -169,7 +172,7 @@ function DocumentActionBar({ documentData, orgId, orgName }: {
     if (!orgId) return
     setIsSaving(true)
     try {
-      const blob = await generatePDF()
+      const blob = await fetchDocument('pdf')
       if (!blob) return
       const supabase = getChurchGPTSupabaseClient()
       const fileName = `${orgId}/${crypto.randomUUID()}.pdf`
@@ -195,6 +198,20 @@ function DocumentActionBar({ documentData, orgId, orgName }: {
 
   const badge = getDocumentBadge(documentData.type as string)
 
+  const fmtBtn = (fmt: DownloadFormat, label: string) => (
+    <button
+      key={fmt}
+      onClick={() => handleDownload(fmt)}
+      disabled={downloadingFormat !== null}
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0f1f3d] text-white text-xs font-semibold hover:bg-[#1b3a6b] transition-colors disabled:opacity-60"
+    >
+      {downloadingFormat === fmt
+        ? <Loader2 className="w-3 h-3 animate-spin" />
+        : <Download className="w-3 h-3" />}
+      {label}
+    </button>
+  )
+
   return (
     <div className="mt-3 flex items-center gap-2 flex-wrap">
       <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#D4AF37]/10 border border-[#D4AF37]/30">
@@ -202,16 +219,9 @@ function DocumentActionBar({ documentData, orgId, orgName }: {
         <span className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-wide">{badge} Ready</span>
       </div>
 
-      <button
-        onClick={handleDownload}
-        disabled={isDownloading}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0f1f3d] text-white text-xs font-semibold hover:bg-[#1b3a6b] transition-colors disabled:opacity-60"
-      >
-        {isDownloading
-          ? <Loader2 className="w-3 h-3 animate-spin" />
-          : <Download className="w-3 h-3" />}
-        Download PDF
-      </button>
+      {fmtBtn('docx', 'DOCX')}
+      {fmtBtn('pdf',  'PDF')}
+      {fmtBtn('txt',  'TXT')}
 
       {orgId && (
         savedToMC

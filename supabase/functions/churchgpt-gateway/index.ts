@@ -561,7 +561,7 @@ async function callGemini(modelId: string, messages: any[], systemPrompt: string
       system_instruction: { parts: [{ text: systemPrompt }] },
       contents: messages.map((m: any) => ({
         role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.content }]
+        parts: m.parts ?? [{ text: m.content }]
       })),
       generationConfig: { temperature: 0.7, maxOutputTokens: 4096 }
     })
@@ -708,7 +708,8 @@ serve(async (req) => {
       model_preference,
       sessionType,
       memberProfile,
-      context: bodyContext
+      context: bodyContext,
+      attachment: incomingAttachment
     } = payload
 
     // Support both new {message} and legacy {messages[]} payload shapes
@@ -842,9 +843,15 @@ serve(async (req) => {
     )
 
     // ── 7. Build message history ─────────────────────────────────────────────
+    const lastUserParts: any[] = [{ text: userMessage }]
+    if (incomingAttachment?.data && incomingAttachment?.mimeType) {
+      lastUserParts.push({
+        inlineData: { mimeType: incomingAttachment.mimeType, data: incomingAttachment.data }
+      })
+    }
     const allMessages = [
-      ...historyMessages.map((m: any) => ({ role: m.role, content: m.content })),
-      { role: 'user', content: userMessage }
+      ...historyMessages.map((m: any) => ({ role: m.role, content: m.content, parts: [{ text: m.content }] })),
+      { role: 'user', content: userMessage, parts: lastUserParts }
     ]
 
     // ── 8. Call AI model ─────────────────────────────────────────────────────
