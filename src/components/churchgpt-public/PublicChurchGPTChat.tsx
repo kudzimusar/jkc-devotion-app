@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { useChurchGPT } from "@/hooks/useChurchGPT"
+import { useVoiceConversation } from "@/hooks/useVoiceConversation"
 import { ChurchGPTMessage } from "@/components/churchgpt/ChurchGPTMessage"
 import { ChurchGPTInput } from "@/components/churchgpt/ChurchGPTInput"
 import { ChurchGPTSuggestions } from "@/components/churchgpt/ChurchGPTSuggestions"
@@ -13,6 +14,7 @@ export function PublicChurchGPTChat() {
   const [sessionType, setSessionType] = useState('general')
   const [guestCount, setGuestCount] = useState(0)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const prevMessageCount = useRef(0)
 
   const {
     messages,
@@ -23,6 +25,9 @@ export function PublicChurchGPTChat() {
     upgradeModal,
     setUpgradeModal,
   } = useChurchGPT(sessionType, undefined, undefined, true)
+
+  const { voiceState, isAvailable: isVoiceAvailable, startListening, stopListening, speak, stopSpeaking } =
+    useVoiceConversation(sessionType)
 
   useEffect(() => {
     const count = parseInt(localStorage.getItem('churchgpt_guest_count') || '0')
@@ -38,7 +43,23 @@ export function PublicChurchGPTChat() {
     const count = parseInt(localStorage.getItem('churchgpt_guest_count') || '0')
     setGuestCount(count)
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+
+    if (messages.length > prevMessageCount.current) {
+      const last = messages[messages.length - 1]
+      if (last?.role === 'assistant' && last.content && voiceState !== 'listening') {
+        speak(last.content, sessionType)
+      }
+    }
+    prevMessageCount.current = messages.length
   }, [messages])
+
+  async function handleMicPress() {
+    if (voiceState === 'listening') { stopListening(); return }
+    try {
+      const transcript = await startListening()
+      if (transcript) sendMessage(transcript, sessionType, undefined, true)
+    } catch { /* permission denied — silently ignore */ }
+  }
 
   // Sync guestCount from quotaState when available
   useEffect(() => {
@@ -133,6 +154,10 @@ export function PublicChurchGPTChat() {
             disabled={isInputDisabled}
             sessionType={sessionType}
             setSessionType={setSessionType}
+            voiceState={voiceState}
+            isVoiceAvailable={isVoiceAvailable}
+            onMicPress={handleMicPress}
+            onStopSpeaking={stopSpeaking}
           />
 
           {/* Quota bar */}

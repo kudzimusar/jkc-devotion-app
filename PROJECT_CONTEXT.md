@@ -59,7 +59,7 @@ This layer operates through two critical **Offices of Authority** that bridge th
 
 ### Layer 3: The Digital Sanctuary (The Member Hub)
 *High-Engagement Spiritual Environment*
-- **ChurchGPT**: Multi-modal AI theological companion with "Identity Hardening," quota-gated multi-model routing (Gemini, Claude, GPT-4o mini, Kimi/Moonshot), tiered access (Guest/Starter/Lite/Pro/Enterprise), Stripe billing integration, and real-time upgrade flow.
+- **ChurchGPT**: Full-stack AI theological companion with "Identity Hardening," 17 behaviorally-distinct session modes, quota-gated multi-model routing (Gemini, Claude, GPT-4o mini, Kimi/Moonshot), tiered access (Guest/Starter/Lite/Pro/Enterprise), Stripe billing integration, real-time upgrade flow, multi-format document generation (PDF/DOCX/TXT), multi-file upload (images, PDFs, DOCX, XLSX, CSV, TXT), and a zero-cost browser-native voice pipeline (STT + TTS).
 - **SOAP Devotion**: Interactive journaling with sentiment sync to the PIL layer.
 - **Growth Milestone Sync**: Unified tracking of salvation, baptism, and leadership milestones.
 - **Junior Church**: Integrated guardian surveillance and child check-in security.
@@ -109,18 +109,129 @@ Church OS isn't a management tool; it's a **Prophetic Intelligence Platform**.
 
 ---
 
+---
+
+## 🤖 ChurchGPT — Full Capability Reference (Updated May 2026)
+
+### Session Modes (17 total, role-gated)
+
+| Mode | Audience | Document Output |
+|------|----------|----------------|
+| `general` | All | — |
+| `devotional` | All | — |
+| `prayer` | All | — |
+| `bible-study` | All | Bible Study Guide (PDF/DOCX/TXT) |
+| `apologetics` | Member+ | — |
+| `pastoral` | Member+ | — |
+| `grief-support` | Member+ | — |
+| `visitor` | Guest | — |
+| `sermon-planning` | Admin/Pastor | Sermon Outline (PDF/DOCX/TXT) |
+| `worship-planning` | Admin/Pastor | Service Order (PDF/DOCX/TXT) |
+| `event-planning` | Admin/Pastor | Event Brief (PDF/DOCX/TXT) |
+| `stewardship` | Admin/Pastor | Stewardship Campaign (PDF/DOCX/TXT) |
+| `youth-ministry` | Leader+ | Youth Lesson (PDF/DOCX/TXT) |
+| `small-group` | Leader+ | Small Group Guide (PDF/DOCX/TXT) |
+| `evangelism-coaching` | Member+ | — |
+| `leadership-development` | Leader+ | — |
+| `admin` | Admin/Pastor | Admin Document (PDF/DOCX/TXT) |
+
+**Role tiers**: `admin/pastor` → all 17 modes · `leader` → 11 modes · `member` → 8 modes · `guest/visitor` → 4 modes
+
+### Document Generation Pipeline
+
+```
+AI completes session → appends ---DOCUMENT_DATA_START---{json}---DOCUMENT_DATA_END---
+    ↓
+Gateway extractDocumentData() strips block → returns cleanReply + documentData
+    ↓
+ChurchGPTMessage renders DocumentActionBar with [DOCX] [PDF] [TXT] buttons
+    ↓
+/api/generate-document route (format param) →
+    PDF: @react-pdf/renderer (ChurchGPTPDF.tsx)
+  DOCX: docx v9 (ChurchGPTDOCX.ts) — navy/gold branded, full structure
+   TXT: plain ASCII (ChurchGPTTXT.ts) — ═══ dividers, | callouts, • bullets
+    ↓
+[org users] "Save to Mission Control" → Supabase Storage (church-documents bucket) → church_documents table
+```
+
+**Mission Control Documents page**: `/shepherd/dashboard/documents` — lists saved documents with [DOCX] [PDF] [TXT] download per row.
+
+### File Upload Support
+
+Accepted types: `image/*, .pdf, .doc, .docx, .txt, .md, .csv, .xlsx, .xls, .pptx`
+
+Conversion pipeline (`/api/read-attachment`):
+- **DOCX** → plain text via `mammoth`
+- **XLSX / XLS / CSV** → per-sheet CSV text via `xlsx`
+- **TXT / MD** → UTF-8 passthrough
+- **Images / PDF** → forwarded to Gemini as `inlineData` (native multimodal)
+
+Extracted text is appended to the user message. Images/PDFs travel as binary inline data in the gateway request body.
+
+### Voice Pipeline (Zero-cost, browser-native)
+
+```
+User presses mic → SpeechRecognition (Web Speech API, browser STT, free)
+    ↓
+Transcript + voice_mode: true → ChurchGPT Gateway
+    ↓
+Gateway injects VOICE_MODE_INSTRUCTION: plain prose, no markdown, 2-4 paragraphs, spell out scripture refs
+    ↓
+Reply text → SpeechSynthesisUtterance (browser TTS, free)
+    ↓ mode-specific voice profile (rate/pitch/gender hint)
+Audio plays in browser — no server, no API key, no cost
+```
+
+**Mode voice profiles** (from `useVoiceConversation.ts`):
+
+| Mode | Rate | Pitch | Voice hint |
+|------|------|-------|------------|
+| devotional, prayer | 0.82–0.88 | 1.00–1.05 | female |
+| pastoral, sermon-planning | 0.90–0.95 | 0.95–0.97 | male |
+| grief-support | 0.80 | 0.95 | female |
+| youth-ministry | 1.05 | 1.08 | male |
+| general | 0.95 | 1.00 | female |
+
+Auto-speaks every new assistant reply. Stop button available mid-speech. Mic toggles off while speaking. Works in both authenticated ChurchGPTChat and public PublicChurchGPTChat.
+
+### Key Files (ChurchGPT subsystem)
+
+| File | Purpose |
+|------|---------|
+| `supabase/functions/churchgpt-gateway/index.ts` | Multi-model router, quota gating, session modes, doc extraction, voice mode, attachment inlineData |
+| `src/hooks/useChurchGPT.ts` | Client state, sendMessage, attachment pre-processing, voice_mode flag |
+| `src/hooks/useVoiceConversation.ts` | STT + TTS hook, mode voice profiles, markdown stripping |
+| `src/components/churchgpt/ChurchGPTChat.tsx` | Authenticated chat shell, voice integration, auto-speak |
+| `src/components/churchgpt-public/PublicChurchGPTChat.tsx` | Public chat shell, voice integration, guest quota |
+| `src/components/churchgpt/ChurchGPTInput.tsx` | Input bar, mode selector, file attach, mic button |
+| `src/components/churchgpt/ChurchGPTMessage.tsx` | Message renderer, DocumentActionBar (DOCX/PDF/TXT/Save) |
+| `src/components/churchgpt/ChurchGPTSuggestions.tsx` | Mode-aware starter prompts (6 per mode × 17 modes) |
+| `src/lib/pdf/ChurchGPTPDF.tsx` | @react-pdf/renderer branded PDF templates (8 types) |
+| `src/lib/pdf/ChurchGPTDOCX.ts` | docx v9 branded Word templates (8 types) |
+| `src/lib/pdf/ChurchGPTTXT.ts` | ASCII plain-text templates (8 types) |
+| `src/app/api/generate-document/route.ts` | PDF/DOCX/TXT generation endpoint (format param) |
+| `src/app/api/read-attachment/route.ts` | DOCX/XLSX/CSV/TXT→text conversion endpoint |
+| `src/app/shepherd/dashboard/documents/page.tsx` | Mission Control documents list |
+| `supabase/migrations/20260504000000_church_documents.sql` | church_documents table + RLS + storage note |
+
+---
+
 ## 🛠️ Specialized AI Skills (The "Agentic" Manual)
 
 | # | Skill | Trigger | Purpose |
 |---|-------|---------|---------|
-| 1 | `onboarding_provision` | Setup new tenant | 5-Step DNA capture -> Edge Function instantiation |
+| 1 | `onboarding_provision` | Setup new tenant | 5-Step DNA capture → Edge Function instantiation |
 | 2 | `run_pil_audit` | Generate health report | Execute the 12-model predictive intelligence sweep |
-| 3 | `ministry_strategy_gen`| Build growth blueprint | Generate vertical-specific AI strategy for a ministry |
+| 3 | `ministry_strategy_gen` | Build growth blueprint | Generate vertical-specific AI strategy for a ministry |
 | 4 | `sync_milestone_master` | Member landmark update | Cross-table sync of spiritual growth markers |
 | 5 | `watch_retention_init` | Setup watch library | Configure 30s retention analytics and AI summaries |
 | 6 | `financial_ledger_wire` | Setup church giving | Connect Stripe/PayPal and wire the financial radar |
-| 7 | `coce_broadcast_dispatch`| Dispatch briefing | Summarize PIL insights and send via Brevo campaign |
-| 8 | `registry_spatial_query`| expansion research | Query 2.1M registry with density & ward-based filters |
+| 7 | `coce_broadcast_dispatch` | Dispatch briefing | Summarize PIL insights and send via Brevo campaign |
+| 8 | `registry_spatial_query` | Expansion research | Query 2.1M registry with density & ward-based filters |
+| 9 | `churchgpt_doc_generate` | Export session output | Call `/api/generate-document` with format (pdf/docx/txt) |
+| 10 | `churchgpt_attach_read` | Process uploaded file | Call `/api/read-attachment` to extract text from DOCX/XLSX/CSV |
+| 11 | `churchgpt_voice_session` | Voice conversation | Activate mic via `useVoiceConversation`, send with `voice_mode: true` |
+| 12 | `mission_control_docs` | View saved documents | Query `church_documents` table, download from Supabase Storage |
 
 ---
 
@@ -129,6 +240,12 @@ Church OS isn't a management tool; it's a **Prophetic Intelligence Platform**.
 - **Owner Focus**: The CEO is **Shadreck Kudzanai Musarurwa**. Never cite a client as the project owner.
 - **Isolation Rule**: Every query MUST be scoped: `.eq('org_id', orgId)`. No exceptions.
 - **Aesthetics**: Premium Glassmorphism (Navy/Gold/Emerald) — First class first impression.
+- **Zero-Cost Voice**: ChurchGPT voice uses Web Speech API for both STT and TTS. Never introduce ElevenLabs or any paid TTS dependency without explicit approval from the CEO.
+- **Document Protocol**: Document-generating modes MUST append `---DOCUMENT_DATA_START---{json}---DOCUMENT_DATA_END---` at the end of their final reply. The `extractDocumentData()` function in the gateway strips this before display. Never break this contract.
+- **Format Trinity**: Every document type MUST be available in three formats — PDF (`@react-pdf/renderer`), DOCX (`docx` v9), TXT (ASCII). Never add a new document type to the PDF builder without adding matching DOCX and TXT builders.
+- **Voice Mode Purity**: When `voice_mode: true`, the `VOICE_MODE_INSTRUCTION` block is injected into the system prompt. The model must return plain prose only — no markdown, no lists, no headers. Keep this block in sync with any future prompt changes.
+- **Storage Bucket**: The `church-documents` Supabase Storage bucket is public-read. Org paths are always `{org_id}/{uuid}.pdf`. Never upload to a flat path.
+- **Attachment Pipeline**: Non-image/non-PDF files are converted to text via `/api/read-attachment` before reaching the gateway. Images and PDFs travel as Gemini `inlineData`. Never send raw binary data as a message string.
 
 ---
 
