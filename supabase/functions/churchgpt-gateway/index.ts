@@ -653,11 +653,18 @@ async function callModel(model: any, messages: any[], systemPrompt: string) {
 
 // ─── System Prompt Builder ────────────────────────────────────────────────────
 
+const VOICE_MODE_INSTRUCTION = `VOICE MODE ACTIVE: The user is listening to your reply through a text-to-speech voice. You MUST follow these rules:
+- Write in natural spoken sentences only. No markdown, no bullet points, no numbered lists, no headers, no asterisks, no symbols.
+- Keep your reply concise — 2 to 4 short paragraphs at most.
+- Spell out scripture references in full words (e.g. say "John chapter 3 verse 16", not "John 3:16").
+- Never include document data blocks in voice mode.`
+
 function buildSystemPrompt(
   context: string,
   sessionType: string,
   orgName: string,
-  memberProfile: any
+  memberProfile: any,
+  voiceMode = false
 ): string {
   const parts = [CHURCHGPT_CORE_IDENTITY, CITATION_ENFORCEMENT_BLOCK]
 
@@ -678,6 +685,8 @@ function buildSystemPrompt(
 
   const modifier = SESSION_MODIFIERS[sessionType || 'general']
   if (modifier) parts.push(modifier)
+
+  if (voiceMode) parts.push(VOICE_MODE_INSTRUCTION)
 
   return parts.join('\n\n---\n\n')
 }
@@ -709,7 +718,8 @@ serve(async (req) => {
       sessionType,
       memberProfile,
       context: bodyContext,
-      attachment: incomingAttachment
+      attachment: incomingAttachment,
+      voice_mode: voiceMode
     } = payload
 
     // Support both new {message} and legacy {messages[]} payload shapes
@@ -839,7 +849,8 @@ serve(async (req) => {
       detectedContext,
       sessionType ?? 'general',
       orgName,
-      memberProfile ?? null
+      memberProfile ?? null,
+      !!voiceMode
     )
 
     // ── 7. Build message history ─────────────────────────────────────────────

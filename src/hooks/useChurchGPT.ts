@@ -248,7 +248,8 @@ export function useChurchGPT(
   const sendMessage = useCallback(async (
     content: string,
     overrideSessionType?: string,
-    attachment?: { data: string, mimeType: string, name?: string }
+    attachment?: { data: string, mimeType: string, name?: string },
+    voiceMode = false
   ) => {
     if (!content.trim() && !attachment) return
 
@@ -368,6 +369,7 @@ export function useChurchGPT(
             sessionType: activeSessionType,
             memberProfile: isGuest ? null : (memberProfile || profile),
             fingerprint,
+            ...(voiceMode ? { voice_mode: true } : {}),
             ...(gatewayAttachment ? { attachment: gatewayAttachment } : {}),
           })
         })

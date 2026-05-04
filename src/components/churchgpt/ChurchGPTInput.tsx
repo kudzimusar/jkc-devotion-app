@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, KeyboardEvent, useRef } from "react"
-import { Paperclip, X, ArrowUp } from "lucide-react"
+import { Paperclip, X, ArrowUp, Mic, MicOff, Volume2 } from "lucide-react"
+import type { VoiceState } from "@/hooks/useVoiceConversation"
 
 interface ChurchGPTInputProps {
   onSend: (message: string, sessionType: string, attachment?: { data: string, mimeType: string, name?: string }) => void
@@ -10,9 +11,25 @@ interface ChurchGPTInputProps {
   setSessionType: (v: string) => void
   userRole?: 'admin' | 'pastor' | 'leader' | 'member' | 'visitor' | null
   placeholder?: string
+  // Voice props — optional; if omitted the mic button is not rendered
+  voiceState?: VoiceState
+  isVoiceAvailable?: boolean
+  onMicPress?: () => void
+  onStopSpeaking?: () => void
 }
 
-export function ChurchGPTInput({ onSend, disabled, sessionType, setSessionType, userRole, placeholder }: ChurchGPTInputProps) {
+export function ChurchGPTInput({
+  onSend,
+  disabled,
+  sessionType,
+  setSessionType,
+  userRole,
+  placeholder,
+  voiceState,
+  isVoiceAvailable,
+  onMicPress,
+  onStopSpeaking,
+}: ChurchGPTInputProps) {
   const [content, setContent] = useState("")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -61,6 +78,8 @@ export function ChurchGPTInput({ onSend, disabled, sessionType, setSessionType, 
   }
 
   const canSend = (content.trim() || !!selectedFile) && !disabled
+  const isListening = voiceState === 'listening'
+  const isSpeaking  = voiceState === 'speaking'
 
   const handleSend = () => {
     if (!canSend) return
@@ -105,6 +124,30 @@ export function ChurchGPTInput({ onSend, disabled, sessionType, setSessionType, 
         </div>
       )}
 
+      {/* Listening indicator */}
+      {isListening && (
+        <div className="flex items-center gap-2 px-3 py-1.5 text-xs text-[#D4AF37] font-semibold animate-pulse">
+          <span className="w-2 h-2 rounded-full bg-red-500 animate-ping inline-block" />
+          Listening… speak now
+        </div>
+      )}
+
+      {/* Speaking indicator */}
+      {isSpeaking && (
+        <div className="flex items-center justify-between px-3 py-1.5">
+          <div className="flex items-center gap-2 text-xs text-[#1b3a6b] font-semibold">
+            <Volume2 size={13} className="text-[#D4AF37]" />
+            ChurchGPT is speaking…
+          </div>
+          <button
+            onClick={onStopSpeaking}
+            className="text-[10px] font-bold text-red-500 hover:underline"
+          >
+            Stop
+          </button>
+        </div>
+      )}
+
       {/* Textarea row */}
       <div className="cgpt-input-row">
         <textarea
@@ -112,11 +155,30 @@ export function ChurchGPTInput({ onSend, disabled, sessionType, setSessionType, 
           value={content}
           onChange={handleInput}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder ?? "Ask anything…"}
+          placeholder={isListening ? '' : (placeholder ?? "Ask anything…")}
           className="cgpt-textarea"
           rows={1}
-          disabled={disabled}
+          disabled={disabled || isListening}
         />
+
+        {/* Mic button — shown when voice is available and not speaking */}
+        {isVoiceAvailable && !isSpeaking && (
+          <button
+            type="button"
+            onClick={onMicPress}
+            disabled={disabled}
+            title={isListening ? 'Stop listening' : 'Speak your message'}
+            className={`cgpt-send-btn transition-colors ${
+              isListening
+                ? 'bg-red-500 text-white active'
+                : 'bg-transparent text-[#0f1f3d]/40 hover:text-[#D4AF37]'
+            }`}
+            style={{ marginRight: 4 }}
+          >
+            {isListening ? <MicOff size={14} /> : <Mic size={14} />}
+          </button>
+        )}
+
         <button
           onClick={handleSend}
           disabled={!canSend}

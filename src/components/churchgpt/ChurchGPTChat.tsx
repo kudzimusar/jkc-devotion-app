@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useChurchGPT } from "@/hooks/useChurchGPT"
+import { useVoiceConversation } from "@/hooks/useVoiceConversation"
 import { supabase } from "@/lib/supabase"
 import { resolveAdminOrgId } from "@/lib/org-resolver"
 import { ChurchGPTMessage } from "./ChurchGPTMessage"
@@ -23,6 +24,9 @@ export function ChurchGPTChat({
   const [orgName, setOrgName] = useState<string>('')
   const [isSidebarOpen, setIsSidebarOpen] = useState(!hideSidebar)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
+
+  const { voiceState, isAvailable: isVoiceAvailable, startListening, stopListening, speak, stopSpeaking } =
+    useVoiceConversation(sessionType)
   
   useEffect(() => {
     async function init() {
@@ -70,10 +74,33 @@ export function ChurchGPTChat({
   }, [currentConversation])
 
   const bottomRef = useRef<HTMLDivElement>(null)
+  const prevMessageCount = useRef(0)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+
+    // Auto-speak the latest assistant reply when a new one arrives
+    if (messages.length > prevMessageCount.current) {
+      const last = messages[messages.length - 1]
+      if (last?.role === 'assistant' && last.content && voiceState !== 'listening') {
+        speak(last.content, sessionType)
+      }
+    }
+    prevMessageCount.current = messages.length
   }, [messages])
+
+  async function handleMicPress() {
+    if (voiceState === 'listening') {
+      stopListening()
+      return
+    }
+    try {
+      const transcript = await startListening()
+      if (transcript) sendMessage(transcript, sessionType, undefined, true)
+    } catch {
+      // permission denied or STT error — silently ignore
+    }
+  }
 
   return (
     <div className="relative flex h-screen overflow-hidden bg-[#fafafa]">
@@ -200,12 +227,16 @@ export function ChurchGPTChat({
         {/* Footer / Input Bar Area */}
         <footer className="bg-gradient-to-t from-[#fafafa] via-[#fafafa]/95 to-transparent pt-4 pb-4 px-4 shrink-0 transition-all">
           <div className="max-w-3xl mx-auto flex flex-col items-center">
-            <ChurchGPTInput 
-              onSend={(msg, sType, att) => sendMessage(msg, sType, att)} 
+            <ChurchGPTInput
+              onSend={(msg, sType, att) => sendMessage(msg, sType, att)}
               disabled={isLoading}
               sessionType={sessionType}
               setSessionType={setSessionType}
               userRole={memberProfile?.role}
+              voiceState={voiceState}
+              isVoiceAvailable={isVoiceAvailable}
+              onMicPress={handleMicPress}
+              onStopSpeaking={stopSpeaking}
             />
             <p className="text-center mt-4 text-[10px] text-gray-400 font-medium tracking-wide">
               ChurchGPT can make mistakes · <span className="font-bold text-[#1b3a6b]/50 italic">Ephesians 4:15</span>
