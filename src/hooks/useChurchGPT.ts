@@ -8,6 +8,7 @@ export interface ChurchGPTMessage {
   content: string
   timestamp: Date
   scriptureRefs?: string[]
+  document_data?: Record<string, unknown> | null
   attachment?: {
     data: string
     mimeType: string
@@ -385,9 +386,10 @@ export function useChurchGPT(
         } catch {}
       }
 
-      // Update assistant message with reply
+      // Update assistant message with reply and optional document_data
+      const documentData: Record<string, unknown> | null = data.document_data ?? null
       setMessages(prev => prev.map(m =>
-        m.id === assistantMessage.id ? { ...m, content: reply } : m
+        m.id === assistantMessage.id ? { ...m, content: reply, document_data: documentData } : m
       ))
 
       // Update quota state from response

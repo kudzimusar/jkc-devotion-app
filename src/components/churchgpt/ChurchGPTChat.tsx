@@ -20,6 +20,7 @@ export function ChurchGPTChat({
   const [sessionType, setSessionType] = useState(initialSessionType)
   const [memberProfile, setMemberProfile] = useState<any>(null)
   const [orgId, setOrgId] = useState<string | undefined>(undefined)
+  const [orgName, setOrgName] = useState<string>('')
   const [isSidebarOpen, setIsSidebarOpen] = useState(!hideSidebar)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   
@@ -34,10 +35,11 @@ export function ChurchGPTChat({
       }
       
       const adminCtx = await resolveAdminOrgId()
-      if (adminCtx?.orgId) {
-        setOrgId(adminCtx.orgId)
-      } else if (userProfile?.org_id) {
-        setOrgId(userProfile.org_id)
+      const resolvedOrgId = adminCtx?.orgId || userProfile?.org_id
+      if (resolvedOrgId) {
+        setOrgId(resolvedOrgId)
+        const { data: org } = await supabase.from('organizations').select('name').eq('id', resolvedOrgId).single()
+        if (org?.name) setOrgName(org.name)
       }
     }
     init()
@@ -178,11 +180,11 @@ export function ChurchGPTChat({
         <main className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar">
           <div className="max-w-3xl mx-auto space-y-6">
             {messages.length === 0 ? (
-               <ChurchGPTSuggestions onSelect={(msg) => sendMessage(msg, sessionType)} />
+               <ChurchGPTSuggestions onSelect={(msg) => sendMessage(msg, sessionType)} sessionType={sessionType} />
             ) : (
               <div className="space-y-6">
                 {messages.map(msg => (
-                  <ChurchGPTMessage key={msg.id} message={msg} />
+                  <ChurchGPTMessage key={msg.id} message={msg} orgId={orgId} orgName={orgName} />
                 ))}
               </div>
             )}

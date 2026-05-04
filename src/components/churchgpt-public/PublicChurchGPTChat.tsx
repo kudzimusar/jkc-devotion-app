@@ -69,7 +69,7 @@ export function PublicChurchGPTChat() {
         <div className="max-w-3xl mx-auto space-y-8 pb-12">
           {messages.length === 0 ? (
             <div className="animate-in fade-in slide-in-from-top-4 duration-1000">
-              <ChurchGPTSuggestions onSelect={(msg) => sendMessage(msg, sessionType)} />
+              <ChurchGPTSuggestions onSelect={(msg) => sendMessage(msg, sessionType)} sessionType={sessionType} />
             </div>
           ) : (
             <div className="space-y-8">

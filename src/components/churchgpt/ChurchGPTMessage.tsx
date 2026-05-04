@@ -1,7 +1,9 @@
 "use client"
 
 import { ChurchGPTMessage as IChurchGPTMessage } from "@/hooks/useChurchGPT"
-import { Copy, Check } from "lucide-react"
+import { getChurchGPTSupabaseClient } from "@/lib/churchgpt/supabase-client"
+import { getDocumentTitle, getDocumentBadge } from "@/lib/pdf/ChurchGPTPDF"
+import { Copy, Check, FileText, Download, CloudUpload, CheckCircle, Loader2 } from "lucide-react"
 import { useState, useCallback } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
@@ -124,9 +126,128 @@ const markdownComponents: Components = {
   ),
 }
 
+// ── Document Action Bar ───────────────────────────────────────────────────────
+
+function DocumentActionBar({ documentData, orgId, orgName }: {
+  documentData: Record<string, unknown>
+  orgId?: string | null
+  orgName?: string
+}) {
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [savedToMC, setSavedToMC] = useState(false)
+
+  async function generatePDF(): Promise<Blob | null> {
+    const res = await fetch('/api/generate-document', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ document_data: documentData, org_name: orgName || 'Church OS' }),
+    })
+    if (!res.ok) return null
+    return res.blob()
+  }
+
+  const handleDownload = useCallback(async () => {
+    setIsDownloading(true)
+    try {
+      const blob = await generatePDF()
+      if (!blob) return
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${getDocumentTitle(documentData).replace(/\s+/g, '-').toLowerCase()}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('[DocumentActionBar] Download failed', err)
+    } finally {
+      setIsDownloading(false)
+    }
+  }, [documentData, orgName])
+
+  const handleSaveToMC = useCallback(async () => {
+    if (!orgId) return
+    setIsSaving(true)
+    try {
+      const blob = await generatePDF()
+      if (!blob) return
+      const supabase = getChurchGPTSupabaseClient()
+      const fileName = `${orgId}/${crypto.randomUUID()}.pdf`
+      const { error: uploadError } = await supabase.storage
+        .from('church-documents')
+        .upload(fileName, blob, { contentType: 'application/pdf' })
+      if (uploadError) throw uploadError
+      const { data: urlData } = supabase.storage.from('church-documents').getPublicUrl(fileName)
+      await supabase.from('church_documents').insert({
+        org_id: orgId,
+        mode: documentData.type as string,
+        title: getDocumentTitle(documentData),
+        document_data: documentData,
+        pdf_url: urlData.publicUrl,
+      })
+      setSavedToMC(true)
+    } catch (err) {
+      console.error('[DocumentActionBar] Save failed', err)
+    } finally {
+      setIsSaving(false)
+    }
+  }, [documentData, orgId, orgName])
+
+  const badge = getDocumentBadge(documentData.type as string)
+
+  return (
+    <div className="mt-3 flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#D4AF37]/10 border border-[#D4AF37]/30">
+        <FileText className="w-3 h-3 text-[#D4AF37]" />
+        <span className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-wide">{badge} Ready</span>
+      </div>
+
+      <button
+        onClick={handleDownload}
+        disabled={isDownloading}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0f1f3d] text-white text-xs font-semibold hover:bg-[#1b3a6b] transition-colors disabled:opacity-60"
+      >
+        {isDownloading
+          ? <Loader2 className="w-3 h-3 animate-spin" />
+          : <Download className="w-3 h-3" />}
+        Download PDF
+      </button>
+
+      {orgId && (
+        savedToMC
+          ? (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 border border-green-200 text-xs font-semibold text-green-700">
+              <CheckCircle className="w-3 h-3" />
+              Saved to Mission Control
+            </div>
+          ) : (
+            <button
+              onClick={handleSaveToMC}
+              disabled={isSaving}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#D4AF37]/50 text-[#0f1f3d] text-xs font-semibold hover:bg-[#D4AF37]/10 transition-colors disabled:opacity-60"
+            >
+              {isSaving
+                ? <Loader2 className="w-3 h-3 animate-spin" />
+                : <CloudUpload className="w-3 h-3 text-[#D4AF37]" />}
+              Save to Mission Control
+            </button>
+          )
+      )}
+    </div>
+  )
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function ChurchGPTMessage({ message }: { message: IChurchGPTMessage }) {
+export function ChurchGPTMessage({
+  message,
+  orgId,
+  orgName,
+}: {
+  message: IChurchGPTMessage
+  orgId?: string | null
+  orgName?: string
+}) {
   const isUser = message.role === "user"
   const rawContent = safeContent(message.content)
   const isThinking = rawContent === "" && !isUser
@@ -184,7 +305,7 @@ export function ChurchGPTMessage({ message }: { message: IChurchGPTMessage }) {
         )}
       </div>
 
-      {/* Copy action */}
+      {/* Copy + Document actions */}
       {!isUser && rawContent !== "" && (
         <div className="cgpt-msg-actions">
           <button onClick={handleCopy} className="cgpt-action-btn" title={copied ? "Copied!" : "Copy"}>
@@ -192,6 +313,15 @@ export function ChurchGPTMessage({ message }: { message: IChurchGPTMessage }) {
             {copied && <span style={{ fontSize: 10, marginLeft: 3 }}>Copied</span>}
           </button>
         </div>
+      )}
+
+      {/* Document action bar */}
+      {!isUser && message.document_data && (
+        <DocumentActionBar
+          documentData={message.document_data}
+          orgId={orgId}
+          orgName={orgName}
+        />
       )}
     </div>
   )

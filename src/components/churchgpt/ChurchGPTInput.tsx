@@ -18,11 +18,47 @@ export function ChurchGPTInput({ onSend, disabled, sessionType, setSessionType, 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedFile, setSelectedFile] = useState<{ data: string, mimeType: string, name: string } | null>(null)
 
-  const sessionOptions = userRole === 'admin' || userRole === 'pastor'
-    ? ['general', 'devotional', 'prayer', 'bible-study', 'apologetics', 'pastoral', 'admin', 'visitor']
-    : userRole === 'member' || userRole === 'leader'
-    ? ['general', 'devotional', 'prayer', 'bible-study', 'apologetics', 'pastoral']
-    : ['general', 'prayer', 'bible-study', 'visitor']
+  const sessionOptions =
+    userRole === 'admin' || userRole === 'pastor'
+      ? [
+          'general', 'devotional', 'prayer', 'bible-study', 'apologetics',
+          'pastoral', 'grief-support', 'visitor',
+          'sermon-planning', 'worship-planning', 'event-planning',
+          'stewardship', 'youth-ministry', 'small-group',
+          'evangelism-coaching', 'leadership-development', 'admin',
+        ]
+      : userRole === 'leader'
+      ? [
+          'general', 'devotional', 'prayer', 'bible-study', 'apologetics',
+          'pastoral', 'grief-support', 'small-group',
+          'youth-ministry', 'evangelism-coaching', 'leadership-development',
+        ]
+      : userRole === 'member'
+      ? [
+          'general', 'devotional', 'prayer', 'bible-study', 'apologetics',
+          'pastoral', 'grief-support', 'evangelism-coaching',
+        ]
+      : ['general', 'prayer', 'bible-study', 'visitor']
+
+  const modeLabel: Record<string, string> = {
+    'general': 'General',
+    'devotional': 'Devotional',
+    'prayer': 'Prayer',
+    'bible-study': 'Bible Study',
+    'apologetics': 'Apologetics',
+    'pastoral': 'Pastoral',
+    'grief-support': 'Grief Support',
+    'visitor': 'Visitor',
+    'admin': 'Admin',
+    'sermon-planning': 'Sermon Planning',
+    'worship-planning': 'Worship Planning',
+    'event-planning': 'Event Planning',
+    'stewardship': 'Stewardship',
+    'youth-ministry': 'Youth Ministry',
+    'small-group': 'Small Group',
+    'evangelism-coaching': 'Evangelism',
+    'leadership-development': 'Leadership',
+  }
 
   const canSend = (content.trim() || !!selectedFile) && !disabled
 
@@ -111,7 +147,7 @@ export function ChurchGPTInput({ onSend, disabled, sessionType, setSessionType, 
         >
           {sessionOptions.map(opt => (
             <option key={opt} value={opt}>
-              {opt === 'bible-study' ? 'Bible Study' : opt.charAt(0).toUpperCase() + opt.slice(1)}
+              {modeLabel[opt] ?? opt}
             </option>
           ))}
         </select>
