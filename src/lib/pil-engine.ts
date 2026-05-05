@@ -307,8 +307,11 @@ export const PILEngine = {
                 .select('*')
                 .eq('org_id', orgId);
 
-            // vw_member_talent_pool not yet available — skip to avoid 400 errors
-            const talentPool: any[] = [];
+            const { data: talentPool } = await supabase
+                .from('vw_member_talent_pool')
+                .select('name, email, skills, current_ministries')
+                .eq('org_id', orgId)
+                .limit(15);
 
             const avgDiscipleship = memberSummary?.length
                 ? Math.round(memberSummary.reduce((s, m) => s + (m.discipleship_score || 0), 0) / memberSummary.length)
