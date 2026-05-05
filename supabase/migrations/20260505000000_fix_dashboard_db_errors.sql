@@ -3,20 +3,19 @@
 -- 2. get_morning_briefing missing from migrations (GROUP BY error)
 -- 3. fn_preview_context_count missing (login email-blur hint hangs)
 
--- ── 1. Fix vw_geo_planting_opportunities (add org_id to SELECT + GROUP BY) ──
-CREATE OR REPLACE VIEW public.vw_geo_planting_opportunities AS
+-- ── 1. Fix vw_geo_planting_opportunities ──
+-- fellowship_groups was renamed → bible_study_groups and never had a ward column.
+-- PIL engine only reads org_id, ward, member_count — drop the broken subquery.
+DROP VIEW IF EXISTS public.vw_geo_planting_opportunities;
+CREATE VIEW public.vw_geo_planting_opportunities AS
 SELECT
     p.org_id,
     p.ward,
-    count(*)::int                                                            AS member_count,
-    (SELECT count(*) FROM public.fellowship_groups fg
-     WHERE lower(fg.ward) = lower(p.ward))::int                             AS group_count
+    count(*)::int AS member_count
 FROM public.profiles p
 WHERE p.ward IS NOT NULL AND p.ward != ''
 GROUP BY p.org_id, p.ward
-HAVING count(*) >= 5
-   AND (SELECT count(*) FROM public.fellowship_groups fg
-        WHERE lower(fg.ward) = lower(p.ward)) = 0;
+HAVING count(*) >= 5;
 
 GRANT SELECT ON public.vw_geo_planting_opportunities TO authenticated;
 
