@@ -22,7 +22,8 @@ GRANT SELECT ON public.vw_geo_planting_opportunities TO authenticated;
 -- ── 2. Recreate get_morning_briefing with correct GROUP BY ──
 -- The previous version selected d.auto_send_at outside an aggregate without GROUP BY.
 -- Fix: use MIN(auto_send_at) so campaign_type is the only group key.
-CREATE OR REPLACE FUNCTION public.get_morning_briefing(p_org_id uuid)
+DROP FUNCTION IF EXISTS public.get_morning_briefing(uuid);
+CREATE FUNCTION public.get_morning_briefing(p_org_id uuid)
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -115,7 +116,8 @@ $$;
 GRANT EXECUTE ON FUNCTION public.get_morning_briefing(uuid) TO authenticated;
 
 -- ── 3. Create fn_preview_context_count (missing — causes login email-blur to hang) ──
-CREATE OR REPLACE FUNCTION public.fn_preview_context_count(p_email text, p_domain text)
+DROP FUNCTION IF EXISTS public.fn_preview_context_count(text, text);
+CREATE FUNCTION public.fn_preview_context_count(p_email text, p_domain text)
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
