@@ -2,7 +2,7 @@
 
 import { ChurchGPTMessage as IChurchGPTMessage } from "@/hooks/useChurchGPT"
 import { getChurchGPTSupabaseClient } from "@/lib/churchgpt/supabase-client"
-import { getDocumentTitle, getDocumentBadge } from "@/lib/pdf/ChurchGPTPDF"
+import { getDocumentTitle, getDocumentBadge } from "@/lib/pdf/churchgpt-document-utils"
 import { Copy, Check, FileText, Download, CloudUpload, CheckCircle, Loader2 } from "lucide-react"
 import { useState, useCallback, useRef } from "react"
 
