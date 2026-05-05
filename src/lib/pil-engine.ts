@@ -10,7 +10,6 @@ export const PILEngine = {
      * Run all predictive models and synchronize with the prophetic_insights table.
      */
     runIntelligenceSweep: async (orgId: string) => {
-        console.log("🌌 PIL Engine: Starting Intelligence Sweep...");
 
 
         const results = {
@@ -292,10 +291,8 @@ export const PILEngine = {
             }
 
             // 12. PHASE 3: MINISTRY CONTEXT COLLECTION
-            console.log("🏛️ PIL Engine: Collecting ministry context...");
-
             const { data: ministryData } = await supabase
-              .from('vw_ministry_hub')
+              .from('ministries')
               .select(`id, name, health_score, avg_attendance`)
               .eq('org_id', orgId)
               .limit(10);
@@ -305,17 +302,13 @@ export const PILEngine = {
                 .select('id, discipleship_score')
                 .eq('org_id', orgId);
 
-            // NEW: Fetch Skill Gaps and Talent Pool for AI matching
             const { data: skillGaps } = await supabase
                 .from('vw_ministry_skill_gaps')
                 .select('*')
                 .eq('org_id', orgId);
 
-            const { data: talentPool } = await supabase
-                .from('vw_member_talent_pool')
-                .select('name, email, skills, current_ministries')
-                .eq('org_id', orgId)
-                .limit(15);
+            // vw_member_talent_pool not yet available — skip to avoid 400 errors
+            const talentPool: any[] = [];
 
             const avgDiscipleship = memberSummary?.length
                 ? Math.round(memberSummary.reduce((s, m) => s + (m.discipleship_score || 0), 0) / memberSummary.length)
@@ -445,11 +438,8 @@ Output JSON: { "insights": [{ "subject": "e.g., Media Ministry", "summary": "Sho
                                     urgency: insight.urgency
                                 }
                             });
-                            if (insertErr) {
-                                console.error("❌ PI Engine: Insert failure on insight:", insertErr);
-                            } else {
+                            if (!insertErr) {
                                 results.ai_insights++;
-                                console.log("✨ PI Engine: Saved new insight:", insight.summary);
                             }
                         }
                     } catch (parseErr) {
@@ -460,7 +450,6 @@ Output JSON: { "insights": [{ "subject": "e.g., Media Ministry", "summary": "Sho
                 console.error("❌ Gemini API error:", response.status);
             }
 
-            console.log("✅ PIL Engine: Sweep Complete.", results);
             return results;
 
         } catch (error) {

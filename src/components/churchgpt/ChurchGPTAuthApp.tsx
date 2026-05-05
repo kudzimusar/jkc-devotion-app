@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { getChurchGPTSupabaseClient } from "@/lib/churchgpt/supabase-client"
+import { supabase } from "@/lib/supabase"
 import { useChurchGPT } from "@/hooks/useChurchGPT"
 import { useVoiceConversation } from "@/hooks/useVoiceConversation"
 import { useCGPTTheme } from "@/hooks/useCGPTTheme"
@@ -59,8 +59,7 @@ export function ChurchGPTAuthApp({ loginRedirect = '/churchgpt/login' }: ChurchG
     useVoiceConversation(sessionType)
 
   useEffect(() => {
-    const sb = getChurchGPTSupabaseClient()
-    sb.auth.getUser().then((res: any) => {
+    supabase.auth.getUser().then((res: any) => {
       const u = res?.data?.user
       if (!u) { router.push(loginRedirect); return }
       setUser(u)
