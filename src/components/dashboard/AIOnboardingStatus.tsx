@@ -26,7 +26,7 @@ export function AIOnboardingStatus({ orgId }: AIOnboardingStatusProps) {
                 .from('organization_intelligence')
                 .select('*')
                 .eq('org_id', orgId)
-                .single();
+                .maybeSingle();
 
             if (intel) {
                 setStatus(intel.ai_provisioning_status);

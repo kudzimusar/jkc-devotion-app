@@ -42,7 +42,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
                 requiredDomain = 'tenant';
             } else if (pathname.startsWith("/onboarding")) {
                 requiredDomain = 'onboarding';
-            } else if (pathname.startsWith("/member")) {
+            } else if (pathname === '/member' || pathname.startsWith('/member/')) {
                 requiredDomain = 'member';
             }
 

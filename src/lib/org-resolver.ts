@@ -224,35 +224,29 @@ export async function resolveAdminOrgId(): Promise<{ orgId: string; role: string
     }
 
     const members = rawMembers as { role: string; org_id: string }[];
-    console.log('[ORG RESOLVER] Found memberships:', members.map(m => `${m.role}@${m.org_id}`));
-
     let result: { orgId: string; role: string } | null = null;
 
     // ── Organization Resolution Logic ──
     if (members.length === 1) {
       result = { orgId: members[0].org_id, role: members[0].role };
-      console.log('[ORG RESOLVER] Single membership resolved:', result.role);
     } else if (members.length > 1) {
       // 1. Prioritize super_admin role (Corporate Layer)
       const saMatch = members.find(m => m.role === 'super_admin');
       if (saMatch) {
          result = { orgId: saMatch.org_id, role: saMatch.role };
-         console.log('[ORG RESOLVER] Prioritized super_admin role');
       } else if (typeof window !== 'undefined') {
         const activeOrgId = sessionStorage.getItem('church_os_active_org');
         if (activeOrgId) {
           const match = members.find(m => m.org_id === activeOrgId);
           if (match) {
             result = { orgId: match.org_id, role: match.role };
-            console.log('[ORG RESOLVER] Used active selection:', activeOrgId);
           }
         }
       }
-      
+
       // Fallback to first if no selection
       if (!result) {
         result = { orgId: members[0].org_id, role: members[0].role };
-        console.log('[ORG RESOLVER] Fallback to first membership:', result.role);
       }
     }
 

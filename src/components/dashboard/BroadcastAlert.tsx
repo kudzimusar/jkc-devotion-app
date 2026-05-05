@@ -26,7 +26,7 @@ export default function BroadcastAlert() {
         .eq('is_read', false)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (receipt) setBroadcast(receipt);
       setLoading(false);

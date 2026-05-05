@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, RefreshCw, AlertTriangle, TrendingUp, ChevronRight, ChevronLeft, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,12 +35,14 @@ export function AIPanel({ insights: externalInsights }: { insights?: AiInsight[]
     const [expanded, setExpanded] = useState<string | null>(null);
     const [churchScore, setChurchScore] = useState<number | null>(null);
     const [collapsed, setCollapsed] = useState(false);
+    const hasFetched = useRef(false);
 
     useEffect(() => {
         if (externalInsights && externalInsights.length > 0) {
             setInsights(externalInsights);
             setLoading(false);
-        } else if (orgId) {
+        } else if (orgId && !hasFetched.current) {
+            hasFetched.current = true;
             loadInsights();
         }
     }, [externalInsights, orgId]);

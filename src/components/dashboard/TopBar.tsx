@@ -86,7 +86,7 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                 .from('communication_events')
                 .select('id, preview, occurred_at, ai_tone, direction, ai_summary')
                 .eq('direction', 'inbound')
-                .eq('read_at', null)
+                .is('read_at', null)
                 .order('occurred_at', { ascending: false })
                 .limit(5);
 

@@ -122,6 +122,12 @@ export function useChurchGPT(
     init()
   }, [isGuest])
 
+  // Once userId resolves from async init, load conversations (init's call ran with stale closure)
+  useEffect(() => {
+    if (!isGuest && resolvedUserId) loadConversations()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resolvedUserId, isGuest])
+
   // Load available models for Pro+ model selector
   useEffect(() => {
     if (!isPro) return
@@ -134,7 +140,7 @@ export function useChurchGPT(
   }, [isPro])
 
   const loadConversations = useCallback(async () => {
-    if (isGuest) return
+    if (isGuest || !resolvedUserId) return
     try {
       // ChurchGPT-only subscribers have no org_id — scope by user_id alone
       let query = supabase

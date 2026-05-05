@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { useChurchGPT } from "@/hooks/useChurchGPT"
 import { useVoiceConversation } from "@/hooks/useVoiceConversation"
-import { supabase } from "@/lib/supabase"
+import { getChurchGPTSupabaseClient } from "@/lib/churchgpt/supabase-client"
 import { resolveAdminOrgId } from "@/lib/org-resolver"
 import { ChurchGPTMessage } from "./ChurchGPTMessage"
 import { ChurchGPTInput } from "./ChurchGPTInput"
@@ -30,19 +30,20 @@ export function ChurchGPTChat({
   
   useEffect(() => {
     async function init() {
-      const { data: { user } } = await supabase.auth.getUser()
+      const sb = getChurchGPTSupabaseClient()
+      const { data: { user } } = await sb.auth.getUser()
       let userProfile = null
       if (user) {
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+        const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single()
         setMemberProfile(profile)
         userProfile = profile
       }
-      
+
       const adminCtx = await resolveAdminOrgId()
       const resolvedOrgId = adminCtx?.orgId || userProfile?.org_id
       if (resolvedOrgId) {
         setOrgId(resolvedOrgId)
-        const { data: org } = await supabase.from('organizations').select('name').eq('id', resolvedOrgId).single()
+        const { data: org } = await sb.from('organizations').select('name').eq('id', resolvedOrgId).single()
         if (org?.name) setOrgName(org.name)
       }
     }
