@@ -3,6 +3,16 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'ChurchGPT',
   description: 'Your Christian AI companion',
+  icons: {
+    icon: '/cgpt-icons/icon-48x48.png',
+    shortcut: '/cgpt-icons/icon-48x48.png',
+    apple: '/cgpt-icons/icon-128x128.png',
+    other: [
+      { rel: 'icon', type: 'image/png', sizes: '32x32', url: '/cgpt-icons/icon-48x48.png' },
+      { rel: 'icon', type: 'image/png', sizes: '96x96', url: '/cgpt-icons/icon-96x96.png' },
+      { rel: 'icon', type: 'image/png', sizes: '192x192', url: '/cgpt-icons/icon-192x192.png' },
+    ],
+  },
 }
 
 export default function ChurchGPTPublicLayout({ children }: { children: React.ReactNode }) {

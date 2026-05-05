@@ -10,6 +10,7 @@ import { PublicChurchGPTSidebar } from "@/components/churchgpt-public/PublicChur
 import { Loader2, PanelLeft, Share2, X, Sun, Moon } from "lucide-react"
 import Link from "next/link"
 import { useCGPTTheme } from "@/hooks/useCGPTTheme"
+import { useVoiceConversation } from "@/hooks/useVoiceConversation"
 
 // ── Analytics helpers ────────────────────────────────────────────────────────
 function genSessionId() {
@@ -32,13 +33,23 @@ async function trackSession(payload: Record<string, any>) {
 }
 
 const SESSION_MODES = [
-  { id: 'general',     label: 'Shepherd',    desc: 'General ministry & pastoral guidance',    color: 'oklch(72% 0.14 65)' },
-  { id: 'devotional',  label: 'Devotional',  desc: 'Scripture reflections & quiet time',      color: 'oklch(72% 0.14 200)' },
-  { id: 'prayer',      label: 'Prayer',      desc: 'Guided intercession & prayer writing',    color: 'oklch(72% 0.14 130)' },
-  { id: 'bible-study', label: 'Bible Study', desc: 'Exegesis & deep Scripture study',         color: 'oklch(72% 0.14 290)' },
-  { id: 'apologetics', label: 'Apologetics', desc: 'Defending the faith intellectually',      color: 'oklch(72% 0.14 10)' },
-  { id: 'pastoral',    label: 'Pastoral',    desc: 'Compassionate care & support',            color: 'oklch(72% 0.14 65)' },
-  { id: 'admin',       label: 'Admin',       desc: 'Church operations & planning',            color: 'oklch(72% 0.14 180)' },
+  { id: 'general',              label: 'General',              desc: 'Ministry & pastoral guidance',           color: 'oklch(72% 0.14 65)' },
+  { id: 'devotional',           label: 'Devotional',           desc: 'Scripture reflections & quiet time',     color: 'oklch(72% 0.14 200)' },
+  { id: 'prayer',               label: 'Prayer',               desc: 'Guided intercession & prayer writing',   color: 'oklch(72% 0.14 130)' },
+  { id: 'bible-study',          label: 'Bible Study',          desc: 'Exegesis & deep Scripture study',        color: 'oklch(72% 0.14 290)' },
+  { id: 'apologetics',          label: 'Apologetics',          desc: 'Defending the faith intellectually',     color: 'oklch(72% 0.14 10)' },
+  { id: 'pastoral',             label: 'Pastoral',             desc: 'Compassionate care & support',           color: 'oklch(72% 0.14 65)' },
+  { id: 'grief-support',        label: 'Grief Support',        desc: 'Walking through loss with grace',        color: 'oklch(72% 0.14 260)' },
+  { id: 'visitor',              label: 'Visitor',              desc: 'Welcome & first steps in faith',         color: 'oklch(72% 0.14 85)' },
+  { id: 'sermon-planning',      label: 'Sermon Planning',      desc: 'Outlines, texts & preaching resources',  color: 'oklch(72% 0.14 30)' },
+  { id: 'worship-planning',     label: 'Worship Planning',     desc: 'Service orders & worship flow',          color: 'oklch(72% 0.14 300)' },
+  { id: 'event-planning',       label: 'Event Planning',       desc: 'Church events & logistics',              color: 'oklch(72% 0.14 180)' },
+  { id: 'stewardship',          label: 'Stewardship',          desc: 'Giving campaigns & financial health',    color: 'oklch(72% 0.14 150)' },
+  { id: 'youth-ministry',       label: 'Youth Ministry',       desc: 'Youth lessons & ministry ideas',         color: 'oklch(72% 0.14 50)' },
+  { id: 'small-group',          label: 'Small Group',          desc: 'Small group guides & discussion',        color: 'oklch(72% 0.14 220)' },
+  { id: 'evangelism-coaching',  label: 'Evangelism',           desc: 'Sharing the faith effectively',          color: 'oklch(72% 0.14 110)' },
+  { id: 'leadership-development', label: 'Leadership',         desc: 'Equipping and developing church leaders', color: 'oklch(72% 0.14 240)' },
+  { id: 'admin',                label: 'Admin',                desc: 'Church operations & planning',           color: 'oklch(72% 0.14 180)' },
 ]
 
 const SUGGESTIONS = [
@@ -57,11 +68,15 @@ function ChurchGPTAuthenticatedChat() {
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const prevMessageCount = useRef(0)
   const { theme, toggle: toggleTheme } = useCGPTTheme()
   // Analytics refs
   const sessionIdRef = useRef<string>(genSessionId())
   const sessionStartRef = useRef<number>(Date.now())
   const messagesSentRef = useRef<number>(0)
+
+  const { voiceState, isAvailable: isVoiceAvailable, startListening, stopListening, speak, stopSpeaking } =
+    useVoiceConversation(sessionType)
 
   const supabase = getChurchGPTSupabaseClient()
 
@@ -123,7 +138,22 @@ function ChurchGPTAuthenticatedChat() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (messages.length > prevMessageCount.current) {
+      const last = messages[messages.length - 1]
+      if (last?.role === 'assistant' && last.content && voiceState !== 'listening') {
+        speak(last.content, sessionType)
+      }
+    }
+    prevMessageCount.current = messages.length
   }, [messages])
+
+  async function handleMicPress() {
+    if (voiceState === 'listening') { stopListening(); return }
+    try {
+      const transcript = await startListening()
+      if (transcript) sendMessage(transcript, sessionType, undefined, true)
+    } catch { /* permission denied — silently ignore */ }
+  }
 
   const activeMode = SESSION_MODES.find(m => m.id === sessionType) ?? SESSION_MODES[0]
 
@@ -273,6 +303,10 @@ function ChurchGPTAuthenticatedChat() {
               disabled={isLoading}
               sessionType={sessionType}
               setSessionType={setSessionType}
+              voiceState={voiceState}
+              isVoiceAvailable={isVoiceAvailable}
+              onMicPress={handleMicPress}
+              onStopSpeaking={stopSpeaking}
             />
 
             <div className="cgpt-input-footer">

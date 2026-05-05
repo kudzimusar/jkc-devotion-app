@@ -161,22 +161,36 @@ export function ChurchGPTInput({
           disabled={disabled || isListening}
         />
 
-        {/* Mic button — shown when voice is available and not speaking */}
-        {isVoiceAvailable && !isSpeaking && (
-          <button
-            type="button"
-            onClick={onMicPress}
-            disabled={disabled}
-            title={isListening ? 'Stop listening' : 'Speak your message'}
-            className={`cgpt-send-btn transition-colors ${
-              isListening
-                ? 'bg-red-500 text-white active'
-                : 'bg-transparent text-[#0f1f3d]/40 hover:text-[#D4AF37]'
-            }`}
-            style={{ marginRight: 4 }}
-          >
-            {isListening ? <MicOff size={14} /> : <Mic size={14} />}
-          </button>
+        {/* Mic button — always shown when onMicPress provided; grayed if unavailable */}
+        {onMicPress && !isSpeaking && (
+          <div className="relative" style={{ marginRight: 4 }}>
+            <button
+              type="button"
+              onClick={isVoiceAvailable ? onMicPress : undefined}
+              disabled={disabled || !isVoiceAvailable}
+              title={
+                !isVoiceAvailable
+                  ? 'Voice not supported in this browser (try Chrome)'
+                  : isListening
+                  ? 'Stop listening'
+                  : 'Speak your message'
+              }
+              className={`cgpt-send-btn transition-colors ${
+                isListening
+                  ? 'bg-red-500 text-white active'
+                  : isVoiceAvailable
+                  ? 'bg-transparent text-[#0f1f3d]/40 hover:text-[#D4AF37]'
+                  : 'bg-transparent text-[#0f1f3d]/20 cursor-not-allowed'
+              }`}
+            >
+              {isListening ? <MicOff size={14} /> : <Mic size={14} />}
+            </button>
+            {isVoiceAvailable && !isListening && (
+              <span className="absolute -top-1.5 -right-1 text-[6px] font-black bg-green-500 text-white px-0.5 rounded leading-tight pointer-events-none">
+                NEW
+              </span>
+            )}
+          </div>
         )}
 
         <button
@@ -190,15 +204,20 @@ export function ChurchGPTInput({
 
       {/* Toolbar */}
       <div className="cgpt-input-toolbar">
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="cgpt-toolbar-chip"
-          disabled={disabled}
-        >
-          <Paperclip size={12} />
-          Attach
-        </button>
+        <div className="relative inline-flex">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="cgpt-toolbar-chip"
+            disabled={disabled}
+          >
+            <Paperclip size={12} />
+            Attach
+          </button>
+          <span className="absolute -top-1.5 -right-1 text-[6px] font-black bg-[#D4AF37] text-[#0f1f3d] px-0.5 rounded leading-tight pointer-events-none">
+            NEW
+          </span>
+        </div>
         <input
           ref={fileInputRef}
           type="file"
@@ -219,6 +238,21 @@ export function ChurchGPTInput({
             </option>
           ))}
         </select>
+      </div>
+
+      {/* Capability indicator strip */}
+      <div className="flex items-center gap-2 px-3 pb-2 flex-wrap">
+        <span className="text-[8px] text-slate-300 font-bold uppercase tracking-widest">Features</span>
+        <span className="inline-flex items-center gap-0.5 text-[9px] text-[#D4AF37] font-semibold">
+          🎤 Voice
+          <span className="ml-0.5 text-[6px] font-black bg-green-500 text-white px-1 py-px rounded leading-tight">NEW</span>
+        </span>
+        <span className="text-[8px] text-slate-300">·</span>
+        <span className="text-[9px] text-slate-400 font-medium">📎 DOCX · XLSX · PDF</span>
+        <span className="text-[8px] text-slate-300">·</span>
+        <span className="text-[9px] text-slate-400 font-medium">📄 Export: Word · PDF · TXT</span>
+        <span className="text-[8px] text-slate-300">·</span>
+        <span className="text-[9px] text-slate-400 font-medium">17 ministry modes</span>
       </div>
     </div>
   )

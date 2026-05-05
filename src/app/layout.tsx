@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   description: "Church OS — Multi-tenant church management platform",
   manifest: "/manifest.json",
   icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-icon.png",
+    icon: "/authentic-favicon.ico",
+    apple: "/authentic-favicon.ico",
   },
 };
 
